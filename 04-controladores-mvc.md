@@ -14,7 +14,8 @@
     - [4.4.1. IActionResult](#441-iactionresult)
     - [4.4.2. ActionResult\<T\>](#442-actionresultt)
     - [4.4.3. ¿Cuándo usar cada método?](#443-cuándo-usar-cada-método)
-  - [4.5. Reto: API de Funkos con CRUD en memoria (MVC)](#45-reto-api-de-funkos-con-crud-en-memoria-mvc)
+  - [4.5. Probando con Bruno](#45-probando-con-bruno)
+  - [4.6. Reto: API de Funkos con CRUD en memoria (MVC)](#46-reto-api-de-funkos-con-crud-en-memoria-mvc)
 
 ---
 
@@ -281,7 +282,96 @@ flowchart TD
 
 > 💡 **Consejo:** `CreatedAtAction` es mejor que `Created` porque genera automáticamente la URL del recurso creado con la ruta del método que lo consulta.
 
-## 4.5. Reto: API de Funkos con CRUD en memoria (MVC)
+## 4.5. Probando con Bruno
+
+**Bruno** es un cliente API open source para probar endpoints. Las mismas pruebas que hiciste en el punto 03 con Minimal APIs funcionan aquí con Controladores MVC.
+
+> 💡 **Consejo:** Si las pruebas de Bruno funcionan igual, tu API está bien diseñada. El cliente no nota la diferencia entre Minimal APIs y Controladores.
+
+### Pruebas GET
+
+**Listar todos los productos:**
+
+```http
+GET {{baseUrl}}/api/productos
+Accept: application/json
+```
+
+**Obtener un producto por ID:**
+
+```http
+GET {{baseUrl}}/api/productos/1
+Accept: application/json
+```
+
+### Pruebas POST
+
+**Crear un producto:**
+
+```http
+POST {{baseUrl}}/api/productos
+Content-Type: application/json
+
+{
+  "nombre": "Guitarra",
+  "precio": 299.99,
+  "categoria": "Instrumentos"
+}
+```
+
+Respuesta esperada: `201 Created` con el producto creado y header `Location`.
+
+### Pruebas PUT
+
+**Actualizar un producto:**
+
+```http
+PUT {{baseUrl}}/api/productos/1
+Content-Type: application/json
+
+{
+  "nombre": "Guitarra eléctrica",
+  "precio": 349.99,
+  "categoria": "Instrumentos"
+}
+```
+
+### Pruebas DELETE
+
+**Eliminar un producto:**
+
+```http
+DELETE {{baseUrl}}/api/productos/1
+```
+
+Respuesta esperada: `204 No Content`.
+
+### Pruebas de error
+
+**Producto no encontrado:**
+
+```http
+GET {{baseUrl}}/api/productos/999
+```
+
+Respuesta esperada: `404 Not Found`.
+
+**Datos inválidos:**
+
+```http
+POST {{baseUrl}}/api/productos
+Content-Type: application/json
+
+{
+  "nombre": ""
+}
+```
+
+Respuesta esperada: `400 Bad Request`.
+
+> ⚠️ **Advertencia:** Si usas HTTPS, Bruno puede pedirte que aceptes el certificado autofirmado. Aceptalo en el primer request.
+
+## 4.6. Reto: API de Funkos con CRUD en memoria (MVC)
 
 > Ahora repite el reto del punto anterior pero usando controladores MVC.
 

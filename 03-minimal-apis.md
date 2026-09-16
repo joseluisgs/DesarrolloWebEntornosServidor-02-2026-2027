@@ -13,7 +13,10 @@
     - [3.4.1. Results: respuestas simples](#341-results-respuestas-simples)
     - [3.4.2. Results\<T\>: respuestas con datos](#342-resultst-respuestas-con-datos)
     - [3.4.3. ¿Cuándo usar cada método?](#343-cuándo-usar-cada-método)
-  - [3.5. Reto: API de Funkos con CRUD en memoria](#35-reto-api-de-funkos-con-crud-en-memoria)
+  - [3.5. Gestión de la clave primaria](#35-gestión-de-la-clave-primaria)
+  - [3.6. Organización de rutas](#36-organización-de-rutas)
+  - [3.7. Probando con Bruno](#37-probando-con-bruno)
+  - [3.8. Reto: API de Funkos con CRUD en memoria](#38-reto-api-de-funkos-con-crud-en-memoria)
 
 ---
 
@@ -217,7 +220,223 @@ flowchart TD
     style I fill:#4CAF50,color:#fff
 ```
 
-## 3.5. Reto: API de Funkos con CRUD en memoria
+## 3.5. Gestión de la clave primaria
+
+Cuando creas un recurso, el **id** debe ser **autogenerado** por el servidor. Nunca lo envía el cliente.
+
+> 💡 **Analogía:** Es como-numerar las entradas de un concierto. El cliente compra la entrada, pero el sistema asigna el número. Tú no eliges tu número de entrada.
+
+### Generar id con un contador
+
+La forma más simple: usar un contador que se incrementa con cada creación:
+
+```csharp
+var funkos = new List<Funko>();
+var nextId = 1L;
+
+app.MapPost("/api/funkos", (FunkoDto dto) =>
+{
+    var funko = new Funko
+    {
+        Id = nextId++,
+        Nombre = dto.Nombre,
+        Precio = dto.Precio,
+        Categoria = dto.Categoria,
+        CreadoEn = DateTime.UtcNow
+    };
+    funkos.Add(funko);
+    return Results.Created($"/api/funkos/{funko.Id}", funko);
+});
+```
+
+### Generar id con Max()
+
+Otra opción: calcular el siguiente id a partir de la lista existente:
+
+```csharp
+var funko = new Funko
+{
+    Id = funkos.Count > 0 ? funkos.Max(f => f.Id) + 1 : 1,
+    // ... demás propiedades
+};
+```
+
+> ⚠️ **Advertencia:** El contador y `Max()` funcionan en memoria. En una base de datos real, el id se genera automáticamente (IDENTITY, SERIAL, etc.).
+
+📌 **Ejemplo real:** Cuando te registras en Netflix, tu `userId` lo genera Netflix. Tú no lo eliges. El servidor siempre controla la clave primaria.
+
+## 3.6. Organización de rutas
+
+Cuando tu API tiene muchos endpoints, `Program.cs` se llena de `app.MapGet(...)`, `app.MapPost(...)`... Para mantenerlo limpio, puedes **separar las rutas** en otro archivo usando **funciones de extensión**.
+
+> 💡 **Analogía:** Es como organizar un libro. No metes todos los capítulos en la portada. Los separas en capítulos y páginas. Lo mismo con las rutas: las separas en archivos según su función.
+
+### El problema
+
+```csharp
+// ❌ Program.cs lleno de rutas
+app.MapGet("/api/productos", ...);
+app.MapGet("/api/productos/{id}", ...);
+app.MapPost("/api/productos", ...);
+app.MapPut("/api/productos/{id}", ...);
+app.MapDelete("/api/productos/{id}", ...);
+app.MapGet("/api/usuarios", ...);
+app.MapGet("/api/usuarios/{id}", ...);
+app.MapPost("/api/usuarios", ...);
+// ... 20 líneas más
+```
+
+### La solución: archivos de rutas con extensiones
+
+Crea un archivo `Routes/ProductosRoutes.cs`:
+
+```csharp
+// Routes/ProductosRoutes.cs
+namespace MiApi.Routes;
+
+public static class ProductosRoutes
+{
+    public static void MapProductosRoutes(this WebApplication app)
+    {
+        var group = app.MapGroup("/api/productos");
+
+        group.MapGet("/", () => Results.Ok(Productos));
+        group.MapGet("/{id:int}", (int id) => ...);
+        group.MapPost("/", (ProductoDto dto) => ...);
+        group.MapPut("/{id:int}", (int id, ProductoDto dto) => ...);
+        group.MapDelete("/{id:int}", (int id) => ...);
+    }
+}
+```
+
+Y en `Program.cs` solo una línea:
+
+```csharp
+var app = builder.Build();
+
+app.MapProductosRoutes();   // Todas las rutas de productos
+app.MapUsuariosRoutes();    // Todas las rutas de usuarios
+
+app.Run();
+```
+
+### MapGroup: agrupar rutas
+
+`MapGroup` crea un **subgrupo** de rutas con un prefijo común:
+
+```csharp
+var group = app.MapGroup("/api/productos");
+// Todas las rutas del grupo empiezan por /api/productos
+```
+
+> ⚠️ **Advertencia:** Los archivos de rutas deben estar en una carpeta `Routes/` organizada. No metas todo en un solo archivo.
+
+📌 **Ejemplo real:** La API de GitHub organiza sus endpoints en archivos separados: `repos/routes.cs`, `users/routes.cs`, `issues/routes.cs`...
+
+## 3.7. Probando con Bruno
+
+**Bruno** es un cliente API open source para probar endpoints. Es la alternativa gratuita a Postman. Las pruebas que hagas aquí funcionarán igual con Minimal APIs y con Controladores MVC.
+
+> 💡 **Consejo:** Instala Bruno desde [brunoapi.io](https://brunoapi.io). Es gratuito, open source y no requiere cuenta.
+
+### Instalación
+
+1. Descarga Bruno desde [brunoapi.io](https://brunoapi.io)
+2. Instálalo como cualquier otra aplicación
+3. Crea una nueva colección (`Collection`) para tus pruebas
+
+### Configuración
+
+Crea una variable de entorno `baseUrl` con la dirección de tu API:
+
+```
+baseUrl = https://localhost:5001
+```
+
+### Pruebas GET
+
+**Listar todos los productos:**
+
+```http
+GET {{baseUrl}}/api/productos
+Accept: application/json
+```
+
+**Obtener un producto por ID:**
+
+```http
+GET {{baseUrl}}/api/productos/1
+Accept: application/json
+```
+
+### Pruebas POST
+
+**Crear un producto:**
+
+```http
+POST {{baseUrl}}/api/productos
+Content-Type: application/json
+
+{
+  "nombre": "Guitarra",
+  "precio": 299.99,
+  "categoria": "Instrumentos"
+}
+```
+
+Respuesta esperada: `201 Created` con el producto creado y header `Location`.
+
+### Pruebas PUT
+
+**Actualizar un producto:**
+
+```http
+PUT {{baseUrl}}/api/productos/1
+Content-Type: application/json
+
+{
+  "nombre": "Guitarra eléctrica",
+  "precio": 349.99,
+  "categoria": "Instrumentos"
+}
+```
+
+### Pruebas DELETE
+
+**Eliminar un producto:**
+
+```http
+DELETE {{baseUrl}}/api/productos/1
+```
+
+Respuesta esperada: `204 No Content`.
+
+### Pruebas de error
+
+**Producto no encontrado:**
+
+```http
+GET {{baseUrl}}/api/productos/999
+```
+
+Respuesta esperada: `404 Not Found`.
+
+**Datos inválidos:**
+
+```http
+POST {{baseUrl}}/api/productos
+Content-Type: application/json
+
+{
+  "nombre": ""
+}
+```
+
+Respuesta esperada: `400 Bad Request`.
+
+> ⚠️ **Advertencia:** Si usas HTTPS, Bruno puede pedirte que aceptes el certificado autofirmado. Aceptalo en el primer request.
+
+## 3.8. Reto: API de Funkos con CRUD en memoria
 
 > Antes de irte, diseña y construye una Minimal API completa para gestionar Funkos.
 
