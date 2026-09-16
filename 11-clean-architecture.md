@@ -22,6 +22,7 @@
     - [11.5.2. Separar Commands de Queries](#1152-separar-commands-de-queries)
     - [11.5.3. CQRS con MediatR (introducción)](#1153-cqrs-con-mediatr-introducción)
     - [11.5.4. ¿Cuándo usar CQRS?](#1154-cuándo-usar-cqrs)
+    - [11.5.5. Nuestra arquitectura: Config Classes](#1155-nuestra-arquitectura-config-classes)
   - [11.6. Estructura del Proyecto](#116-estructura-del-proyecto)
     - [11.6.1. Organización de carpetas](#1161-organización-de-carpetas)
     - [11.6.2. Capas y sus contenidos](#1162-capas-y-sus-contenidos)
@@ -455,6 +456,124 @@ public class ProductosController(IMediator mediator) : ControllerBase
 | Cache agresivo | Sí | Las queries pueden cachear, los commands no |
 
 > 📝 **Nota:** CQRS es un patrón, no una arquitectura. Se puede usar solo o combinado con Clean Architecture. Lo veremos en profundidad en UD03/UD04 con bases de datos.
+
+### 11.5.5. Nuestra arquitectura: Config Classes
+
+En el curso y en **TiendaAPI** usamos una variante práctica de Clean Architecture adaptada a educación. No separamos en proyectos distintos (Domain, Application, Infrastructure), sino que **organizamos por carpetas dentro de un solo proyecto** con **Config classes** en `Infrastructures/` para el registro de DI.
+
+```mermaid
+flowchart TB
+    subgraph PROYECTO["Un solo proyecto"]
+        direction TB
+        CTRL["Controllers/"]
+        SVC["Services/"]
+        REPO["Repositories/"]
+        MDL["Models/"]
+        DTO["Dtos/"]
+        VAL["Validators/"]
+        MAP["Mappers/"]
+        ERR["Errors/"]
+        INF["Infrastructures/"]
+    end
+
+    CTRL --> SVC
+    SVC --> REPO
+    REPO --> MDL
+
+    style PROYECTO fill:#2196F3,color:#fff
+```
+
+**Estructura de TiendaAPI:**
+
+```
+TiendaApi.Api/
+├── Program.cs                    # Punto de entrada
+├── Controllers/                  # Endpoints HTTP
+├── Services/                     # Lógica de negocio
+│   ├── Productos/
+│   ├── Categorias/
+│   └── Auth/
+├── Repositories/                 # Acceso a datos
+│   ├── Productos/
+│   ├── Categorias/
+│   └── Pedidos/
+├── Models/                       # Entidades de dominio
+├── Dtos/                         # Data Transfer Objects
+├── Validators/                   # FluentValidation
+├── Mappers/                      # Model <-> DTO
+├── Errors/                       # DomainError y tipos
+├── Middleware/                   # ExceptionHandler, etc.
+├── Infrastructures/              # Config classes (DI)
+│   ├── RepositoriesConfig.cs
+│   ├── ServicesConfig.cs
+│   ├── DatabaseConfig.cs
+│   ├── CorsConfig.cs
+│   └── SerilogConfig.cs
+└── Data/                         # DbContext, Seed
+```
+
+**Las Config classes** son clases estáticas con métodos de extensión que registran servicios en el contenedor DI:
+
+```csharp
+// Infrastructures/RepositoriesConfig.cs
+public static class RepositoriesConfig
+{
+    public static IServiceCollection AddRepositories(this IServiceCollection services, IConfiguration config)
+    {
+        services.AddScoped<IProductoRepository, ProductoRepository>();
+        services.AddScoped<ICategoriaRepository, CategoriaRepository>();
+
+        // DI condicional según configuración
+        var pedidosRepoType = config["Pedidos:RepositoryType"] ?? "MongoDbNative";
+        if (pedidosRepoType == "MongoDbNative")
+            services.AddScoped<IPedidosRepository, PedidosNativeRepository>();
+        else
+            services.AddScoped<IPedidosRepository, PedidosEfCoreRepository>();
+
+        return services;
+    }
+}
+
+// Infrastructures/ServicesConfig.cs
+public static class ServicesConfig
+{
+    public static IServiceCollection AddServices(this IServiceCollection services)
+    {
+        return services
+            .AddScoped<IProductoService, ProductoService>()
+            .AddScoped<ICategoriaService, CategoriaService>()
+            .AddScoped<IAuthService, AuthService>();
+    }
+}
+```
+
+**Program.cs queda limpio y legible:**
+
+```csharp
+// Program.cs
+var services = builder.Services;
+
+services.AddMvcControllers();
+services.AddDatabases(configuration);
+services.AddAuthentication(configuration);
+
+// Config classes: cada una registra su responsabilidad
+services.AddRepositories(configuration);
+services.AddServices();
+services.AddCache(environment);
+services.AddEmail(environment);
+services.AddStorage();
+```
+
+📌 Ejemplo real: **TiendaAPI** usa este patrón. Cada concern (repositorios, servicios, cache, email, auth) tiene su propia Config class. Cuando añades un nuevo servicio, solo creas una nueva Config class y la llamas en Program.cs. No necesitas tocar el resto.
+
+> 💡 **Consejo:** Para educación, esta arquitectura es ideal porque:
+> - **Un solo proyecto** = más fácil de entender para alumnos nuevos
+> - **Config classes** = el registro de DI está organizado y limpio
+> - **Carpetas por responsabilidad** = separación clara sin la complejidad de múltiples proyectos
+> - **Evoluciona a Clean Architecture** cuando el proyecto crece
+
+> ⚠️ **Advertencia:** Cuando el proyecto tenga más de 3 desarrolladores o más de 20 endpoints, considera migrar a Clean Architecture con proyectos separados. La arquitectura plana funciona bien en educación y proyectos pequeños, pero escala limitada en equipos grandes.
 
 
 ## 11.6. Estructura del Proyecto
