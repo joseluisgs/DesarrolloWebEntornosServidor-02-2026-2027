@@ -591,27 +591,28 @@ app.Run();
 
 ### 6.6.7. DI condicional: elegir implementación según configuración
 
-A veces necesitas elegir qué implementación registrar **según un valor de configuración**. Scrutor registra automáticamente, pero lo que no se puede escanear (configuración condicional, factory) se registra **después del Scan** de forma manual.
-
-```csharp
-// appsettings.json
-{
-  "Pedidos": {
-    "RepositoryType": "MongoDbNative"
-  }
-}
-```
+A veces necesitas elegir qué implementación registrar **según un valor de configuración**. Scrutor escanea automáticamente lo que puede, pero lo condicional se registra **después del Scan** de forma manual:
 
 ```csharp
 // Program.cs — Scrutor + registro condicional
+using Scrutor;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+
+// 1. Scrutor: escanea y registra automáticamente todos los Services y Repositories
 builder.Services.Scan(scan => scan
     .FromAssemblyOf<Program>()
+    .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Repository")))
+        .AsImplementedInterfaces()
+        .WithSingletonLifetime()
     .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Service")))
         .AsImplementedInterfaces()
         .WithScopedLifetime()
 );
 
-// Después de Scrutor: lo que no se puede escanear (condicional)
+// 2. Después de Scrutor: lo condicional (no se puede escanear)
 var pedidosRepoType = builder.Configuration["Pedidos:RepositoryType"] ?? "MongoDbNative";
 
 if (pedidosRepoType == "MongoDbNative")
@@ -622,11 +623,17 @@ else
 {
     builder.Services.AddScoped<IPedidosRepository, PedidosEfCoreRepository>();
 }
+
+var app = builder.Build();
+app.MapControllers();
+app.Run();
 ```
 
-📌 Ejemplo real: **TiendaAPI** usa este patrón en `RepositoriesConfig.cs`. La sección `Pedidos:RepositoryType` en `appsettings.json` determina si los pedidos se almacenan con MongoDB Driver nativo o con EF Core. En desarrollo usa uno, en producción puede cambiar sin tocar el código.
+📌 Ejemplo real: **TiendaAPI** usa este patrón en `RepositoriesConfig.cs`. La sección `Pedidos:RepositoryType` en `appsettings.json` determina si los pedidos se almacenan con MongoDB Driver nativo o con EF Core. Scrutor registra los repos normales automáticamente, y el condicional se registra manualmente después.
 
-> 💡 **Regla:** Scrutor escanea y registra automáticamente lo que puede. Lo condicional (según configuración) se registra manualmente después. No mezcles ambos en el mismo `Scan`.
+> 💡 **Analogía:** Scrutor es como un conserje que registra a todos los invitados automáticamente. Pero si hay un invitado especial que solo viene si llueve (configuración), lo registras tú a mano después del conserje.
+
+> ⚠️ **Importante:** El `if/else` de registro condicional **debe ir después** del `Scan` de Scrutor. Si lo pones dentro del `Scan`, no funciona porque Scrutor gestiona su propio ciclo.
 
 ```mermaid
 flowchart TD
