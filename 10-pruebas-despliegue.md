@@ -396,4 +396,4 @@ flowchart TD
 | **Docker Compose** | Define servicios y dependencias |
 | **Podman** | Alternativa a Docker sin daemon |
 
-En el siguiente punto veremos **Testing avanzado y CI/CD**: tests de integración, Testcontainers y pipelines automáticos.
+En el siguiente punto veremos **Arquitecturas en Capas y Clean Architecture**: cómo organizar el código en capas para aplicaciones grandes y mantenibles.
