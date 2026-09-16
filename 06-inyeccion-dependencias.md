@@ -181,6 +181,25 @@ flowchart TB
     style G2 fill:#4CAF50,color:#fff
 ```
 
+### 6.2.6. Flujo de una petición con DI
+
+```mermaid
+flowchart LR
+    Client["Cliente"] -->|"HTTP Request"| Controller["Controller"]
+    Controller -->|"Inyecta"| Service["Service"]
+    Service -->|"Inyecta"| Repository["Repository"]
+    Repository -->|"Consulta"| DB["Base de Datos"]
+    DB -->|"Respuesta"| Repository
+    Repository -->|"Retorna"| Service
+    Service -->|"Retorna"| Controller
+    Controller -->|"HTTP Response"| Client
+
+    style Controller fill:#4CAF50,color:#fff
+    style Service fill:#2196F3,color:#fff
+    style Repository fill:#FF9800,color:#fff
+    style DB fill:#9C27B0,color:#fff
+```
+
 ### 6.2.5. Errores comunes
 
 **Error 1: DbContext como Singleton**
@@ -425,6 +444,21 @@ builder.Services.AddScoped<IMyService>(sp =>
 
 **Scrutor** es un paquete NuGet que escanea ensamblados y registra servicios automáticamente, evitando escribir `AddScoped` para cada servicio.
 
+```mermaid
+flowchart TD
+    Program["Program.cs"] --> Scan["Scrutor Scan"]
+    Scan --> Scan1["Escanea ensamblado"]
+    Scan1 --> Match1["Clases que terminan en Repository"]
+    Scan1 --> Match2["Clases que terminan en Service"]
+    Match1 --> Reg1["Registra como Singleton"]
+    Match2 --> Reg2["Registra como Scoped"]
+
+    style Program fill:#4CAF50,color:#fff
+    style Scan fill:#2196F3,color:#fff
+    style Match1 fill:#FF9800,color:#fff
+    style Match2 fill:#FF9800,color:#fff
+```
+
 ### 6.6.1. Instalación
 
 ```bash
@@ -642,6 +676,23 @@ app.Run();
 
 Cuando el proyecto crece, el registro de servicios en Program.cs se vuelve un desastre. El **patrón Infrastructure** consiste en crear clases de configuración separadas que agrupan el registro por responsabilidad.
 
+```mermaid
+flowchart TD
+    Program["Program.cs"] --> Config1["Infrastructure/RepositoriesConfig.cs"]
+    Program --> Config2["Infrastructure/ServicesConfig.cs"]
+    Program --> Config3["Infrastructure/CacheConfig.cs"]
+    Config1 --> R1["IProductoRepository"]
+    Config1 --> R2["ICategoriaRepository"]
+    Config2 --> S1["IProductoService"]
+    Config2 --> S2["ICategoriaService"]
+    Config3 --> C1["ICacheService"]
+
+    style Program fill:#4CAF50,color:#fff
+    style Config1 fill:#2196F3,color:#fff
+    style Config2 fill:#2196F3,color:#fff
+    style Config3 fill:#2196F3,color:#fff
+```
+
 ### 6.9.1. ¿Cuándo usarlo?
 
 | Situación | Solución |
@@ -787,4 +838,4 @@ MiApi/
 | **DI en MVC** | Servicios se inyectan en el constructor del controller |
 | **Patrón Infrastructure** | Config classes separadas por responsabilidad |
 
-En el siguiente punto veremos la **Arquitectura y Pipeline HTTP**: cómo se procesa una petición desde que llega al servidor hasta que se devuelve la respuesta.
+En el siguiente punto veremos las **Excepciones y el Patrón Result**: cómo manejar errores de negocio de forma explícita sin depender de excepciones.
