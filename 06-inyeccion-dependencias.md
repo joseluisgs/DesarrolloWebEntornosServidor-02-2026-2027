@@ -22,6 +22,12 @@
     - [6.5.4. Registro con fábricas](#654-registro-con-fábricas)
   - [6.6. Scrutor: registro automático](#66-scrutor-registro-automático)
     - [6.6.1. Instalación](#661-instalación)
+    - [6.6.2. Requisito: las clases DEBEN tener interfaces](#662-requisito-las-clases-deben-tener-interfaces)
+    - [6.6.3. Enfoque 1: Convention-based (por nombre de clase)](#663-enfoque-1-convention-based-por-nombre-de-clase)
+    - [6.6.4. Enfoque 2: Marker interfaces (por ciclo de vida)](#664-enfoque-2-marker-interfaces-por-ciclo-de-vida)
+    - [6.6.5. ¿Cuándo usar cada enfoque?](#665-cuándo-usar-cada-enfoque)
+    - [6.6.6. Ejemplo completo con ambos enfoques](#666-ejemplo-completo-con-ambos-enfoques)
+    - [6.6.1. Instalación](#661-instalación)
     - [6.6.2. Assembly scanning](#662-assembly-scanning)
     - [6.6.3. Convention-based registration](#663-convention-based-registration)
   - [6.7. DI en Minimal APIs](#67-di-en-minimal-apis)
@@ -465,51 +471,119 @@ flowchart TD
 dotnet add package Scrutor
 ```
 
-### 6.6.2. Assembly scanning
+### 6.6.2. Requisito: las clases DEBEN tener interfaces
+
+> ⚠️ **Importante:** `AsImplementedInterfaces()` solo registra clases que implementen al menos una interfaz. Si una clase no tiene interfaz, Scrutor la ignora silenciosamente.
+
+Cada clase de servicio/repositorio debe implementar:
+1. **Su interfaz de negocio** (`IProductoService`, `IProductoRepository`)
+2. **O implementar interfaces que Scrutor pueda detectar** (para `AsImplementedInterfaces()`)
+
+```csharp
+// ✅ Scrutor detecta esta clase (implementa IProductoRepository)
+public class ProductoRepository : IProductoRepository { ... }
+
+// ✅ Scrutor detecta esta clase (implementa IProductoService)
+public class ProductoService(IProductoRepository repo) : IProductoService { ... }
+
+// ❌ Scrutor NO detecta esta clase (no tiene interfaz)
+public class ProductoHelper { ... }
+```
+
+### 6.6.3. Enfoque 1: Convention-based (por nombre de clase)
+
+Registra servicios según el **nombre** de la clase (termina en "Service", "Repository", etc.):
 
 ```csharp
 using Scrutor;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Escanear el ensamblado actual y registrar automáticamente
 builder.Services.Scan(scan => scan
     .FromAssemblyOf<Program>()
-    .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Service")))
+    // Todas las clases que terminan en "Repository" → Singleton
+    .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Repository")))
         .AsImplementedInterfaces()
-        .WithScopedLifetime()
-    .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Repository")))
+        .WithSingletonLifetime()
+    // Todas las clases que terminan en "Service" → Scoped
+    .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Service")))
         .AsImplementedInterfaces()
         .WithScopedLifetime()
 );
 ```
 
-Esto registra automáticamente todas las clases que terminan en `Service` como Scoped, y todas las que terminan en `Repository` como Scoped.
+**Ventaja:** Simple, solo necesitas nombrar bien las clases.
+**Riesgo:** Si renombras una clase, pierde el registro silenciosamente.
 
-### 6.6.3. Convention-based registration
+📌 Ejemplo real: **TiendaAPI** usa este enfoque. Sus clases se llaman `ProductoService`, `UserService`, `CategoriaService`, etc. Scrutor las detecta por el sufijo "Service".
 
-Puedes usar atributos personalizados o convenciones más específicas:
+### 6.6.4. Enfoque 2: Marker interfaces (por ciclo de vida)
+
+Registra servicios según **qué interfaz de marcador implementen**:
 
 ```csharp
-// Registrar por namespace
+// Interfaces marcadoras (vacías, solo sirven para identificar)
+public interface ITransientService { }
+public interface IScopedService { }
+public interface ISingletonService { }
+
+// La clase implementa su interfaz de negocio + marcador de ciclo de vida
+public class ProductoRepository : IProductoRepository, ISingletonService { }
+public class ProductoService : IProductoService, IScopedService { }
+```
+
+```csharp
 builder.Services.Scan(scan => scan
     .FromAssemblyOf<Program>()
-    .AddClasses(classes => classes.InNamespace("MyApi.Services"))
+        .AddClasses(classes => classes.AssignableTo<ITransientService>())
+            .AsImplementedInterfaces()
+            .WithTransientLifetime()
+        .AddClasses(classes => classes.AssignableTo<IScopedService>())
+            .AsImplementedInterfaces()
+            .WithScopedLifetime()
+        .AddClasses(classes => classes.AssignableTo<ISingletonService>())
+            .AsImplementedInterfaces()
+            .WithSingletonLifetime()
+);
+```
+
+**Ventaja:** El ciclo de vida está en la clase, no en Program.cs. Más explícito.
+**Riesgo:** Más interfaces que mantener.
+
+> 💡 **Consejo:** En proyectos nuevos, usa el **Enfoque 1** (convention-based) si tienes pocos servicios. Usa el **Enfoque 2** (marker interfaces) si tienes muchos servicios y quieres que el ciclo de vida esté visible en la clase.
+
+### 6.6.5. ¿Cuándo usar cada enfoque?
+
+| Enfoque | Cuándo usarlo | Ejemplo |
+|---------|---------------|---------|
+| **Convention-based** | Proyectos pequeños/medianos, pocos servicios | `classes.Where(t => t.Name.EndsWith("Service"))` |
+| **Marker interfaces** | Proyectos grandes, muchos servicios, ciclo de vida visible | `classes.AssignableTo<IScopedService>()` |
+
+### 6.6.6. Ejemplo completo con ambos enfoques
+
+```csharp
+// Program.cs — Enfoque convention-based (como en TiendaAPI)
+using Scrutor;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+
+// Scrutor escanea y registra automáticamente
+// REQUISITO: Las clases DEBEN implementar interfaces (IProductoRepository, IProductoService)
+builder.Services.Scan(scan => scan
+    .FromAssemblyOf<Program>()
+    .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Repository")))
         .AsImplementedInterfaces()
-        .WithScopedLifetime()
-    .AddClasses(classes => classes.InNamespace("MyApi.Repositories"))
+        .WithSingletonLifetime()
+    .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Service")))
         .AsImplementedInterfaces()
         .WithScopedLifetime()
 );
 
-// Registrar como Singleton todo lo que implemente ICacheService
-builder.Services.Scan(scan => scan
-    .FromAssemblyOf<Program>()
-    .AddClasses(classes => classes.Where(type =>
-        typeof(ICacheService).IsAssignableFrom(type)))
-        .AsImplementedInterfaces()
-        .WithSingletonLifetime()
-);
+var app = builder.Build();
+app.MapControllers();
+app.Run();
 ```
 
 > 💡 **Consejo:** Scrutor es ideal para proyectos grandes con muchos servicios. En proyectos pequeños, el registro manual es más claro.
