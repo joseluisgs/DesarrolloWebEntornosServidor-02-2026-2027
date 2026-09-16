@@ -11,10 +11,12 @@
     - [8.2.4. Comparación: extensiones vs AutoMapper](#824-comparación-extensiones-vs-automapper)
   - [8.3. Validaciones](#83-validaciones)
     - [8.3.1. Data Annotations: formato básico](#831-data-annotations-formato-básico)
-    - [8.3.2. FluentValidation: reglas de negocio](#832-fluentvalidation-reglas-de-negocio)
-    - [8.3.3. Cuándo usar cada una](#833-cuándo-usar-cada-una)
-    - [8.3.4. Integración con ASP.NET Core](#834-integración-con-aspnet-core)
-    - [8.3.5. Respuestas de error estandarizadas](#835-respuestas-de-error-estandarizadas)
+    - [8.3.2. Crear tu propia etiqueta de validación](#832-crear-tu-propia-etiqueta-de-validación)
+    - [8.3.3. FluentValidation: reglas de negocio](#833-fluentvalidation-reglas-de-negocio)
+    - [8.3.4. Cuándo usar cada una](#834-cuándo-usar-cada-una)
+    - [8.3.5. Integración con ASP.NET Core](#835-integración-con-aspnet-core)
+    - [8.3.6. ¿Qué pasa cuando la validación falla? (Middleware)](#836-qué-pasa-cuando-la-validación-falla-middleware)
+    - [8.3.7. Resumen: Validación en ASP.NET Core](#837-resumen-validación-en-aspnet-core)
   - [8.4. Consultas avanzadas en endpoints](#84-consultas-avanzadas-en-endpoints)
     - [8.4.1. Filtrado múltiple](#841-filtrado-múltiple)
     - [8.4.2. Ordenación](#842-ordenación)
@@ -277,6 +279,17 @@ var modelo = mapper.Map<CreateProductoDto>(dto);
 
 ## 8.3. Validaciones
 
+> 💡 **Punto de partida:** ¿Qué pasaría si alguien pudiera crear un producto con precio negativo, nombre vacío y categoría inexistente? Tu API aceptaría basura. Las validaciones son la puerta que filtra las peticiones malformadas antes de que lleguen a la lógica de negocio.
+
+La validación es una de las partes más importantes de cualquier API. Sin ella, tu aplicación puede comportarse de forma inesperada, guardar datos corruptos o incluso fallar con excepciones no controladas.
+
+En ASP.NET Core tenemos **dos niveles de validación** que se ejecutan **antes** de que el controlador reciba la petición:
+
+1. **Data Annotations** — formato básico (campos obligatorios, rangos, longitudes)
+2. **FluentValidation** — reglas de negocio complejas (condicionales, validación cruzada, lógica)
+
+Además, cuando la validación falla, el **middleware de excepciones** que configuramos en el punto 07 se encarga de convertir los errores en respuestas `ProblemDetails` estandarizadas.
+
 ```mermaid
 flowchart TB
     subgraph "Request HTTP"
@@ -316,9 +329,11 @@ flowchart TB
     style SVC_ERR fill:#f44336,color:#fff
 ```
 
+📌 Ejemplo real: **Netflix** cuando creas una cuenta valida que el email tenga formato correcto (Data Annotations), que la contraseña tenga al menos 8 caracteres con una mayúscula y un número (FluentValidation), y que el email no esté ya registrado en la base de datos (validación en servicio). Los tres niveles working together.
+
 ### 8.3.1. Data Annotations: formato básico
 
-**Data Annotations** son atributos que se ponen en los modelos/DTOs para validar formato básico. ASP.NET Core los valida automáticamente.
+**Data Annotations** son atributos que se ponen en los modelos/DTOs para validar formato básico. ASP.NET Core los valida automáticamente antes de que el controlador reciba la petición. Si algún atributo falla, el framework devuelve un `400 Bad Request` con los errores sin que escribas una sola línea de validación.
 
 ```csharp
 public record CreateProductoDto
@@ -332,24 +347,165 @@ public record CreateProductoDto
 
     [Required(ErrorMessage = "La categoría es obligatoria")]
     public string Categoria { get; init; } = string.Empty;
+
+    public string? Imagen { get; init; }
 }
 ```
 
-**Atributos comunes:**
+**Atributos comunes de `System.ComponentModel.DataAnnotations`:**
 
-| Atributo | Qué valida |
-|----------|-----------|
-| `[Required]` | Campo obligatorio |
-| `[MaxLength(n)]` | Longitud máxima |
-| `[Range(min, max)]` | Rango numérico |
-| `[EmailAddress]` | Formato de email |
-| `[RegularExpression]` | Patrón personalizado |
+| Atributo | Qué valida | Ejemplo |
+|----------|-----------|---------|
+| `[Required]` | Campo obligatorio (no puede ser null, vacío o whitespace) | `[Required(ErrorMessage = "Nombre requerido")]` |
+| `[MaxLength(n)]` | Longitud máxima de string | `[MaxLength(100)]` |
+| `[MinLength(n)]` | Longitud mínima de string | `[MinLength(2)]` |
+| `[Range(min, max)]` | Rango numérico (int, decimal, double) | `[Range(0, 150)]` para edad |
+| `[StringLength(max)]` | Longitud máxima de string (igual que MaxLength) | `[StringLength(200)]` |
+| `[EmailAddress]` | Formato de email válido | `[EmailAddress]` |
+| `[Phone]` | Formato de teléfono válido | `[Phone]` |
+| `[Url]` | Formato de URL válido | `[Url]` |
+| `[RegularExpression]` | Patrón personalizado con regex | `[RegularExpression("^[A-Z]{2}\\d{6}$")]` |
+| `[Compare("Campo")]` | Dos campos deben ser iguales (útil para confirmar contraseña) | `[Compare("Password")]` |
+| `[CreditCard]` | Formato de tarjeta de crédito válido | `[CreditCard]` |
+| `[DataType(DataType.Date)]` | Tipo de dato (fecha, email, etc.) | `[DataType(DataType.Date)]` |
 
-📌 Ejemplo real: **Twitter/X** valida que un tweet no supere los 280 caracteres. Eso es un `[MaxLength(280)]`. Un campo de email lleva `[EmailAddress]`. Un campo de edad tiene `[Range(0, 150)]`. Data Annotations en estado puro.
+📌 Ejemplo real: **Twitter/X** valida que un tweet no supere los 280 caracteres. Eso es un `[MaxLength(280)]`. Un campo de email lleva `[EmailAddress]`. Un campo de edad tiene `[Range(0, 150)]`. Un formulario de registro usa `[Required]` en todos los campos obligatorios y `[Compare("Password")]` para confirmar la contraseña. Data Annotations en estado puro.
 
-### 8.3.2. FluentValidation: reglas de negocio
+#### Ejemplo completo con múltiples atributos
 
-**FluentValidation** es una librería para validar con reglas más complejas que dependen de lógica de negocio.
+```csharp
+public record RegistroUsuarioDto
+{
+    [Required(ErrorMessage = "El nombre de usuario es obligatorio")]
+    [MinLength(3, ErrorMessage = "Mínimo 3 caracteres")]
+    [MaxLength(20, ErrorMessage = "Máximo 20 caracteres")]
+    [RegularExpression("^[a-zA-Z0-9_]+$", ErrorMessage = "Solo letras, números y guión bajo")]
+    public string Username { get; init; } = string.Empty;
+
+    [Required(ErrorMessage = "El email es obligatorio")]
+    [EmailAddress(ErrorMessage = "El email no tiene un formato válido")]
+    public string Email { get; init; } = string.Empty;
+
+    [Required(ErrorMessage = "La contraseña es obligatoria")]
+    [MinLength(8, ErrorMessage = "Mínimo 8 caracteres")]
+    [RegularExpression("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$",
+        ErrorMessage = "Debe tener al menos una mayúscula, una minúscula y un número")]
+    public string Password { get; init; } = string.Empty;
+
+    [Required(ErrorMessage = "Debes confirmar la contraseña")]
+    [Compare("Password", ErrorMessage = "Las contraseñas no coinciden")]
+    public string ConfirmPassword { get; init; } = string.Empty;
+
+    [Range(0, 150, ErrorMessage = "La edad debe estar entre 0 y 150")]
+    public int? Edad { get; init; }
+
+    [Url(ErrorMessage = "La imagen debe ser una URL válida")]
+    public string? AvatarUrl { get; init; }
+
+    [Phone(ErrorMessage = "El teléfono no tiene un formato válido")]
+    public string? Telefono { get; init; }
+}
+```
+
+📌 Ejemplo real: **Amazon** usa exactamente este patrón en su formulario de registro: username con regex, email con formato, contraseña con requisitos de complejidad, y confirmación de contraseña. Todo con Data Annotations.
+
+### 8.3.2. Crear tu propia etiqueta de validación
+
+A veces los atributos de Microsoft no son suficientes. Por ejemplo, ¿qué pasa si necesitas validar que un nombre de usuario no sea "admin", "root" o "sistema"? No hay un atributo para eso. La solución: **crear tu propio atributo de validación**.
+
+Para crear un atributo personalizado, heredas de `ValidationAttribute` y sobreescribes el método `IsValid`:
+
+```csharp
+using System.ComponentModel.DataAnnotations;
+
+public class NoAdminAttribute : ValidationAttribute
+{
+    private static readonly string[] Prohibidos = ["admin", "root", "sistema"];
+
+    protected override ValidationResult? IsValid(
+        object? value, ValidationContext validationContext)
+    {
+        // Si el valor es null o no es string, es válido (otro atributo se encarga del Required)
+        if (value is not string texto)
+            return ValidationResult.Success;
+
+        // Si el texto está en la lista de prohibidos, falla
+        if (Prohibidos.Contains(texto.ToLowerInvariant()))
+            return new ValidationResult(
+                "El nombre no puede ser 'admin', 'root' o 'sistema'.");
+
+        // Si todo está bien, éxito
+        return ValidationResult.Success;
+    }
+}
+```
+
+**Uso en el DTO:**
+
+```csharp
+public record CreateProductoDto
+{
+    [Required(ErrorMessage = "El nombre es obligatorio")]
+    [MaxLength(100, ErrorMessage = "El nombre no puede tener más de 100 caracteres")]
+    [NoAdmin]  // ← Nuestra validación personalizada
+    public string Nombre { get; init; } = string.Empty;
+
+    // ...
+}
+```
+
+**Qué pasa cuando falla:** El mismo pipeline de validación de ASP.NET Core detecta que `NoAdmin` ha devuelto un `ValidationResult` con error, y lo incluye en la respuesta 400 automáticamente:
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "Nombre": ["El nombre no puede ser 'admin', 'root' o 'sistema'."]
+  }
+}
+```
+
+> 💡 **Analogía:** Un atributo personalizado es como un detective privado. Los atributos de Microsoft son la policía normal (saben lo básico: si el campo está vacío, si el email es válido...). Pero si necesitas algo más específico — como comprobar que un nombre no esté en una lista negra — contratas a tu propio detective: `NoAdminAttribute`.
+
+📌 Ejemplo real: **Slack** valida que el nombre de un workspace no contenga palabras ofensivas ni nombres de marcas registradas. Eso se hace con un atributo personalizado que compara contra una lista negra, exactamente como nuestro `NoAdmin`.
+
+#### Otro ejemplo: validación de contraseña fuerte
+
+```csharp
+public class StrongPasswordAttribute : ValidationAttribute
+{
+    protected override ValidationResult? IsValid(
+        object? value, ValidationContext validationContext)
+    {
+        if (value is not string password)
+            return ValidationResult.Success;
+
+        if (password.Length < 8)
+            return new ValidationResult("Mínimo 8 caracteres");
+
+        if (!password.Any(char.IsUpper))
+            return new ValidationResult("Debe contener al menos una mayúscula");
+
+        if (!password.Any(char.IsLower))
+            return new ValidationResult("Debe contener al menos una minúscula");
+
+        if (!password.Any(char.IsDigit))
+            return new ValidationResult("Debe contener al menos un número");
+
+        return ValidationResult.Success;
+    }
+}
+
+// Uso:
+[StrongPassword]
+public string Password { get; init; } = string.Empty;
+```
+
+### 8.3.3. FluentValidation: reglas de negocio
+
+**FluentValidation** es una librería para validar con reglas más complejas que dependen de lógica de negocio. Se usa una clase separada (un "validator") en lugar de atributos en el modelo.
 
 ```bash
 dotnet add package FluentValidation.AspNetCore
@@ -358,26 +514,67 @@ dotnet add package FluentValidation.AspNetCore
 ```csharp
 public class CreateProductoValidator : AbstractValidator<CreateProductoDto>
 {
+    private static readonly string[] CategoriasValidas =
+        ["Electrónica", "Mobiliario", "Instrumentos", "Deportes", "Libros"];
+
     public CreateProductoValidator()
     {
         RuleFor(x => x.Nombre)
             .NotEmpty().WithMessage("El nombre es obligatorio")
-            .MaximumLength(100).WithMessage("El nombre no puede tener más de 100 caracteres");
+            .MaximumLength(100).WithMessage("El nombre no puede tener más de 100 caracteres")
+            .MinimumLength(2).WithMessage("El nombre debe tener al menos 2 caracteres");
 
         RuleFor(x => x.Precio)
-            .GreaterThan(0).WithMessage("El precio debe ser mayor que 0");
+            .GreaterThan(0).WithMessage("El precio debe ser mayor que 0")
+            .LessThan(1_000_000).WithMessage("El precio no puede superar 1.000.000");
 
         RuleFor(x => x.Categoria)
             .NotEmpty().WithMessage("La categoría es obligatoria")
-            .Must(c => new[] { "Electrónica", "Mobiliario", "Instrumentos" }.Contains(c))
-            .WithMessage("La categoría no es válida");
+            .Must(c => CategoriasValidas.Contains(c))
+            .WithMessage($"Categorías válidas: {string.Join(", ", CategoriasValidas)}");
+
+        RuleFor(x => x.Imagen)
+            .Must(url => string.IsNullOrEmpty(url) ||
+                         Uri.TryCreate(url, UriKind.Absolute, out _))
+            .When(x => !string.IsNullOrEmpty(x.Imagen))
+            .WithMessage("La imagen debe ser una URL válida");
     }
 }
 ```
 
 📌 Ejemplo real: **Wallapop** valida que al publicar un anuncio: el título no esté vacío, el precio sea positivo, la categoría exista en la lista de categorías permitidas, y la ubicación sea una ciudad válida de España. Eso no puedes hacerlo solo con Data Annotations — necesitas FluentValidation.
 
-### 8.3.3. Cuándo usar cada una
+#### Reglas avanzadas de FluentValidation
+
+```csharp
+public class RegistroValidator : AbstractValidator<RegistroUsuarioDto>
+{
+    public RegistroValidator()
+    {
+        // Validación condicional: solo validar si el campo tiene valor
+        RuleFor(x => x.Edad)
+            .InclusiveBetween(18, 120)
+            .When(x => x.Edad.HasValue);
+
+        // Validación entre dos campos (cross-field)
+        RuleFor(x => x.ConfirmPassword)
+            .Equal(x => x.Password)
+            .WithMessage("Las contraseñas no coinciden");
+
+        // Validación con Must (lógica personalizada)
+        RuleFor(x => x.Username)
+            .Must(username => !username.Contains(' '))
+            .WithMessage("El nombre de usuario no puede contener espacios");
+
+        // Mensajes por defecto (sin .WithMessage)
+        RuleFor(x => x.Email)
+            .NotEmpty()
+            .EmailAddress();
+    }
+}
+```
+
+### 8.3.4. Cuándo usar cada una
 
 | | Data Annotations | FluentValidation |
 |--|------------------|------------------|
@@ -386,36 +583,134 @@ public class CreateProductoValidator : AbstractValidator<CreateProductoDto>
 | **Validación con BD** | No | Sí (con servicios) |
 | **Configuración** | En el modelo | En una clase separada |
 | **Recomendado para** | Formato básico | Reglas de negocio |
+| **Personalización** | Atributos heredados de `ValidationAttribute` | Clases con lógica arbitraria |
+| **Legibilidad** | En el modelo (puede ser verboso) | Separada (más limpio) |
 
-> 💡 **Consejo:** Usa **Data Annotations** para formato básico (`[Required]`, `[Range]`). Usa **FluentValidation** cuando necesites reglas complejas (verificar que un nombre no exista en BD, que un email sea único, etc.).
+> 💡 **Consejo:** Usa **Data Annotations** para formato básico (`[Required]`, `[Range]`). Usa **FluentValidation** cuando necesites reglas complejas (verificar que un nombre no exista en BD, que un email sea único, etc.). No mezcles ambos para la misma validación — elige uno u otro según la complejidad.
 
-### 8.3.4. Integración con ASP.NET Core
+📌 Ejemplo real: **GitHub** usa Data Annotations para validaciones simples en sus endpoints (required, max length). Pero para validaciones complejas como "el nombre del repositorio no puede conflicto con uno existente del mismo usuario", usa lógica en el servicio, equivalente al enfoque de FluentValidation.
 
-ASP.NET Core valida automáticamente los Data Annotations. Para FluentValidation, necesitas configurarlo:
+### 8.3.5. Integración con ASP.NET Core
+
+ASP.NET Core valida automáticamente los Data Annotations. Para FluentValidation, necesitas registrarlo en `Program.cs`:
 
 ```csharp
 // Program.cs
-builder.Services.AddControllers()
-    .AddFluentValidation(fv =>
-        fv.RegisterValidatorsFromAssemblyContaining<CreateProductoValidator>());
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 ```
 
-### 8.3.5. Respuestas de error estandarizadas
+Esto busca automáticamente todos los `AbstractValidator<T>` en el ensamblado y los registra. Cuando un endpoint recibe un DTO con `[FromBody]`, el pipeline de validación:
 
-Cuando la validación falla, ASP.NET Core devuelve un `ModelState` con los errores:
+1. Ejecuta los **Data Annotations** del DTO
+2. Si hay un `AbstractValidator<T>` registrado, ejecuta **FluentValidation**
+3. Si ambos pasan, el controlador recibe el DTO
+4. Si alguno falla, se devuelve `400 Bad Request` automáticamente
 
-```json
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant P as Pipeline MVC
+    participant V as Validator (FV)
+    participant D as Controller
+
+    C->>P: POST /api/productos<br/>{ nombre: '', precio: -5 }
+    Note over P: 1. Ejecutar Data Annotations
+    P->>P: [Required] Nombre → FALLA
+    P->>C: 400 Bad Request<br/>{ errors: { Nombre: [...] } }
+    Note over P: Si DA pasa, ejecutar FluentValidation
+    P->>V: Validate(CreateProductoDto)
+    V->>V: RuleFor(Precio).GreaterThan(0) → FALLA
+    V->>P: ValidationResult.IsValid = false
+    P->>C: 400 Bad Request<br/>{ errors: { Precio: [...] } }
+    Note over P: Si todo pasa
+    P->>D: Create(CreateProductoDto)
+    D->>C: 201 Created
+
+    style P fill:#2196F3,color:#fff
+    style V fill:#FF9800,color:#fff
+    style D fill:#4CAF50,color:#fff
+```
+
+> ⚠️ **Advertencia:** Si no registras `AddValidatorsFromAssemblyContaining<Program>()`, FluentValidation **no se ejecuta** automáticamente. Los Data Annotations funcionan siempre (son parte del framework), pero FluentValidation necesita este registro explícito.
+
+### 8.3.6. ¿Qué pasa cuando la validación falla? (Middleware)
+
+Cuando la validación falla — ya sea por Data Annotations o FluentValidation — ASP.NET Core devuelve automáticamente un `400 Bad Request` con un formato estándar. **No necesitas escribir código de validación en el controlador.**
+
+```csharp
+// ❌ MALO: Validación manual en el controller (no hagas esto)
+[HttpPost]
+public IActionResult Create([FromBody] CreateProductoDto dto)
 {
-  "errors": {
-    "Nombre": ["El nombre es obligatorio"],
-    "Precio": ["El precio debe ser mayor que 0"]
-  },
-  "status": 400,
-  "title": "Validación fallida"
+    if (string.IsNullOrEmpty(dto.Nombre))
+        return BadRequest("El nombre es obligatorio");
+    if (dto.Precio <= 0)
+        return BadRequest("El precio debe ser positivo");
+    // ... 20 líneas más de validación
+    return CreatedAtAction(...);
+}
+
+// ✅ BUENO: La validación se ejecuta automáticamente antes del controller
+[HttpPost]
+public IActionResult Create([FromBody] CreateProductoDto dto)
+{
+    // Aquí el DTO ya está validado — si llegamos aquí, todo está bien
+    var result = service.Create(dto);
+    return result.IsSuccess
+        ? CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value.ToDto())
+        : result.Error.ToHttpResult();
 }
 ```
 
-📌 Ejemplo real: **Stripe** (pasarela de pagos) devuelve errores de validación muy estructurados: un código de error, un mensaje descriptivo y un campo que indica qué parámetro falló. Es el mismo patrón que aplicamos aquí.
+**Formato de la respuesta de error:**
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "Nombre": ["El nombre es obligatorio"],
+    "Precio": ["El precio debe estar entre 0.01 y 999999.99"],
+    "Categoria": ["La categoría es obligatoria"]
+  },
+  "traceId": "00-abc123-def456-789"
+}
+```
+
+📌 Ejemplo real: **Stripe** (pasarela de pagos) devuelve errores de validación muy estructurados: un código de error, un mensaje descriptivo y un campo que indica qué parámetro falló. Es el mismo patrón que aplicamos aquí con `ProblemDetails`.
+
+> 💡 **Consejo:** En el punto 07 configuramos un `GlobalExceptionHandler` que captura las excepciones no controladas y las convierte en `ProblemDetails`. Ese middleware funciona como "red de seguridad" — si la validación falla de alguna forma inesperada, el middleware se encarga de que el cliente reciba una respuesta coherente en lugar de un 500 genérico.
+
+📌 Ejemplo real: **Mercado Libre** tiene un middleware similar que captura errores de validación, errores de base de datos y excepciones no controladas, y los convierte en respuestas consistentes con código, mensaje y campo afectado. Sin ese middleware, cada endpoint tendría que manejar sus propios errores, lo cual es propenso a olvidos y inconsistencias.
+
+### 8.3.7. Resumen: Validación en ASP.NET Core
+
+```mermaid
+flowchart TD
+    A["Request HTTP"] --> B{"¿Qué validación?"}
+    B -->|"Formato básico"| C["Data Annotations<br/>[Required], [Range], ..."]
+    B -->|"Regla de negocio"| D["FluentValidation<br/>AbstractValidator<T>"]
+    B -->|"Custom"| E["Atributo propio<br/>Hereda ValidationAttribute"]
+    C -->|Falla| F["400 Bad Request<br/>ProblemDetails"]
+    D -->|Falla| F
+    E -->|Falla| F
+    C -->|Pasa| G{"¿FluentValidation?"}
+    D -->|Pasa| G
+    E -->|Pasa| G
+    G -->|Sí| H["Ejecutar FluentValidation"]
+    G -->|No| I["Controlador recibe el DTO"]
+    H -->|Falla| F
+    H -->|Pasa| I
+    I --> J["Lógica de negocio"]
+
+    style C fill:#2196F3,color:#fff
+    style D fill:#FF9800,color:#fff
+    style E fill:#9C27B0,color:#fff
+    style F fill:#f44336,color:#fff
+    style I fill:#4CAF50,color:#fff
+    style J fill:#4CAF50,color:#fff
+```
 
 ---
 
