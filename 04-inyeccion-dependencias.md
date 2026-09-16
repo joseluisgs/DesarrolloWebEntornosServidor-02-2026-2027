@@ -250,8 +250,6 @@ public class ProductoService(
 }
 ```
 
-📌 **Ejemplo real:** En tu proyecto TiendaAPI, todos los servicios usan constructores primarios: `ProductService`, `CarritoService`, `EmailService`...
-
 ### 6.3.2. Constructores primarios en controladores
 
 ```csharp
@@ -385,8 +383,6 @@ builder.Services.AddApplicationServices();
 
 var app = builder.Build();
 ```
-
-📌 **Ejemplo real:** En tu TiendaAPI, `ServicesConfig.cs` registra todos los servicios de negocio: `IProductService`, `ICarritoService`, `IEmailService`...
 
 ### 6.5.3. Registro condicional
 
@@ -722,8 +718,6 @@ builder.Services
 
 var app = builder.Build();
 ```
-
-📌 **Ejemplo real:** Tu TiendaAPI usa este patrón exacto en `TiendaDawWeb.Shared/Infrastructures/`: `ServicesConfig.cs`, `DatabaseConfig.cs`, `CacheConfig.cs`, `EmailConfig.cs`, `CorsConfig.cs`...
 
 ### 6.9.3. Estructura de carpetas
 
