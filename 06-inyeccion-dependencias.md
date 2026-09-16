@@ -27,6 +27,7 @@
     - [6.6.4. Enfoque 2: Marker interfaces (por ciclo de vida)](#664-enfoque-2-marker-interfaces-por-ciclo-de-vida)
     - [6.6.5. ¿Cuándo usar cada enfoque?](#665-cuándo-usar-cada-enfoque)
     - [6.6.6. Ejemplo completo con ambos enfoques](#666-ejemplo-completo-con-ambos-enfoques)
+    - [6.6.7. DI condicional: elegir implementación según configuración](#667-di-condicional-elegir-implementación-según-configuración)
     - [6.6.1. Instalación](#661-instalación)
     - [6.6.2. Assembly scanning](#662-assembly-scanning)
     - [6.6.3. Convention-based registration](#663-convention-based-registration)
@@ -587,6 +588,62 @@ app.Run();
 ```
 
 > 💡 **Consejo:** Scrutor es ideal para proyectos grandes con muchos servicios. En proyectos pequeños, el registro manual es más claro.
+
+### 6.6.7. DI condicional: elegir implementación según configuración
+
+A veces necesitas elegir qué implementación registrar **según un valor de configuración**. Scrutor registra automáticamente, pero lo que no se puede escanear (configuración condicional, factory) se registra **después del Scan** de forma manual.
+
+```csharp
+// appsettings.json
+{
+  "Pedidos": {
+    "RepositoryType": "MongoDbNative"
+  }
+}
+```
+
+```csharp
+// Program.cs — Scrutor + registro condicional
+builder.Services.Scan(scan => scan
+    .FromAssemblyOf<Program>()
+    .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Service")))
+        .AsImplementedInterfaces()
+        .WithScopedLifetime()
+);
+
+// Después de Scrutor: lo que no se puede escanear (condicional)
+var pedidosRepoType = builder.Configuration["Pedidos:RepositoryType"] ?? "MongoDbNative";
+
+if (pedidosRepoType == "MongoDbNative")
+{
+    builder.Services.AddScoped<IPedidosRepository, PedidosNativeRepository>();
+}
+else
+{
+    builder.Services.AddScoped<IPedidosRepository, PedidosEfCoreRepository>();
+}
+```
+
+📌 Ejemplo real: **TiendaAPI** usa este patrón en `RepositoriesConfig.cs`. La sección `Pedidos:RepositoryType` en `appsettings.json` determina si los pedidos se almacenan con MongoDB Driver nativo o con EF Core. En desarrollo usa uno, en producción puede cambiar sin tocar el código.
+
+> 💡 **Regla:** Scrutor escanea y registra automáticamente lo que puede. Lo condicional (según configuración) se registra manualmente después. No mezcles ambos en el mismo `Scan`.
+
+```mermaid
+flowchart TD
+    A["appsettings.json<br/>Pedidos:RepositoryType"] --> B{"¿Valor?"}
+    B -->|MongoDbNative| C["PedidosNativeRepository"]
+    B -->|EfCore| D["PedidosEfCoreRepository"]
+    C --> E["IPedidosRepository"]
+    D --> E
+    E --> F["Servicios que usan IPedidosRepository"]
+
+    style A fill:#2196F3,color:#fff
+    style B fill:#FF9800,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style D fill:#4CAF50,color:#fff
+    style E fill:#9C27B0,color:#fff
+    style F fill:#607D8B,color:#fff
+```
 
 ## 6.7. DI en Minimal APIs
 
