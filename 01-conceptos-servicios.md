@@ -19,8 +19,7 @@
     - [1.5.2. Variables de entorno y User Secrets](#152-variables-de-entorno-y-user-secrets)
     - [1.5.3. Patrón de Opciones (IOptions)](#153-patrón-de-opciones-ioptions)
   - [1.6. Hot Reload y dotnet watch](#16-hot-reload-y-dotnet-watch)
-  - [1.7. Resumen y buenas prácticas](#17-resumen-y-buenas-prácticas)
-  - [🎯 Reto: Diseña tu API de Funkos](#-reto-diseña-tu-api-de-funkos)
+  - [1.7. Reto: Piensa en tu API de Funkos](#17-reto-piensa-en-tu-api-de-funkos)
 
 ---
 
@@ -422,25 +421,7 @@ flowchart LR
 
 > 💡 **Consejo:** Usa `dotnet watch run` siempre que estés desarrollando. Ahorra mucho tiempo.
 
-## 1.7. Resumen y buenas prácticas
-
-| Concepto | Resumen |
-|----------|---------|
-| **Servicio web** | Funcionalidad accesible vía HTTP |
-| **HTTP** | Protocolo sin estado con métodos y códigos de estado |
-| **REST** | Arquitectura basada en HTTP + JSON, la más usada |
-| **Solución .NET** | Contenedor (.slnx) que agrupa proyectos (.csproj) |
-| **NuGet** | Gestor de paquetes para instalar librerías |
-| **appsettings.json** | Configuración jerárquica por entornos |
-| **Hot Reload** | Recarga automática al modificar código |
-
-### Buenas prácticas
-
-- **Separa responsabilidades**: API, Tests...
-- **Nunca commitear secrets**: usa User Secrets
-- **Usa `dotnet watch run`** para desarrollo
-
-## 🎯 Reto: Piensa en tu API de Funkos
+## 1.7. Reto: Piensa en tu API de Funkos
 
 > Antes de irte, reflexiona sobre el proyecto que construiremos a lo largo de la unidad.
 
