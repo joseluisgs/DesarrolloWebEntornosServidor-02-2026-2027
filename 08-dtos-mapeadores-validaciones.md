@@ -11,8 +11,11 @@
     - [8.2.4. Comparación: extensiones vs AutoMapper](#824-comparación-extensiones-vs-automapper)
   - [8.3. Validaciones](#83-validaciones)
     - [8.3.1. Data Annotations: formato básico](#831-data-annotations-formato-básico)
+      - [Ejemplo completo con múltiples atributos](#ejemplo-completo-con-múltiples-atributos)
     - [8.3.2. Crear tu propia etiqueta de validación](#832-crear-tu-propia-etiqueta-de-validación)
+      - [Otro ejemplo: validación de contraseña fuerte](#otro-ejemplo-validación-de-contraseña-fuerte)
     - [8.3.3. FluentValidation: reglas de negocio](#833-fluentvalidation-reglas-de-negocio)
+      - [Reglas avanzadas de FluentValidation](#reglas-avanzadas-de-fluentvalidation)
     - [8.3.4. Cuándo usar cada una](#834-cuándo-usar-cada-una)
     - [8.3.5. Integración con ASP.NET Core](#835-integración-con-aspnet-core)
     - [8.3.6. ¿Qué pasa cuando la validación falla? (Middleware)](#836-qué-pasa-cuando-la-validación-falla-middleware)
@@ -24,7 +27,7 @@
     - [8.4.4. Búsqueda con patrones](#844-búsqueda-con-patrones)
   - [8.5. Parámetros de consulta (Query Parameters)](#85-parámetros-de-consulta-query-parameters)
     - [8.5.1. ¿Qué son los query parameters?](#851-qué-son-los-query-parameters)
-    - [8.5.2. [FromQuery] en controladores](#852-fromquery-en-controladores)
+    - [8.5.2. \[FromQuery\] en controladores](#852-fromquery-en-controladores)
     - [8.5.3. Query strings en minimal APIs](#853-query-strings-en-minimal-apis)
     - [8.5.4. Buenas prácticas](#854-buenas-prácticas)
   - [8.6. El nuevo método HTTP QUERY (RFC 10008)](#86-el-nuevo-método-http-query-rfc-10008)
@@ -40,9 +43,10 @@
   - [8.8. Negociación de Contenido](#88-negociación-de-contenido)
     - [8.8.1. ¿Qué es la negociación de contenido?](#881-qué-es-la-negociación-de-contenido)
     - [8.8.2. Configuración de JSON y XML](#882-configuración-de-json-y-xml)
-    - [8.8.3. Uso desde el cliente](#883-uso-desde-el-cliente)
-    - [8.8.4. Configurar formato por defecto](#884-configurar-formato-por-defecto)
-    - [8.8.5. Formato en respuestas específicas](#885-formato-en-respuestas-específicas)
+    - [8.8.3. XmlSerializer vs DataContractSerializer](#883-xmlserializer-vs-datacontractserializer)
+    - [8.8.4. Uso desde el cliente](#884-uso-desde-el-cliente)
+    - [8.8.5. Respuesta JSON vs XML](#885-respuesta-json-vs-xml)
+    - [8.8.6. Errores comunes al configurar XML](#886-errores-comunes-al-configurar-xml)
   - [8.9. Buenas prácticas](#89-buenas-prácticas)
   - [8.10. Reto](#810-reto)
   - [Resumen](#resumen)
@@ -1100,32 +1104,42 @@ sequenceDiagram
         S->>C: { "id": 1, "nombre": "Laptop" }
     else XML disponible
         S->>C: 200 + Content-Type: application/xml
-        S->>C: <producto><id>1</id><nombre>Laptop</nombre></producto>
+        S->>C: <ProductoDto><Id>1</Id>...</ProductoDto>
     else No disponible
         S->>C: 406 Not Acceptable
     end
 ```
 
+📌 Ejemplo real: **GitHub** solo devuelve JSON. Si pides XML, devuelve `406 Not Acceptable`. Muchas APIs modernas solo usan JSON porque es más ligero y rápido.
+
 ### 8.8.2. Configuración de JSON y XML
 
-**Program.cs:**
+La configuración se hace en `Program.cs`:
 
 ```csharp
-builder.Services.AddControllers()
-    .AddXmlSerializerFormatters()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-    });
+builder.Services.AddControllers(options =>
+{
+    options.RespectBrowserAcceptHeader = true;   // Respetar header Accept del cliente
+    options.ReturnHttpNotAcceptable = true;       // Devolver 406 si formato no soportado
+})
+.AddXmlDataContractSerializerFormatters();        // XML con DataContractSerializer
 ```
 
-**Instalar paquete NuGet para XML:**
+> ⚠️ **Advertencia:** Se usa `AddXmlDataContractSerializerFormatters()` en lugar de `AddXmlSerializerFormatters()` porque `XmlSerializer` requiere un constructor vacío obligatorio, y los records posicionales de C# no lo generan automáticamente. `DataContractSerializer` es más flexible y funciona con records.
 
-```bash
-dotnet add package Microsoft.AspNetCore.Mvc.Formatters.Xml
-```
+📌 Ejemplo real: **TiendaAPI** usa esta misma configuración. En su `ControllersConfig.cs` tiene `RespectBrowserAcceptHeader = true` y `ReturnHttpNotAcceptable = true`, con el XML comentado para activarlo cuando se necesite.
 
-### 8.8.3. Uso desde el cliente
+### 8.8.3. XmlSerializer vs DataContractSerializer
+
+| | `XmlSerializer` | `DataContractSerializer` |
+|--|------------------|--------------------------|
+| **Constructor vacío** | **Obligatorio** | No necesario |
+| **Records posicionales** | ❌ No funciona | ✅ Funciona |
+| **Control total** | Completo sobre nombres XML | Basado en atributos `[DataContract]` |
+| **Rendimiento** | Más lento | Más rápido |
+| **Recomendado para** | Proyectos legacy | Proyectos modernos con records |
+
+### 8.8.4. Uso desde el cliente
 
 El cliente indica el formato que desea con el header `Accept`:
 
@@ -1139,37 +1153,92 @@ GET /api/productos HTTP/1.1
 Accept: application/xml
 ```
 
-### 8.8.4. Configurar formato por defecto
+Si el formato no es soportado por el servidor, devuelve `406 Not Acceptable`:
 
-Si quieres que **JSON sea el formato por defecto** (recomendado para APIs REST):
+```http
+GET /api/productos HTTP/1.1
+Accept: text/csv
 
-```csharp
-builder.Services.AddControllers(options =>
-{
-    // Devolver 406 si el formato no es aceptable
-    options.ReturnHttpNotAcceptable = true;
-})
-.AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-})
-.AddXmlSerializerFormatters();
+→ 406 Not Acceptable
 ```
 
-### 8.8.5. Formato en respuestas específicas
+### 8.8.5. Respuesta JSON vs XML
 
-También puedes forzar el formato en un endpoint específico:
+**JSON:**
+```json
+[
+  {
+    "id": 1,
+    "nombre": "Guitarra",
+    "precio": 299.99,
+    "categoria": "Instrumentos",
+    "imagen": "",
+    "createdAt": "2026-09-16T15:44:32.5071719Z",
+    "updatedAt": null,
+    "isActivo": true
+  }
+]
+```
+
+**XML:**
+```xml
+<ArrayOfProductoDto xmlns="http://schemas.datacontract.org/2004/07/ProductosAvanzados.Dtos">
+  <ProductoDto>
+    <Categoria>Instrumentos</Categoria>
+    <CreatedAt>2026-09-16T15:44:32.5071719Z</CreatedAt>
+    <Id>1</Id>
+    <Imagen></Imagen>
+    <IsActivo>true</IsActivo>
+    <Nombre>Guitarra</Nombre>
+    <Precio>299.99</Precio>
+    <UpdatedAt />
+  </ProductoDto>
+</ArrayOfProductoDto>
+```
+
+### 8.8.6. Errores comunes al configurar XML
+
+**Error 1: `406 Not Acceptable`**
+
+Causa: El formateador XML no se ha registrado correctamente.
+
+Solución: Asegúrate de tener `.AddXmlDataContractSerializerFormatters()` encadenado después de `AddControllers()`.
+
+**Error 2: `500 Internal Server Error`**
+
+Causa: `DataContractSerializer` no puede serializar `IEnumerable` lazy de LINQ.
+
+Solución: Materializar la colección con `.ToList()` antes de devolverla:
 
 ```csharp
-[HttpGet]
-[Produces("application/json", "application/xml")]
-public ActionResult<List<Producto>> GetAll()
+// ❌ MALO: IEnumerable lazy (falla con XML)
+return Ok(result.Value.Select(p => p.ToDto()));
+
+// ✅ BUENO: Colección materializada (funciona con XML)
+return Ok(result.Value.Select(p => p.ToDto()).ToList());
+```
+
+**Error 3: `InvalidDataContractException` en el record**
+
+Causa: El record posicional no tiene constructor vacío.
+
+Solución: Añadir un constructor vacío al record:
+
+```csharp
+public record ProductoDto(
+    long Id,
+    string Nombre,
+    decimal Precio,
+    string Categoria,
+    string Imagen,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt,
+    bool IsActivo)
 {
-    return Ok(service.GetAll());
+    public ProductoDto() : this(0, string.Empty, 0, string.Empty,
+        string.Empty, DateTime.MinValue, null, false) { }
 }
 ```
-
-📌 **Ejemplo real:** La API de GitHub solo devuelve JSON. Si intentas pedir XML, devuelve `406 Not Acceptable`. Muchas APIs modernas solo usan JSON porque es más ligero y rápido que XML.
 
 > 💡 **Consejo:** Para APIs modernas, JSON es el estándar. Usa XML solo si necesitas compatibilidad con sistemas legacy. La negociación de contenido es útil cuando tu API consume clientes heterogéneos (app móvil, web, sistemas empresariales).
 
@@ -1226,4 +1295,4 @@ public ActionResult<List<Producto>> GetAll()
 | **HTTP QUERY** | Nuevo método con cuerpo JSON + caché |
 | **HATEOAS** | Enlaces de navegación en respuestas REST |
 
-En el siguiente punto veremos la **Arquitectura limpia y Clean Architecture**: cómo organizar el código en capas para aplicaciones grandes y mantenibles.
+En el siguiente punto veremos la **Configuración de la Aplicación, uso de Perfiles y Logging**: cómo organizar la configuración, crear perfiles de entorno y registrar logs de manera eficiente.
