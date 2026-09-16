@@ -17,6 +17,8 @@
   - [3.6. Organización de rutas](#36-organización-de-rutas)
   - [3.7. Probando con Bruno](#37-probando-con-bruno)
   - [3.8. Reto: API de Funkos con CRUD en memoria](#38-reto-api-de-funkos-con-crud-en-memoria)
+    - [3.8.1. Results.Created() y el header Location](#381-resultscreated-y-el-header-location)
+    - [Buenas prácticas](#buenas-prácticas)
 
 ---
 
@@ -489,6 +491,55 @@ Crea un proyecto Minimal API y desarrolla cada endpoint. Recuerda:
 - Para `PATCH`, solo actualiza el precio
 
 > 💡 **Consejo:** Empieza por `GET /api/funkos` (listar todos). Una vez que funciona, ve añadiendo los demás endpoints uno a uno.
+
+### 3.8.1. Results.Created() y el header Location
+
+Cuando creas un recurso, debes devolver **201 Created** con el header `Location`:
+
+```csharp
+app.MapPost("/api/productos", (Producto producto) =>
+{
+    // ... crear el producto ...
+    return Results.Created($"/api/productos/{producto.Id}", producto);
+});
+```
+
+Esto genera esta respuesta:
+
+```http
+HTTP/1.1 201 Created
+Location: /api/productos/1
+Content-Type: application/json
+
+{ "id": 1, "nombre": "Guitarra", ... }
+```
+
+#### ¿Qué es un header?
+
+Los **headers** son pares de clave-valor que acompañan a la respuesta HTTP. Aportan información sobre la respuesta:
+
+| Header | Qué comunica |
+|--------|-------------|
+| `Content-Type` | Tipo del body (application/json) |
+| `Location` | URL del recurso recién creado |
+| `Authorization` | Token de autenticación |
+| `Cache-Control` | Directivas de caché |
+
+> 💡 **Consejo:** El header `Location` es fundamental. Sin él, el cliente no sabe dónde está el recurso que acaba de crear. Siempre inclúyelo en respuestas 201.
+
+#### ¿Por qué se usa `$"/api/productos/{producto.Id}"`?
+
+Se construye la URL **a mano** porque Minimal APIs no tienen un sistema de routing que genere URLs automáticamente. Tú debes saber la ruta del endpoint GET correspondiente.
+
+> ⚠️ **Advertencia:** Si cambias la ruta del endpoint GET, también debes cambiar la URL en `Results.Created()`. No hay validación automática.
+
+### Buenas prácticas
+
+- Usa `Results.Created()` en lugar de `Results.Ok()` al crear recursos
+- Siempre devuelve el recurso creado en el body de la respuesta 201
+- El header `Location` debe apuntar al método GET del recurso
+- El `id` lo genera el servidor, nunca el cliente
+- Usa `MapGroup` para organizar rutas cuando hay muchos endpoints
 
 ---
 

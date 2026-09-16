@@ -14,8 +14,10 @@
     - [4.4.1. IActionResult](#441-iactionresult)
     - [4.4.2. ActionResult\<T\>](#442-actionresultt)
     - [4.4.3. ¿Cuándo usar cada método?](#443-cuándo-usar-cada-método)
+    - [4.4.4. CreatedAtAction() y el header Location](#441-createdataction-y-el-header-location)
+    - [Buenas prácticas](#buenas-prácticas)
   - [4.5. Probando con Bruno](#45-probando-con-bruno)
-  - [4.6. Reto: API de Funkos con CRUD en memoria (MVC)](#46-reto-api-de-funkos-con-crud-en-memoria-mvc)
+  - [4.7. Reto: API de Funkos con CRUD en memoria (MVC)](#47-reto-api-de-funkos-con-crud-en-memoria-mvc)
 
 ---
 
@@ -282,6 +284,62 @@ flowchart TD
 
 > 💡 **Consejo:** `CreatedAtAction` es mejor que `Created` porque genera automáticamente la URL del recurso creado con la ruta del método que lo consulta.
 
+### 4.4.4. CreatedAtAction() y el header Location
+
+En controladores, `CreatedAtAction()` hace tres cosas a la vez:
+
+```csharp
+[HttpPost]
+public ActionResult<Producto> Create(Producto producto)
+{
+    // ... crear el producto ...
+    return CreatedAtAction(nameof(GetById), new { id = producto.Id }, producto);
+}
+```
+
+| Argumento | Qué hace |
+|-----------|----------|
+| `nameof(GetById)` | Genera la URL del método GET (sin strings hardcodeados) |
+| `new { id = producto.Id }` | Los parámetros de ruta para la URL |
+| `producto` | El recurso creado que se devuelve en el body |
+
+Esto genera esta respuesta:
+
+```http
+HTTP/1.1 201 Created
+Location: /api/productos/1
+Content-Type: application/json
+
+{ "id": 1, "nombre": "Guitarra", ... }
+```
+
+#### ¿Qué es un header?
+
+Los **headers** son pares de clave-valor que acompañan a la respuesta HTTP. Aportan información sobre la respuesta:
+
+| Header | Qué comunica |
+|--------|-------------|
+| `Content-Type` | Tipo del body (application/json) |
+| `Location` | URL del recurso recién creado |
+| `Authorization` | Token de autenticación |
+| `Cache-Control` | Directivas de caché |
+
+> 💡 **Consejo:** El header `Location` es fundamental. Sin él, el cliente no sabe dónde está el recurso que acaba de crear. Siempre inclúyelo en respuestas 201.
+
+#### ¿Por qué se usa nameof(GetById)?
+
+`nameof(GetById)` convierte el nombre del método en un string: `"GetById"`. Esto evita strings hardcodeados. Si renombras el método, el compilador detecta el error.
+
+> ⚠️ **Advertencia:** Si usas `Created($"api/productos/{id}", ...)` en lugar de `CreatedAtAction`, pierdes la generación automática de URLs. `CreatedAtAction` es la forma correcta en controladores.
+
+### Buenas prácticas
+
+- Usa `CreatedAtAction()` en lugar de `Created()` para generar URLs automáticamente
+- `nameof(Method)` evita strings hardcodeados
+- Siempre devuelve el recurso creado en el body de la respuesta 201
+- El header `Location` debe apuntar al método GET del recurso
+- El `id` lo genera el servidor, nunca el cliente
+
 ## 4.5. Probando con Bruno
 
 **Bruno** es un cliente API open source para probar endpoints. Las mismas pruebas que hiciste en el punto 03 con Minimal APIs funcionan aquí con Controladores MVC.
@@ -371,7 +429,7 @@ Respuesta esperada: `400 Bad Request`.
 
 > ⚠️ **Advertencia:** Si usas HTTPS, Bruno puede pedirte que aceptes el certificado autofirmado. Aceptalo en el primer request.
 
-## 4.6. Reto: API de Funkos con CRUD en memoria (MVC)
+## 4.7. Reto: API de Funkos con CRUD en memoria (MVC)
 
 > Ahora repite el reto del punto anterior pero usando controladores MVC.
 
