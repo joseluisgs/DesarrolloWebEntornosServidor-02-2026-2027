@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres_tenistas_ef
+    environment:
+      POSTGRES_DB: tenistas_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_ef_data:/var/lib/postgresql/data
+    networks:
+      - tenistas_ef_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d tenistas_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  tenistas_ef_network:
+    driver: bridge
+
+volumes:
+  postgres_ef_data:
