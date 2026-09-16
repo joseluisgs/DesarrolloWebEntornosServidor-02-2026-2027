@@ -50,15 +50,15 @@ El proyecto realizado en clase podrás seguirlo desde el repositorio de GitHub:
 
 ## Contenido en YouTube
 
-- [Resumen](https://youtu.be/Ymg1EX8IGmA)
-- [Servicios y Controladores Web con .NET Core](https://youtu.be/gddyFs31q-I)
-- [Entity Core Framework y SQL](https://youtu.be/oQLwnys_qfE)
-- [WebSockets con .NET/ASP Core](https://youtu.be/aNce7giw_Ww)
-- [NoSQL y Mongo con .NET/ASP Core](https://youtu.be/xzUNeU3yx-Q)
-- [Seguridad: Autenticación y Autorización con .NET/ASP Core](https://youtu.be/65_DRgNqr6o)
-- [GraphQL con .NET/ASP Core](https://youtu.be/-N7O6FvJLAM)
-- [Caché avanzada con Redis en .NET/ASP Core](https://youtu.be/HWEg07WXypA)
-- [Lista de Reproducción](https://www.youtube.com/playlist?list=PLK1PMlIrqj3c)
+- [Resumen]()
+- [Servicios y Controladores Web con .NET Core]()
+- [Entity Core Framework y SQL]()
+- [WebSockets con .NET/ASP Core]()
+- [NoSQL y Mongo con .NET/ASP Core]()
+- [Seguridad: Autenticación y Autorización con .NET/ASP Core]()
+- [GraphQL con .NET/ASP Core]()
+- [Caché avanzada con Redis en .NET/ASP Core]()
+- [Lista de Reproducción](https://www.youtube.com/playlist?list=PLLiuVpAc3Gv4)
 
 ## Resultados de Aprendizaje y Criterios de Evaluación
 

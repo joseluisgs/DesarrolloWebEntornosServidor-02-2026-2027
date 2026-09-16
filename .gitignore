@@ -1,9 +1,44 @@
+# Compilación
+bin/
+obj/
+out/
+
+# IDEs
+.idea/
+.vs/
+.vscode/
+*.sln.iml
+*.DotSettings.user
+
+# Archivos temporales
+*.user
+*.suo
+*.userprefs
+*.log
+*.cache
+*.pdb
+*.tmp
+*.bak
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+artifacts/
+
+# Publicaciones
+publish/
+TestResults/
+
+# Contenido multimedia y docs (no subir a git)
+/multimedia/
+/docs/
+/apuntes/
+/evaluacion/
+/ejemplos/
 *.pptx
 .DS_Store
 upload.sh
-/practicas/2023-2024/
-/practicas/2024-2025/
-/doc/
-/ejemplos/mas_ejemplos/
-/multimedia/
-/ejercicios/
+practicas/2023-2024
+ejercicios/2023-2024
+practicas/2024-2025
