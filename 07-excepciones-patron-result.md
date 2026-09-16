@@ -775,6 +775,8 @@ public IActionResult Create([FromBody] ProductoDto dto)
 - **No olvides UnitResult:** Para operaciones sin retorno (Delete, Update) usa `UnitResult<DomainError>`
 - **Match siempre:** No uses `IsSuccess`/`IsFailure` directamente — usa `Match` para forzar el manejo de ambos casos
 
+> 💡 **Consejo:** Aunque uses Result Pattern, **siempre** debes tener un middleware de excepciones global como safety net. Si se te escapa un bug, una excepción de BD, o un error inesperado, el middleware lo captura y devuelve una respuesta 500 coherente en lugar de un HTML crudo. Es como el airbag de tu coche: confías en que no lo necesitarás, pero ahí está por si acaso.
+
 ---
 
 ## 7.10. Reto
@@ -823,4 +825,4 @@ public IActionResult Create([FromBody] ProductoDto dto)
 | **Match** | Fuerza manejar ambos casos (éxito y error) |
 | **UnitResult** | Para operaciones sin retorno de valor |
 
-En el siguiente punto veremos el **Repository Pattern**: cómo abstraer el acceso a datos para desacoplar la lógica de negocio de la fuente de datos.
+En el siguiente punto veremos los **DTOs, Mapeadores, Validaciones y Consultas Avanzadas**: cómo transferir datos entre capas, mapear modelos, validar entradas y diseñar endpoints flexibles con query parameters y HATEOAS.

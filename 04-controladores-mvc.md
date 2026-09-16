@@ -10,6 +10,7 @@
     - [4.3.1. Atributos de verbos HTTP](#431-atributos-de-verbos-http)
     - [4.3.2. Rutas con parámetros](#432-rutas-con-parámetros)
     - [4.3.3. Parámetros de consulta](#433-parámetros-de-consulta)
+    - [4.3.4. Binding de parámetros: FromBody, FromQuery, FromRoute](#434-binding-de-parámetros-frombody-fromquery-fromroute)
   - [4.4. Métodos de respuesta](#44-métodos-de-respuesta)
     - [4.4.1. IActionResult](#441-iactionresult)
     - [4.4.2. ActionResult\<T\>](#442-actionresultt)
@@ -107,11 +108,13 @@ El atributo `[ApiController]` activa comportamientos automáticos:
 
 | Comportamiento | Qué hace |
 |----------------|----------|
-| **Model Binding automático** | Valida el body de la petición |
-| **Errores 400 automáticos** | Si la validación falla, devuelve 400 |
+| **Model Binding automático** | Deserializa el body de la petición |
+| **Validación automática** | Si el DTO tiene Data Annotations y falla, devuelve 400 |
 | **Binding por fuente** | Sabe de dónde viene cada parámetro |
 
 > ⚠️ **Advertencia:** Si olvidas `[ApiController]`, tendrás que validar manualmente el body de cada petición. Siempre úsalo.
+
+> 💡 **Consejo:** La validación con Data Annotations y FluentValidation se cubre en detalle en el [Punto 8: DTOs, Mapeadores y Validaciones](08-dtos-mapeadores-validaciones.md).
 
 ### 4.2.2. El atributo [Route]
 
@@ -220,6 +223,78 @@ public ActionResult<List<Producto>> GetAll(
 ```
 
 📌 **Ejemplo real:** Netflix usa `?genero=accion&anio=2024&pagina=2` para filtrar contenido.
+
+### 4.3.4. Binding de parámetros: FromBody, FromQuery, FromRoute
+
+ASP.NET Core necesita saber **de dónde viene cada dato**. Los atributos de binding le indican la fuente:
+
+```mermaid
+flowchart LR
+    subgraph "Petición HTTP"
+        A["URL: /api/productos/1"] --> B["Route: id=1"]
+        C["Query: ?page=2"] --> D["Query: page=2"]
+        E["Body: { nombre: ... }"] --> F["Body: producto"]
+    end
+```
+
+| Atributo | Fuente | Ejemplo |
+|----------|--------|---------|
+| **[FromBody]** | Cuerpo de la petición (JSON) | `{"nombre": "Laptop", "precio": 999}` |
+| **[FromQuery]** | Query string de la URL | `?page=2&pageSize=10` |
+| **[FromRoute]** | Parámetros de la URL | `/api/productos/{id}` |
+| **[FromForm]** | Formulario HTML | `multipart/form-data` |
+
+#### [FromBody] — El body de la petición
+
+`[FromBody]` le dice a ASP.NET Core que **deserialice el JSON del body** en un objeto C#. Es lo que usas cuando el cliente envía datos para crear o actualizar:
+
+```csharp
+[HttpPost]
+public ActionResult<Producto> Create([FromBody] ProductoDto dto)
+{
+    // dto viene del JSON: {"nombre": "Laptop", "precio": 999}
+    var producto = new Producto { Nombre = dto.Nombre, Precio = dto.Precio };
+    return CreatedAtAction(nameof(GetById), new { id = 1 }, producto);
+}
+```
+
+📌 **Ejemplo real:** Cuando añades un producto en Amazon, el frontend envía un POST con `Content-Type: application/json` y el body contiene los datos del producto. `[FromBody]` lo deserializa automáticamente.
+
+> 💡 **Consejo:** Con `[ApiController]`, si el content-type es `application/json`, ASP.NET Core aplica `[FromBody]` **automáticamente**. No necesitas escribirlo siempre, pero es buena práctica hacerlo explícito para claridad.
+
+#### [FromQuery] — Los query parameters
+
+```csharp
+[HttpGet]
+public ActionResult<List<Producto>> GetAll(
+    [FromQuery] string? nombre,
+    [FromQuery] int page = 1)
+{
+    // nombre y page vienen de: /api/productos?nombre=laptop&page=2
+}
+```
+
+#### [FromRoute] — Los parámetros de URL
+
+```csharp
+[HttpGet("{id:int}")]
+public ActionResult<Producto> GetById([FromRoute] int id)
+{
+    // id viene de: /api/productos/42
+}
+```
+
+> ⚠️ **Advertencia:** Si el nombre del parámetro coincide con el de la ruta, `[FromRoute]` se aplica automáticamente. Solo necesitas escribirlo explícitamente si hay ambigüedad.
+
+#### [FromForm] — Formularios HTML
+
+```csharp
+[HttpPost("upload")]
+public IActionResult Upload([FromForm] IFormFile archivo, [FromQuery] string? carpeta)
+{
+    // archivo viene de un formulario multipart/form-data
+}
+```
 
 ## 4.4. Métodos de respuesta
 
@@ -495,7 +570,10 @@ Crea un proyecto Web API y desarrolla `FunkosController`. Recuerda:
 | **[Route]** | Define la ruta base del controlador |
 | **[HttpGet], [HttpPost]...** | Atributos que indican el verbo HTTP |
 | **{parametro}** | Parámetro de ruta |
+| **[FromBody]** | Datos del body (JSON deserializado) |
 | **[FromQuery]** | Parámetro de consulta |
+| **[FromRoute]** | Parámetro de URL |
+| **[FromForm]** | Formulario HTML |
 | **IActionResult** | Respuesta sin tipo (solo código de estado) |
 | **ActionResult\<T\>** | Respuesta tipada (código + datos) |
 | **CreatedAtAction()** | Respuesta 201 con ubicación del recurso |
