@@ -448,4 +448,4 @@ Log.Logger = new LoggerConfiguration()
 | **Rolling** | Rotación automática de ficheros de log |
 | **Log.CloseAndFlush()** | Asegura que todos los logs se escriben al salir |
 
-En el siguiente punto veremos **Clean Architecture**: cómo organizar el código en capas para aplicaciones grandes y mantenibles.
+En el siguiente punto veremos **Pruebas y Despliegue Básicos**: cómo testear nuestro código con NUnit y Moq, y cómo empaquetarlo con Docker.
