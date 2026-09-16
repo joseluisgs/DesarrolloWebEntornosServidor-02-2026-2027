@@ -245,7 +245,7 @@ public class ProductoService(
 | `Information** | Flujo normal de la aplicación | "Producto creado con ID 42" |
 | `Warning` | Algo inesperado pero no es error | "Cache miss, consultando base de datos" |
 | `Error** | Error que la aplicación puede recuperarse | "Error al conectar con Redis, usando caché en memoria" |
-| `Fatal` | Error catastrófico, la aplicación se detiene | "Base de datos no disponible,终止ando aplicación" |
+| `Fatal` | Error catastrófico, la aplicación se detiene | "Base de datos no disponible, deteniendo aplicación" |
 
 ```mermaid
 flowchart LR

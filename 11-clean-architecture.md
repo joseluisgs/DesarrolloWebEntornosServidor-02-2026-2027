@@ -825,7 +825,7 @@ public class FunkoService : IFunkoService
 | **Tipado** | Exception generica | Tipo de error en firma |
 | **Composicion** | Dificil | Natural (Bind, Map) |
 | **Rendimiento** | Costoso | Barato |
-| **Exhaustividad** | Facil olvidar casos | Compilador强制检查 |
+| **Exhaustividad** | Facil olvidar casos | Compilador fuerza la verificación |
 | **Testing** | Requires Assert.Throws | Assert.IsSuccess |
 
 ---

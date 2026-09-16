@@ -1097,7 +1097,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 }
 ```
 
-⚠️ **Advertencia**: `Cascade` es útil, pero ten cuidado en producción. Un误删除 puede eliminar miles de registros.
+⚠️ **Advertencia**: `Cascade` es útil, pero ten cuidado en producción. Un borrado accidental puede eliminar miles de registros.
 
 ---
 

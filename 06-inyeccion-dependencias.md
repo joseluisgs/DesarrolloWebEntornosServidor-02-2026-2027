@@ -63,7 +63,7 @@ En este punto aprenderás a desacoplar tu código usando Inyección de Dependenc
 
 ## 6.1. ¿Qué es la Inyección de Dependencias?
 
-La **inyección de dependencias (DI)** es un patrón de diseño donde un objeto **no crea sus propias dependencias**, sino que las recibe desde el exterior. ASP.NET Core tiene un contenedor DI integrado que gestiona la creación y生命周期 de todos los servicios.
+La **inyección de dependencias (DI)** es un patrón de diseño donde un objeto **no crea sus propias dependencias**, sino que las recibe desde el exterior. ASP.NET Core tiene un contenedor DI integrado que gestiona la creación y el ciclo de vida de todos los servicios.
 
 ### 6.1.1. El problema sin DI
 

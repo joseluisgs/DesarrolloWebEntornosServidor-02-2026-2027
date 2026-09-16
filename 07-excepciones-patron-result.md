@@ -821,7 +821,7 @@ public IActionResult Create([FromBody] ProductoDto dto)
 | **CSharpFunctionalExtensions** | Librería con `Result<T, TError>` (recomendado para .NET 10) |
 | **DomainError** | Clase abstracta base para errores de dominio |
 | **Sealed records** | Tipos concretos: NotFoundError, ValidationError, etc. |
-| **Errores por dominio** | Clases estáticas con métodos factory por领域 |
+| **Errores por dominio** | Clases estáticas con métodos factory por dominio |
 | **Match** | Fuerza manejar ambos casos (éxito y error) |
 | **UnitResult** | Para operaciones sin retorno de valor |
 
