@@ -14,8 +14,8 @@
     - [4.4.1. IActionResult](#441-iactionresult)
     - [4.4.2. ActionResult\<T\>](#442-actionresultt)
     - [4.4.3. ¿Cuándo usar cada método?](#443-cuándo-usar-cada-método)
-    - [4.4.4. CreatedAtAction() y el header Location](#441-createdataction-y-el-header-location)
-    - [Buenas prácticas](#buenas-prácticas)
+    - [4.4.4. CreatedAtAction() y el header Location](#444-createdataction-y-el-header-location)
+    - [4.4.5. Buenas prácticas](#445-buenas-prácticas)
   - [4.5. Probando con Bruno](#45-probando-con-bruno)
   - [4.7. Reto: API de Funkos con CRUD en memoria (MVC)](#47-reto-api-de-funkos-con-crud-en-memoria-mvc)
 
@@ -332,7 +332,7 @@ Los **headers** son pares de clave-valor que acompañan a la respuesta HTTP. Apo
 
 > ⚠️ **Advertencia:** Si usas `Created($"api/productos/{id}", ...)` en lugar de `CreatedAtAction`, pierdes la generación automática de URLs. `CreatedAtAction` es la forma correcta en controladores.
 
-### Buenas prácticas
+### 4.4.5. Buenas prácticas
 
 - Usa `CreatedAtAction()` en lugar de `Created()` para generar URLs automáticamente
 - `nameof(Method)` evita strings hardcodeados

@@ -15,10 +15,10 @@
     - [3.4.3. ¿Cuándo usar cada método?](#343-cuándo-usar-cada-método)
   - [3.5. Gestión de la clave primaria](#35-gestión-de-la-clave-primaria)
   - [3.6. Organización de rutas](#36-organización-de-rutas)
-  - [3.7. Probando con Bruno](#37-probando-con-bruno)
+    - [3.6.1. Probando con Bruno](#361-probando-con-bruno)
+  - [3.7. Buenas prácticas](#37-buenas-prácticas)
   - [3.8. Reto: API de Funkos con CRUD en memoria](#38-reto-api-de-funkos-con-crud-en-memoria)
     - [3.8.1. Results.Created() y el header Location](#381-resultscreated-y-el-header-location)
-    - [Buenas prácticas](#buenas-prácticas)
 
 ---
 
@@ -335,7 +335,7 @@ var group = app.MapGroup("/api/productos");
 
 📌 **Ejemplo real:** La API de GitHub organiza sus endpoints en archivos separados: `repos/routes.cs`, `users/routes.cs`, `issues/routes.cs`...
 
-## 3.7. Probando con Bruno
+### 3.6.1. Probando con Bruno
 
 **Bruno** es un cliente API open source para probar endpoints. Es la alternativa gratuita a Postman. Las pruebas que hagas aquí funcionarán igual con Minimal APIs y con Controladores MVC.
 
@@ -438,6 +438,14 @@ Respuesta esperada: `400 Bad Request`.
 
 > ⚠️ **Advertencia:** Si usas HTTPS, Bruno puede pedirte que aceptes el certificado autofirmado. Aceptalo en el primer request.
 
+## 3.7. Buenas prácticas
+
+- Usa `Results.Created()` en lugar de `Results.Ok()` al crear recursos
+- Siempre devuelve el recurso creado en el body de la respuesta 201
+- El header `Location` debe apuntar al método GET del recurso
+- El `id` lo genera el servidor, nunca el cliente
+- Usa `MapGroup` para organizar rutas cuando hay muchos endpoints
+
 ## 3.8. Reto: API de Funkos con CRUD en memoria
 
 > Antes de irte, diseña y construye una Minimal API completa para gestionar Funkos.
@@ -532,14 +540,6 @@ Los **headers** son pares de clave-valor que acompañan a la respuesta HTTP. Apo
 Se construye la URL **a mano** porque Minimal APIs no tienen un sistema de routing que genere URLs automáticamente. Tú debes saber la ruta del endpoint GET correspondiente.
 
 > ⚠️ **Advertencia:** Si cambias la ruta del endpoint GET, también debes cambiar la URL en `Results.Created()`. No hay validación automática.
-
-### Buenas prácticas
-
-- Usa `Results.Created()` en lugar de `Results.Ok()` al crear recursos
-- Siempre devuelve el recurso creado en el body de la respuesta 201
-- El header `Location` debe apuntar al método GET del recurso
-- El `id` lo genera el servidor, nunca el cliente
-- Usa `MapGroup` para organizar rutas cuando hay muchos endpoints
 
 ---
 

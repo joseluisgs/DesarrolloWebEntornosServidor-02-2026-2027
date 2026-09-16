@@ -21,8 +21,8 @@
     - [2.5.1. Estructura de un request](#251-estructura-de-un-request)
     - [2.5.2. Estructura de un response](#252-estructura-de-un-response)
     - [2.5.3. Headers comunes](#253-headers-comunes)
-  - [2.6. Reto: Diseña la API de Funkos](#26-reto-diseña-la-api-de-funkos)
-    - [Buenas prácticas](#buenas-prácticas)
+  - [2.6. Buenas prácticas](#26-buenas-prácticas)
+  - [2.7. Reto: Diseña la API de Funkos](#27-reto-diseña-la-api-de-funkos)
 
 ---
 
@@ -430,7 +430,16 @@ Location: /api/productos/1
 | `Cache-Control` | Response | Directivas de caché |
 | `ETag` | Response | Versión del recurso para caché |
 
-## 2.6. Reto: Diseña la API de Funkos
+## 2.6. Buenas prácticas
+
+- **Nouns, no verbs:** Los endpoints son sustantivos (`/api/productos`), no acciones (`/api/getProductos`)
+- **Plural siempre:** Usa `/api/productos`, nunca `/api/producto`
+- **Códigos correctos:** 200 para lectura, 201 para creación, 204 para eliminación
+- **Idempotencia:** GET, PUT, DELETE son idempotentes; POST no lo es
+- **Documenta tus códigos:** Cada endpoint debe indicar qué códigos devuelve y por qué
+- **Consistencia:** Si un endpoint devuelve `{ data: ... }`, todos deben hacerlo
+
+## 2.7. Reto: Diseña la API de Funkos
 
 > Antes de irte, diseña los endpoints de tu API. No escribas código: piensa en el diseño.
 
@@ -466,15 +475,6 @@ Un Funko tiene estas propiedades:
 | Buscar Funkos por nombre | | | | | | |
 
 > 💡 **Consejo:** Piensa en el código correcto para cada operación. ¿Sabes cuándo se devuelve 200, 201 o 204? ¿Qué datos necesitas en el body de request y response?
-
-### Buenas prácticas
-
-- **Nouns, no verbs:** Los endpoints son sustantivos (`/api/productos`), no acciones (`/api/getProductos`)
-- **Plural siempre:** Usa `/api/productos`, nunca `/api/producto`
-- **Códigos correctos:** 200 para lectura, 201 para creación, 204 para eliminación
-- **Idempotencia:** GET, PUT, DELETE son idempotentes; POST no lo es
-- **Documenta tus códigos:** Cada endpoint debe indicar qué códigos devuelve y por qué
-- **Consistencia:** Si un endpoint devuelve `{ data: ... }`, todos deben hacerlo
 
 ---
 

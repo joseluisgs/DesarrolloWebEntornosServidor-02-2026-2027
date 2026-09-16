@@ -34,8 +34,8 @@
     - [6.9.1. ¿Cuándo usarlo?](#691-cuándo-usarlo)
     - [6.9.2. Config classes](#692-config-classes)
     - [6.9.3. Estructura de carpetas](#693-estructura-de-carpetas)
-  - [6.10. Reto: API de Funkos con DI completa](#610-reto-api-de-funkos-con-di-completa)
-  - [6.11. Buenas prácticas](#611-buenas-prácticas)
+  - [6.10. Buenas prácticas](#610-buenas-prácticas)
+  - [6.11. Reto: API de Funkos con DI completa](#611-reto-api-de-funkos-con-di-completa)
 
 ---
 
@@ -747,7 +747,18 @@ MiApi/
 
 > 💡 **Consejo:** Cada `Config` debe ser un método de extensión que devuelva `IServiceCollection`. Así puedes encadenar: `services.AddDatabase().AddServices().AddCache()`.
 
-## 6.10. Reto: API de Funkos con DI completa
+## 6.10. Buenas prácticas
+
+- **Siempre interfaces:** I + nombre (IProductoService, IProductoRepository)
+- **Constructores primarios:** Usa C# 14 para código más limpio
+- **Scoped por defecto:** DbContext y servicios de negocio siempre Scoped
+- **Singleton solo para caché/config:** Logger, Cache, Config son Singleton
+- **Métodos de extensión:** Agrupa el registro en `Infrastructure/` para proyectos grandes
+- **Scrutor:** Úsalo cuando tengas 10+ servicios para evitar boilerplate
+- **Nunca crees dependencias con new:** Siempre inyecta por interfaz
+- **Testing:** Si no puedes hacer mock, tu diseño tiene un problema
+
+## 6.11. Reto: API de Funkos con DI completa
 
 > Aplica todo lo aprendido en el reto del punto 03 o 04.
 
@@ -763,17 +774,6 @@ MiApi/
 
 - Usa Scrutor para el registro automático
 - Crea una `Infrastructure/ServicesConfig.cs` para agrupar el registro
-
-## 6.11. Buenas prácticas
-
-- **Siempre interfaces:** I + nombre (IProductoService, IProductoRepository)
-- **Constructores primarios:** Usa C# 14 para código más limpio
-- **Scoped por defecto:** DbContext y servicios de negocio siempre Scoped
-- **Singleton solo para caché/config:** Logger, Cache, Config son Singleton
-- **Métodos de extensión:** Agrupa el registro en `Infrastructure/` para proyectos grandes
-- **Scrutor:** Úsalo cuando tengas 10+ servicios para evitar boilerplate
-- **Nunca crees dependencias con new:** Siempre inyecta por interfaz
-- **Testing:** Si no puedes hacer mock, tu diseño tiene un problema
 
 ---
 
