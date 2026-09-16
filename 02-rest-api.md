@@ -22,6 +22,7 @@
     - [2.5.2. Estructura de un response](#252-estructura-de-un-response)
     - [2.5.3. Headers comunes](#253-headers-comunes)
   - [2.6. Reto: Diseña la API de Funkos](#26-reto-diseña-la-api-de-funkos)
+    - [Buenas prácticas](#buenas-prácticas)
 
 ---
 
@@ -465,6 +466,15 @@ Un Funko tiene estas propiedades:
 | Buscar Funkos por nombre | | | | | | |
 
 > 💡 **Consejo:** Piensa en el código correcto para cada operación. ¿Sabes cuándo se devuelve 200, 201 o 204? ¿Qué datos necesitas en el body de request y response?
+
+### Buenas prácticas
+
+- **Nouns, no verbs:** Los endpoints son sustantivos (`/api/productos`), no acciones (`/api/getProductos`)
+- **Plural siempre:** Usa `/api/productos`, nunca `/api/producto`
+- **Códigos correctos:** 200 para lectura, 201 para creación, 204 para eliminación
+- **Idempotencia:** GET, PUT, DELETE son idempotentes; POST no lo es
+- **Documenta tus códigos:** Cada endpoint debe indicar qué códigos devuelve y por qué
+- **Consistencia:** Si un endpoint devuelve `{ data: ... }`, todos deben hacerlo
 
 ---
 

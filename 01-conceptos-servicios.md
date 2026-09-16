@@ -20,6 +20,7 @@
     - [1.5.3. Patrón de Opciones (IOptions)](#153-patrón-de-opciones-ioptions)
   - [1.6. Hot Reload y dotnet watch](#16-hot-reload-y-dotnet-watch)
   - [1.7. Reto: Piensa en tu API de Funkos](#17-reto-piensa-en-tu-api-de-funkos)
+    - [Buenas prácticas](#buenas-prácticas)
 
 ---
 
@@ -444,6 +445,15 @@ flowchart LR
 Si abres Netflix y buscas "Star Wars", ¿qué petición HTTP se envía? Si añades un Funko al carrito, ¿qué método HTTP usarías? Si eliminas un Funko, ¿qué devuelve el servidor?
 
 > No necesitas diseñar rutas ni endpoints aún. Solo piensa en el concepto.
+
+### Buenas prácticas
+
+- **No memorices:** Comprende por qué se usa cada concepto, no los memorices
+- **Empieza por lo simple:** Un proyecto con `dotnet new web` antes de complicate con arquitecturas
+- **Configuración por entornos:** Usa `appsettings.json` y nunca valores hardcodeados en código
+- **Hot Reload:** Usa `dotnet watch run` mientras desarrollas para ver cambios instantáneos
+- **Un servicio = Una responsabilidad:** Cada clase de servicio debe hacer solo una cosa bien
+- **NuGet siempre:** Antes de escribir código que ya existe, busca un paquete NuGet
 
 ---
 
