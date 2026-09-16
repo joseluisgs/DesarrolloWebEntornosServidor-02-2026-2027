@@ -14,6 +14,7 @@
     - [10.4.3. Docker Compose](#1043-docker-compose)
   - [10.5. Podman: la alternativa a Docker](#105-podman-la-alternativa-a-docker)
   - [10.6. Buenas prácticas](#106-buenas-prácticas)
+  - [10.7. Reto](#107-reto)
   - [Resumen](#resumen)
 
 
@@ -377,6 +378,27 @@ flowchart TD
 | **Verify siempre** | Comprobar que se llamó a los métodos correctos del mock |
 | **Dockerfile multi-stage** | Imagenes pequeñas y seguras |
 | **No subir secrets al Dockerfile** | Usar variables de entorno o docker-compose |
+
+---
+
+## 10.7. Reto
+
+> Testea el servicio de productos y despliega la API con Docker.
+
+**Añade a tu API:**
+
+1. **Proyecto de tests:** Crea `ProductosTest.Test` con NUnit, Moq y FluentAssertions
+2. **Tests del servicio:** Testea `GetAll`, `GetById`, `Create`, `Update`, `PatchPrice`, `Delete`
+3. **Mocks:** Mockea `IProductoRepository` y verifica que se llama a `Add`, `Delete`, etc.
+4. **Dockerfile:** Multi-stage build con `dotnet/sdk:10.0` y `dotnet/aspnet:10.0`
+5. **docker-compose.yml:** Servicio `api` con puerto 5000:8080 y variables de entorno
+
+**Puntos extra:**
+
+- Añade tests parametrizados con `[TestCase]` para `PatchPrice` con diferentes precios
+- Añade un test que verifique que `PatchPrice` con precio negativo NO llama a `PatchPrice` del repositorio
+- Configura cobertura de código con `dotnet test --collect:"XPlat Code Coverage"`
+- Añade un servicio `redis` en `docker-compose.yml` (solo definición, sin usar)
 
 
 ## Resumen
