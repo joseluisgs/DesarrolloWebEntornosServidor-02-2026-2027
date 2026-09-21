@@ -79,6 +79,31 @@ MongoDB es una base de datos **NoSQL orientada a documentos**. A diferencia de M
 | JOIN | Embebido o referencia |
 | PRIMARY KEY | `_id` |
 
+```mermaid
+graph TD
+    subgraph SQL["SQL (Relacional)"]
+        S1[Base de Datos] --> S2[Tabla Productos]
+        S1 --> S3[Tabla Categorías]
+        S2 -->|FK| S3
+        S2 --> S4[Fila: 1 producto = 1 fila]
+    end
+
+    subgraph NOSQL["MongoDB (Documentos)"]
+        M1[Database] --> M2[Colección Productos]
+        M2 --> M3[Documento: 1 producto = 1 JSON completo]
+    end
+
+    style SQL fill:#2196F3,color:#fff
+    style NOSQL fill:#4CAF50,color:#fff
+    style S1 fill:#1565C0,color:#fff
+    style S2 fill:#1976D2,color:#fff
+    style S3 fill:#1976D2,color:#fff
+    style S4 fill:#42A5F5,color:#fff
+    style M1 fill:#2E7D32,color:#fff
+    style M2 fill:#388E3C,color:#fff
+    style M3 fill:#66BB6A,color:#fff
+```
+
 ### 13.1.2. Modelo de documentos
 
 Un documento MongoDB es una estructura de pares clave-valor. Puede anidar objetos y arrays de forma natural:
@@ -172,6 +197,34 @@ En SQL, las relaciones se hacen con claves foráneas y JOINs. En MongoDB, hay **
 
 Esta es **la decisión más importante** al diseñar en NoSQL:
 
+```mermaid
+graph TD
+    START[Necesito guardar una relación] --> Q1{Los datos se leen juntos?}
+    Q1 -->|Sí| Q2{Cambia con frecuencia?}
+    Q1 -->|No| REF[Referenciar]
+
+    Q2 -->|No| Q3{Crece sin límite?}
+    Q2 -->|Sí| REF
+
+    Q3 -->|No| EMB[Embeber]
+    Q3 -->|Sí| Q4{Consultas independientes?}
+
+    Q4 -->|Sí| REF
+    Q4 -->|No| SUBSET[Subset Pattern]
+
+    EMB --> OK[Documento completo en una consulta]
+    REF --> OK2[Dos consultas, datos normalizados]
+    SUBSET --> OK3[Lo mejor de ambos mundos]
+
+    style START fill:#FF9800,color:#fff
+    style EMB fill:#4CAF50,color:#fff
+    style REF fill:#2196F3,color:#fff
+    style SUBSET fill:#9C27B0,color:#fff
+    style OK fill:#388E3C,color:#fff
+    style OK2 fill:#1976D2,color:#fff
+    style OK3 fill:#7B1FA2,color:#fff
+```
+
 | Criterio | Embeber | Referenciar |
 |----------|---------|-------------|
 | **Datos que se leen juntos** | ✅ Sí | ❌ No |
@@ -222,6 +275,24 @@ var client = new MongoClient("mongodb://localhost:27017");
 
 // Conexión a Atlas (nube)
 var client = new MongoClient("mongodb+srv://usuario:password@cluster0.abc.mongodb.net/?retryWrites=true&w=majority");
+```
+
+```mermaid
+graph LR
+    APP[Tu App C#] -->|1 conexión| MC[MongoClient]
+    MC -->|Pool| P1[Conexión 1]
+    MC -->|Pool| P2[Conexión 2]
+    MC -->|Pool| PN[Conexión N]
+    P1 --> DB[(MongoDB Server)]
+    P2 --> DB
+    PN --> DB
+
+    style APP fill:#FF9800,color:#fff
+    style MC fill:#4CAF50,color:#fff
+    style P1 fill:#2196F3,color:#fff
+    style P2 fill:#2196F3,color:#fff
+    style PN fill:#2196F3,color:#fff
+    style DB fill:#f44336,color:#fff
 ```
 
 `MongoClient` es **thread-safe** y gestiona un pool de conexiones. Debes crear **una sola instancia** y reutilizarla (como `HttpClient`).
@@ -503,6 +574,29 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
 Las entidades **Owned** son el equivalente a los documentos embebidos en MongoDB. Es la forma natural de modelar datos que van siempre juntos.
 
+```mermaid
+graph TD
+    subgraph CLASES["Clases C#"]
+        C[Cliente] -->|propiedad| D[Direccion]
+    end
+
+    subgraph MONGO["Documento MongoDB"]
+        M["_id: ObjectId(...)"]
+        M --> N["Nombre: Juan"]
+        M --> DIR["Direccion: { Calle, Ciudad, CodigoPostal }"]
+    end
+
+    CLASES -->|serializa| MONGO
+
+    style CLASES fill:#2196F3,color:#fff
+    style MONGO fill:#4CAF50,color:#fff
+    style C fill:#1565C0,color:#fff
+    style D fill:#1976D2,color:#fff
+    style M fill:#2E7D32,color:#fff
+    style N fill:#388E3C,color:#fff
+    style DIR fill:#388E3C,color:#fff
+```
+
 ```csharp
 // Modelo embebido: Dirección dentro de Cliente
 [Owned]
@@ -645,6 +739,39 @@ var existe = await db.Productos.AnyAsync(p => p.Nombre == "Teclado");
 ---
 
 ## 13.5. Driver Nativo vs EF Core: Comparativa
+
+```mermaid
+graph TD
+    subgraph DRIVER["Driver Nativo"]
+        D1[MongoClient] --> D2[IMongoCollection T]
+        D2 --> D3[Builders T]
+        D3 --> D4[(MongoDB)]
+    end
+
+    subgraph EF["EF Core"]
+        E1[DbContext] --> E2[DbSet T]
+        E2 --> E3[LINQ]
+        E3 --> E4[(MongoDB)]
+    end
+
+    DRIVER -->|"Control total, más código"| DEC{¿Qué prefieres?}
+    EF -->|"Abstracción, menos código"| DEC
+
+    DEC -->|"MongoDB puro, agregaciones"| DRIVER
+    DEC -->|"CRUD simple, cambiable"| EF
+
+    style DRIVER fill:#FF9800,color:#fff
+    style EF fill:#9C27B0,color:#fff
+    style D1 fill:#E65100,color:#fff
+    style D2 fill:#EF6C00,color:#fff
+    style D3 fill:#F57C00,color:#fff
+    style D4 fill:#f44336,color:#fff
+    style E1 fill:#6A1B9A,color:#fff
+    style E2 fill:#7B1FA2,color:#fff
+    style E3 fill:#8E24AA,color:#fff
+    style E4 fill:#f44336,color:#fff
+    style DEC fill:#607D8B,color:#fff
+```
 
 | Criterio | Driver Nativo | EF Core |
 |----------|--------------|---------|
@@ -813,6 +940,32 @@ public class FunkoEfCoreRepository(TiendaDbContext db) : IFunkoRepository
 ### 13.7.1. TestContainers
 
 TestContainers levanta un contenedor Docker de MongoDB real para los tests, sin depender de una instalación local.
+
+```mermaid
+sequenceDiagram
+    participant T as Test
+    participant TC as TestContainers
+    participant D as Docker
+    participant M as MongoDB
+
+    T->+TC: Build contenedor
+    TC->+D: docker run mongo:7
+    D->+M: Iniciar MongoDB
+    M-->>-D: Listo
+    D-->>-TC: Puerto asignado
+    TC-->>-T: Connection string
+
+    T->+M: Insertar datos de test
+    M-->>-T: OK
+
+    T->+M: Ejecutar tests
+    M-->>-T: Resultados
+
+    T->+TC: Dispose
+    TC->+D: docker stop + rm
+    D-->>-TC: Contenedor eliminado
+    TC-->>-T: Limpieza completada
+```
 
 ```bash
 dotnet add package Testcontainers.MongoDb
@@ -1084,6 +1237,47 @@ ProductosMongo/
 ---
 
 ## 13.11. Resumen
+
+```mermaid
+graph TD
+    MONGO[MongoDB] --> NOSQL[NoSQL Documentos]
+    MONGO --> DESIGN[Diseño]
+    MONGO --> TOOLS[Herramientas C#]
+    MONGO --> TEST[Testing]
+
+    NOSQL --> BSON[BSON / JSON]
+    NOSQL --> COL[Colecciones]
+    NOSQL --> DOC[Documentos flexibles]
+
+    DESIGN --> EMB[Embeber Owned]
+    DESIGN --> REF[Referenciar]
+    DESIGN --> PAT[Patrones de diseño]
+
+    TOOLS --> DRIVER[Driver Nativo]
+    TOOLS --> EF[MongoDB EF Core]
+
+    DRIVER --> CRUD1[CRUD Builders]
+    EF --> CRUD2[LINQ DbSet]
+
+    TEST --> TC[TestContainers Docker]
+
+    style MONGO fill:#f44336,color:#fff
+    style NOSQL fill:#4CAF50,color:#fff
+    style DESIGN fill:#2196F3,color:#fff
+    style TOOLS fill:#FF9800,color:#fff
+    style TEST fill:#9C27B0,color:#fff
+    style BSON fill:#388E3C,color:#fff
+    style COL fill:#388E3C,color:#fff
+    style DOC fill:#388E3C,color:#fff
+    style EMB fill:#1976D2,color:#fff
+    style REF fill:#1976D2,color:#fff
+    style PAT fill:#1976D2,color:#fff
+    style DRIVER fill:#E65100,color:#fff
+    style EF fill:#6A1B9A,color:#fff
+    style CRUD1 fill:#EF6C00,color:#fff
+    style CRUD2 fill:#7B1FA2,color:#fff
+    style TC fill:#7B1FA2,color:#fff
+```
 
 | Concepto | Descripción |
 |----------|-------------|
