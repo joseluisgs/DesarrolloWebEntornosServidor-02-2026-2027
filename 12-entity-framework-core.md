@@ -2290,7 +2290,6 @@ erDiagram
 
 **Puntos extra:**
 
-- Concurrencia optimista con `RowVersion`
 - Paginación en `GetAll`
 - Búsqueda por texto en Funkos
 - Logging para ver las consultas SQL
@@ -2317,4 +2316,4 @@ erDiagram
 | **Concurrencia** | Optimista vs Pessimista |
 | **TestContainers** | Tests con BD real en Docker |
 
-En el siguiente punto veremos **Transacciones**: cómo manejar operaciones que deben ejecutarse todas juntas o ninguna (commit/rollback), incluyendo transacciones distribuidas y el patrón de resiliencia con Polly.
+En el siguiente punto veremos **MongoDB**: una base de datos NoSQL orientada a documentos que no usa tablas ni SQL. Verás cómo trabajar con colecciones de documentos JSON y cómo muchos conceptos de EF Core (repositorios, mapeo, configuración) tienen su equivalente en el mundo NoSQL con el **MongoDB.Driver**.
