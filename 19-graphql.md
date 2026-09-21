@@ -1,115 +1,148 @@
-# 19. GraphQL con HotChocolate
+# 19. APIs con GraphQL
 
-## Indice
+- [19. APIs con GraphQL](#19-apis-con-graphql)
+  - [19.1. Introduccion](#191-introduccion)
+    - [19.1.1. Que es GraphQL](#1911-que-es-graphql)
+    - [19.1.2. REST vs GraphQL](#1912-rest-vs-graphql)
+    - [19.1.3. Cuando Usar GraphQL](#1913-cuando-usar-graphql)
+  - [19.2. HotChocolate en ASP.NET Core](#192-hotchocolate-en-aspnet-core)
+    - [19.2.1. Paquetes NuGet](#1921-paquetes-nut)
+    - [19.2.2. Configuracion en Program.cs](#1922-configuracion-en-programcs)
+    - [19.2.3. Flujo de Peticion GraphQL](#1923-flujo-de-peticion-graphql)
+  - [19.3. Tipos y Esquema](#193-tipos-y-esquema)
+    - [19.3.1. ObjectType Basico](#1931-objecttype-basico)
+    - [19.3.2. Mapeo de Tipos GraphQL](#1932-mapeo-de-tipos-graphql)
+    - [19.3.3. Resolvers Personalizados](#1933-resolvers-personalizados)
+    - [19.3.4. Campos Calculados](#1934-campos-calculados)
+  - [19.4. Inputs y Validacion](#194-inputs-y-validacion)
+    - [19.4.1. Input Record](#1941-input-record)
+    - [19.4.2. Input con Validacion](#1942-input-con-validacion)
+    - [19.4.3. Input para Actualizacion Parcial](#1943-input-para-actualizacion-parcial)
+  - [19.5. Queries](#195-queries)
+    - [19.5.1. Query Basica](#1951-query-basica)
+    - [19.5.2. Paginacion, Filtrado y Ordenamiento](#1952-paginacion-filtrado-y-ordenamiento)
+    - [19.5.3. Consultas GraphQL de Ejemplo](#1953-consultas-graphql-de-ejemplo)
+    - [19.5.4. Operadores de Filtro](#1954-operadores-de-filtro)
+  - [19.6. Mutations](#196-mutations)
+    - [19.6.1. Mutation de Crear](#1961-mutation-de-crear)
+    - [19.6.2. Mutation de Actualizar](#1962-mutation-de-actualizar)
+    - [19.6.3. Mutation de Eliminar](#1963-mutation-de-eliminar)
+    - [19.6.4. Mutations GraphQL de Ejemplo](#1964-mutations-graphql-de-ejemplo)
+  - [19.7. Subscriptions y Tiempo Real](#197-subscriptions-y-tiempo-real)
+    - [19.7.1. Patron Pub/Sub](#1971-patron-pubsub)
+    - [19.7.2. Implementacion de Subscription](#1972-implementacion-de-subscription)
+    - [19.7.3. Configuracion de WebSockets](#1973-configuracion-de-websockets)
+    - [19.7.4. Flujo de Subscription](#1974-flujo-de-subscription)
+  - [19.8. DataLoaders y Problema N+1](#198-dataloaders-y-problema-n1)
+    - [19.8.1. El Problema N+1](#1981-el-problema-n1)
+    - [19.8.2. Solucion con DataLoader](#1982-solucion-con-dataloader)
+    - [19.8.3. Implementacion de DataLoaders](#1983-implementacion-de-dataloaders)
+  - [19.9. Autorizacion](#199-autorizacion)
+    - [19.9.1. Configuracion de Autenticacion JWT](#1991-configuracion-de-autenticacion-jwt)
+    - [19.9.2. Proteger Queries y Mutations](#1992-proteger-queries-y-mutations)
+    - [19.9.3. Politicas Personalizadas](#1993-politicas-personalizadas)
+  - [19.10. Testing](#1910-testing)
+    - [19.10.1. Test de Queries](#19101-test-de-queries)
+    - [19.10.2. Test de Mutations](#19102-test-de-mutations)
+  - [19.11. Buenas Practicas](#1911-buenas-practicas)
+  - [19.12. Reto](#1912-reto)
+  - [19.13. Resumen](#1913-resumen)
 
-- [19.1. Conceptos Fundamentales](#191-conceptos-fundamentales)
-- [19.2. HotChocolate en ASP.NET Core](#192-hotchocolate-en-aspnet-core)
-- [19.3. Tipos y Esquema](#193-tipos-y-esquema)
-- [19.4. Inputs](#194-inputs)
-- [19.5. Queries](#195-queries)
-- [19.6. Mutations](#196-mutations)
-- [19.7. Subscriptions y Patron Pub/Sub](#197-subscriptions-y-patron-pubsub)
-- [19.8. DataLoaders y Problema N+1](#198-dataloaders-y-problema-n1)
-- [19.9. Autorizacion](#199-autorizacion)
-- [19.10. Testing](#1910-testing)
-- [19.11. Resumen](#1911-resumen)
-- [19.12. Ejercicio Propuesto](#1912-ejercicio-propuesto)
+
+> **Punto de partida:** En una tienda online, un cliente movil solo necesita el nombre y precio de un producto, pero el administrador necesita el stock, la categoria y las ventas. Con REST, haces una peticion y recibes todo (over-fetching). O haces 3 peticiones para obtener 3 recursos diferentes (under-fetching). GraphQL resuelve esto: el cliente pide exactamente lo que necesita, ni mas ni menos, en una sola peticion.
+
+**Objetivos de aprendizaje:**
+- Comprender las diferencias fundamentales entre REST y GraphQL
+- Configurar un servidor GraphQL con HotChocolate en ASP.NET Core
+- Definir tipos, queries, mutations y subscriptions
+- Resolver el problema N+1 con DataLoaders
+- Proteger APIs GraphQL con JWT y autorizacion
+- Testear endpoints GraphQL
 
 ---
 
-## 19.1. Conceptos Fundamentales
+## 19.1. Introduccion
 
-GraphQL es un lenguaje de consulta desarrollado por Facebook que permite al cliente especificar exactamente que datos necesita.
+### 19.1.1. Que es GraphQL
 
-### Que es GraphQL
+GraphQL es un lenguaje de consulta desarrollado por Facebook (2015) que permite al cliente especificar **exactamente que datos necesita**. A diferencia de REST, donde el servidor define la estructura de la respuesta, en GraphQL es el cliente quien decide que campos recibe.
 
 ```mermaid
 graph LR
-    subgraph "REST - Over-fetching"
-        A1["GET /api/productos/1"] --> A2["{id, nombre, precio, categoria, ...}"]
-        A2 --> A3["Cliente solo usa 3 campos"]
-        style A1 fill:#B71C1C
-        style A2 fill:#B71C1C
-        style A3 fill:#B71C1C
+    subgraph REST["REST - Over-fetching"]
+        R1["GET /api/productos/1"] --> R2["{id, nombre, precio, categoria, stock, imagen, fecha}"]
+        R2 --> R3["Cliente solo usa 3 campos"]
     end
-    
-    subgraph "GraphQL - Consulta precisa"
-        B1["POST /graphql"] --> B2["{ producto(id: 1) { id nombre precio } }"]
-        B2 --> B3["{id, nombre, precio}"]
-        style B1 fill:#2E7D32
-        style B2 fill:#2E7D32
-        style B3 fill:#2E7D32
+
+    subgraph GQL["GraphQL - Consulta precisa"]
+        G1["POST /graphql"] --> G2["{ producto(id:1) { id nombre precio } }"]
+        G2 --> G3["{id, nombre, precio}"]
     end
+
+    style REST fill:#f44336,color:#fff
+    style GQL fill:#4CAF50,color:#fff
+    style R1 fill:#B71C1C,color:#fff
+    style R2 fill:#C62828,color:#fff
+    style R3 fill:#D32F2F,color:#fff
+    style G1 fill:#2E7D32,color:#fff
+    style G2 fill:#388E3C,color:#fff
+    style G3 fill:#43A047,color:#fff
 ```
 
-🧠 **Analogia**: REST es como un menu con platos combinados donde recibes todo aunque solo quieras una parte. GraphQL es como personalizar tu pedido exactamente: "pollo sin piel, con verduras al vapor". El chef prepara exactamente lo que pides.
+> **Analogia:** REST es como un menu fijo donde recibes el plato completo aunque solo quieras la ensalada. GraphQL es como un buffet donde sirves exactamente lo que quieres: "un poco de pollo, mucha ensalada, nada de arroz".
 
-### REST vs GraphQL
+📌 Ejemplo real: **GitHub** usa GraphQL para su API. La app móvil de GitHub usa la misma API que la web, pero cada cliente pide los campos que necesita. La versión móvil pide menos datos (mas rapida), la web pide todos los campos (mas completa).
+
+### 19.1.2. REST vs GraphQL
 
 | Aspecto | REST | GraphQL |
 |---------|------|---------|
-| **Endpoints** | Multiple URLs | Un solo endpoint |
-| **Datos** | Servidor define respuesta | Cliente elige campos |
-| **Over-fetching** | Si | No |
-| **Under-fetching** | Si | No |
-| **Versionado** | Comun (/v1/) | No necesario |
-| **Cache** | HTTP nativo | Mas complejo |
-| **Documentacion** | Manual/ Swagger | Automatica |
-
-### Arquitectura GraphQL
+| **Endpoints** | Multiples URLs (`/api/productos`, `/api/categorias`) | Un solo endpoint (`/graphql`) |
+| **Datos** | Servidor define la respuesta | Cliente elige los campos |
+| **Over-fetching** | Si (recibes mas de lo que necesitas) | No (solo lo que pides) |
+| **Under-fetching** | Si (multiples peticiones para relacionados) | No (consulta anidada en una sola peticion) |
+| **Versionado** | Comun (`/v1/`, `/v2/`) | No necesario (el esquema evoluciona) |
+| **Cache** | HTTP nativo (GET, headers) | Mas complejo (POST siempre) |
+| **Documentacion** | Manual o Swagger | Automatica (introspection) |
 
 ```mermaid
-graph TD
-    subgraph "Cliente"
-        A[App Web/Mobile]
+flowchart TD
+    subgraph REST_FLOW["REST: 3 peticiones para producto + categoria + reviews"]
+        A["GET /api/productos/1"] --> B["GET /api/categorias/5"]
+        A --> C["GET /api/productos/1/reviews"]
     end
-    
-    subgraph "GraphQL Server"
-        B[HotChocolate]
-        C[Schema]
-        D[Resolvers]
+
+    subgraph GQL_FLOW["GraphQL: 1 sola peticion"]
+        D["POST /graphql { producto(1) { nombre, categoria { nombre }, reviews { texto } } }"]
     end
-    
-    subgraph "Capa de Datos"
-        E[EF Core]
-        F[MongoDB]
-        G[Servicios Externos]
-    end
-    
-    A -->|Query/Mutation| B
-    B --> C
-    C --> D
-    D --> E
-    D --> F
-    D --> G
-    
-    style A fill:#1565C0
-    style B fill:#E65100
-    style C fill:#6A1B9A
-    style D fill:#00838F
+
+    style REST_FLOW fill:#f44336,color:#fff
+    style GQL_FLOW fill:#4CAF50,color:#fff
+    style A fill:#C62828,color:#fff
+    style B fill:#C62828,color:#fff
+    style C fill:#C62828,color:#fff
+    style D fill:#2E7D32,color:#fff
 ```
 
-### Cuando Usar GraphQL
+### 19.1.3. Cuando Usar GraphQL
 
-✅ **GraphQL:**
-- Clientes moviles/web diferentes
-- Consultas complejas anidadas
-- Reducir llamadas API
-- API publica con muchos clientes
+| Usar GraphQL cuando... | Usar REST cuando... |
+|------------------------|---------------------|
+| Clientes moviles/web diferentes | API simple y estatica |
+| Consultas complejas anidadas | Cacheo prioritario (CDN, HTTP cache) |
+| Reducir llamadas API | Equipo nuevo sin experiencia GraphQL |
+| API publica con muchos clientes | Microservicios independientes |
+| Datos relacionados frecuentemente | Archivos multimedia (REST + streaming) |
 
-❌ **REST:**
-- API simple
-- Cacheo prioritario
-- Equipo nuevo
-- Microservicios independientes
+> **Nota:** GraphQL **no reemplaza** REST. Son complementarios. Muchas aplicaciones usan REST para operaciones simples y GraphQL para consultas complejas.
 
 ---
 
 ## 19.2. HotChocolate en ASP.NET Core
 
-HotChocolate es la implementación mas popular de GraphQL para .NET con enfoque Code-First.
+HotChocolate es la implementacion mas popular de GraphQL para .NET. Usa un enfoque **Code-First**: defines el esquema con clases C# y HotChocolate genera el esquema GraphQL automaticamente.
 
-### Paquetes NuGet
+### 19.2.1. Paquetes NuGet
 
 ```bash
 # Paquete principal
@@ -118,17 +151,11 @@ dotnet add package HotChocolate.AspNetCore
 # Autorizacion integrada
 dotnet add package HotChocolate.AspNetCore.Authorization
 
-# Integracion con EF Core
-dotnet add package HotChocolate.Data.EntityFramework
-
-# Suscripciones
-dotnet add package HotChocolate.Subscriptions.InMemory
-
-# DataLoaders
+# DataLoaders (GreenDonut)
 dotnet add package GreenDonut
 ```
 
-### Configuracion en Program.cs
+### 19.2.2. Configuracion en Program.cs
 
 ```csharp
 using HotChocolate;
@@ -138,7 +165,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
 // GraphQL Server
 builder.Services
@@ -159,25 +186,45 @@ var app = builder.Build();
 // Endpoint GraphQL
 app.MapGraphQL();
 
-// Playground (solo desarrollo)
-if (app.Environment.IsDevelopment())
-{
-    Console.WriteLine("GraphQL Playground: https://localhost:5001/graphql");
-}
-
 app.Run();
 ```
 
-### Flujo de Peticion GraphQL
+```mermaid
+flowchart TD
+    subgraph DI["Inyeccion de Dependencias"]
+        A["AddGraphQLServer()"] --> B["AddQueryType()"]
+        A --> C["AddMutationType()"]
+        A --> D["AddSubscriptionType()"]
+        A --> E["AddFiltering() + AddSorting()"]
+    end
+
+    subgraph ENDPOINT["Endpoint"]
+        F["MapGraphQL()"] --> G["/graphql"]
+    end
+
+    DI --> F
+
+    style DI fill:#2196F3,color:#fff
+    style ENDPOINT fill:#4CAF50,color:#fff
+    style A fill:#1565C0,color:#fff
+    style B fill:#1976D2,color:#fff
+    style C fill:#1976D2,color:#fff
+    style D fill:#1976D2,color:#fff
+    style E fill:#1976D2,color:#fff
+    style F fill:#2E7D32,color:#fff
+    style G fill:#388E3C,color:#fff
+```
+
+### 19.2.3. Flujo de Peticion GraphQL
 
 ```mermaid
 sequenceDiagram
     participant C as Cliente
-    participant S as HotChocolate Server
+    participant S as HotChocolate
     participant R as Resolvers
     participant D as Base de Datos
-    
-    C->>S: POST /graphql { query: "...", variables: {...} }
+
+    C->>S: POST /graphql { query, variables }
     S->>S: Parsear Query
     S->>S: Validar Schema
     S->>R: Ejecutar Resolvers
@@ -187,59 +234,41 @@ sequenceDiagram
     S-->>C: { data: {...}, errors: [...] }
 ```
 
-### Banana Cake Pop
-
-El playground de HotChocolate accesible en `/graphql` permite:
-
-- Explorar el esquema automaticamente
-- Ejecutar consultas
-- Ver documentacion
-- Depurar suscripciones
-- Administrar esquemas
+> **Nota:** El playground de HotChocolate (Banana Cake Pop) se accede en `/graphql` en modo desarrollo. Permite explorar el esquema, ejecutar consultas y depurar suscripciones.
 
 ---
 
 ## 19.3. Tipos y Esquema
 
-HotChocolate usa **Code-First**, generando el esquema GraphQL automaticamente desde clases C#.
+HotChocolate usa **Code-First**: el esquema GraphQL se genera automaticamente desde clases C#. No necesitas escribir un `.graphql` a mano.
 
-### ObjectType Basico
+### 19.3.1. ObjectType Basico
 
 ```csharp
 using HotChocolate.Types;
-
-namespace TiendaApi.Apis.GraphQL.Types;
 
 public class ProductoType : ObjectType<Producto>
 {
     protected override void Configure(IObjectTypeDescriptor<Producto> descriptor)
     {
         descriptor.Name("Producto");
-        descriptor.Description("Entidad Producto de la tienda");
+        descriptor.Description("Producto de la tienda");
 
         descriptor.Field(p => p.Id)
             .Type<NonNullType<IdType>>()
-            .Description("El ID unico del producto");
+            .Description("ID unico del producto");
 
         descriptor.Field(p => p.Nombre)
             .Type<NonNullType<StringType>>()
-            .Description("El nombre del producto");
+            .Description("Nombre del producto");
 
         descriptor.Field(p => p.Precio)
             .Type<NonNullType<DecimalType>>()
-            .Description("El precio del producto");
+            .Description("Precio en euros");
 
         descriptor.Field(p => p.Stock)
             .Type<NonNullType<IntType>>()
             .Description("Cantidad en stock");
-
-        descriptor.Field(p => p.Descripcion)
-            .Type<StringType>()
-            .Description("Descripcion del producto");
-
-        descriptor.Field(p => p.ImagenUrl)
-            .Type<StringType>()
-            .Description("URL de la imagen del producto");
 
         descriptor.Field(p => p.Categoria)
             .Type<NonNullType<CategoriaType>>()
@@ -248,104 +277,38 @@ public class ProductoType : ObjectType<Producto>
 }
 ```
 
-### Tipos GraphQL Disponibles
+```csharp
+// ❌ MALO: Sin descripcion en los campos
+descriptor.Field(p => p.Nombre);
+
+// ✅ BUENO: Descripcion en cada campo para documentacion automatica
+descriptor.Field(p => p.Nombre)
+    .Type<NonNullType<StringType>>()
+    .Description("Nombre del producto");
+```
+
+### 19.3.2. Mapeo de Tipos GraphQL
 
 | GraphQL Type | .NET Type | Descripcion |
 |--------------|-----------|-------------|
-| `ID` | `string` o `Guid` | Identificador unico |
+| `ID` | `string` o `long` | Identificador unico |
 | `String` | `string` | Cadena de texto |
 | `Int` | `int` | Entero de 32 bits |
 | `Float` | `double` | Numero decimal |
 | `Boolean` | `bool` | Verdadero/Falso |
 | `DateTime` | `DateTime` | Fecha y hora |
-| `Date` | `DateOnly` | Solo fecha |
-| `Decimal` | `decimal` | Decimal preciso monetario |
-| `[Type!]!` | `ICollection<T>` | Lista no nula de no nulos |
+| `Decimal` | `decimal` | Decimal preciso (monetario) |
+| `[Type!]!` | `List<T>` | Lista no nula de no nulos |
 
-### Tipos de Coleccion
+📌 Ejemplo real: **Shopify** usa GraphQL para su storefront. Los tipos GraphQL mapean directamente a entidades como `Product`, `Order`, `Customer`. Cada campo tiene un tipo y una descripcion que se genera automaticamente en la documentacion.
 
-```csharp
-// Lista de strings
-public IEnumerable<string> Tags { get; set; } = new List<string>();
+### 19.3.3. Resolvers Personalizados
 
-// GraphQL: [String!]
-
-// Lista de objetos no nula
-public List<Producto> Productos { get; set; }
-
-// GraphQL: [Producto!]!
-
-// Lista nullable
-public List<Producto>? Productos { get; set; }
-
-// GraphQL: [Producto]
-```
-
-### EnumType
-
-```csharp
-using HotChocolate.Types;
-
-namespace TiendaApi.Apis.GraphQL.Types;
-
-public enum CategoriaEnum
-{
-    Marvel = 1,
-    DC = 2,
-    Anime = 3,
-    Videojuegos = 4,
-    Peliculas = 5
-}
-
-public class CategoriaEnumType : EnumType<CategoriaEnum>
-{
-    protected override void Configure(IEnumTypeDescriptor<CategoriaEnum> descriptor)
-    {
-        descriptor.Name("CategoriaEnum");
-        descriptor.Description("Enumeracion de categorias de productos");
-        
-        descriptor.Value(CategoriaEnum.Marvel)
-            .Description("Productos de Marvel");
-            
-        descriptor.Value(CategoriaEnum.DC)
-            .Description("Productos de DC Comics");
-    }
-}
-```
-
-### InterfaceType
-
-```csharp
-using HotChocolate.Types;
-
-namespace TiendaApi.Apis.GraphQL.Types;
-
-public interface IEntity
-{
-    long Id { get; set; }
-    string Nombre { get; set; }
-}
-
-public class ProductoType : ObjectType<Producto>, IInterfaceType
-{
-    public new interface IEntity Entity => this;
-    
-    protected override void Configure(IObjectTypeDescriptor<Producto> descriptor)
-    {
-        descriptor.Implements<IEntity>();
-        // ... campos
-    }
-}
-```
-
-### Resolvers Personalizados
+Los resolvers son metodos que calculan campos que no existen en el modelo de datos.
 
 ```csharp
 using HotChocolate;
 using HotChocolate.Types;
-using GreenDonut;
-
-namespace TiendaApi.Apis.GraphQL.Resolvers;
 
 [ExtendObjectType(typeof(Producto))]
 public class ProductoResolvers
@@ -367,56 +330,47 @@ public class ProductoResolvers
     {
         return producto.Precio * (100 - porcentaje) / 100;
     }
-
-    /// <summary>
-    /// Resolver con DataLoader para evitar N+1
-    /// </summary>
-    public async Task<Categoria> GetCategoria(
-        [Parent] Producto producto,
-        [Service] IDataLoader<long, Categoria> categoriaLoader)
-    {
-        return await categoriaLoader.LoadAsync(producto.CategoriaId);
-    }
 }
 ```
 
-### UnionType
+```mermaid
+graph LR
+    M["Modelo C#"] --> R["Resolver"]
+    R --> G["Campo en GraphQL"]
+
+    M -->|"Producto: Id, Nombre, Precio, Stock"| R
+    R -->|"estaDisponible (calculado)"| G
+    R -->|"precioConDescuento (calculado)"| G
+
+    style M fill:#2196F3,color:#fff
+    style R fill:#FF9800,color:#fff
+    style G fill:#4CAF50,color:#fff
+```
+
+### 19.3.4. Campos Calculados
+
+Los campos calculados no se almacenan en la BD. Se calculan en tiempo de ejecucion usando resolvers:
 
 ```csharp
-using HotChocolate.Types;
+// En el ObjectType, se exponen como campos normales:
+descriptor.Field(p => p.Nombre)
+    .Type<NonNullType<StringType>>();
 
-namespace TiendaApi.Apis.GraphQL.Types;
-
-public class ErrorType : ObjectType<Error>
-{
-    protected override void Configure(IObjectTypeDescriptor<Error> descriptor)
-    {
-        descriptor.Field(e => e.Mensaje).Type<NonNullType<StringType>>();
-    }
-}
-
-public class BusquedaResultType : UnionType<SearchResult>
-{
-    protected override void Configure(IUnionTypeDescriptor descriptor)
-    {
-        descriptor.Type<ProductoType>();
-        descriptor.Type<CategoriaType>();
-        descriptor.Type<ErrorType>();
-    }
-}
+// El resolver se registra con [ExtendObjectType]
+// y se ejecuta automaticamente cuando el cliente pide ese campo
 ```
+
+> **Consejo:** Solo crea campos calculados cuando el cliente los pide. Si nadie usa `precioConDescuento`, no lo incluyas en el esquema.
 
 ---
 
-## 19.4. Inputs
+## 19.4. Inputs y Validacion
 
-Los Input Types representan datos de entrada para Mutations, comparables a DTOs en REST.
+Los Input Types representan datos de entrada para las Mutations, equivalentes a los DTOs en REST.
 
-### Input Record Simple
+### 19.4.1. Input Record
 
 ```csharp
-namespace TiendaApi.Apis.GraphQL.Inputs;
-
 public record CreateProductoInput(
     string Nombre,
     string? Descripcion,
@@ -426,13 +380,12 @@ public record CreateProductoInput(
 );
 ```
 
-### Input con Validacion
+> **Consejo:** Usa `record` para Inputs simples. Son inmutables, con `init` implicito y serializan bien.
+
+### 19.4.2. Input con Validacion
 
 ```csharp
-using HotChocolate;
 using System.ComponentModel.DataAnnotations;
-
-namespace TiendaApi.Apis.GraphQL.Inputs;
 
 public class CreateProductoInput : IValidatableObject
 {
@@ -464,11 +417,22 @@ public class CreateProductoInput : IValidatableObject
 }
 ```
 
-### Input para Actualizacion (Partial Update)
+```csharp
+// ❌ MALO: Sin validacion — datos invalidos llegan a la BD
+public record CreateProductoInput(string Nombre, decimal Precio);
+
+// ✅ BUENO: Validacion con DataAnnotations + IValidatableObject
+public class CreateProductoInput : IValidatableObject
+{
+    [Required] public string Nombre { get; set; } = string.Empty;
+    [Range(0.01, 10000)] public decimal Precio { get; set; }
+    // ...
+}
+```
+
+### 19.4.3. Input para Actualizacion Parcial
 
 ```csharp
-namespace TiendaApi.Apis.GraphQL.Inputs;
-
 public record UpdateProductoInput(
     string? Nombre,
     string? Descripcion,
@@ -478,51 +442,18 @@ public record UpdateProductoInput(
 );
 ```
 
-### Input con Campos Calculados
-
-```csharp
-namespace TiendaApi.Apis.GraphQL.Inputs;
-
-public class BusquedaInput
-{
-    public string? Termino { get; set; }
-    public decimal? PrecioMin { get; set; }
-    public decimal? PrecioMax { get; set; }
-    public long? CategoriaId { get; set; }
-    public bool? SoloDisponibles { get; set; }
-    public List<string>? Tags { get; set; }
-    public string? OrdenarPor { get; set; } = "nombre";
-    public bool Ascendente { get; set; } = true;
-}
-```
-
-### Input para Filtros de Paginacion
-
-```csharp
-namespace TiendaApi.Apis.GraphQL.Inputs;
-
-public class PaginationInput
-{
-    public int? Skip { get; set; }
-    public int? Take { get; set; }
-    public string? Cursor { get; set; }
-}
-```
+> **Nota:** Todos los campos son nullable para permitir actualizaciones parciales. Solo se actualizan los campos que el cliente envia.
 
 ---
 
 ## 19.5. Queries
 
-Las Queries son operaciones de solo lectura equivalentes a GET en REST.
+Las Queries son operaciones de solo lectura, equivalentes a GET en REST.
 
-### Query Basica
+### 19.5.1. Query Basica
 
 ```csharp
-using HotChocolate;
-using HotChocolate.Types;
 using HotChocolate.Data;
-
-namespace TiendaApi.Apis.GraphQL.Types;
 
 public class Query
 {
@@ -559,79 +490,21 @@ public class Query
 }
 ```
 
-### Query con Filtros Personalizados
+### 19.5.2. Paginacion, Filtrado y Ordenamiento
 
-```csharp
-using HotChocolate;
-using System.Linq;
+HotChocolate incluye atributos listos para usar:
 
-public class Query
-{
-    /// <summary>
-    /// Busqueda de productos con termino
-    /// </summary>
-    [UseFiltering]
-    public IQueryable<Producto> BuscarProductos(
-        string termino,
-        [Service] ApplicationDbContext context)
-    {
-        if (string.IsNullOrWhiteSpace(termino))
-            return Enumerable.Empty<Producto>().AsQueryable();
+| Atributo | Funcion | Ejemplo |
+|----------|---------|---------|
+| `[UsePaging]` | Paginacion por cursor | `productos(first: 10, skip: 0)` |
+| `[UseFiltering]` | Filtros automaticos | `productos(where: { precio: { gt: 20 } })` |
+| `[UseSorting]` | Ordenamiento | `productos(order: { precio: DESC })` |
+| `[UseFirstOrDefault]` | Primer elemento | `producto(id: 1)` |
+| `[UseProjection]` | Proyeccion de campos | Solo los campos que el cliente pide |
 
-        return context.Productos
-            .Where(p => p.Nombre.Contains(termino) ||
-                       p.Descripcion.Contains(termino))
-            .Include(p => p.Categoria);
-    }
+### 19.5.3. Consultas GraphQL de Ejemplo
 
-    /// <summary>
-    /// Productos mas vendidos (campo calculado)
-    /// </summary>
-    [UsePaging]
-    public IQueryable<Producto> GetProductosPopulares(
-        [Service] IProductoService service)
-    {
-        return service.GetMasVendidos(10);
-    }
-
-    /// <summary>
-    /// Busqueda avanzada con input
-    /// </summary>
-    [UseFiltering]
-    public IQueryable<Producto> BusquedaAvanzada(
-        BusquedaInput input,
-        [Service] ApplicationDbContext context)
-    {
-        var query = context.Productos.AsQueryable();
-
-        if (!string.IsNullOrEmpty(input.Termino))
-        {
-            var term = input.Termino.ToLower();
-            query = query.Where(p => 
-                p.Nombre.ToLower().Contains(term) ||
-                p.Descripcion.ToLower().Contains(term));
-        }
-
-        if (input.PrecioMin.HasValue)
-            query = query.Where(p => p.Precio >= input.PrecioMin.Value);
-
-        if (input.PrecioMax.HasValue)
-            query = query.Where(p => p.Precio <= input.PrecioMax.Value);
-
-        if (input.CategoriaId.HasValue)
-            query = query.Where(p => p.CategoriaId == input.CategoriaId.Value);
-
-        if (input.SoloDisponibles == true)
-            query = query.Where(p => p.Stock > 0);
-
-        return query;
-    }
-}
-```
-
-### Consultas GraphQL de Ejemplo
-
-**Obtener productos paginados:**
+**Productos paginados:**
 
 ```graphql
 query {
@@ -652,15 +525,12 @@ query {
 }
 ```
 
-**Con filtrado:**
+**Con filtrado y ordenamiento:**
 
 ```graphql
 query {
   productos(
-    where: { 
-      precio: { gt: 20, lte: 100 }
-      categoria: { nombre: { contains: "Marvel" } }
-    }
+    where: { precio: { gt: 20, lte: 100 } }
     order: { precio: DESC }
     first: 10
   ) {
@@ -668,9 +538,7 @@ query {
       id
       nombre
       precio
-      categoria {
-        nombre
-      }
+      categoria { nombre }
     }
   }
 }
@@ -694,7 +562,7 @@ query {
 }
 ```
 
-### Operadores de Filtro Disponibles
+### 19.5.4. Operadores de Filtro
 
 | Operador | Descripcion | Ejemplo |
 |----------|-------------|---------|
@@ -707,23 +575,17 @@ query {
 | `contains` | Contiene texto | `nombre: { contains: "Iron" }` |
 | `startsWith` | Empieza con | `nombre: { startsWith: "Funko" }` |
 | `in` | En lista | `categoriaId: { in: [1, 2, 3] }` |
-| `some` | Algun elemento | `tags: { some: { eq: "novedad" } }` |
 
 ---
 
 ## 19.6. Mutations
 
-Las Mutations son operaciones que modifican datos, equivalentes a POST, PUT, PATCH, DELETE en REST.
+Las Mutations son operaciones que modifican datos, equivalentes a POST, PUT, DELETE en REST.
 
-### Mutation de Crear
+### 19.6.1. Mutation de Crear
 
 ```csharp
-using HotChocolate;
 using HotChocolate.Subscriptions;
-using TiendaApi.Apis.GraphQL.Inputs;
-using TiendaApi.Apis.Services;
-
-namespace TiendaApi.Apis.GraphQL.Types;
 
 public class Mutation
 {
@@ -747,7 +609,7 @@ public class Mutation
 
         var producto = await service.CreateAsync(dto);
 
-        // Publicar evento para suscripciones
+        // Notificar a suscriptores
         await eventSender.SendAsync("ProductoCreado", producto);
 
         return producto;
@@ -755,7 +617,7 @@ public class Mutation
 }
 ```
 
-### Mutation de Actualizar
+### 19.6.2. Mutation de Actualizar
 
 ```csharp
 public class Mutation
@@ -780,7 +642,7 @@ public class Mutation
 
         var producto = await service.UpdateAsync(id, dto);
 
-        if (producto != null)
+        if (producto is not null)
         {
             await eventSender.SendAsync("ProductoActualizado", producto);
         }
@@ -790,13 +652,13 @@ public class Mutation
 }
 ```
 
-### Mutation de Eliminar
+### 19.6.3. Mutation de Eliminar
 
 ```csharp
 public class Mutation
 {
     /// <summary>
-    /// Elimina un producto
+    /// Elimina un producto (borrado logico)
     /// </summary>
     [Authorize(Roles = new[] { "Admin" })]
     public async Task<bool> EliminarProducto(
@@ -816,46 +678,7 @@ public class Mutation
 }
 ```
 
-### Mutation con Transaccion
-
-```csharp
-public class Mutation
-{
-    /// <summary>
-    /// Compra multiple productos
-    /// </summary>
-    [Authorize]
-    public async Task<ResultadoCompra> RealizarCompra(
-        RealizarCompraInput input,
-        [Service] ICompraService compraService,
-        [Service] ITopicEventSender eventSender)
-    {
-        using var transaction = await compraService.BeginTransactionAsync();
-        
-        try
-        {
-            var resultado = await compraService.ProcesarCompraAsync(input);
-            await transaction.CommitAsync();
-            
-            // Notificar actualizacion de stock
-            foreach (var item in input.Items)
-            {
-                await eventSender.SendAsync("StockActualizado", 
-                    new { productoId = item.ProductoId, cantidad = item.Cantidad });
-            }
-            
-            return resultado;
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
-    }
-}
-```
-
-### Mutations GraphQL de Ejemplo
+### 19.6.4. Mutations GraphQL de Ejemplo
 
 **Crear producto:**
 
@@ -863,7 +686,6 @@ public class Mutation
 mutation CrearProducto {
   crearProducto(input: {
     nombre: "Funko Iron Man"
-    descripcion: "Funko de Iron Man modelo 2024"
     precio: 29.99
     stock: 15
     categoriaId: 1
@@ -880,13 +702,7 @@ mutation CrearProducto {
 
 ```graphql
 mutation ActualizarProducto {
-  actualizarProducto(
-    id: 1
-    input: { 
-      precio: 34.99
-      stock: 20
-    }
-  ) {
+  actualizarProducto(id: 1, input: { precio: 34.99, stock: 20 }) {
     id
     nombre
     precio
@@ -903,75 +719,53 @@ mutation EliminarProducto {
 }
 ```
 
-**Ejecutar compra:**
-
-```graphql
-mutation RealizarCompra {
-  realizarCompra(input: {
-    usuarioId: 1
-    items: [
-      { productoId: 1, cantidad: 2 }
-      { productoId: 2, cantidad: 1 }
-    ]
-    direccionEnvio: "Calle Principal 123"
-  }) {
-    id
-    total
-    estado
-    items {
-      productoId
-      cantidad
-    }
-  }
-}
-```
-
 ---
 
-## 19.7. Subscriptions y Patron Pub/Sub
+## 19.7. Subscriptions y Tiempo Real
 
-Las Subscriptions permiten recibir actualizaciones en tiempo real mediante WebSockets usando el patron Publicacion/Suscripcion.
+Las Subscriptions permiten recibir actualizaciones en tiempo real mediante WebSockets.
 
-### Patron Pub/Sub
+### 19.7.1. Patron Pub/Sub
 
 ```mermaid
 graph TB
-    subgraph "Publicador"
+    subgraph PUBLICADOR["Publicador"]
         A[Mutation] --> B[ITopicEventSender]
     end
-    
-    subgraph "Pub/Sub Server"
+
+    subgraph SERVIDOR["Servidor Pub/Sub"]
         B --> C[Topic Event Aggregator]
     end
-    
-    subgraph "Suscripciones"
+
+    subgraph SUSCRIPCIONES["Suscriptores"]
         C --> D[Suscripcion 1]
         C --> E[Suscripcion 2]
         C --> F[Suscripcion 3]
     end
-    
-    subgraph "Suscriptores"
-        D --> G[Cliente WebSocket 1]
-        E --> H[Cliente WebSocket 2]
-        F --> I[Cliente WebSocket 3]
+
+    subgraph CLIENTES["Clientes WebSocket"]
+        D --> G[Cliente 1]
+        E --> H[Cliente 2]
+        F --> I[Cliente 3]
     end
-    
-    style A fill:#1565C0
-    style B fill:#E65100
-    style C fill:#6A1B9A
-    style G fill:#2E7D32
-    style H fill:#2E7D32
-    style I fill:#2E7D32
+
+    style PUBLICADOR fill:#2196F3,color:#fff
+    style SERVIDOR fill:#FF9800,color:#fff
+    style SUSCRIPCIONES fill:#9C27B0,color:#fff
+    style CLIENTES fill:#4CAF50,color:#fff
+    style A fill:#1565C0,color:#fff
+    style B fill:#E65100,color:#fff
+    style C fill:#6A1B9A,color:#fff
+    style G fill:#2E7D32,color:#fff
+    style H fill:#2E7D32,color:#fff
+    style I fill:#2E7D32,color:#fff
 ```
 
-### Implementacion de Subscription
+📌 Ejemplo real: **Shopify** usa subscriptions para notificar a los comerciantes cuando se realiza un pedido nuevo. El panel de administracion se actualiza instantaneamente sin recargar la pagina.
+
+### 19.7.2. Implementacion de Subscription
 
 ```csharp
-using HotChocolate;
-using HotChocolate.Subscriptions;
-
-namespace TiendaApi.Apis.GraphQL.Types;
-
 public class Subscription
 {
     /// <summary>
@@ -1003,30 +797,10 @@ public class Subscription
     {
         return id;
     }
-
-    /// <summary>
-    /// Notifica cambios de stock
-    /// </summary>
-    [Subscribe]
-    [Topic("StockActualizado")]
-    public StockUpdate StockActualizado([EventMessage] StockUpdate update)
-    {
-        return update;
-    }
-}
-
-public class StockUpdate
-{
-    public long ProductoId { get; set; }
-    public int CantidadAnterior { get; set; }
-    public int CantidadNueva { get; set; }
-    public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
 }
 ```
 
-### Suscripciones GraphQL de Ejemplo
-
-**Suscribirse a nuevos productos:**
+**Ejemplo de suscripcion GraphQL:**
 
 ```graphql
 subscription OnProductoCreado {
@@ -1034,74 +808,17 @@ subscription OnProductoCreado {
     id
     nombre
     precio
-    categoria {
-      nombre
-    }
+    categoria { nombre }
     estaDisponible
   }
 }
 ```
 
-**Suscribirse a actualizaciones:**
-
-```graphql
-subscription OnProductoActualizado {
-  productoActualizado {
-    id
-    nombre
-    precio
-    stock
-  }
-}
-```
-
-**Suscribirse a cambios de stock:**
-
-```graphql
-subscription OnStockChange {
-  stockActualizado {
-    productoId
-    cantidadAnterior
-    cantidadNueva
-    fechaActualizacion
-  }
-}
-```
-
-### Flujo de Subscription
-
-```mermaid
-sequenceDiagram
-    participant C as Cliente
-    participant WS as WebSocket
-    participant HS as HotChocolate Server
-    participant P as Pub/Sub
-    participant M as Mutation
-    
-    C->>WS: Conexion WebSocket
-    WS->>HS: Upgrade HTTP a WebSocket
-    
-    C->>HS: subscription { productoCreado { id nombre } }
-    HS->>P: Subscribe("ProductoCreado", clientId)
-    
-    Note over C: Cliente conectado y esperando eventos
-    
-    M->>HS: crearProducto(...)
-    HS->>P: Publish("ProductoCreado", producto)
-    P->>HS: Notificar suscriptores
-    HS->>WS: { data: { productoCreado: {...} } }
-    WS->>C: Evento en tiempo real
-    
-    C->>WS: Desconectar
-    WS->>P: Unsubscribe("ProductoCreado", clientId)
-```
-
-### Configuracion de WebSockets
+### 19.7.3. Configuracion de WebSockets
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar WebSockets
 builder.Services.AddServerSentEvents();
 
 var app = builder.Build();
@@ -1117,122 +834,86 @@ app.MapGraphQL();
 app.Run();
 ```
 
-### TopicEventSender
+### 19.7.4. Flujo de Subscription
 
-```csharp
-using HotChocolate.Subscriptions;
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant WS as WebSocket
+    participant HS as HotChocolate
+    participant P as Pub/Sub
+    participant M as Mutation
 
-public class MiMutation
-{
-    public async Task<Producto> CrearProducto(
-        CreateProductoInput input,
-        [Service] IProductoService service,
-        [Service] ITopicEventSender eventSender)
-    {
-        var producto = await service.CreateAsync(input);
-        
-        // Enviar mensaje a un topic
-        await eventSender.SendAsync(
-            "ProductoCreado",  // Topic name
-            producto);         // Event message
-        
-        return producto;
-    }
+    C->>WS: Conexion WebSocket
+    WS->>HS: Upgrade HTTP a WebSocket
 
-    public async Task<StockUpdate> ActualizarStock(
-        long productoId,
-        int nuevaCantidad,
-        [Service] IProductoService service,
-        [Service] ITopicEventSender eventSender)
-    {
-        var producto = await service.GetByIdAsync(productoId);
-        var cantidadAnterior = producto.Stock;
-        
-        producto.Stock = nuevaCantidad;
-        await service.UpdateAsync(producto);
-        
-        var update = new StockUpdate
-        {
-            ProductoId = productoId,
-            CantidadAnterior = cantidadAnterior,
-            CantidadNueva = nuevaCantidad
-        };
-        
-        // Enviar a topic especifico por ID
-        await eventSender.SendAsync(
-            $"StockActualizado_{productoId}",
-            update);
-        
-        return update;
-    }
-}
+    C->>HS: subscription { productoCreado { id nombre } }
+    HS->>P: Subscribe("ProductoCreado", clientId)
+
+    Note over C: Esperando eventos...
+
+    M->>HS: crearProducto(...)
+    HS->>P: Publish("ProductoCreado", producto)
+    P->>HS: Notificar suscriptores
+    HS->>WS: { data: { productoCreado: {...} } }
+    WS->>C: Evento en tiempo real
 ```
 
 ---
 
 ## 19.8. DataLoaders y Problema N+1
 
-El problema N+1 ocurre cuando una query causa N+1 consultas a la base de datos.
+El problema N+1 ocurre cuando una query causa N+1 consultas a la base de datos. Es el problema de rendimiento mas comun en GraphQL.
 
-### Problema N+1
-
-```mermaid
-graph TD
-    A[Query: categorias] --> B[BD: SELECT * FROM categorias]
-    B --> C[3 categorias encontradas]
-    
-    C --> D1[Para categoria 1: productos]
-    C --> D2[Para categoria 2: productos]
-    C --> D3[Para categoria 3: productos]
-    
-    D1 --> E1[SELECT * FROM productos WHERE categoriaId = 1]
-    D2 --> E2[SELECT * FROM productos WHERE categoriaId = 2]
-    D3 --> E3[SELECT * FROM productos WHERE categoriaId = 3]
-    
-    E1 --> F1[5 productos]
-    E2 --> F2[3 productos]
-    E3 --> F3[8 productos]
-    
-    F1 --> TOTAL[4 consultas + 3 = 7 consultas!]
-    F2 --> TOTAL
-    F3 --> TOTAL
-    
-    style B fill:#B71C1C
-    style E1 fill:#B71C1C
-    style E2 fill:#B71C1C
-    style E3 fill:#B71C1C
-    style TOTAL fill:#B71C1C
-```
-
-### Solucion con DataLoader
+### 19.8.1. El Problema N+1
 
 ```mermaid
 graph TD
-    A[Query: categorias con productos] --> B[BD: SELECT * FROM categorias]
-    B --> C[3 categorias]
-    
-    C --> D[DataLoader agrupa por categoriaId]
-    
-    D --> E[BD: SELECT * FROM productos WHERE categoriaId IN (1,2,3)]
-    E --> F[16 productos]
-    
-    F --> G[DataLoader asigna a cada categoria]
-    G --> H[1 consulta + 1 consulta = 2 consultas]
-    
-    style B fill:#2E7D32
-:#2E7D32
-    style H fill:#    style E fill2E7D32
+    Q["Query: categorias con productos"] --> S1["BD: SELECT * FROM categorias"]
+    S1 --> C["3 categorias"]
+
+    C --> D1["Para cat 1: SELECT * FROM productos WHERE catId = 1"]
+    C --> D2["Para cat 2: SELECT * FROM productos WHERE catId = 2"]
+    C --> D3["Para cat 3: SELECT * FROM productos WHERE catId = 3"]
+
+    D1 --> R["7 consultas en total!"]
+    D2 --> R
+    D3 --> R
+
+    style S1 fill:#f44336,color:#fff
+    style D1 fill:#f44336,color:#fff
+    style D2 fill:#f44336,color:#fff
+    style D3 fill:#f44336,color:#fff
+    style R fill:#B71C1C,color:#fff
 ```
 
-### Implementacion de DataLoader
+### 19.8.2. Solucion con DataLoader
+
+```mermaid
+graph TD
+    Q["Query: categorias con productos"] --> S1["BD: SELECT * FROM categorias"]
+    S1 --> C["3 categorias"]
+
+    C --> DL["DataLoader agrupa por categoriaId"]
+
+    DL --> S2["BD: SELECT * FROM productos WHERE catId IN (1,2,3)"]
+    S2 --> P["16 productos"]
+
+    P --> DL2["DataLoader asigna a cada categoria"]
+    DL2 --> R["2 consultas en total!"]
+
+    style S1 fill:#4CAF50,color:#fff
+    style DL fill:#FF9800,color:#fff
+    style S2 fill:#4CAF50,color:#fff
+    style DL2 fill:#FF9800,color:#fff
+    style R fill:#2E7D32,color:#fff
+```
+
+### 19.8.3. Implementacion de DataLoaders
 
 ```csharp
 using GreenDonut;
 using Microsoft.EntityFrameworkCore;
-using TiendaApi.Apis.Data;
-using TiendaApi.Apis.Models;
-
-namespace TiendaApi.Apis.GraphQL.DataLoaders;
 
 /// <summary>
 /// DataLoader para cargar categorias por ID
@@ -1254,15 +935,15 @@ public class CategoriaByIdDataLoader : BatchDataLoader<long, Categoria>
         CancellationToken cancellationToken)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        
-        var categorias = await context.Categorias
+
+        return await context.Categorias
             .Where(c => keys.Contains(c.Id))
             .ToDictionaryAsync(c => c.Id, cancellationToken);
-
-        return categorias;
     }
 }
+```
 
+```csharp
 /// <summary>
 /// DataLoader para cargar productos por categoria
 /// </summary>
@@ -1283,69 +964,28 @@ public class ProductoByCategoriaDataLoader : GroupedDataLoader<long, Producto>
         CancellationToken cancellationToken)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        
+
         var productos = await context.Productos
             .Where(p => keys.Contains(p.CategoriaId))
             .ToListAsync(cancellationToken);
-        
+
         return productos.ToLookup(p => p.CategoriaId);
-    }
-}
-
-/// <summary>
-/// DataLoader para cargar productos por ID
-/// </summary>
-public class ProductoByIdDataLoader : BatchDataLoader<long, Producto>
-{
-    private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
-
-    public ProductoByIdDataLoader(
-        IDbContextFactory<ApplicationDbContext> dbContextFactory,
-        IBatchScheduler batchScheduler)
-        : base(batchScheduler)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
-
-    protected override async Task<IReadOnlyDictionary<long, Producto>> LoadBatchAsync(
-        IReadOnlyList<long> keys,
-        CancellationToken cancellationToken)
-    {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        
-        var productos = await context.Productos
-            .Where(p => keys.Contains(p.Id))
-            .ToDictionaryAsync(p => p.Id, cancellationToken);
-
-        return productos;
     }
 }
 ```
 
-### Registro de DataLoaders
+**Registro en Program.cs:**
 
 ```csharp
 builder.Services
     .AddGraphQLServer()
     .AddDataLoader<CategoriaByIdDataLoader>()
-    .AddDataLoader<ProductoByIdDataLoader>()
     .AddDataLoader<ProductoByCategoriaDataLoader>();
 ```
 
-### Uso de DataLoaders en Resolvers
+**Uso en resolvers:**
 
 ```csharp
-[ExtendObjectType(typeof(Categoria))]
-public class CategoriaResolvers
-{
-    public async Task<IEnumerable<Producto>> GetProductos(
-        [Parent] Categoria categoria,
-        [Service] ProductoByCategoriaDataLoader dataLoader)
-    {
-        return await dataLoader.LoadAsync(categoria.Id);
-    }
-}
-
 [ExtendObjectType(typeof(Producto))]
 public class ProductoResolvers
 {
@@ -1362,9 +1002,9 @@ public class ProductoResolvers
 
 ## 19.9. Autorizacion
 
-HotChocolate se integra con ASP.NET Core Identity y JWT.
+HotChocolate se integra directamente con ASP.NET Core Identity y JWT.
 
-### Configuracion de Autenticacion y Autorizacion
+### 19.9.1. Configuracion de Autenticacion JWT
 
 ```csharp
 builder.Services
@@ -1391,7 +1031,7 @@ builder.Services
     .AddAuthorization();
 ```
 
-### Proteger Queries y Mutations
+### 19.9.2. Proteger Queries y Mutations
 
 ```csharp
 public class Query
@@ -1406,17 +1046,6 @@ public class Query
     }
 
     /// <summary>
-    /// Query protegida - requiere autenticacion
-    /// </summary>
-    [Authorize]
-    public async Task<Producto?> GetProductoAdmin(
-        long id, 
-        [Service] IProductoService service)
-    {
-        return await service.GetByIdAsync(id);
-    }
-
-    /// <summary>
     /// Solo administradores pueden ver productos eliminados
     /// </summary>
     [Authorize(Roles = new[] { "Admin" })]
@@ -1424,16 +1053,6 @@ public class Query
         [Service] IProductoService service)
     {
         return await service.GetEliminadosAsync();
-    }
-
-    /// <summary>
-    /// Acceso basado en politica
-    /// </summary>
-    [Authorize(Policy = "AdminGerente")]
-    public async Task<decimal> GetIngresosTotales(
-        [Service] IReportService reportService)
-    {
-        return await reportService.GetIngresosTotalesAsync();
     }
 }
 
@@ -1444,7 +1063,7 @@ public class Mutation
     /// </summary>
     [Authorize(Roles = new[] { "Admin", "Editor" })]
     public async Task<Producto> CrearProducto(
-        CreateProductoInput input, 
+        CreateProductoInput input,
         [Service] IProductoService service)
     {
         return await service.CreateAsync(input);
@@ -1455,26 +1074,24 @@ public class Mutation
     /// </summary>
     [Authorize(Roles = new[] { "Admin" })]
     public async Task<bool> EliminarProducto(
-        long id, 
+        long id,
         [Service] IProductoService service)
     {
         return await service.DeleteAsync(id);
     }
-
-    /// <summary>
-    /// Politica personalizada
-    /// </summary>
-    [Authorize(Policy = "PremiumUser")]
-    public async Task<List<Producto>> GetFavoritos(
-        [Service] IFavoritoService service,
-        [GlobalState("userId")] long userId)
-    {
-        return await service.GetFavoritosAsync(userId);
-    }
 }
 ```
 
-### Definir Politicas en Program.cs
+```csharp
+// ❌ MALO: Mutation sensible sin autorizacion
+public async Task<bool> EliminarProducto(long id, ...) { ... }
+
+// ✅ BUENO: Protegido con [Authorize]
+[Authorize(Roles = new[] { "Admin" })]
+public async Task<bool> EliminarProducto(long id, ...) { ... }
+```
+
+### 19.9.3. Politicas Personalizadas
 
 ```csharp
 builder.Services.AddAuthorization(options =>
@@ -1484,43 +1101,23 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("PremiumUser", policy =>
         policy.RequireAssertion(ctx =>
-            ctx.User.HasClaim(c => 
-                c.Type == "subscription_type" && 
+            ctx.User.HasClaim(c =>
+                c.Type == "subscription_type" &&
                 c.Value == "premium")));
-
-    options.AddPolicy("OwnerOnly", policy =>
-        policy.RequireAssertion(ctx =>
-        {
-            var resourceId = ctx.Resource; // ID del recurso
-            var userId = ctx.User.FindFirst("sub")?.Value;
-            return resourceId == userId;
-        }));
 });
 ```
-
-### Atributos de Autorizacion
-
-| Atributo | Descripcion | Ejemplo |
-|----------|-------------|---------|
-| `[Authorize]` | Requiere autenticacion | Cualquier usuario logueado |
-| `[Authorize(Roles = "Admin")]` | Requiere rol especifico | Solo administradores |
-| `[Authorize(Roles = "Admin,Editor")]` | Requiere uno de los roles | Admin o Editor |
-| `[Authorize(Policy = "Name")]` | Requiere politica personalizada | Definida en DI |
 
 ---
 
 ## 19.10. Testing
 
+### 19.10.1. Test de Queries
+
 ```csharp
 using HotChocolate;
-using HotChocolate.Types;
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using FluentAssertions;
-using TiendaApi.Apis.Data;
-using TiendaApi.Apis.GraphQL;
-
-namespace TiendaApi.Apis.Tests.GraphQL;
 
 [TestFixture]
 public class ProductoGraphQLTests
@@ -1529,7 +1126,7 @@ public class ProductoGraphQLTests
     private IRequestExecutor _executor = null!;
 
     [SetUp]
-    public void Setup()
+    public void SetUp()
     {
         _context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -1538,35 +1135,33 @@ public class ProductoGraphQLTests
 
         // Seed data
         _context.Categorias.Add(new Categoria { Id = 1, Nombre = "Marvel" });
-        _context.Productos.Add(new Producto 
-        { 
-            Id = 1, 
-            Nombre = "Iron Man", 
-            Precio = 29.99m, 
+        _context.Productos.Add(new Producto
+        {
+            Id = 1,
+            Nombre = "Iron Man",
+            Precio = 29.99m,
             Stock = 10,
-            CategoriaId = 1 
+            CategoriaId = 1
         });
-        _context.Productos.Add(new Producto 
-        { 
-            Id = 2, 
-            Nombre = "Spider-Man", 
-            Precio = 24.99m, 
+        _context.Productos.Add(new Producto
+        {
+            Id = 2,
+            Nombre = "Spider-Man",
+            Precio = 24.99m,
             Stock = 5,
-            CategoriaId = 1 
+            CategoriaId = 1
         });
         _context.SaveChanges();
 
         _executor = new ServiceCollection()
-            .AddDbContext<ApplicationDbContext>(p => 
+            .AddDbContext<ApplicationDbContext>(p =>
                 p.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}"))
             .AddGraphQL()
             .AddQueryType<Query>()
             .AddMutationType<Mutation>()
-            .AddSubscriptionType<Subscription>()
             .AddInMemorySubscriptions()
             .AddFiltering()
             .AddSorting()
-            .AddProjections()
             .Services
             .BuildServiceProvider()
             .GetRequiredService<IRequestExecutor>();
@@ -1604,29 +1199,6 @@ public class ProductoGraphQLTests
     }
 
     [Test]
-    public async Task Query_GetProductoById_ReturnsProduct()
-    {
-        // Arrange
-        var query = @"
-            query {
-                producto(id: 1) {
-                    id
-                    nombre
-                    precio
-                    stock
-                }
-            }
-        ";
-
-        // Act
-        var result = await _executor.ExecuteAsync(query);
-
-        // Assert
-        result.ToJson().Should().Contain("Iron Man");
-        result.ToJson().Should().Contain("29.99");
-    }
-
-    [Test]
     public async Task Query_GetProductos_WithFilter_ReturnsFilteredResults()
     {
         // Arrange
@@ -1649,251 +1221,227 @@ public class ProductoGraphQLTests
         result.ToJson().Should().Contain("Iron Man");
         result.ToJson().Should().NotContain("Spider-Man");
     }
+}
+```
 
-    [Test]
-    public async Task Query_GetProductos_WithSorting_ReturnsSortedResults()
-    {
-        // Arrange
-        var query = @"
-            query {
-                productos(order: { precio: DESC }) {
-                    nodes {
-                        id
-                        nombre
-                        precio
-                    }
-                }
+### 19.10.2. Test de Mutations
+
+```csharp
+[Test]
+public async Task Mutation_CrearProducto_ReturnsNewProduct()
+{
+    // Arrange
+    var mutation = @"
+        mutation {
+            crearProducto(input: {
+                nombre: ""Batman""
+                precio: 29.99
+                stock: 15
+                categoriaId: 1
+            }) {
+                id
+                nombre
+                precio
             }
-        ";
+        }
+    ";
 
-        // Act
-        var result = await _executor.ExecuteAsync(query);
+    // Act
+    var result = await _executor.ExecuteAsync(mutation);
 
-        // Assert
-        var json = result.ToJson();
-        json.Should().Contain("Iron Man");
-        json.Should().Contain("Spider-Man");
-        // Iron Man ($29.99) should come before Spider-Man ($24.99)
-        var ironManPosition = json.IndexOf("Iron Man");
-        var spiderManPosition = json.IndexOf("Spider-Man");
-        ironManPosition.Should().BeLessThan(spiderManPosition);
-    }
-
-    [Test]
-    public async Task Mutation_CrearProducto_ReturnsNewProduct()
-    {
-        // Arrange
-        var mutation = @"
-            mutation {
-                crearProducto(input: {
-                    nombre: ""Batman""
-                    precio: 29.99
-                    stock: 15
-                    categoriaId: 1
-                }) {
-                    id
-                    nombre
-                    precio
-                }
-            }
-        ";
-
-        // Act
-        var result = await _executor.ExecuteAsync(mutation);
-
-        // Assert
-        result.ToJson().Should().Contain("Batman");
-        result.ToJson().Should().Contain("29.99");
-    }
-
-    [Test]
-    public async Task Query_GetCategorias_ReturnsCategories()
-    {
-        // Arrange
-        var query = @"
-            query {
-                categorias {
-                    nodes {
-                        id
-                        nombre
-                    }
-                }
-            }
-        ";
-
-        // Act
-        var result = await _executor.ExecuteAsync(query);
-
-        // Assert
-        result.ToJson().Should().Contain("Marvel");
-    }
+    // Assert
+    result.ToJson().Should().Contain("Batman");
+    result.ToJson().Should().Contain("29.99");
 }
 ```
 
 ---
 
-## 19.11. Resumen
+## 19.11. Buenas Practicas
+
+```csharp
+// ❌ MALO: Exponer entidades directamente sin filtrar campos
+public class Query
+{
+    public IQueryable<Usuario> GetUsuarios([Service] ApplicationDbContext db)
+    {
+        return db.Usuarios; // Expone password hash, tokens, etc.
+    }
+}
+
+// ✅ BUENO: Usar DTOs o proyecciones para exponer solo lo necesario
+public class Query
+{
+    [UseProjection]
+    public IQueryable<UsuarioDto> GetUsuarios([Service] ApplicationDbContext db)
+    {
+        return db.Usuarios.Select(u => new UsuarioDto
+        {
+            Id = u.Id,
+            Nombre = u.Nombre,
+            Email = u.Email
+            // Password, tokens, etc. NO se exponen
+        });
+    }
+}
+```
+
+```csharp
+// ❌ MALO: Resolver sin DataLoader — problema N+1
+public async Task<Categoria> GetCategoria([Parent] Producto producto, [Service] ApplicationDbContext db)
+{
+    return await db.Categorias.FindAsync(producto.CategoriaId); // 1 consulta por producto
+}
+
+// ✅ BUENO: DataLoader — agrupa consultas
+public async Task<Categoria> GetCategoria(
+    [Parent] Producto producto,
+    [Service] CategoriaByIdDataLoader dataLoader)
+{
+    return await dataLoader.LoadAsync(producto.CategoriaId); // 1 consulta para todos
+}
+```
+
+1. **Un solo endpoint** — Todas las queries van a `/graphql`, no crees endpoints REST paralelos
+2. **Usa DataLoaders** — Siempre que accedas a datos relacionados en resolvers
+3. **Valida los Inputs** — Usa DataAnnotations o FluentValidation
+4. **Protege las Mutations** — `[Authorize]` en toda operacion de escritura
+5. **No expongas entidades directamente** — Usa DTOs o proyecciones
+6. **Documenta los campos** — Descripciones en ObjectType y resolvers
+7. **Usa paging** — `[UsePaging]` para colecciones grandes
+8. **Subscriptions solo cuando sea necesario** — No las uses para datos que cambian poco
+9. **Testing** — Testea queries y mutations como si fueran endpoints REST
+10. **Error handling** — HotChocolate convierte excepciones en errores GraphQL automaticamente
+
+---
+
+## 19.12. Reto
+
+> Implementa una API GraphQL completa para gestionar Funkos con categorias usando HotChocolate y ASP.NET Core.
+
+**Requisitos:**
+
+1. **Tipos GraphQL:**
+   - `FunkoType` con campos: `Id`, `Nombre`, `Precio`, `Stock`, `Categoria`, `EstaDisponible`
+   - `CategoriaType` con campos: `Id`, `Nombre`, `Funkos`
+   - `CreateFunkoInput` y `UpdateFunkoInput`
+
+2. **Queries:**
+   - `funkos` con paginacion, filtrado y ordenamiento
+   - `funko(id)` por ID
+   - `categorias` con paginacion
+   - Campo calculado `estaDisponible` en Funko
+
+3. **Mutations:**
+   - `crearFunko` (requiere rol Admin/Editor)
+   - `actualizarFunko` (requiere rol Admin/Editor)
+   - `eliminarFunko` (requiere rol Admin)
+
+4. **Subscriptions:**
+   - `funkoCreado` — notifica al crear
+   - `funkoActualizado` — notifica al actualizar
+   - `funkoEliminado` — notifica al eliminar
+
+5. **DataLoaders:**
+   - `CategoriaByIdDataLoader` para resolver la categoria de cada funko
+
+6. **Autorizacion:**
+   - Queries publicas (cualquiera puede leer)
+   - Mutations protegidas con JWT + roles
+
+7. **Tests:**
+   - Al menos 4 tests: query funkos, query por filtro, mutation crear, mutation eliminar
+
+**Arquitectura:**
+
+```
+FunkosGraphQL/
+├── FunkosGraphQL.slnx
+├── FunkosGraphQL/
+│   ├── Program.cs
+│   ├── Models/
+│   │   ├── Funko.cs
+│   │   └── Categoria.cs
+│   ├── GraphQL/
+│   │   ├── Types/
+│   │   │   ├── FunkoType.cs
+│   │   │   └── CategoriaType.cs
+│   │   ├── Inputs/
+│   │   │   ├── CreateFunkoInput.cs
+│   │   │   └── UpdateFunkoInput.cs
+│   │   ├── Query.cs
+│   │   ├── Mutation.cs
+│   │   ├── Subscription.cs
+│   │   └── Resolvers/
+│   │       └── FunkoResolvers.cs
+│   ├── DataLoaders/
+│   │   └── CategoriaByIdDataLoader.cs
+│   ├── Entity/
+│   │   └── AppDbContext.cs
+│   └── Infrastructures/
+│       ├── DatabaseConfig.cs
+│       └── RepositoriesConfig.cs
+└── FunkosGraphQL.Test/
+    └── GraphQLTests.cs
+```
+
+---
+
+## 19.13. Resumen
+
+```mermaid
+graph TD
+    GQL[GraphQL] --> CONCEPTOS[Conceptos]
+    GQL --> TOOLS[Herramientas]
+    GQL --> SECURITY[Seguridad]
+    GQL --> TEST[Testing]
+
+    CONCEPTOS --> QRY[Queries - Solo lectura]
+    CONCEPTOS --> MUT[Mutations - Escritura]
+    CONCEPTOS --> SUB[Subscriptions - Tiempo Real]
+    CONCEPTOS --> DL[DataLoaders - N+1]
+
+    TOOLS --> HC[HotChocolate]
+    TOOLS --> TYPES[Types + Inputs]
+    TOOLS --> FILTERS[Filtering + Sorting]
+
+    SECURITY --> JWT[JWT + Identity]
+    SECURITY --> AUTH[Authorize Roles]
+
+    TEST --> NUNIT[NUnit + InMemory]
+
+    style GQL fill:#f44336,color:#fff
+    style CONCEPTOS fill:#2196F3,color:#fff
+    style TOOLS fill:#FF9800,color:#fff
+    style SECURITY fill:#9C27B0,color:#fff
+    style TEST fill:#4CAF50,color:#fff
+    style QRY fill:#1565C0,color:#fff
+    style MUT fill:#1565C0,color:#fff
+    style SUB fill:#1565C0,color:#fff
+    style DL fill:#1565C0,color:#fff
+    style HC fill:#E65100,color:#fff
+    style TYPES fill:#E65100,color:#fff
+    style FILTERS fill:#E65100,color:#fff
+    style JWT fill:#6A1B9A,color:#fff
+    style AUTH fill:#6A1B9A,color:#fff
+    style NUNIT fill:#2E7D32,color:#fff
+```
 
 | Concepto | Descripcion |
 |----------|-------------|
 | **GraphQL** | Lenguaje de consulta que permite al cliente especificar exactamente que datos necesita |
-| **HotChocolate** | Implementacion mas popular de GraphQL para .NET con enfoque Code-First |
+| **HotChocolate** | Implementacion mas popular de GraphQL para .NET (Code-First) |
 | **ObjectType** | Define tipos de objeto en el esquema GraphQL |
 | **Input Type** | Representa datos de entrada para mutations |
-| **Query** | Operaciones de solo lectura equivalentes a GET en REST |
+| **Query** | Operaciones de solo lectura equivalentes a GET |
 | **Mutation** | Operaciones de escritura equivalentes a POST, PUT, DELETE |
 | **Subscription** | Notificaciones en tiempo real mediante WebSockets |
-| **ITopicEventSender** | Envio de eventos para el patron Pub/Sub |
 | **DataLoader** | Solucion al problema N+1 agrupando consultas |
-| **Schema Code-First** | Definicion del esquema mediante clases C# |
+| **`[UsePaging]`** | Paginacion automatica por cursor |
+| **`[UseFiltering]`** | Filtros automaticos en queries |
+| **`[UseSorting]`** | Ordenamiento automatico en queries |
+| **`[Authorize]`** | Protege endpoints con autenticacion/autorizacion |
 
-### Ventajas de GraphQL
+**¿Que viene despues?**
 
-✅ Un solo endpoint para toda la API
-✅ El cliente decide que datos recibir
-✅ Consultas anidadas sin multiples llamadas
-✅ Tipado fuerte con validacion automatica
-✅ Documentacion automatica del esquema
-✅ Tiempo real con subscriptions
-
-### Desventajas de GraphQL
-
-❌ Curva de aprendizaje mas alta
-❌ Cacheo mas complejo que REST
-❌ Overhead en parsing de queries complejas
-❌ No es ideal para APIs simples
-
-### Flujo de Desarrollo
-
-```mermaid
-graph LR
-    A[Modelos C#] --> B[ObjectType]
-    B --> C[Schema GraphQL]
-    C --> D[Queries]
-    C --> E[Mutations]
-    C --> F[Subscriptions]
-    D --> G[Banana Cake Pop]
-    E --> G
-    F --> G
-    
-    style A fill:#1565C0
-    style C fill:#6A1B9A
-    style G fill:#2E7D32
-```
-
----
-
-## 19.12. Ejercicio Propuesto
-
-Implementar una API GraphQL completa para gestionar una tienda de Funkos.
-
-### Entidades
-
-```csharp
-public class Funko
-{
-    public long Id { get; set; }
-    public string Nombre { get; set; } = string.Empty;
-    public decimal Precio { get; set; }
-    public int Stock { get; set; }
-    public string? Descripcion { get; set; }
-    public string? ImagenUrl { get; set; }
-    public long CategoriaId { get; set; }
-    public Categoria Categoria { get; set; } = null!;
-    public DateTime FechaLanzamiento { get; set; }
-    public bool Activo { get; set; } = true;
-}
-
-public class Categoria
-{
-    public long Id { get; set; }
-    public string Nombre { get; set; } = string.Empty;
-    public string? Descripcion { get; set; }
-    public string? ImagenUrl { get; set; }
-    public ICollection<Funko> Funkos { get; set; } = new List<Funko>();
-}
-```
-
-### Schema GraphQL Requerido
-
-```graphql
-# Tipos
-type Funko {
-  id: ID!
-  nombre: String!
-  precio: Decimal!
-  stock: Int!
-  descripcion: String
-  imagenUrl: String
-  categoria: Categoria!
-  estaDisponible: Boolean!
-  categoriaId: Long!
-}
-
-type Categoria {
-  id: ID!
-  nombre: String!
-  descripcion: String
-  imagenUrl: String
-  funkos(first: Int): [Funko!]!
-}
-
-# Inputs
-input CreateFunkoInput {
-  nombre: String!
-  descripcion: String
-  precio: Decimal!
-  stock: Int!
-  categoriaId: Long!
-}
-
-input UpdateFunkoInput {
-  nombre: String
-  descripcion: String
-  precio: Decimal
-  stock: Int
-}
-
-# Queries
-type Query {
-  funkos(first: Int, skip: Int, where: FunkoFilter, order: FunkoOrder): FunkoConnection!
-  funko(id: Long!): Funko
-  categorias(first: Int): CategoriaConnection!
-  categoria(id: Long!): Categoria
-}
-
-# Mutations
-type Mutation {
-  crearFunko(input: CreateFunkoInput!): Funko!
-  actualizarFunko(id: Long!, input: UpdateFunkoInput!): Funko
-  eliminarFunko(id: Long!): Boolean!
-}
-
-# Subscriptions
-type Subscription {
-  funkoCreado: Funko!
-  funkoActualizado: Funko!
-  funkoEliminado: Long!
-  stockActualizado(productoId: Long!): StockUpdate!
-}
-```
-
-### Criterios de Evaluacion
-
-| Criterio | Puntos |
-|----------|--------|
-| ObjectTypes correctamente definidos | 2 |
-| Queries con paginacion, filtrado y ordenamiento | 2 |
-| Mutations con inputs validados | 2 |
-| Subscriptions con ITopicEventSender | 2 |
-| DataLoaders para evitar N+1 | 1 |
-| Autorizacion en mutations sensibles | 1 |
-| Tests unitarios | 2 |
-
-### Extras
-
-- Filtros personalizados por rango de precio
-- Busqueda por texto completo (LIKE)
-- Documentacion con Banana Cake Pop
-- Integracion con Redis para suscripciones
-- Campos calculados (estaDisponible)
+En el siguiente punto veremos **Almacenamiento de Ficheros**: como gestionar upload y download de archivos, almacenamiento local y en la nube, y integracion con servicios como Azure Blob Storage o AWS S3.
