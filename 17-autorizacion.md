@@ -119,6 +119,76 @@ app.Run();
 
 > ⚠️ **Advertencia:** El orden de `UseAuthentication()` y `UseAuthorization()` es **crítico**. Si los inviertes, la autorización fallará porque no habrá identidad que verificar. **Siempre** autenticación primero, autorización segundo.
 
+#### Flujo positivo: Autorizacion con roles
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant S as Servidor
+    participant Auth as Middleware Auth
+
+    C->>S: DELETE /api/productos/1 (Bearer ADMIN token)
+    S->>Auth: UseAuthentication
+    Auth->>Auth: Validar JWT, crear ClaimsPrincipal
+    S->>Auth: UseAuthorization
+    Auth->>Auth: Evaluar [Authorize(Roles = ADMIN)]
+    Auth->>Auth: User.IsInRole(ADMIN) = true
+    Auth-->>S: Autorizado
+    S->>S: Ejecutar Delete(1)
+    S-->>C: 200 OK
+```
+
+#### Flujo negativo: Usuario sin permisos
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant S as Servidor
+    participant Auth as Middleware Auth
+
+    C->>S: DELETE /api/productos/1 (Bearer USER token)
+    S->>Auth: UseAuthentication
+    Auth->>Auth: Validar JWT, crear ClaimsPrincipal
+    S->>Auth: UseAuthorization
+    Auth->>Auth: Evaluar [Authorize(Roles = ADMIN)]
+    Auth->>Auth: User.IsInRole(ADMIN) = false
+    Auth-->>S: No autorizado
+    S-->>C: 403 Forbidden
+```
+
+#### Flujo negativo: Sin token
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant S as Servidor
+    participant Auth as Middleware Auth
+
+    C->>S: DELETE /api/productos/1 (sin header)
+    S->>Auth: UseAuthentication
+    Auth->>Auth: No hay Bearer token
+    Auth-->>S: No autenticado
+    S-->>C: 401 Unauthorized
+```
+
+#### Flujo positivo: Policy RequireAdmin
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant S as Servidor
+    participant Auth as AuthorizationHandler
+
+    C->>S: PUT /api/productos/1 (Bearer ADMIN token)
+    S->>Auth: Evaluar policy RequireAdmin
+    Auth->>Auth: Revisar claims del JWT
+    Auth->>Auth: Claim role = ADMIN
+    Auth->>Auth: context.Succeed(requirement)
+    Auth-->>S: Policy cumplida
+    S->>S: Ejecutar Update(1)
+    S-->>C: 200 OK
+```
+
 ---
 
 ## 17.2. Conceptos Fundamentales
@@ -435,9 +505,25 @@ public class ProductosController(IProductoService productoService) : ControllerB
         return NoContent();
     }
 
-    /// <summary>
-    /// Verificación programática de roles en código.
-    /// </summary>
+El diagrama siguiente muestra como el middleware de autorizacion evalua cada request. Primero `UseAuthentication` crea el `ClaimsPrincipal` a partir del JWT. Luego `UseAuthorization` evalua si el usuario tiene los permisos necesarios (roles, claims o policies).
+
+```mermaid
+flowchart TD
+    REQ[Request con Bearer token] --> AUTH[UseAuthentication]
+    AUTH -->|Token valido| CP[ClaimsPrincipal creado]
+    AUTH -->|Token invalido| R401[401 Unauthorized]
+    CP --> AUTHZ[UseAuthorization]
+    AUTHZ -->|Tiene rol o policy| OK[Endpoint ejecutado]
+    AUTHZ -->|No tiene permiso| R403[403 Forbidden]
+
+    style AUTH fill:#4CAF50,color:#fff
+    style AUTHZ fill:#2196F3,color:#fff
+    style R401 fill:#f44336,color:#fff
+    style R403 fill:#f44336,color:#fff
+    style OK fill:#4CAF50,color:#fff
+```
+
+#### Verificación programática de roles en código
     [HttpGet("{id:long}/detail")]
     [Authorize]
     public async Task<IActionResult> GetById(long id)

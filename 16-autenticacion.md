@@ -131,6 +131,64 @@ flowchart TD
 
 > 📝 **Nota:** Este flujo es identico para el enfoque manual y para Identity. Lo que cambia es como se genera el token y como se gestiona el usuario, pero el ciclo de vida del token es el mismo.
 
+#### Flujo positivo: Login exitoso
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant S as Servidor
+    participant BD as Base de Datos
+
+    C->>S: POST /auth/login (username, password)
+    S->>BD: Buscar usuario por username
+    BD-->>S: Usuario encontrado
+    S->>S: BCrypt.Verify(password, hash)
+    S->>S: Generar JWT (claims: sub, role, exp)
+    S-->>C: 200 OK { token: eyJhbG... }
+    C->>C: Almacenar token
+    C->>S: GET /api/productos (Authorization: Bearer eyJhbG...)
+    S->>S: Validar JWT (firma, expiracion, issuer)
+    S-->>C: 200 OK [productos]
+```
+
+#### Flujo negativo: Credenciales invalidas
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant S as Servidor
+    participant BD as Base de Datos
+
+    C->>S: POST /auth/login (username, password)
+    S->>BD: Buscar usuario por username
+    BD-->>S: No encontrado
+    S-->>C: 401 Unauthorized
+```
+
+#### Flujo negativo: Token expirado
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant S as Servidor
+
+    C->>S: GET /api/productos (Authorization: Bearer token_expirado)
+    S->>S: Validar JWT
+    S-->>C: 401 Unauthorized (token expirado)
+```
+
+#### Flujo negativo: Token falsificado
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant S as Servidor
+
+    C->>S: GET /api/productos (Authorization: Bearer token_falso)
+    S->>S: Validar JWT (firma incorrecta)
+    S-->>C: 401 Unauthorized (firma invalida)
+```
+
 ---
 
 ## 16.2. JWT en Profundidad
@@ -903,6 +961,21 @@ app.Run();
 
 > ⚠️ **Advertencia:** El orden de `UseAuthentication()` y `UseAuthorization()` es **critico**. Si los inviertes, la autorizacion no funcionara porque no habra identidad que verificar. **Siempre** autenticacion primero, autorizacion segundo.
 
+El siguiente diagrama muestra el pipeline de middleware y el orden correcto. Cada request pasa por cada middleware en secuencia. Si `UseAuthentication` no valida el token, `UseAuthorization` no tiene identidad que verificar y deniega todo.
+
+```mermaid
+flowchart LR
+    REQ[Request entrante] --> A1[UseRouting]
+    A1 --> A2[UseCors]
+    A2 --> A3[UseAuthentication]
+    A3 --> A4[UseAuthorization]
+    A4 --> A5[MapControllers]
+    A5 --> RESP[Response]
+
+    style A3 fill:#4CAF50,color:#fff
+    style A4 fill:#2196F3,color:#fff
+```
+
 ---
 
 ## 16.5. OAuth2 y Autenticacion con Proveedores Externos
@@ -1248,6 +1321,49 @@ public class AuthIdentityController(
 Identity genera contrasenas hasheadas con PBKDF2 por defecto (no BCrypt). Para generar JWT desde Identity, puedes usar `UserManager` para obtener el usuario y los roles, y luego generar el token con `JwtSecurityTokenHandler` o integrarlo con el `JwtService` del enfoque manual.
 
 La ventaja de combinar Identity con JWT es que obtienes la gestion de usuarios de Identity (2FA, lockout, external logins) con la escalabilidad de JWT para APIs REST.
+
+#### Flujo positivo: Login con Identity
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant S as Servidor
+    participant UM as UserManager
+    participant SM as SignInManager
+    participant BD as Base de Datos
+
+    C->>S: POST /auth/login (username, password)
+    S->>UM: FindByNameAsync(username)
+    UM->>BD: SELECT from AspNetUsers
+    BD-->>UM: User found
+    UM-->>S: User object
+    S->>SM: CheckPasswordSignInAsync(user, password)
+    SM->>SM: PBKDF2 hash verification
+    SM-->>S: SignInResult.Succeeded
+    S->>S: Generate JWT with user claims
+    S-->>C: 200 OK { token: eyJhbG... }
+    C->>S: GET /api/productos (Bearer token)
+    S->>S: Validate JWT
+    S-->>C: 200 OK [productos]
+```
+
+#### Flujo negativo: Identity bloquea usuario
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant S as Servidor
+    participant UM as UserManager
+    participant SM as SignInManager
+
+    C->>S: POST /auth/login (username, password)
+    S->>UM: FindByNameAsync(username)
+    UM-->>S: User found
+    S->>SM: CheckPasswordSignInAsync(user, password, lockoutOnFailure: true)
+    SM->>SM: Password incorrect. FailedAttempts++
+    SM-->>S: SignInResult.LockedOut (5 intentos fallidos)
+    S-->>C: 403 Forbidden (usuario bloqueado)
+```
 
 ### 16.6.5. Identity con OAuth2 (Login Externo)
 
