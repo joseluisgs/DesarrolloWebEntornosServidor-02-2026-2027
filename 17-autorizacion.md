@@ -30,7 +30,6 @@
   - [17.10. Reto](#1710-reto)
   - [17.11. Resumen](#1711-resumen)
 
----
 
 # 17. Autorización
 
@@ -48,18 +47,22 @@ La **autorización** es el proceso de determinar **qué recursos puede acceder**
 
 ### 17.1.2. Autenticación vs Autorización
 
+Para entender la diferencia, piensa en la metáfora de una discoteca. La **autenticación** es cuando sacas tu DNI en la puerta: el portero verifica que eres quien dices ser. La **autorización** es cuando el portero comprueba si tu entrada es VIP, si tienes la pulsera de zona premium o si solo puedes acceder a la zona general. Ya saben quién eres, pero ahora necesitan saber **qué puedes hacer** dentro.
+
+El siguiente diagrama muestra cómo estos dos procesos se encadenan en una aplicación web:
+
 ```mermaid
 flowchart LR
-    subgraph "Autenticación (¿Quién eres?)"
-        A1["El usuario demuestra su identidad"]
+    subgraph "Autenticacion"
+        A1["Usuario demuestra identidad"]
         A2["Verificar credenciales"]
-        A3["Establecer identidad (ClaimsPrincipal)"]
+        A3["Crear ClaimsPrincipal"]
     end
 
-    subgraph "Autorización (¿Qué puedes hacer?)"
+    subgraph "Autorizacion"
         B1["Evaluar permisos"]
-        B2["Verificar roles/claims/políticas"]
-        B3["Permitir o denegar acceso"]
+        B2["Verificar roles, claims o policies"]
+        B3["Permitir o denegar"]
     end
 
     A1 --> A2 --> A3 --> B1 --> B2 --> B3
@@ -87,12 +90,14 @@ flowchart LR
 
 ### 17.1.3. Flujo Completo: Autenticar → Autorizar → Acceder
 
+Cuando una petición llega a tu API, el middleware de ASP.NET Core procesa la seguridad en dos fases. Primero `UseAuthentication()` valida el token JWT y extrae los claims del usuario. Si el token es inválido, la petición se rechaza con 401. Si es válido, se crea un `ClaimsPrincipal` con toda la información del usuario. Después, `UseAuthorization()` evalúa si ese usuario tiene permisos para acceder al endpoint solicitado. Si no tiene permisos, devuelve 403. Si todo está correcto, ejecuta la acción del controller.
+
 ```mermaid
 flowchart TD
-    A["Request con Bearer token"] --> B["UseAuthentication(): validar JWT"]
-    B -->|Token inválido| C["401 Unauthorized"]
-    B -->|Token válido| D["ClaimsPrincipal creado"]
-    D --> E["UseAuthorization(): evaluar permisos"]
+    A["Request con Bearer token"] --> B["UseAuthentication: validar JWT"]
+    B -->|Token invalido| C["401 Unauthorized"]
+    B -->|Token valido| D["ClaimsPrincipal creado"]
+    D --> E["UseAuthorization: evaluar permisos"]
     E -->|Sin permiso| F["403 Forbidden"]
     E -->|Permiso concedido| G["Ejecutar endpoint"]
     G --> H["200 OK + datos"]
@@ -104,10 +109,12 @@ flowchart TD
     style H fill:#4CAF50,color:#fff
 ```
 
+En el `Program.cs`, la configuración de estos middlewares debe seguir un orden estricto. La autenticación siempre va primero porque la autorización necesita saber quién es el usuario antes de evaluar sus permisos:
+
 ```csharp
 var app = builder.Build();
 
-app.UseAuthentication();   // 1. Extraer y validar el JWT →ClaimsPrincipal
+app.UseAuthentication();   // 1. Extraer y validar el JWT → ClaimsPrincipal
 app.UseAuthorization();    // 2. Evaluar políticas → Allow/Deny
 
 app.MapControllers();
@@ -121,16 +128,20 @@ app.Run();
 
 ## 17.2. Conceptos Fundamentales
 
+Antes de meternos en código, necesitas entender los cinco pilares sobre los que se construye todo el sistema de autorización en ASP.NET Core: roles, claims, policies, requirements y handlers. Piensa en ello como las piezas de un mecanismo de seguridad: cada pieza tiene una función concreta y todas trabajan juntas.
+
 ### 17.2.1. Roles
 
-Un **rol** agrupa permisos de forma binaria: o tienes el rol o no lo tienes. Es la forma más simple de autorización.
+Un **rol** agrupa permisos de forma binaria: o tienes el rol o no lo tienes. Es la forma más simple de autorización. Si un usuario tiene el rol `ADMIN`, tiene acceso total. Si tiene `USER`, acceso estándar. No hay valores intermedios.
+
+El siguiente diagrama muestra cómo los roles se asocian a permisos concretos en una aplicación típica:
 
 ```mermaid
 flowchart TD
     subgraph "Roles"
-        ADMIN["ADMIN — Acceso total"]
-        USER["USER — Acceso estándar"]
-        MOD["MODERADOR — Gestión parcial"]
+        ADMIN["ADMIN: acceso total"]
+        USER["USER: acceso estandar"]
+        MOD["MODERATOR: gestion parcial"]
     end
 
     subgraph "Permisos"
@@ -163,11 +174,15 @@ flowchart TD
 
 ### 17.2.2. Claims
 
-Los **claims** son pares clave-valor que transportan información sobre el usuario. A diferencia de los roles (binarios), los claims pueden contener cualquier dato: email, departamento, nivel de acceso, fecha de registro, etc.
+Los **claims** son pares clave-valor que transportan información sobre el usuario. A diferencia de los roles (binarios), los claims pueden contener cualquier dato: email, departamento, nivel de acceso, fecha de registro, etc. Son la materia prima que alimenta las decisiones de autorización.
+
+Piensa en un claim como una etiqueta en tu credencial. Cada etiqueta dice algo de ti: "Departamento: IT", "Nivel: senior", "Email: ana@email.com". El sistema de autorización lee estas etiquetas y decide si tienes acceso.
+
+El siguiente diagrama muestra cómo los claims de un JWT se evalúan para tomar decisiones de autorización:
 
 ```mermaid
 flowchart LR
-    subgraph "JWT Payload (Claims)"
+    subgraph "JWT Payload"
         C1["sub: 42"]
         C2["email: ana@email.com"]
         C3["role: ADMIN"]
@@ -175,10 +190,10 @@ flowchart LR
         C5["level: senior"]
     end
 
-    subgraph "Autorización"
-        A1["¿Es ADMIN? → Sí"]
-        A2["¿Departamento IT? → Sí"]
-        A3["¿Nivel senior? → Sí"]
+    subgraph "Evaluacion"
+        A1["Es ADMIN? Si"]
+        A2["Departamento IT? Si"]
+        A3["Nivel senior? Si"]
     end
 
     C3 --> A1
@@ -200,6 +215,8 @@ flowchart LR
 | `department` | `IT` | Departamento (personalizado) |
 | `level` | `senior` | Nivel de experiencia (personalizado) |
 
+Una vez que el usuario está autenticado, puedes leer sus claims desde el `HttpContext.User`. Esto es lo que normalmente haces en un controller para obtener información del usuario actual:
+
 ```csharp
 // Leer claims del usuario autenticado
 var userId = User.FindFirst("sub")?.Value;
@@ -214,27 +231,29 @@ bool isSenior = User.HasClaim("level", "senior");
 
 ### 17.2.3. Policies
 
-Una **política** (policy) es una regla de autorización reutilizable que puede combinar múltiples requisitos. En lugar de escribir `[Authorize(Roles = "ADMIN")]` por todas partes, defines una política una vez y la reutilizas.
+Una **política** (policy) es una regla de autorización reutilizable que puede combinar múltiples requisitos. En lugar de escribir `[Authorize(Roles = "ADMIN")]` por todas partes, defines una política una vez y la reutilizas. Las políticas hacen tu código más limpio, más mantenible y más fácil de modificar.
+
+El siguiente diagrama muestra cómo se construyen políticas a partir de requisitos individuales y cómo se aplican en los controllers:
 
 ```mermaid
 flowchart TD
-    subgraph "Política RequireAdmin"
+    subgraph "Politica RequireAdmin"
         R1["Requisito: Rol ADMIN"]
     end
 
-    subgraph "Política RequireDepartment"
+    subgraph "Politica RequireDepartment"
         R2["Requisito: Claim department = IT"]
     end
 
-    subgraph "Política RequireSeniorAdmin"
+    subgraph "Politica RequireSeniorAdmin"
         R3["Requisito 1: Rol ADMIN"]
         R4["Requisito 2: Claim level = senior"]
         R3 --> R4
     end
 
     subgraph "Controller"
-        C1["[Authorize(Policy='RequireAdmin')]"]
-        C2["[Authorize(Policy='RequireSeniorAdmin')]"]
+        C1["Authorize Policy RequireAdmin"]
+        C2["Authorize Policy RequireSeniorAdmin"]
     end
 
     R1 --> C1
@@ -246,16 +265,20 @@ flowchart TD
     style R4 fill:#FF9800,color:#fff
 ```
 
+Una política puede ser tan simple como requerir un rol, o tan compleja como combinar múltiples requisitos con lógica personalizada. La clave es que defines la política una vez en `Program.cs` y la reutilizas con el atributo `[Authorize(Policy = "...")]` en cualquier endpoint.
+
 ### 17.2.4. Requirements y Handlers
 
-Un **Requirement** es una interfaz que define una condición de autorización. Un **Handler** es la clase que implementa la lógica para verificar esa condición.
+Un **Requirement** es una interfaz que define una condición de autorización. Un **Handler** es la clase que implementa la lógica para verificar esa condición. Juntos forman el patrón más flexible del sistema de autorización.
+
+El flujo es el siguiente: defines un requirement (qué quieres verificar), implementas un handler (cómo lo verificas), registras la política en DI y la aplicas en tu controller. El framework se encarga de llamar al handler cuando alguien accede a un endpoint protegido con esa política.
 
 ```mermaid
 flowchart LR
-    REQ["IAuthorizationRequirement"] --> HANDLER["AuthorizationHandler<T>"]
-    HANDLER --> EVALUAR["Evaluar condición"]
-    EVALUAR -->|Cumple| SUCEED["context.Succeed(requirement)"]
-    EVALUAR -->|No cumple| FAIL["No hacer nada (denegar)"]
+    REQ["IAuthorizationRequirement"] --> HANDLER["AuthorizationHandler"]
+    HANDLER --> EVALUAR["Evaluar condicion"]
+    EVALUAR -->|Cumple| SUCEED["context.Succeed"]
+    EVALUAR -->|No cumple| FAIL["Denegar acceso"]
 
     style REQ fill:#9C27B0,color:#fff
     style HANDLER fill:#2196F3,color:#fff
@@ -269,11 +292,11 @@ flowchart LR
 
 ## 17.3. Autorización con Roles
 
+Los roles son el mecanismo de autorización más directo. Un usuario tiene un rol o no lo tiene, y eso determina si puede acceder a un endpoint. Veamos cómo implementar esta mecánica con ambos enfoques.
+
 ### 17.3.1. Enfoque Manual
 
-Sin Identity, gestionas los roles en tu propio modelo de usuario y los incluyes en el JWT como claims.
-
-**Configurar roles en DI:**
+Sin Identity, gestionas los roles en tu propio modelo de usuario y los incluyes en el JWT como claims. El primer paso es configurar las políticas de autorización en el contenedor de dependencias, indicando qué roles requiere cada política:
 
 ```csharp
 using Microsoft.AspNetCore.Authorization;
@@ -305,7 +328,7 @@ public static class AuthorizationConfig
 }
 ```
 
-**Añadir rol al JWT en JwtService:**
+Una vez configuradas las políticas, necesitas incluir el claim de rol en el token JWT. Esto se hace en el servicio que genera los tokens, añadiendo un claim de tipo `role` con el valor del rol del usuario:
 
 ```csharp
 var claims = new List<Claim>
@@ -318,7 +341,7 @@ var claims = new List<Claim>
 };
 ```
 
-**Uso en el controller:**
+Con las políticas configuradas y el rol en el JWT, ya puedes proteger endpoints en tu controller. El atributo `[Authorize]` acepta un parámetro `Roles` donde puedes especificar uno o varios roles separados por comas:
 
 ```csharp
 using Microsoft.AspNetCore.Authorization;
@@ -398,11 +421,13 @@ public class ProductosController(IProductoService productoService) : ControllerB
 }
 ```
 
+> 📝 **Nota:** Cuando especificas varios roles con `Roles = "ADMIN,USER"`, el usuario necesita tener **al menos uno** de esos roles para acceder. No necesita tener todos, solo uno.
+
 ### 17.3.2. Enfoque Identity
 
-Con Identity, los roles se gestionan con `RoleManager` y se asignan con `UserManager`. La configuración de políticas es idéntica.
+Con Identity, los roles se gestionan con `RoleManager` y se asignan con `UserManager`. La ventaja es que no tienes que gestionar tú la persistencia de roles en la base de datos: Identity crea automáticamente las tablas necesarias.
 
-**Crear roles al iniciar la aplicación:**
+El primer paso es crear los roles y usuarios seed al iniciar la aplicación. Esto se hace típicamente en un servicio de inicialización que se ejecuta una vez:
 
 ```csharp
 using Microsoft.AspNetCore.Identity;
@@ -477,7 +502,7 @@ public static class SeedIdentityData
 }
 ```
 
-**Configurar autorización con Identity:**
+La configuración de autorización con Identity es idéntica a la del enfoque manual. Las políticas se registran de la misma manera, porque el sistema de autorización es independiente del sistema de autenticación:
 
 ```csharp
 public static class AuthorizationConfig
@@ -500,7 +525,7 @@ public static class AuthorizationConfig
 }
 ```
 
-**Asignar roles con UserManager:**
+La diferencia fundamental es que Identity te ofrece un conjunto de métodos integrados para gestionar roles. Con `UserManager` puedes añadir, quitar y consultar roles de un usuario sin escribir una sola línea de SQL:
 
 ```csharp
 // Asignar rol a un usuario
@@ -522,11 +547,13 @@ bool isAdmin = await userManager.IsInRoleAsync(user, "ADMIN");
 
 ## 17.4. Autorización con Claims
 
+Los claims van un paso más allá de los roles. Mientras que un rol te dice "este usuario es ADMIN", un claim te dice "este usuario pertenece al departamento IT y tiene nivel senior". Los claims permiten condiciones de autorización mucho más granulares.
+
 ### 17.4.1. Enfoque Manual
 
-Con el enfoque manual, añades claims personalizados directamente al JWT en el JwtService.
+Con el enfoque manual, añades claims personalizados directamente al JWT en el JwtService. Estos claims viajan dentro del token y se extraen cuando el middleware de autenticación lo valida.
 
-**Añadir claims al JWT:**
+Para añadir claims personalizados, simplemente inclúyelos en la lista de claims que se genera al crear el token. Cada claim es un par clave-valor que el cliente no puede modificar (está firmado criptográficamente):
 
 ```csharp
 public string GenerateToken(User user)
@@ -558,7 +585,7 @@ public string GenerateToken(User user)
 }
 ```
 
-**Leer claims en el controller:**
+Una vez que el token está generado, puedes leer los claims en cualquier controller usando `User.FindFirst()`. Esto te permite personalizar la respuesta según la información del usuario:
 
 ```csharp
 [ApiController]
@@ -589,11 +616,13 @@ public class AdminController : ControllerBase
 }
 ```
 
+📌 Ejemplo real: **GitHub** usa claims para controlar el acceso a repositorios. Un claim indica si eres "miembro" o "admin" de una organización, y otro claim indica tu nivel de acceso a cada repositorio (lectura, escritura o administración).
+
 ### 17.4.2. Enfoque Identity
 
-Con Identity, los claims se gestionan con `UserManager` y se persisten en la base de datos.
+Con Identity, los claims se gestionan con `UserManager` y se persisten en la base de datos. A diferencia del enfoque manual (donde los claims viajan en el JWT), Identity almacena los claims en la tabla `AspNetUserClaims` y los carga automáticamente en el `ClaimsPrincipal` durante la autenticación.
 
-**Añadir claims con UserManager:**
+Para añadir claims a un usuario, usa `UserManager.AddClaimAsync()`. También puedes actualizar, consultar y eliminar claims con los métodos correspondientes:
 
 ```csharp
 // Añadir claims a un usuario
@@ -612,7 +641,7 @@ var claims = await userManager.GetClaimsAsync(user);
 await userManager.RemoveClaimAsync(user, new Claim("level", "senior"));
 ```
 
-**Leer claims (idéntico al enfoque manual):**
+La forma de leer claims en el controller es exactamente igual que en el enfoque manual. El `ClaimsPrincipal` tiene la misma estructura independientemente de dónde provengan los claims:
 
 ```csharp
 [HttpGet("profile")]
@@ -635,9 +664,15 @@ public IActionResult GetProfile()
 
 ## 17.5. Políticas de Autorización
 
+Las políticas son la forma más potente de definir reglas de autorización. En lugar de escribir condiciones sueltas por toda la aplicación, defines una política una vez y la reutilizas. Esto hace tu código más limpio y más fácil de mantener.
+
 ### 17.5.1. Enfoque Manual
 
+Las políticas se registran en el contenedor de dependencias con `AddAuthorizationBuilder()`. Cada política es una combinación de requisitos que el framework evalúa cuando alguien accede a un endpoint protegido.
+
 **Política simple — solo requerir un rol:**
+
+La forma más básica es crear una política que requiera un rol concreto. Esto es equivalente a usar `[Authorize(Roles = "ADMIN")]` directamente, pero con la ventaja de que puedes reutilizar la política en múltiples endpoints:
 
 ```csharp
 services.AddAuthorizationBuilder()
@@ -647,6 +682,8 @@ services.AddAuthorizationBuilder()
 
 **Política con claims — verificar edad mínima:**
 
+También puedes crear políticas que verifiquen claims específicos. Por ejemplo, una política que solo permita el acceso si el usuario tiene un claim de edad mayor o igual a 18:
+
 ```csharp
 services.AddAuthorizationBuilder()
     .AddPolicy("MinimumAge18", policy =>
@@ -655,6 +692,8 @@ services.AddAuthorizationBuilder()
 ```
 
 **Política con assertion — combinación de condiciones:**
+
+Cuando necesitas combinar múltiples condiciones con lógica AND/OR, puedes usar `RequireAssertion()`. Esto te permite escribir cualquier condición en C#:
 
 ```csharp
 services.AddAuthorizationBuilder()
@@ -666,13 +705,15 @@ services.AddAuthorizationBuilder()
 
 **Política con requirements personalizados:**
 
+Para lógica compleja que no puedes expresar con los métodos integrados, puedes crear requisitos personalizados y añadirlos a la política con `AddRequirements()`:
+
 ```csharp
 services.AddAuthorizationBuilder()
     .AddPolicy("RequireDepartment", policy =>
         policy.AddRequirements(new RequireDepartmentRequirement("IT")));
 ```
 
-**Uso en el controller:**
+Una vez registradas las políticas, las aplicas en tus controllers con el atributo `[Authorize(Policy = "...")]`. Cada endpoint puede tener una política diferente según sus necesidades:
 
 ```csharp
 [ApiController]
@@ -704,7 +745,7 @@ public class ReportsController : ControllerBase
 
 ### 17.5.2. Enfoque Identity
 
-La configuración de políticas es **idéntica**. Solo cambia el contexto de registro (ya tienes Identity configurado):
+La configuración de políticas con Identity es **idéntica** a la del enfoque manual. Las políticas son independientes del sistema de autenticación, por lo que solo cambia el contexto de registro en `Program.cs`. Ya tienes Identity configurado, así que añades las políticas directamente:
 
 ```csharp
 // Con Identity, las políticas se registran igual
@@ -728,9 +769,15 @@ services.AddAuthorizationBuilder()
 
 ## 17.6. Requirements y Handlers Personalizados
 
+Cuando las políticas integradas (`RequireRole`, `RequireClaim`, `RequireAssertion`) no son suficientes, puedes crear requirements y handlers personalizados. Esto te permite implementar lógica de autorización arbitraria: consultar la base de datos, llamar a servicios externos o combinar múltiples condiciones de negocio.
+
 ### 17.6.1. Enfoque Manual
 
+El patrón consta de tres partes: un **requirement** (define qué quieres verificar), un **handler** (implementa cómo lo verificas) y un **registro** en el contenedor de dependencias.
+
 **Requirement — define la condición:**
+
+El requirement es una clase que implementa `IAuthorizationRequirement`. En C# 14, puedes usar un primary constructor para pasar los parámetros necesarios. En este caso, el nombre del departamento requerido:
 
 ```csharp
 using Microsoft.AspNetCore.Authorization;
@@ -748,6 +795,8 @@ public class RequireDepartmentRequirement(string department) : IAuthorizationReq
 ```
 
 **Handler — implementa la lógica:**
+
+El handler es donde se ejecuta la lógica de verificación. Hereda de `AuthorizationHandler<T>` y sobrescribe `HandleRequirementAsync()`. Si la condición se cumple, llamas a `context.Succeed(requirement)`. Si no se cumple, simplemente no haces nada (el framework denegará el acceso):
 
 ```csharp
 using Microsoft.AspNetCore.Authorization;
@@ -769,7 +818,7 @@ public class RequireDepartmentHandler : AuthorizationHandler<RequireDepartmentRe
 
         if (department is null)
         {
-            Log.Warning("Usuario sin claim 'department'");
+            Log.Warning("Usuario sin claim department");
             return Task.CompletedTask;
         }
 
@@ -793,6 +842,8 @@ public class RequireDepartmentHandler : AuthorizationHandler<RequireDepartmentRe
 ```
 
 **Handler para verificar propietario de recurso:**
+
+Un caso muy habitual es verificar si el usuario es propietario de un recurso concreto. Este handler extrae el ID del recurso desde la ruta de la petición, obtiene el recurso de la base de datos y compara el propietario con el usuario actual. Los usuarios ADMIN siempre pasan la verificación:
 
 ```csharp
 using Microsoft.AspNetCore.Authorization;
@@ -846,7 +897,9 @@ public class ResourceOwnerHandler(
 }
 ```
 
-**Registrar handlers:**
+**Registrar handlers y políticas:**
+
+El último paso es registrar los handlers en el contenedor de dependencias y crear las políticas que los referencian. Los handlers se registran como `IAuthorizationHandler`, y las políticas se vinculan a los requirements con `AddRequirements()`:
 
 ```csharp
 services.AddSingleton<IAuthorizationHandler, RequireDepartmentHandler>();
@@ -861,7 +914,7 @@ services.AddAuthorizationBuilder()
 
 ### 17.6.2. Enfoque Identity
 
-Los handlers son **idénticos**. Solo cambia el registro en DI (ya tienes Identity configurado):
+Los handlers son **idénticos** en ambos enfoques. La lógica de verificación no cambia porque el sistema de autorización es independiente del sistema de autenticación. Lo único que cambia es el contexto de registro en `Program.cs`, donde ya tienes Identity configurado:
 
 ```csharp
 // Mismo handler, mismo código
@@ -890,18 +943,20 @@ services.AddSingleton<IAuthorizationHandler, ResourceOwnerHandler>();
 
 ## 17.7. Autorización Basada en Recursos
 
-La autorización basada en recursos verifica permisos sobre un **objeto concreto**, no sobre una acción genérica. Por ejemplo: "solo el dueño de un producto puede editarlo".
+La autorización basada en recursos verifica permisos sobre un **objeto concreto**, no sobre una acción genérica. Por ejemplo: "solo el dueño de un producto puede editarlo". Esto va más allá de los roles y claims porque necesita acceder al recurso real para tomar la decisión.
+
+El flujo de este tipo de autorización es el siguiente: el controller recibe la petición, obtiene el recurso de la base de datos y luego verifica si el usuario tiene permiso sobre ese recurso específico. Si el usuario es propietario o tiene un rol elevado (como ADMIN), se permite la operación. En caso contrario, se devuelve 403 Forbidden.
 
 ```mermaid
 flowchart TD
-    A["PUT /api/productos/42"] --> B["Controller recibe id=42"]
+    A["PUT api/productos/42"] --> B["Controller recibe id=42"]
     B --> C["Obtener producto de BD"]
-    C --> D{"¿Producto existe?"}
+    C --> D{"Producto existe?"}
     D -->|No| E["404 Not Found"]
-    D -->|Sí| F{"¿Es ADMIN?"}
-    F -->|Sí| G["Permitir"]
-    F -->|No| H{"¿Es propietario?"}
-    H -->|Sí| G
+    D -->|Si| F{"Es ADMIN?"}
+    F -->|Si| G["Permitir"]
+    F -->|No| H{"Es propietario?"}
+    H -->|Si| G
     H -->|No| I["403 Forbidden"]
 
     style E fill:#f44336,color:#fff
@@ -909,7 +964,7 @@ flowchart TD
     style I fill:#f44336,color:#fff
 ```
 
-**Con verificación directa en el controller:**
+Para implementar esta verificación, puedes usar `IAuthorizationService` que ASP.NET Core te inyecta automáticamente. Este servicio te permite evaluar políticas sobre recursos concretos en tiempo de ejecución:
 
 ```csharp
 [ApiController]
@@ -956,7 +1011,7 @@ public class ProductosController(
 }
 ```
 
-**Con IAuthorizationService inyectado:**
+Si necesitas reutilizar la verificación de autorización basada en recursos en varios controllers, puedes crear un servicio wrapper que encapsule `IAuthorizationService` con métodos de conveniencia:
 
 ```csharp
 using Microsoft.AspNetCore.Authorization;
@@ -996,12 +1051,14 @@ public class AuthorizationService(
 
 ## 17.8. Comparación de Enfoques
 
+Hemos visto dos caminos para implementar autorización: el enfoque manual (tú gestionas todo) y el enfoque Identity (el framework te ayuda). La siguiente tabla resume las diferencias clave para que puedas decidir cuál se adapta mejor a tu proyecto:
+
 | Aspecto | Enfoque Manual | Enfoque Identity |
 |---------|---------------|------------------|
 | **Control total** | Sí, tú gestionas todo | Limitado por el framework |
-| **Tablas BD** | 1 tabla (`users`) | 7+ tablas (`AspNetUsers`, etc.) |
-| **Gestión de roles** | Campo en tu modelo | `RoleManager<T>` integrado |
-| **Claims en JWT** | Tú los añades en JwtService | `UserManager.AddClaimAsync()` |
+| **Tablas BD** | 1 tabla (users) | 7+ tablas (AspNetUsers, etc.) |
+| **Gestión de roles** | Campo en tu modelo | RoleManager integrado |
+| **Claims en JWT** | Tú los añades en JwtService | UserManager.AddClaimAsync() |
 | **Policies** | Idénticas | Idénticas |
 | **Requirements/Handlers** | Idénticos | Idénticos |
 | **Resource-based** | Idéntico | Idéntico |
@@ -1009,16 +1066,18 @@ public class AuthorizationService(
 | **Mantenimiento** | Lo mantienes tú | Microsoft lo mantiene |
 | **Flexibilidad** | Total | Limitada por convenciones |
 
+Para ayudarte a decidir, el siguiente diagrama muestra el proceso de elección entre ambos enfoques. La clave es que la autorización (roles, claims, policies, handlers) funciona igual en ambos casos; lo que cambia es cómo gestionas la identidad del usuario:
+
 ```mermaid
 flowchart TD
-    A{"¿Necesitas control total?"} -->|Sí| B["Enfoque Manual"]
-    A -->|No| C{"¿Necesitas features Identity?"}
-    C -->|"2FA, External Login, Lockout"| D["Enfoque Identity"]
+    A{"Necesitas control total?"} -->|Si| B["Enfoque Manual"]
+    A -->|No| C{"Necesitas features Identity?"}
+    C -->|2FA, External Login, Lockout| D["Enfoque Identity"]
     C -->|No| E["Cualquiera"]
 
-    B --> F["1 tabla, código manual"]
+    B --> F["1 tabla, codigo manual"]
     D --> G["7+ tablas, scaffolding"]
-    E --> H["Ambos funcionan igual para autorización"]
+    E --> H["Ambos funcionan igual para autorizacion"]
 
     style B fill:#4CAF50,color:#fff
     style D fill:#FF9800,color:#fff
@@ -1034,12 +1093,14 @@ flowchart TD
 
 ## 17.9. Buenas Prácticas
 
+Antes de pasar al reto, es fundamental que interiorices estas buenas prácticas. La autorización es una de las áreas donde los errores tienen consecuencias directas en la seguridad de tu aplicación.
+
 ```mermaid
 flowchart TB
     subgraph "Principios"
-        P1["Mínimo privilegio"]
+        P1["Minimo privilegio"]
         P2["Denegar por defecto"]
-        P3["Permitir explícitamente"]
+        P3["Permitir explicitamente"]
     end
 
     subgraph "Seguridad"
@@ -1049,8 +1110,8 @@ flowchart TB
     end
 
     subgraph "Mantenimiento"
-        M1["Nombres claros de políticas"]
-        M2["Tests de autorización"]
+        M1["Nombres claros de politicas"]
+        M2["Tests de autorizacion"]
         M3["Documentar permisos"]
     end
 
@@ -1093,7 +1154,7 @@ flowchart TB
 **Añade a tu API:**
 
 1. **Crear roles:** `ADMIN` y `USER` al iniciar la app con `RoleManager`
-2. **Seed de usuarios:** admin (`admin@funko.com` / `Admin123!`, rol `ADMIN`) y user (`user@funko.com` / `User123!`, rol `USER`)
+2. **Seed de usuarios:** admin (`admin` / `admin123`, rol `ADMIN`) y user (`user` / `user123`, rol `USER`)
 3. **Endpoints protegidos:**
    - `GET /api/productos` → público (sin auth)
    - `POST /api/productos` → solo `ADMIN`
@@ -1127,7 +1188,7 @@ flowchart TB
 | **`[Authorize]`** | Atributo para proteger endpoints |
 | **`User.IsInRole()`** | Verificación programática de roles |
 | **`IAuthorizationService`** | Autorización programática sobre recursos |
-| **401 vs 401** | 401 = no autenticado, 403 = no autorizado |
+| **401 vs 403** | 401 = no autenticado, 403 = no autorizado |
 | **Mínimo privilegio** | Dar solo los permisos estrictamente necesarios |
 
 **¿Qué viene después?**
