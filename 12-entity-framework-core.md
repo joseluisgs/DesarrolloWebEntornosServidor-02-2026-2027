@@ -708,7 +708,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 | Legibilidad | Rápida de leer | Más verbosa |
 | Control | Limitado | Total |
 
-> 💡 **Recomendación:** Usa un **enfoque híbrido**. Data Annotations para lo simple (`[Required]`, `[StringLength]`, `[Key]`). Fluent API para lo complejo (relaciones, índices, filtros, owned types).
+> 💡 **Consejo:** Usa un **enfoque híbrido**. Data Annotations para lo simple (`[Required]`, `[StringLength]`, `[Key]`). Fluent API para lo complejo (relaciones, índices, filtros, owned types).
 
 ---
 
@@ -1164,7 +1164,7 @@ entity.Property(e => e.PrecioConIva)
     .HasComputedColumnSql("[Precio] * (1 + [Iva])");
 ```
 
-> ⚠️ **Diferencia clave:** `[NotMapped]` se calcula **en C#** cada vez que accedes a la propiedad. `HasComputedColumnSql` se calcula **en la BD** (se almacena y se actualiza automáticamente cuando cambian las columnas base). Si necesitas consultar por `PrecioConIva`, usa `HasComputedColumnSql`. Si solo lo muestras en pantalla, `[NotMapped]` es más rápido.
+> 📝 **Nota:** `[NotMapped]` se calcula **en C#** cada vez que accedes a la propiedad. `HasComputedColumnSql` se calcula **en la BD** (se almacena y se actualiza automáticamente cuando cambian las columnas base). Si necesitas consultar por `PrecioConIva`, usa `HasComputedColumnSql`. Si solo lo muestras en pantalla, `[NotMapped]` es más rápido.
 
 > 💡 **Consejo:** `[NotMapped]` también es útil para propiedades que solo usas en tiempo de ejecución, como un `bool IsValid` que se calcula según reglas de negocio pero no necesitas guardar.
 
@@ -2249,147 +2249,61 @@ public async Task GetById_ProductoExists_ReturnsProducto()
 
 ## 12.20. Reto
 
-> **Implementa un repositorio CRUD completo de Funkos con PostgreSQL y TestContainers.**
->
-> El objetivo es aplicar todo lo visto en el tema: Entity Framework Core con Fluent API, relaciones, borrado lógico, auditoría, seed data y testing.
->
-> **Entidades:**
->
-> ```mermaid
-> erDiagram
->     CATEGORIA ||--o{ FUNKO : tiene
->     CATEGORIA {
->         long Id PK
->         string Nombre
->         string Descripcion
->         datetime CreatedAt
->         datetime UpdatedAt
->     }
->     FUNKO {
->         long Id PK
->         string Nombre
->         string Codigo
->         decimal Precio
->         int Stock
->         string Imagen
->         bool IsDeleted
->         datetime CreatedAt
->         datetime UpdatedAt
->         long CategoriaId FK
->     }
-> ```
->
-> **Requisitos:**
->
-> 1. **Entidades con Fluent API:**
->    - `Funko` con todas las propiedades (Id, Nombre, Codigo, Precio, Stock, Imagen, IsDeleted, CreatedAt, UpdatedAt, CategoriaId)
->    - `Categoria` con propiedades (Id, Nombre, Descripcion, CreatedAt, UpdatedAt)
->    - Configurar relaciones: un Funko tiene una Categoría, una Categoría tiene muchos Funkos
->    - Índices en Codigo de Funko (único) y en Nombre de Categoría
->    - `HasPrecision(18, 2)` en Precio
->    - `HasMaxLength` en strings relevantes
->
-> 2. **Borrado lógico en Funko:**
->    - Campo `IsDeleted` con `HasQueryFilter(f => !f.IsDeleted)`
->    - Método para listar borrados con `IgnoreQueryFilters()`
->    - Método para restaurar borrados lógicamente
->
-> 3. **Timestamps de auditoría:**
->    - `CreatedAt` se asigna automáticamente al crear (en el repositorio)
->    - `UpdatedAt` se asigna automáticamente al modificar
->    - Usar `SaveChangesAsync` override o lógica en el repositorio
->
-> 4. **Repository Pattern:**
->    - Interfaz `IFunkRepository` con: `GetAll`, `GetById`, `GetByCategoria`, `Create`, `Update`, `Delete` (lógico), `DeleteHard` (físico), `GetDeleted`, `Restore`
->    - Interfaz `ICategoriaRepository` con: `GetAll`, `GetById`, `GetByNombre` (solo lectura, sin CRUD de creación/modificación/borrado)
->    - Implementación con EF Core y PostgreSQL
->
-> 5. **Seed Data:**
->    - Al menos 5 categorías (Funko Pop, Funko Soda, Funko Nendoroid, Funko Mystery Minis, Funko Pez)
->    - Al menos 10 Funkos distribuidos en diferentes categorías
->    - Los datos se insertan automáticamente al iniciar la aplicación
->
-> 6. **Endpoints de Categorías (solo lectura):**
->    - `GET /api/categorias` → listar todas
->    - `GET /api/categorias/{id}` → obtener por Id
->    - **NO** hay endpoints de POST, PUT o DELETE para categorías (se gestionan solo como seed)
->
-> 7. **Tests con TestContainers:**
->    - Tests de integración usando TestContainers con PostgreSQL real
->    - Test `Create_FunkoValido_RetornaFunkoConId`
->    - Test `GetById_FunkoExiste_RetornaFunko`
->    - Test `GetAll_ConFunkos_RetornaLista`
->    - Test `Delete_Logico_FunkoNoApareceEnGetAll`
->    - Test `Restore_BorradoLogico_FunkoVuelveAparecer`
->    - Test `Create_FunkoCodigoDuplicado_LanzaExcepcion`
->
-> 8. **Arquitectura del proyecto:**
->    - Usar estructura de carpetas: `Models/`, `Repositories/`, `Services/`, `Entity/`
->    - `AppDbContext` en `Entity/`
->    - Repositorios en `Repositories/Funko/` y `Repositories/Categoria/`
->    - Config classes en `Infrastructure/` (patrón TiendaAPI)
->    - DTOs como records
->    - Primary constructors en servicios y repositorios
->
-> **Puntos extra:**
-> - Añade concurrencia optimista con `RowVersion` en Funko
-> - Implementa paginación en `GetAll`
-> - Añade búsqueda por texto en Funkos (`WHERE Nombre LIKE ...`)
-> - Configura logging para ver las consultas SQL generadas
+> Aplica todo lo visto en el tema a la API de Funkos.
+
+**Entidades:**
+
+```mermaid
+erDiagram
+    CATEGORIA ||--o{ FUNKO : tiene
+    CATEGORIA {
+        long Id PK
+        string Nombre
+        string Descripcion
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+    FUNKO {
+        long Id PK
+        string Nombre
+        string Codigo
+        decimal Precio
+        int Stock
+        string Imagen
+        bool IsDeleted
+        datetime CreatedAt
+        datetime UpdatedAt
+        long CategoriaId FK
+    }
+```
+
+**Añade a tu API:**
+
+1. **Entidades con Fluent API:** `Funko` y `Categoria` con relaciones (1:N), índices, `HasPrecision(18, 2)` en Precio, `HasMaxLength` en strings
+2. **Borrado lógico:** Campo `IsDeleted` con `HasQueryFilter(f => !f.IsDeleted)`, método para listar borrados con `IgnoreQueryFilters()` y restaurar
+3. **Timestamps:** `CreatedAt` al crear, `UpdatedAt` al modificar (en el repositorio o con `SaveChangesAsync` override)
+4. **Repository Pattern:** `IFunkRepository` con CRUD completo (Create, Read, Update, Delete lógico, Delete físico, GetDeleted, Restore) e `ICategoriaRepository` solo lectura (GetAll, GetById, GetByNombre)
+5. **Seed Data:** 5 categorías y 10 Funkos que se insertan automáticamente al iniciar la aplicación
+6. **Endpoints de Categorías:** Solo `GET /api/categorias` y `GET /api/categorias/{id}` (sin POST, PUT ni DELETE)
+7. **Tests con TestContainers:** Tests de integración con PostgreSQL real: Create, GetById, GetAll, Delete lógico, Restore, código duplicado
+8. **Arquitectura:** Estructura `Models/`, `Repositories/`, `Services/`, `Entity/`, `Infrastructure/` con Config classes, DTOs como records, primary constructors
+
+**Puntos extra:**
+
+- Concurrencia optimista con `RowVersion`
+- Paginación en `GetAll`
+- Búsqueda por texto en Funkos
+- Logging para ver las consultas SQL
 
 ---
 
 ## 12.21. Resumen
 
-```mermaid
-flowchart TB
-    subgraph "Configuración"
-        A1["Fluent API sobre Data Annotations"]
-        A2["Configuraciones separadas"]
-        A3["Índices en propiedades frecuentes"]
-    end
-
-    subgraph "Carga de datos"
-        B1["Eager Loading con Include"]
-        B2["ThenInclude para anidados"]
-        B3["AsNoTracking para solo lectura"]
-    end
-
-    subgraph "Migraciones"
-        C1["Migrate() en producción"]
-        C2["Revisar SQL generado"]
-        C3["Backup antes de aplicar"]
-    end
-
-    subgraph "Rendimiento"
-        D1["ExecuteUpdate/ExecuteDelete para bulk"]
-        D2["AsSplitQuery para muchos Include"]
-        D3["ToQueryString para depurar"]
-    end
-
-    A1 --> A2 --> A3
-    B1 --> B2 --> B3
-    C1 --> C2 --> C3
-    D1 --> D2 --> D3
-
-    style A1 fill:#1B5E20,color:#fff
-    style A2 fill:#1B5E20,color:#fff
-    style A3 fill:#1B5E20,color:#fff
-    style B1 fill:#1B5E20,color:#fff
-    style B2 fill:#1B5E20,color:#fff
-    style B3 fill:#1B5E20,color:#fff
-    style C1 fill:#1565C0,color:#fff
-    style C2 fill:#1565C0,color:#fff
-    style C3 fill:#1565C0,color:#fff
-    style D1 fill:#0D47A1,color:#fff
-    style D2 fill:#0D47A1,color:#fff
-    style D3 fill:#0D47A1,color:#fff
-```
-
 | Concepto | Descripción |
 |----------|-------------|
 | **ORM** | Traduce objetos C# a SQL |
 | **DbContext** | Sesión con la base de datos |
+| **Change Tracker** | Detecta qué entidades han cambiado |
 | **Fluent API** | Configuración avanzada de entidades |
 | **Data Annotations** | Atributos C# para mapear |
 | **Relaciones** | 1:1, 1:N, N:M |
@@ -2400,14 +2314,7 @@ flowchart TB
 | **AsNoTracking** | Sin tracking para solo lectura |
 | **ExecuteUpdate/Delete** | Operaciones bulk rápidas |
 | **Migraciones** | Versionado del esquema |
-| **Change Tracker** | Detecta cambios automáticamente |
 | **Concurrencia** | Optimista vs Pessimista |
 | **TestContainers** | Tests con BD real en Docker |
 
-> 🧠 **Analogía final:** EF Core es como un **traductor profesional** que domina muchos idiomas (SQL Server, PostgreSQL, SQLite). Tú le hablas en C# y él traduce a SQL. Mantiene un registro de todo lo que cambias (Change Tracker) y solo persiste cuando le dices "guardar" (SaveChanges).
-
-> 💡 **Tip del Examinador:** En el examen se valora que conozcas la diferencia entre Fluent API y Data Annotations, las estrategias de carga de datos, cómo configurar logging para depurar consultas, y la diferencia entre borrado físico y lógico.
-
----
-
-> 💡 **¿Qué viene después?** En el siguiente tema veremos **MongoDB**, una base de datos NoSQL (documentos) que no usa SQL ni tablas. Aprenderás a trabajar con documentos JSON en vez de filas, y verás que muchos conceptos de EF Core (repositorios, mapeo, configuración) tienen su equivalente en el mundo NoSQL con el **MongoDB.Driver**.
+En el siguiente punto veremos **Transacciones**: cómo manejar operaciones que deben ejecutarse todas juntas o ninguna (commit/rollback), incluyendo transacciones distribuidas y el patrón de resiliencia con Polly.
