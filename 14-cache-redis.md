@@ -1020,5 +1020,7 @@ public class RedisCacheServiceTests : IAsyncLifetime
 | **Invalidación** | Proceso de eliminar datos obsoletos del caché |
 | **TTL** | Tiempo de vida de cada entrada en caché |
 
-> En el siguiente punto veremos **Transacciones, Identificadores y Elementos Avanzados de Bases de Datos**: cómo gestionar operaciones atómicas, UUIDs, concurrente optimista/pesimista y otras funcionalidades avanzadas de persistencia.
+**¿Qué viene después?**
+
+En el siguiente punto veremos **Transacciones, Identificadores y Elementos Avanzados de Bases de Datos**: cómo gestionar operaciones atómicas, UUIDs, concurrencia optimista/pesimista y otras funcionalidades avanzadas de persistencia.
 

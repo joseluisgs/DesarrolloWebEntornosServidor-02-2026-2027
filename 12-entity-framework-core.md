@@ -2353,4 +2353,6 @@ erDiagram
 | **Concurrencia** | Optimista vs Pessimista |
 | **TestContainers** | Tests con BD real en Docker |
 
+**¿Qué viene después?**
+
 En el siguiente punto veremos **MongoDB**: una base de datos NoSQL orientada a documentos que no usa tablas ni SQL. Verás cómo trabajar con colecciones de documentos JSON y cómo muchos conceptos de EF Core (repositorios, mapeo, configuración) tienen su equivalente en el mundo NoSQL con el **MongoDB.Driver**.
