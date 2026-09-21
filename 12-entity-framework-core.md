@@ -2279,7 +2279,7 @@ erDiagram
 
 **Añade a tu API:**
 
-1. **Entidades con Fluent API:** `Funko` y `Categoria` con relaciones (1:N), índices, `HasPrecision(18, 2)` en Precio, `HasMaxLength` en strings
+1. **Entidades:** `Funko` y `Categoria` con Data Annotations por defecto (`[Required]`, `[StringLength]`, `[Key]`, etc.) y Fluent API solo para relaciones (1:N), índices, `HasPrecision` y `HasQueryFilter`
 2. **Borrado lógico:** Campo `IsDeleted` con `HasQueryFilter(f => !f.IsDeleted)`, método para listar borrados con `IgnoreQueryFilters()` y restaurar
 3. **Timestamps:** `CreatedAt` al crear, `UpdatedAt` al modificar (en el repositorio o con `SaveChangesAsync` override)
 4. **Repository Pattern:** `IFunkRepository` con CRUD completo (Create, Read, Update, Delete lógico, Delete físico, GetDeleted, Restore) e `ICategoriaRepository` solo lectura (GetAll, GetById, GetByNombre)
