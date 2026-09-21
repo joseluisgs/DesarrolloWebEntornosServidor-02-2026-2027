@@ -28,6 +28,7 @@
   - [21.9. TestContainers](#219-testcontainers)
     - [Por que usar TestContainers](#por-que-usar-testcontainers)
     - [Fixture con TestContainers](#fixture-con-testcontainers)
+    - [Buenas prácticas con TestContainers](#buenas-prácticas-con-testcontainers)
     - [Test de Repository con TestContainers](#test-de-repository-con-testcontainers)
   - [21.10. Tests de Controladores](#2110-tests-de-controladores)
     - [WebApplicationFactory](#webapplicationfactory)
@@ -1157,6 +1158,92 @@ public class IntegrationTestBase : IDisposable
     }
 }
 ```
+
+### Buenas prácticas con TestContainers
+
+> ⚠️ **Advertencia — Errores habituales con TestContainers**
+>
+> **Principio fundamental: cada test debe ser aislado**
+>
+> Un test no debe depender del estado que haya dejado otro test anterior. Si el test A inserta 3 productos y el test B espera encontrar exactamente 2 productos, el test B falla... ¡aunque el código sea correcto! Por eso, cada test debe empezar con una **BD limpia y con los mismos datos base**. Así todos los tests se ejecutan en las mismas condiciones, sin importar el orden.
+>
+> ```mermaid
+> flowchart LR
+>     T1["Test A: inserta 3 productos"] --> T2["Test B: espera 2 productos"]
+>     T2 --> FAIL["❌ FALLA: encuentra 5"]
+>
+>     T1B["Test A: inserta 3 productos"] --> CLEAN["🧹 Limpieza"]
+>     CLEAN --> T2B["Test B: BD limpia, inserta 2"]
+>     T2B --> OK["✅ PASA: encuentra solo 2"]
+>
+>     style FAIL fill:#f44336,color:#fff
+>     style OK fill:#4CAF50,color:#fff
+>     style CLEAN fill:#FF9800,color:#fff
+> ```
+>
+> **1. Container como campo instance, nunca `static`**
+>
+> Si el contenedor es `static readonly`, se comparte entre todos los `[TestFixture]` de la solución. Pero NUnit ejecuta cada `[TestFixture]` en un ensamblado diferente, y el contenedor se destruye al terminar el primero. El siguiente fixture intenta usar un contenedor muerto → errores raros.
+>
+> ```csharp
+> // ❌ MALO: static readonly — compartido entre fixtures, se destruye antes de tiempo
+> public class IntegrationTestBase : IAsyncLifetime
+> {
+>     private static readonly PostgreSqlContainer _container = new PostgreSqlBuilder()
+>         .WithImage("postgres:17-alpine").Build();
+> }
+>
+> // ✅ BUENO: instance field — cada fixture obtiene su propio contenedor
+> public class IntegrationTestBase : IAsyncLifetime
+> {
+>     private readonly PostgreSqlContainer _container = new PostgreSqlBuilder()
+>         .WithImage("postgres:17-alpine").Build();
+> }
+> ```
+>
+> **2. `[OneTimeTearDown]` para dispose del contenedor**
+>
+> Usa `[OneTimeTearDown]` (no `[TearDown]`) para destruir el contenedor. Así se ejecuta una sola vez al final de todos los tests del fixture, no después de cada test.
+>
+> ```csharp
+> [OneTimeTearDown]
+> public void OneTimeTearDown()
+> {
+>     _container?.Dispose();
+> }
+> ```
+>
+> **3. Limpieza de datos entre tests**
+>
+> TestContainers no recrea la BD entre tests. Si no limpias los datos, los tests se contaminan entre sí. Cada test debe empezar con la **BD limpia y con los mismos datos base**. Para **SQL** (PostgreSQL), usa `TRUNCATE` en `[SetUp]`:
+>
+> ```csharp
+> [SetUp]
+> public void SetUp()
+> {
+>     // Cada test empieza con la BD limpia y los mismos datos base
+>     using var conn = new NpgsqlConnection(_container.GetConnectionString());
+>     conn.Open();
+>     using var cmd = conn.CreateCommand();
+>     cmd.CommandText = @"
+>         TRUNCATE TABLE Productos, Categorias
+>         RESTART IDENTITY CASCADE";
+>     cmd.ExecuteNonQuery();
+> }
+> ```
+>
+> Para **MongoDB**, usa `DeleteMany`:
+>
+> ```csharp
+> [SetUp]
+> public void SetUp()
+> {
+>     // Cada test empieza con la BD limpia y los mismos datos base
+>     Database.GetCollection<BsonDocument>("productos").DeleteMany(FilterDefinition<BsonDocument>.Empty);
+> }
+> ```
+>
+> 🔧 **Truco:** Si olvidas el `RESTART IDENTITY` en SQL, los IDs siguen incrementándose. Aunque la tabla esté vacía, el próximo registro empieza desde el último ID, no desde 1.
 
 ### Test de Repository con TestContainers
 

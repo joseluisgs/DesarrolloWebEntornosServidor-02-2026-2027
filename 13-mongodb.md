@@ -39,9 +39,10 @@
     - [13.6.3. Implementación con Driver Nativo](#1363-implementación-con-driver-nativo)
     - [13.6.4. Implementación con EF Core](#1364-implementación-con-ef-core)
   - [13.7. Testing con MongoDB](#137-testing-con-mongodb)
-    - [13.7.1. TestContainers](#1371-testcontainers)
-    - [13.7.2. Tests con Driver Nativo](#1372-tests-con-driver-nativo)
-    - [13.7.3. Tests con EF Core](#1373-tests-con-ef-core)
+    - [13.7.1. Compatibilidad de versiones: EF Core + MongoDB](#1371-compatibilidad-de-versiones-ef-core--mongodb)
+    - [13.7.2. TestContainers](#1372-testcontainers)
+    - [13.7.3. Tests con Driver Nativo](#1373-tests-con-driver-nativo)
+    - [13.7.4. Tests con EF Core](#1374-tests-con-ef-core)
   - [13.8. Semilla de datos (Seed)](#138-semilla-de-datos-seed)
   - [13.9. Buenas prácticas](#139-buenas-prácticas)
   - [13.10. Reto](#1310-reto)
@@ -1027,7 +1028,35 @@ public class FunkoEfCoreRepository(TiendaDbContext db) : IFunkoRepository
 
 ## 13.7. Testing con MongoDB
 
-### 13.7.1. TestContainers
+### 13.7.1. Compatibilidad de versiones: EF Core + MongoDB
+
+> ⚠️ **Advertencia — ¡Ojo con las versiones!**
+>
+> `MongoDB.EntityFrameworkCore` depende de una versión **exacta** de `Microsoft.EntityFrameworkCore`. Si usas versiones incompatibles, obtendrás errores en runtime como `MissingMethodException` o `FileNotFoundException`.
+>
+> **Tabla de compatibilidad verificada:**
+>
+> | MongoDB.EntityFrameworkCore | MongoDB.Driver | Microsoft.EntityFrameworkCore | Estado |
+> |------------------------------|----------------|-------------------------------|--------|
+> | **10.0.3** | **3.11.0** | **10.0.11** | ✅ Funciona |
+> | 9.0.0 | 3.3.0 | 10.0.0 | ❌ `MissingMethodException` |
+> | 9.0.0 | 3.3.0 | 9.0.x | ✅ Funciona |
+>
+> ```csharp
+> // ❌ MALO: Mezclar versiones incompatibles
+> <PackageReference Include="MongoDB.EntityFrameworkCore" Version="9.0.0" />
+> <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />  // ¡INCOMPATIBLE!
+> // Resultado: MissingMethodException en runtime
+>
+> // ✅ BUENO: Todas las versiones alineadas
+> <PackageReference Include="MongoDB.EntityFrameworkCore" Version="10.0.3" />
+> <PackageReference Include="MongoDB.Driver" Version="3.11.0" />
+> <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />  // Compatible
+> ```
+>
+> 🔧 **Truco:** Si cambias la versión de EF Core en un proyecto relacional (PostgreSQL, SQLite), acuérdate de actualizar también `MongoDB.EntityFrameworkCore` en el proyecto Mongo. Mantén siempre las versiones alineadas.
+
+### 13.7.2. TestContainers
 
 TestContainers levanta un contenedor Docker de MongoDB real para los tests, sin depender de una instalación local.
 
@@ -1087,7 +1116,75 @@ public abstract class MongoTestBase : IAsyncLifetime
 }
 ```
 
-### 13.7.2. Tests con Driver Nativo
+> ⚠️ **Advertencia — Errores habituales con TestContainers**
+>
+> **Principio fundamental: cada test debe ser aislado**
+>
+> Un test no debe depender del estado que haya dejado otro test anterior. Si el test A inserta 3 productos y el test B espera encontrar exactamente 2 productos, el test B falla... ¡aunque el código sea correcto! Por eso, cada test debe empezar con una **BD limpia y con los mismos datos base**. Así todos los tests se ejecutan en las mismas condiciones, sin importar el orden.
+>
+> ```mermaid
+> flowchart LR
+>     T1["Test A: inserta 3 productos"] --> T2["Test B: espera 2 productos"]
+>     T2 --> FAIL["❌ FALLA: encuentra 5"]
+>
+>     T1B["Test A: inserta 3 productos"] --> CLEAN["🧹 Limpieza"]
+>     CLEAN --> T2B["Test B: BD limpia, inserta 2"]
+>     T2B --> OK["✅ PASA: encuentra solo 2"]
+>
+>     style FAIL fill:#f44336,color:#fff
+>     style OK fill:#4CAF50,color:#fff
+>     style CLEAN fill:#FF9800,color:#fff
+> ```
+>
+> **1. Container como campo instance, nunca `static`**
+>
+> Si el contenedor es `static readonly`, se comparte entre todos los `[TestFixture]` de la solución. Pero NUnit ejecuta cada `[TestFixture]` en un ensamblado diferente, y el contenedor se destruye al terminar el primero. El siguiente fixture intenta usar un contenedor muerto → errores raros.
+>
+> ```csharp
+> // ❌ MALO: static readonly — compartido entre fixtures, se destruye antes de tiempo
+> public abstract class MongoTestBase : IAsyncLifetime
+> {
+>     private static readonly MongoDbContainer _mongo = new MongoDbBuilder()
+>         .WithImage("mongo:7").Build();
+> }
+>
+> // ✅ BUENO: instance field — cada fixture obtiene su propio contenedor
+> public abstract class MongoTestBase : IAsyncLifetime
+> {
+>     private readonly MongoDbContainer _mongo = new MongoDbBuilder()
+>         .WithImage("mongo:7").Build();
+> }
+> ```
+>
+> **2. `[OneTimeTearDown]` para dispose del contenedor**
+>
+> Usa `[OneTimeTearDown]` (no `[TearDown]`) para destruir el contenedor. Así se ejecuta una sola vez al final de todos los tests del fixture, no después de cada test.
+>
+> ```csharp
+> [OneTimeTearDown]
+> public void OneTimeTearDown()
+> {
+>     _mongo?.Dispose();
+> }
+> ```
+>
+> **3. Limpieza de datos entre tests**
+>
+> TestContainers no recrea la BD entre tests. Si no limpias los datos, los tests se contaminan entre sí. Cada test debe empezar con la BD limpia y con los mismos datos base. Para **MongoDB**, usa `DeleteMany` en `[SetUp]`:
+>
+> ```csharp
+> [SetUp]
+> public void SetUp()
+> {
+>     // Cada test empieza con la BD limpia y los mismos datos base
+>     Database.GetCollection<BsonDocument>("productos").DeleteMany(FilterDefinition<BsonDocument>.Empty);
+>     Database.GetCollection<BsonDocument>("categorias").DeleteMany(FilterDefinition<BsonDocument>.Empty);
+> }
+> ```
+>
+> 🔧 **Truco:** MongoDB no tiene `TRUNCATE ... RESTART IDENTITY` porque los IDs son `ObjectId` (generados por el driver, no por la BD). La limpieza con `DeleteMany` es suficiente.
+
+### 13.7.3. Tests con Driver Nativo
 
 ```csharp
 [TestFixture]
@@ -1145,7 +1242,7 @@ public class FunkoRepositoryTests : MongoTestBase
 }
 ```
 
-### 13.7.3. Tests con EF Core
+### 13.7.4. Tests con EF Core
 
 ```csharp
 using Microsoft.EntityFrameworkCore;

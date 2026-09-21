@@ -79,7 +79,8 @@
   - [12.18. Testing con EF Core](#1218-testing-con-ef-core)
     - [12.18.1. InMemory Database](#12181-inmemory-database)
     - [12.18.2. TestContainers (PostgreSQL)](#12182-testcontainers-postgresql)
-    - [12.18.3. Patrón AAA](#12183-patrón-aaa)
+    - [12.18.3. Buenas prácticas con TestContainers](#12183-buenas-prácticas-con-testcontainers)
+    - [12.18.4. Patrón AAA](#12184-patrón-aaa)
   - [12.19. Buenas prácticas](#1219-buenas-prácticas)
   - [12.20. Reto](#1220-reto)
   - [12.21. Resumen](#1221-resumen)
@@ -2156,7 +2157,7 @@ catch
 
 Probar repositorios que usan EF Core requiere una BD de prueba. Hay dos opciones principales: **InMemory** (rápido, sin persistencia real) y **TestContainers** (contenedor Docker con BD real, más realista).
 
-### 12.19.1. InMemory Database
+### 12.18.1. InMemory Database
 
 EF Core incluye un proveedor InMemory que guarda los datos en memoria. Es **muy rápido** pero no soporta todas las funcionalidades de una BD real (restricciones, triggers, SQL nativo).
 
@@ -2179,7 +2180,7 @@ result.Id.Should().BeGreaterThan(0);
 
 > 💡 **Consejo:** InMemory es ideal para tests unitarios rápidos. Cada test debe crear su propia BD aislada (usar un nombre único). No compartas BD entre tests.
 
-### 12.19.2. TestContainers (PostgreSQL)
+### 12.18.2. TestContainers (PostgreSQL)
 
 TestContainers crea un **contenedor Docker real** con la BD que usas en producción. Es más lento que InMemory pero prueba exactamente lo que se ejecuta en producción.
 
@@ -2243,7 +2244,82 @@ public class ProductoRepositoryTests : IAsyncLifetime
 
 > 📝 **Nota:** TestContainers necesita Docker instalado y ejecutándose. Los tests son más lentos pero son **mucho más realistas**. Son la opción recomendada para tests de integración.
 
-### 12.19.3. Patrón AAA
+### 12.18.3. Buenas prácticas con TestContainers
+
+> ⚠️ **Advertencia — Errores habituales con TestContainers**
+>
+> **Principio fundamental: cada test debe ser aislado**
+>
+> Un test no debe depender del estado que haya dejado otro test anterior. Si el test A inserta 3 productos y el test B espera encontrar exactamente 5 productos (2 suyos + 3 del test A), el test B falla... ¡aunque el código sea correcto! Por eso, cada test debe empezar con una **BD limpia y con los mismos datos base**. Así todos los tests se ejecutan en las mismas condiciones, sin importar el orden.
+>
+> ```mermaid
+> flowchart LR
+>     T1["Test A: inserta 3 productos"] --> T2["Test B: espera 2 productos"]
+>     T2 --> FAIL["❌ FALLA: encuentra 5"]
+>
+>     T1B["Test A: inserta 3 productos"] --> CLEAN["🧹 Limpieza"]
+>     CLEAN --> T2B["Test B: BD limpia, inserta 2"]
+>     T2B --> OK["✅ PASA: encuentra solo 2"]
+>
+>     style FAIL fill:#f44336,color:#fff
+>     style OK fill:#4CAF50,color:#fff
+>     style CLEAN fill:#FF9800,color:#fff
+> ```
+>
+> **1. Container como campo instance, nunca `static`**
+>
+> Si el contenedor es `static readonly`, se comparte entre todos los `[TestFixture]` de la solución. Pero NUnit ejecuta cada `[TestFixture]` en un ensamblado diferente, y el contenedor se destruye al terminar el primero. El siguiente fixture intenta usar un contenedor muerto → errores raros.
+>
+> ```csharp
+> // ❌ MALO: static readonly — compartido entre fixtures, se destruye antes de tiempo
+> public class IntegrationTestBase : IAsyncLifetime
+> {
+>     private static readonly PostgreSqlContainer _container = new PostgreSqlBuilder()
+>         .WithImage("postgres:17-alpine").Build();
+> }
+>
+> // ✅ BUENO: instance field — cada fixture obtiene su propio contenedor
+> public class IntegrationTestBase : IAsyncLifetime
+> {
+>     private readonly PostgreSqlContainer _container = new PostgreSqlBuilder()
+>         .WithImage("postgres:17-alpine").Build();
+> }
+> ```
+>
+> **2. `[OneTimeTearDown]` para dispose del contenedor**
+>
+> Usa `[OneTimeTearDown]` (no `[TearDown]`) para destruir el contenedor. Así se ejecuta una sola vez al final de todos los tests del fixture, no después de cada test.
+>
+> ```csharp
+> [OneTimeTearDown]
+> public void OneTimeTearDown()
+> {
+>     _container?.Dispose();
+> }
+> ```
+>
+> **3. `TRUNCATE ... RESTART IDENTITY CASCADE` en `[SetUp]`**
+>
+> TestContainers no recrea la BD entre tests. Si no limpias los datos, los tests se contaminan entre sí (un test encuentra datos del anterior). Usa `TRUNCATE` en `[SetUp]` para reiniciar el estado antes de cada test:
+>
+> ```csharp
+> [SetUp]
+> public void SetUp()
+> {
+>     // Cada test empieza con la BD limpia y los mismos datos base
+>     using var conn = new NpgsqlConnection(_container.GetConnectionString());
+>     conn.Open();
+>     using var cmd = conn.CreateCommand();
+>     cmd.CommandText = @"
+>         TRUNCATE TABLE Productos, Categorias
+>         RESTART IDENTITY CASCADE";
+>     cmd.ExecuteNonQuery();
+> }
+> ```
+>
+> 🔧 **Truco:** Si olvidas el `RESTART IDENTITY`, los IDs siguen incrementándose. Aunque la tabla esté vacía, el próximo registro empieza desde el último ID, no desde 1. Esto puede causar confusiones en los tests.
+
+### 12.18.4. Patrón AAA
 
 Todos los tests deben seguir el patrón **AAA** (Arrange-Act-Assert) para que sean legibles y mantenibles:
 
