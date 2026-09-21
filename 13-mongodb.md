@@ -67,6 +67,8 @@
 
 MongoDB es una base de datos **NoSQL orientada a documentos**. A diferencia de MySQL o PostgreSQL, no guarda datos en tablas con filas y columnas, sino en **documentos** dentro de **colecciones**. Cada documento es un JSON (o BSON) flexible que puede tener estructuras diferentes dentro de la misma colección.
 
+> 💡 **Analogía:** MongoDB es como un cajón de carpetas donde cada carpeta puede tener un formato diferente. En SQL, todos los documentos deben seguir la misma plantilla (como formularios oficiales). En MongoDB, cada carpeta es libre de incluir las secciones que quieras.
+
 📌 Ejemplo real: **Instagram** usa MongoDB para almacenar perfiles de usuario, donde cada usuario puede tener campos diferentes (unos tienen blog, otros tienda, otros solo fotos). No tendría sentido forzar a todos a tener las mismas columnas.
 
 | Concepto SQL | MongoDB |
@@ -234,6 +236,32 @@ graph TD
 | **Relación N:M** | ❌ No | ✅ Sí |
 | **Datos duplicados aceptables** | ✅ Sí | ❌ No |
 
+```csharp
+// ❌ MALO: Pensar en SQL y separar todo en colecciones distintas
+// Esto fuerza múltiples consultas y pierde la ventaja de MongoDB
+var producto = collection<Producto>.Find(p => p.Id == id).First();
+var categoria = collection<Categoria>.Find(c => c.Id == producto.CategoriaId).First(); // 2ª consulta
+var reviews = collection<Review>.Find(r => r.ProductoId == id).ToList(); // 3ª consulta
+
+// ✅ BUENO: Embeber datos que siempre se leen juntos en un solo documento
+var producto = collection<Producto>.Find(p => p.Id == id).First();
+// Producto ya contiene: Categoria { ... } y Reviews [ ... ]
+// Una sola consulta, datos consistentes, mejor rendimiento
+```
+
+```csharp
+// ❌ MALO: Embeber colecciones que crecen sin límite (llegarás a 16 MB)
+var logs = collection<Log>.Find(_ => true).ToList();
+// Si un producto tiene millones de logs embebidos →.DocumentExceedsSizeLimitException
+
+// ✅ BUENO: Usar Subset Pattern — embeber solo los más recientes
+varproducto = collection<Producto>.Find(p => p.Id == id).First();
+// Producto tiene: ReviewsRecientes [últimos 5] + ReviewCount
+// El resto de reviews se obtiene de una colección separada si hace falta
+```
+
+> 💡 **Analogía:** Piensa en MongoDB como una carpeta de expediente. Puedes pegar notas, fotos y documentos dentro de la misma carpeta (embeber). Pero si la carpeta crece demasiado, necesitarás un archivador separado (referenciar) y solo dejar un Post-It con la referencia.
+
 📌 Ejemplo real: **Netflix** embebe la lista de "episodios" dentro de cada "serie" porque siempre se ven juntos. Pero usa referencias para los "actores" porque un actor aparece en múltiples series.
 
 ### 13.2.4. El límite de 16 MB
@@ -347,6 +375,18 @@ public class Producto
 ```
 
 > 💡 **Consejo:** Usa siempre POCO en proyectos reales. BsonDocument es útil para prototipos o consultas dinámicas, pero no tiene IntelliSense ni compile-time checking.
+
+```csharp
+// ❌ MALO: Usar BsonDocument en producción — sin tipado, errores en runtime
+var doc = collection.Find(new BsonDocument { { "nombre", "Teclado" } }).First();
+var precio = doc["precio"].AsDecimal; // Error si el campo no existe o cambia de tipo
+string nombre = doc["nombre"].AsString; // Sin IntelliSense, sin validación
+
+// ✅ BUENO: Usar POCO con atributos — tipado, IntelliSense, compile-time checking
+var producto = collection.Find(p => p.Nombre == "Teclado").First();
+var precio = producto.Precio; // decimal, seguro
+string nombre = producto.Nombre; // string, con autocompletado
+```
 
 Atributos Bson más habituales:
 
@@ -465,10 +505,32 @@ var resultados = collection.Find(filtro1).Project(proyeccion).ToList();
 ### 13.3.10. Índices
 
 ```csharp
-// Índice simple
-var indices = collection.Indexes;
-indices.CreateOne(new CreateIndexModel<Producto>(
+// ❌ MALO: No crear índices y hacer full table scan en colecciones grandes
+var productos = collection.Find(p => p.Nombre == "Teclado").ToList();
+// MongoDB escanea TODOS los documentos → lentitud extrema con millones de registros
+
+// ✅ BUENO: Crear índices en campos de consulta frecuentes
+collection.Indexes.CreateOne(new CreateIndexModel<Producto>(
     Builders<Producto>.IndexKeys.Ascending(p => p.Nombre)));
+
+// Ahora la búsqueda por nombre usa el índice → respuesta en milisegundos
+var productos = collection.Find(p => p.Nombre == "Teclado").ToList();
+```
+
+```csharp
+// ❌ MALO: Crear índices en campos que nunca se consultan
+// Esto desperdicia memoria y ralentiza las escrituras
+collection.Indexes.CreateOne(new CreateIndexModel<Producto>(
+    Builders<Producto>.IndexKeys.Ascending(p => p.DescripcionLarga)));
+// Nadie busca por descripción larga → inútil
+
+// ✅ BUENO: Índice compuesto para consultas que filtran y ordenan
+collection.Indexes.CreateOne(new CreateIndexModel<Producto>(
+    Builders<Producto>.IndexKeys
+        .Ascending(p => p.Categoria)
+        .Descending(p => p.Precio)));
+// Optimiza: WHERE categoria = 'X' ORDER BY precio DESC
+```
 
 // Índice único
 indices.CreateOne(new CreateIndexModel<Producto>(
@@ -572,6 +634,35 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 ### 13.4.5. Entidades Owned (documentos embebidos)
 
 Las entidades **Owned** son el equivalente a los documentos embebidos en MongoDB. Es la forma natural de modelar datos que van siempre juntos.
+
+```csharp
+// ❌ MALO: Guardar dirección como referencia (estilo SQL) en MongoDB
+public class Cliente
+{
+    [BsonId]
+    public ObjectId Id { get; set; }
+    public long DireccionId { get; set; } // Referencia a otra colección
+}
+// Requiere 2 consultas para obtener cliente + dirección. En MongoDB esto es innecesario.
+
+// ✅ BUENO: Embebir dirección como Owned Type dentro del mismo documento
+[Owned]
+public class Direccion
+{
+    public string Calle { get; set; } = string.Empty;
+    public string Ciudad { get; set; } = string.Empty;
+    public string CodigoPostal { get; set; } = string.Empty;
+}
+
+public class Cliente
+{
+    [BsonId]
+    public ObjectId Id { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+    public Direccion Direccion { get; set; } = null!; // Todo en un solo documento
+}
+// Una sola consulta, datos siempre consistentes, mejor rendimiento
+```
 
 ```mermaid
 graph TD
@@ -1156,6 +1247,31 @@ if (app.Environment.IsDevelopment())
 ---
 
 ## 13.9. Buenas prácticas
+
+```csharp
+// ❌ MALO: Crear un MongoClient por petición — agota el pool de conexiones
+public Producto GetProducto(int id)
+{
+    var client = new MongoClient("mongodb://localhost:27017"); // ¡MAL! Cada petición crea un cliente
+    var db = client.GetDatabase("tienda");
+    return db.GetCollection<Producto>("productos").Find(p => p.Id == id).First();
+}
+
+// ✅ BUENO: MongoClient como singleton — thread-safe, reutilizable
+// Registrar en DI como singleton:
+builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://localhost:27017"));
+// Linyectarlo en repositorios/servicios — UN solo cliente para toda la app
+```
+
+```csharp
+// ❌ MALO: Usar ObjectId como string — pierde rendimiento en búsquedas
+[BsonElement("_id")]
+public string Id { get; set; } // No se puede buscar eficientemente
+
+// ✅ BUENO: Usar ObjectId tipado — búsqueda directa por el _id nativo
+[BsonId]
+public ObjectId Id { get; set; } // Indexado automáticamente, búsqueda óptima
+```
 
 1. **Embebe cuando los datos van juntos** — Categoría en Producto, Dirección en Cliente
 2. **Referencia cuando cambian a menudo** — No embebas un contador de visitas dentro de un Producto

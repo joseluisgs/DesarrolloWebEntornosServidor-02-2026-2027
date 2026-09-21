@@ -104,30 +104,30 @@ flowchart TD
 **Transacción implícita** (cada `SaveChanges` es una transacción):
 
 ```csharp
+// ❌ MALO: Crear pedido y stock en SaveChanges separados — riesgo de inconsistencia
 context.Productos.Add(producto);
-await context.SaveChangesAsync();  // Transacción automática
+await context.SaveChangesAsync();  // Transacción 1: si falla aquí...
 
 context.Pedidos.Add(pedido);
-await context.SaveChangesAsync();  // Otra transacción automática
-```
+await context.SaveChangesAsync();  // Transacción 2: ...el producto ya está creado pero no el pedido
 
-**Transacción explícita** (varias operaciones atómicas):
-
-```csharp
+// ✅ BUENO: Usar transacción explícita para operaciones que deben ser atómicas
 await using var transaction = await context.Database.BeginTransactionAsync();
 try
 {
     context.Productos.Add(producto);
     context.Pedidos.Add(pedido);
     await context.SaveChangesAsync();
-    await transaction.CommitAsync();
+    await transaction.CommitAsync(); // Todo se aplica junto o nada
 }
 catch
 {
-    await transaction.RollbackAsync();
+    await transaction.RollbackAsync(); // Deshacer todo si algo falla
     throw;
 }
 ```
+
+> 💡 **Consejo:** Una transacción implícita (`SaveChanges`) solo sirve para una operación simple. Cuando necesitas que varias operaciones sean atómicas (crear pedido + decrementar stock), **siempre** usa transacción explícita con `BeginTransactionAsync`.
 
 > ⚠️ **Advertencia:** Siempre haz `RollbackAsync()` en el bloque `catch`, incluso si el error es esperado. Una transacción abandonada puede bloquear recursos en la BD.
 
@@ -153,6 +153,16 @@ flowchart TD
 **Implementación con `[Timestamp]`:**
 
 ```csharp
+// ❌ MALO: No usar control de concurrencia — race conditions garantizadas
+public class Producto
+{
+    public long Id { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+    public int Stock { get; set; }
+    // Sin [Timestamp] → dos usuarios pueden vender el mismo stock
+}
+
+// ✅ BUENO: Usar [Timestamp] para concurrencia optimista
 public class Producto
 {
     public long Id { get; set; }
@@ -160,8 +170,10 @@ public class Producto
     public int Stock { get; set; }
 
     [Timestamp]
-    public byte[] RowVersion { get; set; } = null!;
+    public byte[] RowVersion { get; set; } = null!; // EF Core valida conflictos automáticamente
 }
+// Si otro usuario modificó el registro entre tu lectura y tu escritura,
+// SaveChanges lanza DbUpdateConcurrencyException
 ```
 
 **Manejo de `DbUpdateConcurrencyException`:**
@@ -335,12 +347,22 @@ flowchart TD
 El tipo más tradicional. La BD asigna automáticamente el siguiente valor: 1, 2, 3, ...
 
 ```csharp
+// ❌ MALO: Usar INT para sistemas distribuidos (múltiples bases de datos)
+// BD1 tiene Producto ID=42, BD2 también tiene Producto ID=42 → colisión
 public class Producto
 {
-    public int Id { get; set; }  // Se asigna automáticamente
+    public int Id { get; set; } // ¡Peligro en microservicios!
+}
+
+// ✅ BUENO: Usar INT solo en sistemas monolíticos con una única BD
+public class Producto
+{
+    public int Id { get; set; }  // Aceptable en app con una sola BD
     public string Nombre { get; set; } = string.Empty;
 }
 ```
+
+> 💡 **Analogía:** Un INT autoincremental es como el número de tu DNI: es único **dentro de tu país**, pero si dos países emitieran los mismos números, habría colisiones. Un GUID es como tu huella dactilar: única en todo el mundo, sin importar cuántas personas haya.
 
 | Ventaja | Desventaja |
 |---------|------------|
@@ -353,11 +375,33 @@ public class Producto
 Un **GUID** (Globally Unique Identifier) es un identificador de 128 bits con 3.4 × 10^38 combinaciones posibles. Es prácticamente imposible que se repita.
 
 ```csharp
+// ❌ MALO: Usar GUID sin contexto — no se sabe qué representa
 public class Producto
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.NewGuid(); // ¿Por qué GUID aquí?
+}
+
+// ✅ BUENO: Usar GUID cuando necesitas distribuir entre sistemas
+public class Producto
+{
+    public Guid Id { get; set; } = Guid.NewGuid(); // Sistemas distribuidos ✓
     public string Nombre { get; set; } = string.Empty;
 }
+
+// ✅ BUENO: Usar SHORT GUID para URLs más legibles (ej: invite links)
+public class Invitacion
+{
+    public string Id { get; set; } = ShortGuid.NewGuid().ToString(); // "aB3xYz..."
+    // Más corto que un GUID completo, ideal para URLs y códigos de invitación
+}
+```
+
+```csharp
+// ❌ MALO: Comparar GUIDs con == (operación costosa en某些 plataformas)
+if (producto.Id == otroProducto.Id) { ... } // Puede ser lento con GUIDs
+
+// ✅ BUENO: Usar Equals() para comparación eficiente de GUIDs
+if (producto.Id.Equals(otroProducto.Id)) { ... } // Comparación optimizada
 ```
 
 | Ventaja | Desventaja |
@@ -482,6 +526,54 @@ flowchart TD
 ---
 
 ## 15.5. Buenas Prácticas
+
+```csharp
+// ❌ MALO: Olvidar el rollback en catch — transacción abandonada bloquea recursos
+await using var transaction = await context.Database.BeginTransactionAsync();
+try
+{
+    context.Pedidos.Add(pedido);
+    context.Productos.Update(producto);
+    await context.SaveChangesAsync();
+    await transaction.CommitAsync();
+}
+catch (Exception ex)
+{
+    // ¡Sin rollback! La transacción queda abierta → bloqueo indefinido
+    throw;
+}
+
+// ✅ BUENO: SIEMPRE hacer rollback en catch, sin excepciones
+await using var transaction = await context.Database.BeginTransactionAsync();
+try
+{
+    context.Pedidos.Add(pedido);
+    context.Productos.Update(producto);
+    await context.SaveChangesAsync();
+    await transaction.CommitAsync();
+}
+catch
+{
+    await transaction.RollbackAsync(); // Libera recursos siempre
+    throw;
+}
+// Alternativa: usar 'await using' que hace dispose automático (pero explícito es mejor práctica)
+```
+
+```csharp
+// ❌ MALO: Usar SELECT sin FOR UPDATE en pesimista — otros usuarios modifican mientras lees
+var productos = await context.Productos.Where(p => ids.Contains(p.Id)).ToListAsync();
+// Otro usuario puede decrementar el stock entre tu SELECT y tu UPDATE
+
+// ✅ BUENO: SELECT FOR UPDATE garantiza bloqueo durante la transacción
+var productos = await context.Productos
+    .FromSqlInterpolated($@"
+        SELECT * FROM ""Productos""
+        WHERE ""Id"" IN ({string.Join(",", ids)})
+        FOR UPDATE")
+    .ToListAsync();
+// Bloqueo hasta COMMIT → ningún otro usuario puede modificar estas filas
+```
 
 | Práctica | Descripción |
 |----------|-------------|

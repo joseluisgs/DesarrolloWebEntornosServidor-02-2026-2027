@@ -118,6 +118,8 @@ flowchart TB
 
 > 💡 **Consejo:** Piensa en el caché como los estantes del supermercado. Los productos más vendidos están al frente (caché). Solo cuando se agota el estante, bajan al almacén (base de datos).
 
+> 💡 **Analogía:** Un caché es como la estantería de tu despacho donde guardas los libros que más consultas. En vez de ir a la biblioteca (base de datos) cada vez que necesitas información, miras primero en tu estantería (caché). Si está, lo tienes en segundos; si no, vas a la biblioteca y traes una copia para la próxima vez.
+
 ---
 
 ## 14.2. Tipos de Caché
@@ -421,6 +423,8 @@ flowchart TD
 ### 14.6.1. Qué es Redis
 
 **Redis** (Remote Dictionary Server) es una base de datos en memoria de código abierto que funciona como almacén de estructuras de datos clave-valor. Es extremadamente rápido porque mantiene todos los datos en memoria RAM.
+
+> 💡 **Analogía:** Redis es como un tablero de anuncios inteligente en tu oficina. Puedes escribir notas (clave → valor) y encontrarlas al instante. Si las notas tienen datos simples (String), objetos con campos (Hash), listas de tareas (List) o rankings (Sorted Set), Redis las maneja nativamente. Y como todo está en la pizarra (RAM), la búsqueda es instantánea — no tienes que ir al archivo (disco) a buscar.
 
 📌 Ejemplo real: **Twitter** usa Redis para almacenar los timelines de los usuarios. Cuando abres tu timeline, los tweets más recientes vienen de Redis, no de una consulta a la base de datos principal. Esto permite servir millones de peticiones por segundo.
 
@@ -742,6 +746,31 @@ flowchart TD
     style H fill:#F44336,color:#fff
 ```
 
+```csharp
+// ❌ MALO: Cachear datos sensibles — passwords, tokens, datos de pago
+await _cache.SetAsync($"user:{id}:password", passwordHash, TimeSpan.FromHours(1));
+await _cache.SetAsync($"user:{id}:token", jwtToken, TimeSpan.FromHours(1));
+// Si Redis es comprometido, todos los datos sensibles quedan expuestos
+
+// ✅ BUENO: Cachear solo datos públicos, nunca sensibles
+await _cache.SetAsync($"producto:{id}", producto, TimeSpan.FromMinutes(30));
+await _cache.SetAsync("productos:all", listaProductos, TimeSpan.FromMinutes(5));
+await _cache.SetAsync($"user:{id}:profile", perfilPublico, TimeSpan.FromMinutes(15));
+// Datos públicos: catálogos, listados, configuración — sin información privada
+```
+
+```csharp
+// ❌ MALO: No invalidar caché después de UPDATE/DELETE
+await _repository.UpdateAsync(producto); // Actualizo en BD
+// El caché sigue con el dato ANTIGUO → inconsistencia
+
+// ✅ BUENO: Invalidar siempre en cada operación de escritura
+await _repository.UpdateAsync(producto);
+await _cache.RemoveAsync($"producto:{producto.Id}");   // Invalidar elemento
+await _cache.RemoveAsync("productos:all");              // Invalidar listado
+// La próxima lectura obtendrá el dato actualizado de la BD
+```
+
 | Qué cachear | Qué NO cachear |
 |-------------|----------------|
 | Productos, categorías | Datos sensibles (passwords, tokens) |
@@ -787,6 +816,19 @@ flowchart TD
     style B4 fill:#4CAF50,color:#fff
     style C2 fill:#FF9800,color:#fff
     style D2 fill:#FF9800,color:#fff
+```
+
+```csharp
+// ❌ MALO: Olvidar invalidar caché al actualizar — usuarios ven datos viejos
+await service.UpdateProducto(producto);
+// Resultado: el usuario sigue viendo el precio anterior
+
+// ✅ BUENO: Invalidar tanto el elemento individual como las listas relacionadas
+await service.UpdateProducto(producto);
+await cache.RemoveAsync($"producto:{producto.Id}");
+await cache.RemoveAsync("productos:all");
+await cache.RemoveAsync($"productos:cat:{producto.CategoriaId}"); // lista por categoría
+// Garantiza que la próxima lectura siempre traiga datos frescos
 ```
 
 ### 14.9.3. Invalidación en Cascada
@@ -1010,6 +1052,40 @@ public class RedisCacheServiceTests : IAsyncLifetime
 ---
 
 ## 14.13. Buenas Prácticas
+
+```csharp
+// ❌ MALO: Usar IMemoryCache directamente en el servicio — acoplamiento total
+public class ProductoService(IMemoryCache cache) : IProductoService
+{
+    public async Task<Producto?> GetByIdAsync(int id)
+    {
+        cache.TryGetValue($"producto:{id}", out Producto? cached); // Acoplado a IMemoryCache
+        // Si mañana cambias a Redis, tienes que reescribir todo el servicio
+    }
+}
+
+// ✅ BUENO: Usar la abstracción ICacheService — desacoplado, intercambiable
+public class ProductoService(ICacheService cache) : IProductoService
+{
+    public async Task<Producto?> GetByIdAsync(int id)
+    {
+        var cached = await cache.GetAsync<Producto>($"producto:{id}"); // Interface genérica
+        // Cambiar de MemoryCache a Redis = solo cambiar el registro en DI
+    }
+}
+```
+
+```csharp
+// ❌ MALO: Claves genéricas o ambiguas — imposible depurar
+await _cache.SetAsync("data", objeto);         // ¿Qué dato es?
+await _cache.SetAsync("item:1", objeto);       // ¿Qué tipo de ítem?
+
+// ✅ BUENO: Claves descriptivas con namespace claro
+await _cache.SetAsync("producto:123", producto);           // Item específico
+await _cache.SetAsync("productos:all", lista);             // Listado completo
+await _cache.SetAsync("productos:cat:gaming", lista);      // Listado filtrado
+await _cache.SetAsync("user:456:session", sesion);         // Sesión de usuario
+```
 
 | Práctica | Descripción |
 |----------|-------------|

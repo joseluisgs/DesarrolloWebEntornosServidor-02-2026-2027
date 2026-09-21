@@ -167,6 +167,44 @@ flowchart TD
 
 > 📝 **Nota:** Los roles son binarios: un usuario **tiene** o **no tiene** un rol. No hay valores intermedios. Si necesitas condiciones más complejas, usa Claims o Policies.
 
+> 💡 **Analogia:** La autorización es como un **portero de discoteca que verifica tu pulsera**. Primero te revisa el DNI (autenticación: ¿quién eres?). Luego mira tu pulsera de color (autorización: ¿qué zona puedes usar?). Si tienes la pulsera VIP, accedes a la zona premium. Si tienes la pulsera normal, solo zona general. Si no tienes pulsera, ni entrada al vestíbulo.
+
+```csharp
+// ❌ MALO: Permitir todo sin autorización — cualquier usuario anónimo puede acceder
+[HttpGet("admin/users")]
+public IActionResult GetAllUsers()  // ¡Sin [Authorize]! Cualquiera puede ver todos los usuarios
+{
+    return Ok(_userRepository.GetAll());
+}
+
+// ✅ BUENO: Denegar por defecto, permitir explícitamente — solo usuarios autorizados acceden
+[HttpGet("admin/users")]
+[Authorize(Policy = "RequireAdmin")]  // Solo ADMIN puede ver la lista de usuarios
+public IActionResult GetAllUsers()
+{
+    return Ok(_userRepository.GetAll());
+}
+```
+
+```csharp
+// ❌ MALO: Hardcodear roles en el código del controller — difícil de mantener y cambiar
+[HttpDelete("{id}")]
+[Authorize(Roles = "ADMIN")]  // ¿Y si mañana necesitas un rol "SUPERADMIN"?
+public IActionResult Delete(long id) { ... }
+
+// ✅ BUENO: Usar políticas configurables — cambiar permisos sin tocar el controller
+// En Program.cs: se define la política una vez
+services.AddAuthorizationBuilder()
+    .AddPolicy("CanDeleteProducts", policy =>
+        policy.RequireAssertion(ctx =>
+            ctx.User.IsInRole("ADMIN") || ctx.User.IsInRole("SUPERADMIN")));
+
+// En el controller: se usa la política, no el rol directamente
+[HttpDelete("{id}")]
+[Authorize(Policy = "CanDeleteProducts")]
+public IActionResult Delete(long id) { ... }
+```
+
 ### 17.2.2. Claims
 
 Los **claims** son pares clave-valor que transportan información sobre el usuario. A diferencia de los roles (binarios), los claims pueden contener cualquier dato: email, departamento, nivel de acceso, fecha de registro, etc. Son la materia prima que alimenta las decisiones de autorización.
@@ -261,6 +299,8 @@ flowchart TD
 ```
 
 Una política puede ser tan simple como requerir un rol, o tan compleja como combinar múltiples requisitos con lógica personalizada. La clave es que defines la política una vez en `Program.cs` y la reutilizas con el atributo `[Authorize(Policy = "...")]` en cualquier endpoint.
+
+> 💡 **Analogía:** Las Policies son como las **reglas de un club VIP**. Cada sala del club tiene sus propias reglas: la sala de karaoke requiere que seas mayor de 18, la terraza VIP requiere pulsera premium, y la sala de eventos requiere ser socio Y estar bien vestido. Tú defines las reglas una vez en la puerta del club (Program.cs) y cada sala las aplica (controllers). Si mañana cambias la regla de la terraza, solo actualizas la definición en la puerta, no tienes que ir sala por sala.
 
 ### 17.2.4. Requirements y Handlers
 
@@ -1137,6 +1177,58 @@ flowchart TB
 | **Documentar permisos** | Cada endpoint debe indicar qué rol/política requiere |
 
 ✅ **Buena práctica:** Siempre define una política por defecto que requiera autenticación. Así, si olvidas añadir `[Authorize]` a un endpoint, denegará acceso por defecto en lugar de permitirlo anónimamente.
+
+```csharp
+// ❌ MALO: No hacer rollback en catch — si falla la autorización, los cambios parciales quedan en la BD
+try
+{
+    var producto = await repo.GetByIdAsync(id);
+    producto.Stock -= cantidad;
+    await repo.UpdateAsync(producto);  // Cambio parcial aplicado
+    await authorizationService.AuthorizeAsync(User, producto, "RequireOwner");
+    // Si la autorización falla, el cambio de stock ya está en la BD
+}
+catch (UnauthorizedAccessException)
+{
+    // No se hace nada — ¡el cambio de stock ya se aplicó!
+    return Forbid();
+}
+
+// ✅ BUENO: SIEMPRE rollback en catch — la transacción solo se confirma si todo va bien
+using var transaction = await dbContext.Database.BeginTransactionAsync();
+try
+{
+    var producto = await repo.GetByIdAsync(id);
+    producto.Stock -= cantidad;
+    await repo.UpdateAsync(producto);
+    var authResult = await authorizationService.AuthorizeAsync(User, producto, "RequireOwner");
+    if (!authResult.Succeeded)
+    {
+        await transaction.RollbackAsync();  // Revertir cambios
+        return Forbid();
+    }
+    await transaction.CommitAsync();  // Confirmar solo si todo OK
+}
+catch
+{
+    await transaction.RollbackAsync();  // Siempre rollback en error
+    throw;
+}
+```
+
+```csharp
+// ❌ MALO: SELECT sin FOR UPDATE en pesimista — dos usuarios leen el mismo stock simultáneamente
+var producto = await repo.GetByIdAsync(id);  // SELECT * FROM productos WHERE id = @id
+producto.Stock -= cantidad;  // Ambos usuarios leen stock = 10, ambos restan 3 → stock = 7 (debería ser 4)
+await repo.UpdateAsync(producto);
+
+// ✅ BUENO: SELECT FOR UPDATE para bloquear filas — un usuario espera a que el otro termine
+var producto = await dbContext.Productos
+    .FromSqlRaw("SELECT * FROM productos WHERE id = {0} FOR UPDATE", id)
+    .FirstAsync();  // Bloquea la fila hasta que termine la transacción
+producto.Stock -= cantidad;
+await dbContext.SaveChangesAsync();
+```
 
 > ⚠️ **Advertencia:** **Nunca** confíes en que el frontend filtra lo que el usuario puede ver. Si un usuario malicioso llama directamente a tu API con un token válido pero sin permisos, el servidor debe denegar el acceso. La autorización **siempre** se verifica en el backend.
 

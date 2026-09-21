@@ -206,6 +206,32 @@ var token = new JwtSecurityToken(
 
 > ⚠️ **Advertencia:** El payload de un JWT **NO esta cifrado**, solo codificado en Base64Url. Cualquiera puede leerlo. **Nunca** incluyas informacion sensible (contrasenas, numeros de tarjeta) en el payload. Solo incluye claims que no sean secretos.
 
+> 💡 **Analogia:** Un JWT es como un **carnet de identidad con fecha de caducidad**. El header es el formato del carnet (tipo de documento), el payload son tus datos (nombre, DNI, rol), y la firma es el holograma que impide falsificarlo. El carnet es válido mientras no esté caducado y el holograma sea auténtico. Si alguien intenta cambiar tu nombre en el carnet, el holograma se rompe y el portero lo detecta.
+
+```csharp
+// ❌ MALO: JWT sin validar issuer ni audience — aceptaria tokens de cualquier emisor
+options.TokenValidationParameters = new TokenValidationParameters
+{
+    ValidateIssuer = false,      // ¡Cualquier servidor podria emitir tokens validos!
+    ValidateAudience = false,    // ¡Cualquier app podria usar el token!
+    ValidateIssuerSigningKey = false
+};
+
+// ✅ BUENO: JWT validando issuer, audience y signing key — solo acepta tokens de tu servidor
+options.TokenValidationParameters = new TokenValidationParameters
+{
+    ValidateIssuer = true,
+    ValidIssuer = jwtSettings["Issuer"],
+    ValidateAudience = true,
+    ValidAudience = jwtSettings["Audience"],
+    ValidateIssuerSigningKey = true,
+    IssuerSigningKey = new SymmetricSecurityKey(
+        Encoding.UTF8.GetBytes(secretKey)),
+    ValidateLifetime = true,
+    ClockSkew = TimeSpan.Zero
+};
+```
+
 ### 16.2.2. Claims
 
 Los **claims** son pares clave-valor que transportan informacion sobre el usuario y el token. Es como el contenido de tu DNI: datos identificativos y metadatos.
@@ -321,6 +347,34 @@ string hash = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 11);
 // Login: verificar la contrasena
 bool isValid = BCrypt.Net.BCrypt.Verify(password, hash);
 // true si coincide, false si no
+```
+
+> 💡 **Analogia:** BCrypt es como una **maquina de picar carne que siempre produce resultados diferentes**. Cada vez que introduces la misma pie de carne (contraseña), la máquina añade sal (salt) antes de picarla, así que el resultado final (hash) es siempre distinto. Para verificar si una contraseña es correcta, pasas la nueva pie por la misma máquina con el mismo salt y comparas el resultado. Un atacante no puede simplemente "deshacer" el picado para recuperar la carne original.
+
+```csharp
+// ❌ MALO: Almacenar contraseña en texto plano — si hackean la BD, todos los usuarios quedan comprometidos
+public class Usuario
+{
+    public string Email { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;  // ¡NUNCA hacer esto!
+}
+
+// ✅ BUENO: Almacenar hash con BCrypt —即使 hackean la BD, las contraseñas son irrecuperables
+public class Usuario
+{
+    public string Email { get; set; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty;  // BCrypt hash con salt
+}
+
+// Registro: hashear antes de guardar
+var usuario = new Usuario
+{
+    Email = request.Email,
+    PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, workFactor: 11)
+};
+
+// Login: verificar con BCrypt.Verify
+bool esValido = BCrypt.Net.BCrypt.Verify(request.Password, usuario.PasswordHash);
 ```
 
 ```mermaid
@@ -1337,6 +1391,30 @@ flowchart TD
 | **Refresh tokens** | Renovar access tokens sin re-login |
 | **No logear passwords** | Nunca incluir contrasenas en logs |
 | **Seed de usuarios** | Crear usuario admin y de prueba en desarrollo |
+
+```csharp
+// ❌ MALO: JWT con expiración de 24 horas — si roban el token, tienen acceso todo el día
+var token = new JwtSecurityToken(
+    expires: DateTime.UtcNow.AddHours(24),  // ¡Muy peligroso!
+    signingCredentials: creds
+);
+
+// ✅ BUENO: JWT con expiración de 15-30 minutos — ventana de ataque mínima
+var token = new JwtSecurityToken(
+    expires: DateTime.UtcNow.AddMinutes(15),  // AccessToken de corta vida
+    signingCredentials: creds
+);
+// El refresh token (larga vida) se usa para renovar el access token sin re-login
+```
+
+```csharp
+// ❌ MALO: Almacenar token en localStorage — vulnerable a XSS
+localStorage.setItem("token", jwtToken);  // ¡Cualquier script puede leerlo!
+
+// ✅ BUENO: Usar httpOnly cookies o memoria del navegador — protegido contra XSS
+// Opción 1: httpOnly cookie (el navegador la envía automáticamente, JS no puede acceder)
+// Opción 2: Variable en memoria del SPA (se pierde al cerrar la pestaña, pero es seguro)
+```
 
 > ⚠️ **Advertencia:** **Nunca** almacenes JWT en `localStorage` del navegador. Si un atacante logra inyectar JavaScript (XSS), puede robar el token. Usa **httpOnly cookies** o almacen en memoria del SPA. El `localStorage` es accesible desde cualquier script en la pagina.
 
