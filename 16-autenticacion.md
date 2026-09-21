@@ -34,6 +34,7 @@
     - [16.6.2. Instalación y Configuración](#1662-instalación-y-configuración)
     - [16.6.3. UserManager y SignInManager](#1663-usermanager-y-signinmanager)
     - [16.6.4. Identity con JWT](#1664-identity-con-jwt)
+    - [16.6.5. Identity con OAuth2 (Login Externo)](#1665-identity-con-oauth2-login-externo)
   - [16.7. Comparación de Enfoques](#167-comparación-de-enfoques)
   - [16.8. Buenas Prácticas](#168-buenas-prácticas)
   - [16.9. Reto](#169-reto)
@@ -1197,6 +1198,80 @@ public class AuthIdentityController(
 Identity genera contrasenas hasheadas con PBKDF2 por defecto (no BCrypt). Para generar JWT desde Identity, puedes usar `UserManager` para obtener el usuario y los roles, y luego generar el token con `JwtSecurityTokenHandler` o integrarlo con el `JwtService` del enfoque manual.
 
 La ventaja de combinar Identity con JWT es que obtienes la gestion de usuarios de Identity (2FA, lockout, external logins) con la escalabilidad de JWT para APIs REST.
+
+### 16.6.5. Identity con OAuth2 (Login Externo)
+
+Identity integra de forma nativa el login con proveedores externos como Google, GitHub o Microsoft. Esto significa que puedes ofrecer a tus usuarios la opcion de iniciar sesion con su cuenta de Google sin tener que gestionar contrasenas. Identity se encarga automaticamente de crear el usuario la primera vez y de asociar el proveedor externo.
+
+Para configurar Google con Identity, necesitas registrar tu app en la consola de Google Cloud y obtener el ClientId y ClientSecret. Luego, en Program.cs, registras el esquema de autenticacion con `.AddGoogle()` y configuras el Identity para que acepte login externo.
+
+```csharp
+// Program.cs - Identity + Google
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+})
+.AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+{
+    options.ClientId = configuration["Google:ClientId"]!;
+    options.ClientSecret = configuration["Google:ClientSecret"]!;
+})
+.AddIdentityCookies();
+
+builder.Services.AddAuthorizationBuilder()
+    .SetDefaultPolicy(new AuthorizationPolicyBuilder(
+        IdentityConstants.ApplicationScheme)
+        .RequireAuthenticatedUser()
+        .Build());
+```
+
+En el `AuthController`, el endpoint de login externo redirige al usuario a Google. Cuando el usuario autoriza, Google redirige de vuelta a tu app con un codigo. Identity intercambia ese codigo por un token y crea o busca el usuario automaticamente.
+
+```csharp
+[HttpGet("external-login")]
+public IActionResult ExternalLogin(string provider, string? returnUrl = null)
+{
+    var redirectUrl = Url.Action("ExternalLoginCallback", "Auth",
+        new { returnUrl });
+    var properties = signInManager
+        .ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+    return Challenge(properties, provider);
+}
+
+[HttpGet("external-login-callback")]
+public async Task<IActionResult> ExternalLoginCallback(
+    string? returnUrl = null)
+{
+    var info = await signInManager.GetExternalLoginInfoAsync();
+    if (info == null)
+        return BadRequest("Error obteniendo informacion del proveedor");
+
+    var result = await signInManager
+        .ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey,
+            isPersistent: false, bypassTwoFactor: true);
+
+    if (result.Succeeded)
+        return Redirect(returnUrl ?? "/");
+
+    // Primera vez: crear usuario desde los datos del proveedor
+    var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+    var name = info.Principal.FindFirstValue(ClaimTypes.Name);
+
+    var user = new User { UserName = email, Email = email };
+    var createResult = await userManager.CreateAsync(user);
+    if (createResult.Succeeded)
+    {
+        await userManager.AddLoginAsync(user, info);
+        await signInManager.SignInAsync(user, isPersistent: false);
+        return Redirect(returnUrl ?? "/");
+    }
+
+    return BadRequest("Error creando usuario");
+}
+```
+
+> 📝 **Nota:** Cuando un usuario se registra con Google por primera vez, Identity crea el usuario en tu BD y asocia el proveedor externo. En el segundo login, simplemente lo reconoce. El usuario nunca necesita crear una contrasena local.
 
 ---
 
