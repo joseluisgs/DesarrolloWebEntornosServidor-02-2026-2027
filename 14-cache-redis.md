@@ -544,20 +544,52 @@ public interface ICacheService
 
 > 💡 **Consejo:** El método `GetOrSetAsync` es crucial para evitar el "cache stampede" donde múltiples hilos intentan cargar el mismo dato simultáneamente.
 
-### 14.7.3. MemoryCacheService
+### 14.7.3. CacheOptions (configurable desde appsettings.json)
+
+```csharp
+namespace ProductosEFCore.Cache;
+
+/// <summary>
+/// Opciones de configuración de caché.
+/// Se configura desde appsettings.json en la sección "Cache".
+/// </summary>
+public class CacheOptions
+{
+    public const string SectionName = "Cache";
+
+    /// <summary>
+    /// Tiempo de vida por defecto de las entradas en caché (en minutos).
+    /// </summary>
+    public int DefaultExpirationMinutes { get; set; } = 30;
+
+    /// <summary>
+    /// Tiempo de expiración deslizante (en minutos).
+    /// Se renueva en cada acceso.
+    /// </summary>
+    public int SlidingExpirationMinutes { get; set; } = 10;
+
+    public TimeSpan DefaultExpiration => TimeSpan.FromMinutes(DefaultExpirationMinutes);
+    public TimeSpan SlidingExpiration => TimeSpan.FromMinutes(SlidingExpirationMinutes);
+}
+```
+
+### 14.7.4. MemoryCacheService
 
 ```csharp
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 
-namespace ProductosApi.Services.Cache;
+namespace ProductosEFCore.Cache;
 
 /// <summary>
 /// Implementación de caché en memoria local.
-/// Útil para desarrollo o aplicaciones de instancia única.
+/// El TTL se configura desde appsettings.json.
 /// </summary>
-public class MemoryCacheService(IMemoryCache cache) : ICacheService
+public class MemoryCacheService(
+    IMemoryCache cache,
+    IOptions<CacheOptions> options) : ICacheService
 {
-    private static readonly TimeSpan DefaultExpiration = TimeSpan.FromMinutes(30);
+    private readonly CacheOptions _options = options.Value;
 
     public Task<T?> GetAsync<T>(string key, CancellationToken ct = default)
     {
@@ -567,11 +599,12 @@ public class MemoryCacheService(IMemoryCache cache) : ICacheService
 
     public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken ct = default)
     {
-        var options = new MemoryCacheEntryOptions
+        var cacheEntryOptions = new MemoryCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = expiration ?? DefaultExpiration
+            AbsoluteExpirationRelativeToNow = expiration ?? _options.DefaultExpiration,
+            SlidingExpiration = _options.SlidingExpiration
         };
-        cache.Set(key, value, options);
+        cache.Set(key, value, cacheEntryOptions);
         return Task.CompletedTask;
     }
 
@@ -600,21 +633,24 @@ public class MemoryCacheService(IMemoryCache cache) : ICacheService
 }
 ```
 
-### 14.7.4. RedisCacheService
+### 14.7.5. RedisCacheService
 
 ```csharp
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Options;
 using System.Text.Json;
 
-namespace ProductosApi.Services.Cache;
+namespace ProductosEFCore.Cache;
 
 /// <summary>
 /// Implementación de caché distribuido con Redis.
-/// Para producción y aplicaciones multi-instancia.
+/// El TTL se configura desde appsettings.json.
 /// </summary>
-public class RedisCacheService(IDistributedCache cache) : ICacheService
+public class RedisCacheService(
+    IDistributedCache cache,
+    IOptions<CacheOptions> options) : ICacheService
 {
-    private static readonly TimeSpan DefaultExpiration = TimeSpan.FromMinutes(30);
+    private readonly CacheOptions _options = options.Value;
 
     public async Task<T?> GetAsync<T>(string key, CancellationToken ct = default)
     {
@@ -655,10 +691,15 @@ public class RedisCacheService(IDistributedCache cache) : ICacheService
 }
 ```
 
-### 14.7.5. Configuración en DI
+### 14.7.6. Configuración en DI
 
 ```csharp
 // Program.cs - Configuración según entorno
+// 1. Registrar opciones de caché desde appsettings.json
+builder.Services.Configure<CacheOptions>(
+    builder.Configuration.GetSection(CacheOptions.SectionName));
+
+// 2. Seleccionar implementación según entorno
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddMemoryCache();
@@ -678,6 +719,10 @@ else
 
 ```json
 {
+  "Cache": {
+    "DefaultExpirationMinutes": 30,
+    "SlidingExpirationMinutes": 10
+  },
   "Redis": {
     "ConnectionString": "localhost:6379,password=miPassword123"
   }
