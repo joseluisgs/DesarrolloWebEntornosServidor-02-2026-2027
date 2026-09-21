@@ -7,6 +7,7 @@ UD02. Desarrollo de servicios web en .NET. 2DAW. Curso 2026-2027.
 
   
 ## Contenidos
+0.  [Guía de Supervivencia: Comandos .NET CLI](00-comandos.md)
 1.  [Servicios Web](01-conceptos-servicios.md)
 2.  [APIs REST](02-rest-api.md)
 3.  [Minimal APIs](03-minimal-apis.md)
@@ -18,11 +19,11 @@ UD02. Desarrollo de servicios web en .NET. 2DAW. Curso 2026-2027.
 9.  [Configuración y Logging](09-configuracion-logging.md)
 10. [Pruebas y Despliegue Básicos](10-pruebas-despliegue.md)
 11. [Arquitecturas para Servicios](11-clean-architecture.md)
-10. [Entity Framework Core SQL](10-entity-framework-core.md)
-13. [Entity Framework Core NoSQL con MongoDB](netcore/11-mongodb.md)
-14. [Sistemas de Cache: Redis y Memcached](netcore/12-redis-caching.md)
-15. [Transacciones avanzadas](13-transacciones.md)
-16. [Atenticación JWT con Identity](14-autenticacion.md)
+12. [Entity Framework Core SQL](12-entity-framework-core.md)
+13. [Entity Framework Core NoSQL con MongoDB](13-mongodb.md)
+14. [Sistemas de Caché: Redis y Memcached](14-cache-redis.md)
+15. [Transacciones, Concurrencia e Identificadores](15-transacciones-identificadores.md)
+16. [Autenticación JWT con Identity](14-autenticacion.md)
 17. [Autorización mediante Roles y Claims](15-autorizacion.md)
 18. [Logging](16-logging.md)
 19. [Tiempo Real con WebSockets y SignalR](17-websockets-signalr.md)
@@ -37,6 +38,13 @@ UD02. Desarrollo de servicios web en .NET. 2DAW. Curso 2026-2027.
 28. [Tareas Programadas](26-tareas-programadas.md)
 29. [Organización e Infraestructuras de Program.cs](27-organizacion-program.md)
 30. [Resumen](28-resumen.md)
+
+## Prácticas
+1.  [Prueba de C# y Terminal](practicas/01-test-csharp.md)
+2.  [Cuestionario de C#](practicas/02-cuestionario-charp.md)
+3.  [Repositorio Remoto](practicas/03-repositorio_remoto.md)
+4.  [Prueba de ASP.NET Core](practicas/04-test-aspcore.md)
+5.  [Cuestionario de ASP.NET Core](practicas/05-cuestionario_aspcore.md)
 
 ## Proyecto Integrador
 El proyecto realizado en clase podrás seguirlo desde el repositorio de GitHub:
