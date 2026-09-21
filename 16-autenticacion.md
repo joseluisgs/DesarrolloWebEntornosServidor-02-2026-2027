@@ -1196,6 +1196,27 @@ builder.Services.AddIdentity<User, Role>(options =>
 
 > 📝 **Nota:** Identity crea automaticamente 7 tablas en la base de datos: `AspNetUsers`, `AspNetRoles`, `AspNetUserClaims`, `AspNetUserRoles`, `AspNetUserLogins`, `AspNetUserTokens` y `AspNetRoleClaims`. Con `ToTable()` puedes cambiarles el nombre.
 
+> ⚠️ **Advertencia: Un solo DbContext para Identity y datos de negocio**
+>
+> Error comun: usar **dos DbContexts separados** (uno para Identity, otro para productos, etc.) apuntando a la **misma base de datos**. Esto falla porque `EnsureCreatedAsync()` solo crea tablas cuando la BD no existe. Si un DbContext crea la BD primero, el otro encuentra la BD ya existente y **no crea sus tablas**.
+>
+> **Solucion:** Usar un **unico DbContext** que herede de `IdentityDbContext` e incluya todas las entidades de la aplicacion:
+>
+> ```csharp
+> // ❌ MALO: Dos contexts para la misma BD
+> public class AuthDbContext : IdentityDbContext<AppUser, IdentityRole<long>, long> { ... }
+> public class AppDbContext : DbContext { ... } // Productos, Categorias...
+>
+> // ✅ BUENO: Un solo context para todo
+> public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<long>, long>
+> {
+>     public DbSet<Producto> Productos => Set<Producto>();
+>     public DbSet<Categoria> Categorias => Set<Categoria>();
+> }
+> ```
+>
+> Si necesitas **dos bases de datos separadas** (una para Identity, otra para negocio), ahi si tiene sentido usar dos DbContexts con **connection strings diferentes**.
+
 ### 16.6.3. UserManager y SignInManager
 
 `UserManager<T>` y `SignInManager<T>` son los servicios centrales de Identity. `UserManager` gestiona CRUD de usuarios (crear, buscar, actualizar, eliminar, gestionar roles). `SignInManager` gestiona las operaciones de login (verificar contrasena, bloqueo, login externo).

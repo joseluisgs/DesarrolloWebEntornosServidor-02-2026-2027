@@ -297,6 +297,53 @@ networks:
 | `docker-compose restart api` | Reiniciar solo la API |
 | `docker-compose ps` | Ver estado de los servicios |
 
+### Patron de Dos Archivos: Desarrollo vs Produccion
+
+En desarrollo es comun separar la infraestructura de la API en dos archivos:
+
+```yaml
+# docker-compose.yml — Solo base de datos (para desarrollo local)
+services:
+  db:
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: productos
+```
+
+```yaml
+# docker-compose.api.yml — API + base de datos (para despliegue)
+services:
+  api:
+    build: .
+    ports:
+      - "5000:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:17-alpine
+    ports:
+      - "5433:5432"  # Puerto distinto para evitar colisiones
+```
+
+**Por que dos archivos?**
+- **`docker-compose.yml`**: Levantas solo la BD localmente y ejecutas la API desde tu IDE (con `dotnet run`). Es el modo normal de desarrollo.
+- **`docker-compose.api.yml`**: Levanta todo junto (API + BD) para probar el despliegue en contenedor.
+
+```bash
+# Desarrollo: solo BD
+docker compose up -d
+
+# Despliegue: API + BD
+docker compose -f docker-compose.api.yml up -d
+```
+
+> 💡 **Consejo:** Mantén las versiones de imagenes consistentes en todos los compose. Ejemplo estandar: `postgres:17-alpine`, `redis:7-alpine`, `mongo:7.0`.
+
 ---
 
 ## 22.6. Variables de Entorno
@@ -394,6 +441,21 @@ services:
 FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 ```
+
+> ⚠️ **Advertencia: MongoDB no tiene imagen Alpine oficial**
+>
+> MongoDB no se compila para **musl libc** (el libc de Alpine), por lo que no existe una imagen `mongo:*-alpine` oficial. Si usas `mongo:7` en un `docker-compose.yml` con servicios Alpine (PostgreSQL, Redis), la imagen de MongoDB sera la mas pesada (~337MB comprimida).
+>
+> Alternativas para reducir tamano:
+> | Imagen | Tamano comprimido | Notas |
+> |--------|-------------------|-------|
+> | `mongo:7.0` | ~337 MB | Oficial, mas completa |
+> | `mongodb/mongodb-community-server` | ~330 MB | Community Server |
+> | `bitnami/mongodb` | ~269 MB | Con graficos Bitnami |
+> | `chainguard/mongodb` | ~184 MB | Chainguard (Wolfi) |
+> | `ghcr.io/theofilos-chamalis/mongodb-slim` | ~138 MB | El mas ligero |
+>
+> Para un curso, **`mongo:7.0` (oficial)** es la mejor opcion: es la mas documentada y estable. Usa `*-alpine` para PostgreSQL y Redis (si estan disponibles), y acepta que MongoDB sera la imagen mas grande del compose.
 
 ### .dockerignore
 

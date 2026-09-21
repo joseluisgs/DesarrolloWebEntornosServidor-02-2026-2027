@@ -497,6 +497,44 @@ public class Proveedor
 
 > 💡 **Consejo:** El ValueGenerator se ejecuta solo cuando la entidad es nueva y la propiedad tiene valor por defecto. No necesitas asignar el ID manualmente: EF Core lo genera automáticamente al hacer `Add()`.
 
+> ⚠️ **Advertencia: SaveChanges vs SaveChangesAsync**
+>
+> Si tu repositorio llama a `SaveChanges()` (sincrono) pero tu override de generacion de IDs solo esta en `SaveChangesAsync()`, **los IDs no se generaran**. Siempre override **ambos** metodos:
+>
+> ```csharp
+> // ❌ MALO: Solo override async
+> public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
+> {
+>     GenerateIds();
+>     return await base.SaveChangesAsync(ct);
+> }
+>
+> // ✅ BUENO: Override ambos
+> private void GenerateIds()
+> {
+>     foreach (var entry in ChangeTracker.Entries<Proveedor>()
+>         .Where(e => e.State == EntityState.Added))
+>     {
+>         if (string.IsNullOrEmpty(entry.Entity.Id))
+>             entry.Entity.Id = new YouTubeIdValueGenerator().Next(entry);
+>     }
+> }
+>
+> public override int SaveChanges()
+> {
+>     GenerateIds();
+>     return base.SaveChanges();
+> }
+>
+> public override Task<int> SaveChangesAsync(CancellationToken ct = default)
+> {
+>     GenerateIds();
+>     return base.SaveChangesAsync(ct);
+> }
+> ```
+>
+> También elimina `ValueGeneratedOnAdd()` del Fluent API si generas el ID manualmente en el override.
+
 ### 15.4.5. Comparativa de Identificadores
 
 | Tipo | Espacio | Único | Ordenable | Distribuible | Legible |
