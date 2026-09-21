@@ -1,7 +1,5 @@
 # 15. Transacciones, Concurrencia e Identificadores
 
-## Tabla de Contenidos
-
 - [15. Transacciones, Concurrencia e Identificadores](#15-transacciones-concurrencia-e-identificadores)
   - [15.1. El Problema de la Concurrencia](#151-el-problema-de-la-concurrencia)
   - [15.2. Transacciones](#152-transacciones)
@@ -22,10 +20,6 @@
   - [15.5. Buenas Prácticas](#155-buenas-prácticas)
   - [15.6. Reto](#156-reto)
   - [15.7. Resumen](#157-resumen)
-
----
-
-# 15. Transacciones, Concurrencia e Identificadores
 
 > 💡 **Punto de partida:** Si dos personas intentan comprar el último billete de avión al mismo tiempo, ¿quién se lo lleva? La base de datos debe tener un mecanismo para decidirlo sin perder datos ni vender el mismo billete dos veces.
 

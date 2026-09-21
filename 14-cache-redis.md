@@ -1,7 +1,5 @@
 # 14. Caché y Redis
 
-## Tabla de Contenidos
-
 - [14. Caché y Redis](#14-caché-y-redis)
   - [14.1. Fundamentos de Caché](#141-fundamentos-de-caché)
     - [14.1.1. Qué es un Caché](#1411-qué-es-un-caché)
@@ -52,10 +50,6 @@
   - [14.13. Buenas Prácticas](#1413-buenas-prácticas)
   - [14.14. Reto](#1414-reto)
   - [14.15. Resumen](#1415-resumen)
-
----
-
-# 14. Caché y Redis
 
 ## 14.1. Fundamentos de Caché
 

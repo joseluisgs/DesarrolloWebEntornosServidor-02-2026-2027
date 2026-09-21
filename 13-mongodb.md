@@ -47,7 +47,6 @@
   - [13.10. Reto](#1310-reto)
   - [13.11. Resumen](#1311-resumen)
 
----
 
 > 💡 **Punto de partida:** ¿Alguna vez has tenido que diseñar una base de datos con 15 tablas y 20 joins solo para guardar una factura? ¿O has sufrido con un ORM relacional que no encaja con tu modelo de datos? MongoDB te propone otra forma: guarda lo que piensas como un documento, sin tablas, sin joins, sin ceremony.
 

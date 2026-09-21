@@ -1,7 +1,5 @@
 # 16. Autenticación JWT y BCrypt
 
-## Tabla de Contenidos
-
 - [16. Autenticación JWT y BCrypt](#16-autenticación-jwt-y-bcrypt)
   - [16.1. Introducción](#161-introducción)
     - [16.1.1. ¿Qué es la Autenticación?](#1611-qué-es-la-autenticación)
@@ -39,8 +37,6 @@
   - [16.8. Buenas Prácticas](#168-buenas-prácticas)
   - [16.9. Reto](#169-reto)
   - [16.10. Resumen](#1610-resumen)
-
-# 16. Autenticación JWT y BCrypt
 
 > 💡 **Punto de partida:** Cuando abres Instagram, introduces tu email y contraseña. Instagram comprueba que eres quien dices ser y te da acceso a tu feed. Ese proceso se llama **autenticación**. Pero en una API REST, ¿cómo sabe el servidor quién eres en cada petición? La respuesta está en JWT y BCrypt.
 

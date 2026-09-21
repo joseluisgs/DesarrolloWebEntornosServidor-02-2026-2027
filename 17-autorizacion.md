@@ -1,7 +1,5 @@
 # 17. Autorización
 
-## Tabla de Contenidos
-
 - [17. Autorización](#17-autorización)
   - [17.1. Introducción](#171-introducción)
     - [17.1.1. ¿Qué es la Autorización?](#1711-qué-es-la-autorización)
@@ -29,9 +27,6 @@
   - [17.9. Buenas Prácticas](#179-buenas-prácticas)
   - [17.10. Reto](#1710-reto)
   - [17.11. Resumen](#1711-resumen)
-
-
-# 17. Autorización
 
 > 💡 **Punto de partida:** Has conseguido que Instagram sepa quién eres (autenticación). Pero... ¿puedes borrar la cuenta de otro usuario? ¿Puedes ver estadísticas de negocio? Eso lo decide la **autorización**: qué puedes hacer una vez autenticado.
 
