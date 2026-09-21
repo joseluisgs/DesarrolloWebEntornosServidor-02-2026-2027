@@ -1863,6 +1863,43 @@ db.Database.Migrate();  // Aplica migraciones pendientes
 
 > 📝 **Nota:** `EnsureCreated()` crea la BD desde cero **sin migraciones**. No se puede usar con migraciones existentes. Solo sirve para prototipos rápidos o tests con InMemory/SQLite. En producción, **siempre** usa `Migrate()`.
 
+#### Patrón condicional: Development vs Production
+
+Lo habitual es **migrar automáticamente en desarrollo** pero **no tocar nada en producción** (la BD se gestiona con scripts o CI/CD). Este patrón se implementa en `Program.cs` comprobando el entorno:
+
+```csharp
+var app = builder.Build();
+
+// Migrar y sembrar SOLO en desarrollo
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();  // Aplica migraciones + seed data (HasData)
+}
+
+app.UseSerilogRequestLogging();
+// ... resto del pipeline
+```
+
+¿Por qué `Migrate()` y no `EnsureCreated()`? Porque `Migrate()`:
+
+1. **Aplica migraciones pendientes** — si cambias el modelo, se actualiza la BD
+2. **Ejecuta el seed data** — los datos de `HasData` se insertan durante la migración
+3. **Es seguro ejecutar多次** — si ya está todo aplicado, no hace nada
+
+En producción, la migración se gestiona normalmente con:
+
+```bash
+# Script idempotente para ejecutar manualmente o en CI/CD
+dotnet ef migrations script --idempotent -o migrate.sql
+
+# O aplicar directamente (si el usuario de BD tiene permisos)
+dotnet ef database update
+```
+
+> 💡 **Consejo:** En desarrollo, `Migrate()` al arrancar es cómodo porque siempre tienes la BD actualizada con el último modelo y los datos de ejemplo. En producción, nunca ejecutes `Migrate()` automáticamente — un cambio inesperado en la BD puede ser catastrófico.
+
 ---
 
 ## 12.15. Seed Data
