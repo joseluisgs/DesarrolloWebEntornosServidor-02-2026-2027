@@ -13,7 +13,7 @@
     - [13.2.4. El límite de 16 MB](#1324-el-límite-de-16-mb)
     - [13.2.5. Patrones de diseño habituales](#1325-patrones-de-diseño-habituales)
   - [13.3. MongoDB con Driver Nativo](#133-mongodb-con-driver-nativo)
-    - [13.3.1. Paquete NuGet](#1331-paquete-nut)
+    - [13.3.1. Paquete NuGet](#1331-paquete-nuget)
     - [13.3.2. Conexión: MongoClient](#1332-conexión-mongoclient)
     - [13.3.3. Database y Collection](#1333-database-y-collection)
     - [13.3.4. Documentos POCO y BsonDocument](#1334-documentos-poco-y-bsondocument)
@@ -23,8 +23,6 @@
     - [13.3.8. Borrar documentos](#1338-borrar-documentos)
     - [13.3.9. Builders de filtros y actualizaciones](#1339-builders-de-filtros-y-actualizaciones)
     - [13.3.10. Índices](#13310-índices)
-  - [13.4. MongoDB con EF Core](#134-mongodb-con-ef-core)
-    - [13.4.1. Paquete NuGet](#1341-paquete-nut)
     - [13.4.2. DbContext con UseMongoDB](#1342-dbcontext-con-usemongodb)
     - [13.4.3. Data Annotations en MongoDB](#1343-data-annotations-en-mongodb)
     - [13.4.4. Fluent API en MongoDB](#1344-fluent-api-en-mongodb)
@@ -44,10 +42,13 @@
     - [13.7.3. Tests con Driver Nativo](#1373-tests-con-driver-nativo)
     - [13.7.4. Tests con EF Core](#1374-tests-con-ef-core)
   - [13.8. Semilla de datos (Seed)](#138-semilla-de-datos-seed)
+    - [Con Driver Nativo](#con-driver-nativo)
+    - [Con EF Core](#con-ef-core)
   - [13.9. Buenas prácticas](#139-buenas-prácticas)
   - [13.10. Reto](#1310-reto)
   - [13.11. Resumen](#1311-resumen)
 
+---
 
 > 💡 **Punto de partida:** ¿Alguna vez has tenido que diseñar una base de datos con 15 tablas y 20 joins solo para guardar una factura? ¿O has sufrido con un ORM relacional que no encaja con tu modelo de datos? MongoDB te propone otra forma: guarda lo que piensas como un documento, sin tablas, sin joins, sin ceremony.
 

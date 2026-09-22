@@ -28,6 +28,8 @@
   - [17.10. Reto](#1710-reto)
   - [17.11. Resumen](#1711-resumen)
 
+---
+
 > 💡 **Punto de partida:** Has conseguido que Instagram sepa quién eres (autenticación). Pero... ¿puedes borrar la cuenta de otro usuario? ¿Puedes ver estadísticas de negocio? Eso lo decide la **autorización**: qué puedes hacer una vez autenticado.
 
 ## 17.1. Introducción

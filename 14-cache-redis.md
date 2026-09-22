@@ -33,9 +33,10 @@
   - [14.7. Caché en ASP.NET Core](#147-caché-en-aspnet-core)
     - [14.7.1. Paquetes NuGet](#1471-paquetes-nuget)
     - [14.7.2. Interfaz ICacheService](#1472-interfaz-icacheservice)
-    - [14.7.3. MemoryCacheService](#1473-memorycacheservice)
-    - [14.7.4. RedisCacheService](#1474-rediscacheservice)
-    - [14.7.5. Configuración en DI](#1475-configuración-en-di)
+    - [14.7.3. CacheOptions (configurable desde appsettings.json)](#1473-cacheoptions-configurable-desde-appsettingsjson)
+    - [14.7.4. MemoryCacheService](#1474-memorycacheservice)
+    - [14.7.5. RedisCacheService](#1475-rediscacheservice)
+    - [14.7.6. Configuración en DI](#1476-configuración-en-di)
   - [14.8. Qué y qué no cachear](#148-qué-y-qué-no-cachear)
   - [14.9. Invalidación de Caché](#149-invalidación-de-caché)
     - [14.9.1. Invalidación por TTL](#1491-invalidación-por-ttl)
@@ -50,6 +51,9 @@
   - [14.13. Buenas Prácticas](#1413-buenas-prácticas)
   - [14.14. Reto](#1414-reto)
   - [14.15. Resumen](#1415-resumen)
+
+
+---
 
 ## 14.1. Fundamentos de Caché
 

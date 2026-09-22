@@ -21,6 +21,9 @@
   - [15.6. Reto](#156-reto)
   - [15.7. Resumen](#157-resumen)
 
+
+---
+
 > 💡 **Punto de partida:** Si dos personas intentan comprar el último billete de avión al mismo tiempo, ¿quién se lo lleva? La base de datos debe tener un mecanismo para decidirlo sin perder datos ni vender el mismo billete dos veces.
 
 ## 15.1. El Problema de la Concurrencia

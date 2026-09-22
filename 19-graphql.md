@@ -48,6 +48,8 @@
   - [19.12. Reto](#1912-reto)
   - [19.13. Resumen](#1913-resumen)
 
+---
+
 > **Punto de partida:** En una tienda online, un cliente movil solo necesita el nombre y precio de un producto, pero el administrador necesita el stock, la categoria y las ventas. Con REST, haces una peticion y recibes todo (over-fetching). O haces 3 peticiones para obtener 3 recursos diferentes (under-fetching). GraphQL resuelve esto: el cliente pide exactamente lo que necesita, ni mas ni menos, en una sola peticion.
 
 **Objetivos de aprendizaje:**

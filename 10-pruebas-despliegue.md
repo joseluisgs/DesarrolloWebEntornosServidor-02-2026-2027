@@ -17,6 +17,7 @@
   - [10.7. Reto](#107-reto)
   - [Resumen](#resumen)
 
+---
 
 # 10. Pruebas y Despliegue Básicos
 

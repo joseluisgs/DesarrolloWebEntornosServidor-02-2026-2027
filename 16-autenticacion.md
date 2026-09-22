@@ -38,6 +38,8 @@
   - [16.9. Reto](#169-reto)
   - [16.10. Resumen](#1610-resumen)
 
+---
+
 > 💡 **Punto de partida:** Cuando abres Instagram, introduces tu email y contraseña. Instagram comprueba que eres quien dices ser y te da acceso a tu feed. Ese proceso se llama **autenticación**. Pero en una API REST, ¿cómo sabe el servidor quién eres en cada petición? La respuesta está en JWT y BCrypt.
 
 ## 16.1. Introducción

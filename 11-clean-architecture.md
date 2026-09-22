@@ -30,6 +30,7 @@
   - [11.8. Reto](#118-reto)
   - [Resumen](#resumen)
 
+---
 
 # 11. Arquitecturas en Capas y Clean Architecture
 
