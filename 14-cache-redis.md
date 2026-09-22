@@ -50,7 +50,7 @@
     - [14.12.2. Integration Testing con TestContainers](#14122-integration-testing-con-testcontainers)
   - [14.13. Buenas Prácticas](#1413-buenas-prácticas)
   - [14.14. Reto](#1414-reto)
-  - [14.15. Resumen](#1415-resumen)
+
 
 
 ---
@@ -1126,7 +1126,7 @@ await _cache.SetAsync("user:456:session", sesion);         // Sesión de usuario
 
 ---
 
-## 14.15. Resumen
+**Resumen del punto:**
 
 | Concepto | Descripción |
 |----------|-------------|

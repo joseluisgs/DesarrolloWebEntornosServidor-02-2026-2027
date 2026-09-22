@@ -46,7 +46,7 @@
     - [19.10.2. Test de Mutations](#19102-test-de-mutations)
   - [19.11. Buenas Practicas](#1911-buenas-practicas)
   - [19.12. Reto](#1912-reto)
-  - [19.13. Resumen](#1913-resumen)
+
 
 ---
 
@@ -1368,7 +1368,7 @@ FunkosGraphQL/
     └── GraphQLTests.cs
 ```
 
-## 19.13. Resumen
+**Resumen del punto:**
 
 ```mermaid
 graph TD

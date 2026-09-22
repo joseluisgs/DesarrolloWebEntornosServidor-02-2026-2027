@@ -38,7 +38,7 @@
   - [18.11. Buenas Practicas](#1811-buenas-practicas)
   - [18.12. Testing](#1812-testing)
   - [18.13. Reto](#1813-reto)
-  - [18.14. Resumen](#1814-resumen)
+
 
 ---
 
@@ -1067,7 +1067,7 @@ public class ProductosHubTests
 - Grupo por coleccion de funkos (suscripcion a colecciones)
 - Redis Backplane para escalabilidad
 
-## 18.14. Resumen
+**Resumen del punto:**
 
 | Concepto | Descripcion |
 |----------|-------------|

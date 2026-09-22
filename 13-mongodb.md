@@ -46,7 +46,7 @@
     - [Con EF Core](#con-ef-core)
   - [13.9. Buenas prácticas](#139-buenas-prácticas)
   - [13.10. Reto](#1310-reto)
-  - [13.11. Resumen](#1311-resumen)
+
 
 ---
 
@@ -1449,7 +1449,7 @@ ProductosMongo/
 
 ---
 
-## 13.11. Resumen
+**Resumen del punto:**
 
 ```mermaid
 graph TD

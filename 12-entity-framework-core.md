@@ -83,7 +83,7 @@
     - [12.18.4. Patrón AAA](#12184-patrón-aaa)
   - [12.19. Buenas prácticas](#1219-buenas-prácticas)
   - [12.20. Reto](#1220-reto)
-  - [12.21. Resumen](#1221-resumen)
+
 
 ---
 
@@ -2409,7 +2409,7 @@ erDiagram
 
 ---
 
-## 12.21. Resumen
+**Resumen del punto:**
 
 | Concepto | Descripción |
 |----------|-------------|

@@ -37,8 +37,6 @@
     - [7.8.4. Comparación](#784-comparación)
   - [7.9. Buenas prácticas](#79-buenas-prácticas)
   - [7.10. Reto](#710-reto)
-  - [Resumen](#resumen)
-
 ---
 
 # 7. Excepciones y Patrón Result
@@ -808,7 +806,7 @@ public IActionResult Create([FromBody] ProductoDto dto)
 
 ---
 
-## Resumen
+**Resumen del punto:**
 
 | Concepto | Descripción |
 |----------|-------------|

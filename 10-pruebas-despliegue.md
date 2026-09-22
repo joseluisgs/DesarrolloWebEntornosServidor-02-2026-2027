@@ -15,7 +15,7 @@
   - [10.5. Podman: la alternativa a Docker](#105-podman-la-alternativa-a-docker)
   - [10.6. Buenas prácticas](#106-buenas-prácticas)
   - [10.7. Reto](#107-reto)
-  - [Resumen](#resumen)
+
 
 ---
 
@@ -402,7 +402,7 @@ flowchart TD
 - Añade un servicio `redis` en `docker-compose.yml` (solo definición, sin usar)
 
 
-## Resumen
+**Resumen del punto:**
 
 | Concepto | Descripción |
 |----------|-------------|

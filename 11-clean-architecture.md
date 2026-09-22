@@ -28,7 +28,7 @@
     - [11.6.2. Capas y sus contenidos](#1162-capas-y-sus-contenidos)
   - [11.7. Buenas prácticas](#117-buenas-prácticas)
   - [11.8. Reto](#118-reto)
-  - [Resumen](#resumen)
+
 
 ---
 
@@ -649,7 +649,7 @@ MiApi/
 - Diagrama Mermaid de la arquitectura
 
 
-## Resumen
+**Resumen del punto:**
 
 | Concepto | Descripción |
 |----------|-------------|

@@ -36,7 +36,7 @@
   - [16.7. Comparación de Enfoques](#167-comparación-de-enfoques)
   - [16.8. Buenas Prácticas](#168-buenas-prácticas)
   - [16.9. Reto](#169-reto)
-  - [16.10. Resumen](#1610-resumen)
+
 
 ---
 
@@ -1597,7 +1597,7 @@ public static class SeedService
 - Rate limiting en login (maximo 5 intentos por minuto por IP)
 - Validacion de fortaleza de contrasena (minimo 8 caracteres, mayuscula, minuscula, numero)
 
-## 16.10. Resumen
+**Resumen del punto:**
 
 | Concepto | Descripcion |
 |----------|-------------|

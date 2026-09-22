@@ -15,7 +15,7 @@
     - [9.2.7. Serilog con configuración desde appsettings.json](#927-serilog-con-configuración-desde-appsettingsjson)
   - [9.3. Buenas prácticas](#93-buenas-prácticas)
   - [9.4. Reto](#94-reto)
-  - [Resumen](#resumen)
+
 
 ---
 
@@ -433,7 +433,7 @@ Log.Logger = new LoggerConfiguration()
 
 ---
 
-## Resumen
+**Resumen del punto:**
 
 | Concepto | Descripción |
 |----------|-------------|

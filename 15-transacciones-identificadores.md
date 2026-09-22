@@ -19,7 +19,7 @@
     - [15.4.5. Comparativa de Identificadores](#1545-comparativa-de-identificadores)
   - [15.5. Buenas Prácticas](#155-buenas-prácticas)
   - [15.6. Reto](#156-reto)
-  - [15.7. Resumen](#157-resumen)
+
 
 
 ---
@@ -653,7 +653,7 @@ var productos = await context.Productos
 
 ---
 
-## 15.7. Resumen
+**Resumen del punto:**
 
 | Concepto | Descripción |
 |----------|-------------|

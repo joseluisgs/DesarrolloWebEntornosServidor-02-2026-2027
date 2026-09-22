@@ -49,7 +49,7 @@
     - [8.8.6. Errores comunes al configurar XML](#886-errores-comunes-al-configurar-xml)
   - [8.9. Buenas prácticas](#89-buenas-prácticas)
   - [8.10. Reto](#810-reto)
-  - [Resumen](#resumen)
+
 
 ---
 
@@ -1279,7 +1279,7 @@ public record ProductoDto(
 
 ---
 
-## Resumen
+**Resumen del punto:**
 
 | Concepto | Descripción |
 |----------|-------------|

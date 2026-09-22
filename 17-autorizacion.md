@@ -26,7 +26,7 @@
   - [17.8. Comparación de Enfoques](#178-comparación-de-enfoques)
   - [17.9. Buenas Prácticas](#179-buenas-prácticas)
   - [17.10. Reto](#1710-reto)
-  - [17.11. Resumen](#1711-resumen)
+
 
 ---
 
@@ -1326,7 +1326,7 @@ await dbContext.SaveChangesAsync();
 - Handler de autorización basado en recursos con `IAuthorizationService`
 - Rate limiting por rol (más requests para ADMIN, menos para USER)
 
-## 17.11. Resumen
+**Resumen del punto:**
 
 | Concepto | Descripción |
 |----------|-------------|
