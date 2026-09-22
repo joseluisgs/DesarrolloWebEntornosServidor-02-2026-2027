@@ -1,106 +1,112 @@
-# 26. Tareas Programadas en ASP.NET Core
-
-## Indice
-
-- [26. Tareas Programadas en ASP.NET Core](#26-tareas-programadas-en-aspnet-core)
-  - [26.1. Introduccion](#261-introduccion)
-    - [26.1.1. Que son las tareas programadas](#2611-que-son-las-tareas-programadas)
-    - [26.1.2. Casos de uso comunes](#2612-casos-de-uso-comunes)
-  - [26.2. Opciones para implementar tareas programadas](#262-opciones-para-implementar-tareas-programadas)
-  - [26.3. Implementacion con BackgroundService](#263-implementación-con-backgroundservice)
-    - [26.3.1. Tarea simple con intervalo fijo](#2631-tarea-simple-con-intervalo-fijo)
-    - [26.3.2. Tarea con intervalo configurable](#2632-tarea-con-intervalo-configurable)
-    - [26.3.3. Tarea con expresion Cron](#2633-tarea-con-expresion-cron)
-  - [26.4. Implementacion con NCronTab](#264-implementación-con-ncrontab)
-    - [26.4.1. Instalacion](#2641-instalacion)
-    - [26.4.2. Servicio base con Cron](#2642-servicio-base-con-cron)
-    - [26.4.3. Ejemplo: Limpieza diaria de cache](#2643-ejemplo-limpieza-diaria-de-cache)
-    - [26.4.4. Expresiones Cron comunes](#2644-expresiones-cron-comunes)
-  - [26.5. Implementacion con Hangfire (Produccion)](#265-implementación-con-hangfire-produccion)
-    - [26.5.1. Instalacion](#2651-instalacion)
-    - [26.5.2. Configuracion](#2652-configuración)
-    - [26.5.3. Crear tareas recurrentes](#2653-crear-tareas-recurrentes)
-    - [26.5.4. Dashboard de monitoreo](#2654-dashboard-de-monitoreo)
-  - [26.6. Ejemplo avanzado: Servicio de novedades por email](#266-ejemplo-avanzado-servicio-de-novedades-por-email)
-    - [26.6.1. Con BackgroundService](#2661-con-backgroundservice)
-    - [26.6.2. Con Hangfire](#2662-con-hangfire)
-  - [26.7. Monitoreo y Logging](#267-monitoreo-y-logging)
-  - [26.8. Testing de tareas programadas](#268-testing-de-tareas-programadas)
-  - [26.9. Buenas practicas](#269-buenas-practicas)
-  - [26.10. Comparacion de opciones](#2610-comparacion-de-opciones)
-  - [26.11. Resumen](#2611-resumen)
-  - [26.12. Ejercicio Propuesto: Sistema de Tareas para Funkos](#2612-ejercicio-propuesto-sistema-de-tareas-para-funkos)
-    - [26.12.1. Requisitos](#26121-requisitos)
+- [22. Tareas Programadas en ASP.NET Core](#22-tareas-programadas-en-aspnet-core)
+  - [22.1. Introducción](#221-introducción)
+    - [22.1.1. Qué son las tareas programadas](#2211-qué-son-las-tareas-programadas)
+    - [22.1.2. Casos de uso comunes](#2212-casos-de-uso-comunes)
+  - [22.2. Opciones para implementar tareas programadas](#222-opciones-para-implementar-tareas-programadas)
+  - [22.3. Implementación con BackgroundService](#223-implementación-con-backgroundservice)
+    - [22.3.1. Tarea simple con intervalo fijo](#2231-tarea-simple-con-intervalo-fijo)
+    - [22.3.2. Tarea con intervalo configurable](#2232-tarea-con-intervalo-configurable)
+    - [22.3.3. Tarea con expresión Cron](#2233-tarea-con-expresión-cron)
+  - [22.4. Implementación con NCronTab](#224-implementación-con-ncrontab)
+    - [22.4.1. Instalación](#2241-instalación)
+    - [22.4.2. Servicio base con Cron](#2242-servicio-base-con-cron)
+    - [22.4.3. Ejemplo: Limpieza diaria de caché](#2243-ejemplo-limpieza-diaria-de-caché)
+    - [22.4.4. Expresiones Cron comunes](#2244-expresiones-cron-comunes)
+  - [22.5. Implementación con Hangfire (Producción)](#225-implementación-con-hangfire-producción)
+    - [22.5.1. Instalación](#2251-instalación)
+    - [22.5.2. Configuración](#2252-configuración)
+    - [22.5.3. Crear tareas recurrentes](#2253-crear-tareas-recurrentes)
+    - [22.5.4. Dashboard de monitoreo](#2254-dashboard-de-monitoreo)
+  - [22.6. Ejemplo avanzado: Servicio de novedades por email](#226-ejemplo-avanzado-servicio-de-novedades-por-email)
+    - [22.6.1. Con BackgroundService](#2261-con-backgroundservice)
+    - [22.6.2. Con Hangfire](#2262-con-hangfire)
+  - [22.7. Monitoreo y Logging](#227-monitoreo-y-logging)
+  - [22.8. Testing de tareas programadas](#228-testing-de-tareas-programadas)
+  - [22.9. Buenas prácticas](#229-buenas-prácticas)
+  - [22.10. Comparación de opciones](#2210-comparación-de-opciones)
+  - [22.11. Reto: Sistema de Tareas para FunkoApp](#2211-reto-sistema-de-tareas-para-funkoapp)
 
 ---
 
-## 26.1. Introduccion
+# 22. Tareas Programadas en ASP.NET Core
 
-### 26.1.1. Que son las tareas programadas
+> 💡 **Punto de partida:** ¿Has pensado alguna vez cómo Netflix te envía notificaciones de "hay novedades para ti" cada mañana a las 8:00? O cómo Glovo limpia los pedidos cancelados cada noche sin que nadie lo pulse. Detrás de todo eso hay tareas programadas: código que se ejecuta solo, en el momento justo, sin intervención humana.
 
-Las **tareas programadas** (scheduled tasks o background jobs) son fragmentos de código que se ejecutan automaticamente en momentos especificos o con intervalos regulares, sin intervencion manual. Son esenciales para automatizar procesos repetitivos en aplicaciones modernas.
+En este punto aprenderás a crear tareas programadas en ASP.NET Core: desde un BackgroundService sencillo hasta Hangfire con dashboard de monitoreo.
 
-🧠 **Analogia**: Imagina un empleado diligentisimo que cada mañana a las 8:00 AM revisa el correo, genera reportes semanales todos los lunes, y hace copias de seguridad cada noche a las 2:00 AM. Las tareas programadas son exactamente eso: empleados virtuales que trabajan incansablemente en segundo plano.
+**Objetivos de aprendizaje:**
 
-### 26.1.2. Casos de uso comunes
+- Comprender qué son las tareas programadas y cuándo usarlas
+- Implementar tareas con BackgroundService (intervalo fijo, configurable, Cron)
+- Usar NCronTab para expresiones Cron precisas
+- Configurar Hangfire para producción con dashboard y persistencia
+- Monitorear, testear y aplicar buenas prácticas
 
-| Categoria | Ejemplo | Frecuencia tipica |
+## 22.1. Introducción
+
+### 22.1.1. Qué son las tareas programadas
+
+Las **tareas programadas** (scheduled tasks o background jobs) son fragmentos de código que se ejecutan automáticamente en momentos específicos o con intervalos regulares, sin intervención manual. Son esenciales para automatizar procesos repetitivos en aplicaciones modernas.
+
+> 💡 **Analogía:** Imagina un empleado diligentísimo que cada mañana a las 8:00 AM revisa el correo, genera reportes semanales todos los lunes, y hace copias de seguridad cada noche a las 2:00 AM. Las tareas programadas son exactamente eso: empleados virtuales que trabajan incansablemente en segundo plano.
+
+📌 **Ejemplo real:** Cuando abres Instagram, la app muestra contenido nuevo porque cada cierto tiempo un job en el servidor actualiza el feed. Si eso no existiera, tendrías que recargar la app manualmente para ver algo nuevo.
+
+```mermaid
+flowchart LR
+    A["Servidor ASP.NET Core"] -->|Programa| B["Tarea A: Cada 5 min"]
+    A -->|Programa| C["Tarea B: Diaria 2AM"]
+    A -->|Programa| D["Tarea C: Semanal"]
+    style A fill:#2196F3,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#FF9800,color:#fff
+    style D fill:#9C27B0,color:#fff
+```
+
+### 22.1.2. Casos de uso comunes
+
+| Categoría | Ejemplo | Frecuencia típica |
 |:----------|:--------|:------------------|
 | **Mantenimiento** | Limpieza de datos antiguos | Diaria |
-| **Reportes** | Generacion de estadisticas de ventas | Semanal |
-| **Comunicacion** | Envio de newsletters | Diaria/semanal |
-| **Sincronizacion** | Importar datos de proveedores | Horaria |
+| **Reportes** | Generación de estadísticas de ventas | Semanal |
+| **Comunicación** | Envío de newsletters | Diaria/semanal |
+| **Sincronización** | Importar datos de proveedores | Horaria |
 | **Copia de seguridad** | Backup de base de datos | Nocturna |
 | **Alertas** | Notificar stock bajo | Continua |
 | **Limpieza** | Eliminar archivos temporales | Diaria |
 
-💡 **Tip del Examinador**: En entrevistas, menciona que las tareas programadas son fundamentales en arquitecturas de microservicios para manejar cross-cutting concerns como logging, metricas, y mantenimiento automatico.
+📌 **Ejemplo real:** En un e-commerce como FunkoApp, una tarea horaria comprueba el stock de productos y envía un email al administrador cuando un Funko tiene menos de 10 unidades. Sin esa tarea, alguien tendría que revisar manualmente cada producto cada día.
 
----
+> 💡 **Consejo:** En entrevistas, menciona que las tareas programadas son fundamentales en arquitecturas de microservicios para manejar cross-cutting concerns como logging, métricas y mantenimiento automático.
 
-## 26.2. Opciones para implementar tareas programadas
+## 22.2. Opciones para implementar tareas programadas
 
-En ASP.NET Core existen varias formas de implementar tareas programadas, cada una con diferentes niveles de complejidad y caracteristicas.
+En ASP.NET Core existen varias formas de implementar tareas programadas, cada una con diferentes niveles de complejidad y características.
 
-| Opcion | Complejidad | Caracteristicas | Uso recomendado |
+| Opción | Complejidad | Características | Uso recomendado |
 |:-------|:------------|:----------------|:----------------|
-| **IHostedService** | Baja | Integrado en .NET, simple | Tareas basicas |
-| **BackgroundService** | Baja | Mas sencillo que IHostedService | Tareas con intervalos fijos |
-| **NCronTab** | Media | Expresiones Cron precisas | Tareas con horarios especificos |
-| **Hangfire** | Media-Alta | Dashboard, persistencia, reintentos | Produccion con monitoreo |
+| **IHostedService** | Baja | Integrado en .NET, simple | Tareas básicas |
+| **BackgroundService** | Baja | Más sencillo que IHostedService | Tareas con intervalos fijos |
+| **NCronTab** | Media | Expresiones Cron precisas | Tareas con horarios específicos |
+| **Hangfire** | Media-Alta | Dashboard, persistencia, reintentos | Producción con monitoreo |
 | **Quartz.NET** | Alta | Muy completo y robusto | Sistemas empresariales complejos |
 
 ```mermaid
 flowchart TB
-    subgraph Simple["Tareas Simples"]
-        BS[BackgroundService]
-    end
-    
-    subgraph Medium["Tareas con Horario"]
-        NC[NCronTab]
-    end
-    
-    subgraph Production["Produccion"]
-        HB[Hangfire]
-        QZ[Quartz.NET]
-    end
-    
-    BS -->|"Intervalo fijo"| NC
-    NC -->|"Persistencia + Dashboard"| HB
-    HB -->|"Alta complejidad"| QZ
-    
-    style BS fill:#2E7D32
-    style HB fill:#FF9800
-    style QZ fill:#B71C1C
+    BS["BackgroundService"] -->|"Intervalo fijo"| NC["NCronTab"]
+    NC -->|"Persistencia + Dashboard"| HB["Hangfire"]
+    HB -->|"Alta complejidad"| QZ["Quartz.NET"]
+    style BS fill:#4CAF50,color:#fff
+    style NC fill:#2196F3,color:#fff
+    style HB fill:#FF9800,color:#fff
+    style QZ fill:#f44336,color:#fff
 ```
 
-📝 **Nota del Profesor**: Para este curso, nos centraremos en **BackgroundService** para desarrollo (simple y efectivo) y **Hangfire** para produccion (robusto con monitoreo).
+> 📝 **Nota:** Para este curso nos centraremos en **BackgroundService** para desarrollo (simple y efectivo) y **Hangfire** para producción (robusto con monitoreo).
 
----
+## 22.3. Implementación con BackgroundService
 
-## 26.3. Implementacion con BackgroundService
-
-### 26.3.1. Tarea simple con intervalo fijo
+### 22.3.1. Tarea simple con intervalo fijo
 
 ```csharp
 using Microsoft.Extensions.Hosting;
@@ -121,7 +127,7 @@ public class SimpleScheduledTask(ILogger<SimpleScheduledTask> logger) : Backgrou
             try
             {
                 logger.LogInformation("Ejecutando tarea: {Time}", DateTime.Now);
-                
+
                 await DoWorkAsync();
 
                 await Task.Delay(_interval, stoppingToken);
@@ -155,20 +161,17 @@ public class SimpleScheduledTask(ILogger<SimpleScheduledTask> logger) : Backgrou
 builder.Services.AddHostedService<SimpleScheduledTask>();
 ```
 
-### 26.3.2. Tarea con intervalo configurable
+> 💡 **Consejo:** Siempre incluye `try-catch` dentro del bucle `while`. Si una excepción escapa, la tarea se detiene silenciosamente y nunca vuelves a tener noticias de ella.
+
+### 22.3.2. Tarea con intervalo configurable
 
 ```csharp
 public class ConfigurableScheduledTask(
     ILogger<ConfigurableScheduledTask> logger,
     IConfiguration configuration) : BackgroundService
 {
-    private TimeSpan _interval;
-
-    public ConfigurableScheduledTask()
-    {
-        var intervalSeconds = configuration.GetValue<int>("ScheduledTasks:IntervalSeconds", 60);
-        _interval = TimeSpan.FromSeconds(intervalSeconds);
-    }
+    private readonly TimeSpan _interval = TimeSpan.FromSeconds(
+        configuration.GetValue<int>("ScheduledTasks:IntervalSeconds", 60));
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -183,12 +186,12 @@ public class ConfigurableScheduledTask(
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation("Tarea cancelada");
+                logger.LogInformation("Tarea cancelada");
                 break;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error en tarea");
+                logger.LogError(ex, "Error en tarea");
                 await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
         }
@@ -196,7 +199,7 @@ public class ConfigurableScheduledTask(
 
     private async Task DoWorkAsync()
     {
-        _logger.LogInformation("Ejecutando tarea: {Time}", DateTime.Now);
+        logger.LogInformation("Ejecutando tarea: {Time}", DateTime.Now);
         await Task.CompletedTask;
     }
 }
@@ -207,36 +210,26 @@ public class ConfigurableScheduledTask(
 ```json
 {
   "ScheduledTasks": {
-    "IntervalSeconds": 300,
-    "CacheCleanup": {
-      "Hour": 2,
-      "Minute": 0
-    }
+    "IntervalSeconds": 300
   }
 }
 ```
 
-### 26.3.3. Tarea con expresion Cron
+### 22.3.3. Tarea con expresión Cron
 
-Para tareas que necesitan ejecutarse en horarios especificos (como "a las 2:00 AM cada dia"), puedes combinar BackgroundService con expresiones Cron.
+Para tareas que necesitan ejecutarse en horarios específicos (como "a las 2:00 AM cada día"), puedes combinar BackgroundService con expresiones Cron.
 
 ```csharp
-public class CronScheduledTask : BackgroundService
+public class CronScheduledTask(ILogger<CronScheduledTask> logger) : BackgroundService
 {
-    private readonly ILogger<CronScheduledTask> _logger;
     private readonly TimeSpan _checkInterval = TimeSpan.FromMinutes(1);
     private readonly string _cronExpression = "0 2 * * *"; // 2:00 AM diario
-    private DateTime _nextRun;
-
-    public CronScheduledTask(ILogger<CronScheduledTask> logger)
-    {
-        _logger = logger;
-        _nextRun = CalculateNextRun();
-    }
+    private DateTime _nextRun = DateTime.MinValue;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Tarea Cron iniciada. Proxima ejecucion: {NextRun}", _nextRun);
+        _nextRun = CalculateNextRun();
+        logger.LogInformation("Tarea Cron iniciada. Próxima ejecución: {NextRun}", _nextRun);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -244,14 +237,14 @@ public class CronScheduledTask : BackgroundService
             {
                 try
                 {
-                    _logger.LogInformation("Ejecutando tarea programada");
+                    logger.LogInformation("Ejecutando tarea programada");
                     await DoWorkAsync();
                     _nextRun = CalculateNextRun();
-                    _logger.LogInformation("Tarea completada. Proxima: {NextRun}", _nextRun);
+                    logger.LogInformation("Tarea completada. Próxima: {NextRun}", _nextRun);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error en tarea Cron");
+                    logger.LogError(ex, "Error en tarea Cron");
                 }
             }
 
@@ -266,78 +259,72 @@ public class CronScheduledTask : BackgroundService
         var minute = int.Parse(parts[0]);
         var hour = int.Parse(parts[1]);
         var nextRun = now.Date.AddHours(hour).AddMinutes(minute);
-        
+
         return nextRun > now ? nextRun : nextRun.AddDays(1);
     }
 
     private async Task DoWorkAsync()
     {
-        _logger.LogInformation("Ejecutando limpieza programada");
+        logger.LogInformation("Ejecutando limpieza programada");
         await Task.CompletedTask;
     }
 }
 ```
 
-⚠️ **Advertencia**: En BackgroundService, debes crear un nuevo scope para acceder a servicios con lifetime Scoped (como DbContext).
+> ⚠️ **Advertencia:** En BackgroundService, debes crear un nuevo scope para acceder a servicios con lifetime Scoped (como DbContext). Sin esto, obtendrás errores de "captive dependency".
 
 ```csharp
+// ✅ BUENO: Crear scope para servicios Scoped
 using var scope = _serviceProvider.CreateScope();
 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 ```
 
----
+## 22.4. Implementación con NCronTab
 
-## 26.4. Implementacion con NCronTab
-
-### 26.4.1. Instalacion
+### 22.4.1. Instalación
 
 ```bash
-# Paquete NCronTab para expresiones Cron
 dotnet add package NCronTab
 ```
 
-### 26.4.2. Servicio base con Cron
+### 22.4.2. Servicio base con Cron
 
 ```csharp
 using NCronTab;
 
 namespace FunkosApi.Services.Background;
 
-public abstract class CronScheduledService : BackgroundService
+public abstract class CronScheduledService(ILogger logger) : BackgroundService
 {
-    private readonly CrontabSchedule _schedule;
+    private readonly CrontabSchedule _schedule = CrontabSchedule.Parse(Schedule);
     private DateTime _nextRun;
-    protected readonly ILogger Logger;
 
     protected abstract string Schedule { get; }
 
-    protected CronScheduledService(ILogger logger)
+    protected CronScheduledService(ILogger logger) : base()
     {
-        Logger = logger;
-        _schedule = CrontabSchedule.Parse(Schedule);
         _nextRun = _schedule.GetNextOccurrence(DateTime.Now);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        Logger.LogInformation("Tarea Cron iniciada. Proxima ejecucion: {NextRun}", _nextRun);
+        logger.LogInformation("Tarea Cron iniciada. Próxima ejecución: {NextRun}", _nextRun);
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            var now = DateTime.Now;
-            if (now >= _nextRun)
+            if (DateTime.Now >= _nextRun)
             {
                 try
                 {
-                    Logger.LogInformation("Ejecutando tarea programada");
+                    logger.LogInformation("Ejecutando tarea programada");
                     await DoWorkAsync();
-                    
+
                     _nextRun = _schedule.GetNextOccurrence(DateTime.Now);
-                    Logger.LogInformation("Tarea completada. Proxima: {NextRun}", _nextRun);
+                    logger.LogInformation("Tarea completada. Próxima: {NextRun}", _nextRun);
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(ex, "Error en tarea Cron");
+                    logger.LogError(ex, "Error en tarea Cron");
                     _nextRun = _schedule.GetNextOccurrence(DateTime.Now);
                 }
             }
@@ -350,50 +337,43 @@ public abstract class CronScheduledService : BackgroundService
 }
 ```
 
-### 26.4.3. Ejemplo: Limpieza diaria de cache
+### 22.4.3. Ejemplo: Limpieza diaria de caché
 
 ```csharp
-public class DailyCacheCleanupTask : CronScheduledService
+public class DailyCacheCleanupTask(
+    ICacheService cacheService,
+    ILogger<DailyCacheCleanupTask> logger) : CronScheduledService(logger)
 {
-    private readonly ICacheService _cacheService;
-
-    protected override string Schedule => "0 2 * * *"; // Todos los dias a las 2:00 AM
-
-    public DailyCacheCleanupTask(
-        ICacheService cacheService,
-        ILogger<DailyCacheCleanupTask> logger) : base(logger)
-    {
-        _cacheService = cacheService;
-    }
+    protected override string Schedule => "0 2 * * *"; // Todos los días a las 2:00 AM
 
     protected override async Task DoWorkAsync()
     {
-        Logger.LogInformation("Iniciando limpieza de cache");
-        
-        await _cacheService.RemoveExpiredAsync();
-        await _cacheService.RemoveByPrefixAsync("temp:");
-        
-        Logger.LogInformation("Limpieza de cache completada");
+        Logger.LogInformation("Iniciando limpieza de caché");
+
+        await cacheService.RemoveExpiredAsync();
+        await cacheService.RemoveByPrefixAsync("temp:");
+
+        Logger.LogInformation("Limpieza de caché completada");
     }
 }
 ```
 
-### 26.4.4. Expresiones Cron comunes
+### 22.4.4. Expresiones Cron comunes
 
-| Expresion | Descripcion | Ejemplo practico |
+| Expresión | Descripción | Ejemplo práctico |
 |:----------|:------------|:-----------------|
 | `* * * * *` | Cada minuto | Monitoreo continuo |
 | `0 * * * *` | Cada hora (minuto 0) | Limpieza horaria |
-| `0 */2 * * *` | Cada 2 horas | Sincronizacion cada 2h |
-| `0 9 * * *` | Todos los dias a las 9:00 AM | Envio de reportes diarios |
+| `0 */2 * * *` | Cada 2 horas | Sincronización cada 2h |
+| `0 9 * * *` | Todos los días a las 9:00 AM | Envío de reportes diarios |
 | `0 9 * * 1` | Todos los lunes a las 9:00 AM | Resumen semanal |
-| `0 0 1 * *` | Primer dia de cada mes | Reporte mensual |
+| `0 0 1 * *` | Primer día de cada mes | Reporte mensual |
 | `0 0 * * 0` | Domingos a medianoche | Backup semanal |
 | `30 8 * * 1-5` | Lun-Vie a las 8:30 AM | Notificaciones laborales |
 
-🧠 **Analogia**: La expresion Cron se divide en 5 campos: `minuto hora dia-del-mes mes dia-de-la-semana`. Es como configurar una alarma de reloj pero mucho mas flexible.
+> 💡 **Analogía:** La expresión Cron se divide en 5 campos: `minuto hora día-del-mes mes día-de-la-semana`. Es como configurar una alarma de reloj pero mucho más flexible: puedes decir "solo los lunes", "cada 15 días", o "el primer día de cada mes".
 
-💡 **Tip del Examinador**: Usa [crontab.guru](https://crontab.guru/) para generar y verificar expresiones Cron visualmente.
+📌 **Ejemplo real:** En Spotify, el algoritmo de descubrimiento se ejecuta con expresiones como `0 3 * * 1` (cada lunes a las 3:00 AM) para generar las playlist personalizadas de "Descubrimiento de la Semana".
 
 ```mermaid
 flowchart LR
@@ -401,29 +381,23 @@ flowchart LR
     C["0 2 * * *"] --> D["2:00 AM diario"]
     E["0 9 * * 1"] --> F["9:00 AM lunes"]
     G["0 0 1 * *"] --> H["1 de cada mes"]
-    
-    style A fill:#2E7D32
-    style C fill:#1565C0
-    style E fill:#FF9800
-    style G fill:#B71C1C
+    style A fill:#4CAF50,color:#fff
+    style C fill:#2196F3,color:#fff
+    style E fill:#FF9800,color:#fff
+    style G fill:#9C27B0,color:#fff
 ```
 
----
+## 22.5. Implementación con Hangfire (Producción)
 
-## 26.5. Implementacion con Hangfire (Produccion)
-
-### 26.5.1. Instalacion
+### 22.5.1. Instalación
 
 ```bash
-# Paquetes principales de Hangfire
 dotnet add package Hangfire.Core
 dotnet add package Hangfire.AspNetCore
-
-# Almacenamiento en SQL Server
 dotnet add package Hangfire.SqlServer
 ```
 
-### 26.5.2. Configuracion
+### 22.5.2. Configuración
 
 **Program.cs:**
 
@@ -433,7 +407,6 @@ using Hangfire.SqlServer;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar Hangfire
 builder.Services.AddHangfire(configuration => configuration
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
@@ -455,47 +428,12 @@ builder.Services.AddHangfireServer();
 
 var app = builder.Build();
 
-// Dashboard de Hangfire (proteger en produccion)
 if (app.Environment.IsDevelopment())
 {
     app.UseHangfireDashboard("/hangfire");
 }
 
-// Configurar tareas recurrentes
-ConfigureRecurringJobs();
-
 app.Run();
-
-void ConfigureRecurringJobs()
-{
-    // Tarea cada 10 minutos
-    RecurringJob.AddOrUpdate<CleanupService>(
-        "cleanup-temp-files",
-        service => service.CleanupTempFiles(),
-        "*/10 * * * *"
-    );
-
-    // Tarea diaria a las 2:00 AM
-    RecurringJob.AddOrUpdate<BackupService>(
-        "daily-backup",
-        service => service.CreateBackup(),
-        Cron.Daily(2)
-    );
-
-    // Tarea semanal los lunes a las 9:00 AM
-    RecurringJob.AddOrUpdate<ReportService>(
-        "weekly-report",
-        service => service.GenerateWeeklyReport(),
-        Cron.Weekly(DayOfWeek.Monday, 9)
-    );
-
-    // Tarea mensual el dia 1 a las 3:00 AM
-    RecurringJob.AddOrUpdate<AnalyticsService>(
-        "monthly-analytics",
-        service => service.GenerateMonthlyAnalytics(),
-        Cron.Monthly(1, 3)
-    );
-}
 ```
 
 **appsettings.json:**
@@ -508,61 +446,37 @@ void ConfigureRecurringJobs()
 }
 ```
 
-### 26.5.3. Crear tareas recurrentes
+### 22.5.3. Crear tareas recurrentes
 
 ```csharp
-namespace FunkosApi.Services.Background;
+using Hangfire;
 
-public class CleanupService
-{
-    private readonly ILogger<CleanupService> _logger;
-    private readonly IWebHostEnvironment _environment;
+// Configurar tareas recurrentes
+RecurringJob.AddOrUpdate<CleanupService>(
+    "cleanup-temp-files",
+    service => service.CleanupTempFiles(),
+    "*/10 * * * *"
+);
 
-    public CleanupService(
-        ILogger<CleanupService> logger,
-        IWebHostEnvironment environment)
-    {
-        _logger = logger;
-        _environment = environment;
-    }
+RecurringJob.AddOrUpdate<BackupService>(
+    "daily-backup",
+    service => service.CreateBackup(),
+    Cron.Daily(2)
+);
 
-    public async Task CleanupTempFiles()
-    {
-        _logger.LogInformation("Iniciando limpieza de archivos temporales");
-        
-        var tempPath = Path.Combine(_environment.ContentRootPath, "Temp");
-        if (Directory.Exists(tempPath))
-        {
-            var files = Directory.GetFiles(tempPath)
-                .Where(f => File.GetCreationTime(f) < DateTime.Now.AddDays(-7));
-            
-            foreach (var file in files)
-            {
-                File.Delete(file);
-                _logger.LogDebug("Eliminado: {File}", file);
-            }
-        }
-        
-        _logger.LogInformation("Limpieza completada");
-    }
-}
+RecurringJob.AddOrUpdate<ReportService>(
+    "weekly-report",
+    service => service.GenerateWeeklyReport(),
+    Cron.Weekly(DayOfWeek.Monday, 9)
+);
 ```
 
-### 26.5.4. Dashboard de monitoreo
+📌 **Ejemplo real:** En una plataforma de e-commerce, Hangfire ejecuta la sincronización de inventario con el proveedor cada 10 minutos (`*/10 * * * *`), genera el reporte de ventas cada lunes a las 9:00 AM, y envía los emails de confirmación de pedido de forma asíncrona.
 
-Hangfire incluye un dashboard visual para monitorear tareas:
-
-```csharp
-// En Program.cs - Proteccion del dashboard
-if (app.Environment.IsDevelopment())
-{
-    app.UseHangfireDashboard("/hangfire");
-}
-```
-
-**Proteger dashboard en produccion:**
+### 22.5.4. Dashboard de monitoreo
 
 ```csharp
+// Proteger dashboard en producción
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
     Authorization = new[] { new HangfireAuthorizationFilter() }
@@ -578,60 +492,31 @@ public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter
 }
 ```
 
-📝 **Nota del Profesor**: El dashboard de Hangfire muestra:
-- Tareas recurrentes programadas
-- Historial de ejecuciones
-- Tareas fallidas con reintentos automaticos
-- Colas de procesamiento
-- Metric as de rendimiento
-
 ```mermaid
 flowchart TB
-    subgraph App["Aplicacion ASP.NET Core"]
-        BS[BackgroundService]
-        HJ[Hangfire Jobs]
-    end
-    
-    subgraph Storage["Hangfire Storage"]
-        DB[(SQL Server)]
-        Redis[(Redis - Opcional)]
-    end
-    
-    subgraph Dashboard["Dashboard /hangfire"]
-        MJ["Monitor de Jobs"]
-        FJ["Jobs Fallidos"]
-        RJ["Jobs Recurrentes"]
-    end
-    
-    HJ --> DB
-    BS --> DB
-    DB --> Dashboard
-    
-    style HJ fill:#2E7D32
-    style Dashboard fill:#FF9800
+    HJ["Hangfire Jobs"] --> DB[(SQL Server)]
+    DB --> MJ["Monitor de Jobs"]
+    DB --> FJ["Jobs Fallidos"]
+    DB --> RJ["Jobs Recurrentes"]
+    style HJ fill:#4CAF50,color:#fff
+    style DB fill:#2196F3,color:#fff
+    style MJ fill:#FF9800,color:#fff
+    style FJ fill:#f44336,color:#fff
+    style RJ fill:#9C27B0,color:#fff
 ```
 
----
+> 📝 **Nota:** El dashboard de Hangfire muestra tareas recurrentes programadas, historial de ejecuciones, tareas fallidas con reintentos automáticos, colas de procesamiento y métricas de rendimiento.
 
-## 26.6. Ejemplo avanzado: Servicio de novedades por email
+## 22.6. Ejemplo avanzado: Servicio de novedades por email
 
-### 26.6.1. Con BackgroundService
+### 22.6.1. Con BackgroundService
 
 ```csharp
-public class NovedadesEmailTask : BackgroundService
+public class NovedadesEmailTask(
+    IServiceProvider serviceProvider,
+    ILogger<NovedadesEmailTask> logger) : BackgroundService
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<NovedadesEmailTask> _logger;
-    private DateTime _ultimaEjecucion;
-
-    public NovedadesEmailTask(
-        IServiceProvider serviceProvider,
-        ILogger<NovedadesEmailTask> logger)
-    {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-        _ultimaEjecucion = DateTime.Now.AddDays(-1);
-    }
+    private DateTime _ultimaEjecucion = DateTime.Now.AddDays(-1);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -639,7 +524,6 @@ public class NovedadesEmailTask : BackgroundService
         {
             var ahora = DateTime.Now;
 
-            // Ejecutar todos los dias a las 8:30 AM
             if (ahora.Hour == 8 && ahora.Minute == 30)
             {
                 await EnviarNovedadesAsync();
@@ -653,16 +537,16 @@ public class NovedadesEmailTask : BackgroundService
 
     private async Task EnviarNovedadesAsync()
     {
-        using var scope = _serviceProvider.CreateScope();
-        var funkOService = scope.ServiceProvider.GetRequiredService<IFunkoService>();
+        using var scope = serviceProvider.CreateScope();
+        var funkoService = scope.ServiceProvider.GetRequiredService<IFunkoService>();
         var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
         var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
 
         try
         {
-            _logger.LogInformation("Enviando novedades diarias");
+            logger.LogInformation("Enviando novedades diarias");
 
-            var nuevosFunkos = await funkOService.GetNuevosDesdeAsync(_ultimaEjecucion);
+            var nuevosFunkos = await funkoService.GetNuevosDesdeAsync(_ultimaEjecucion);
 
             if (nuevosFunkos.Any())
             {
@@ -671,98 +555,74 @@ public class NovedadesEmailTask : BackgroundService
 
                 foreach (var usuario in usuarios)
                 {
-                    await emailService.SendHtmlEmailAsync(
-                        usuario.Email,
-                        "Nuevos Funkos",
-                        htmlBody
-                    );
+                    await emailService.SendHtmlEmailAsync(usuario.Email, "Nuevos Funkos", htmlBody);
                 }
 
-                _logger.LogInformation("Novedades enviadas a {Count} usuarios", usuarios.Count());
+                logger.LogInformation("Novedades enviadas a {Count} usuarios", usuarios.Count());
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error enviando novedades");
+            logger.LogError(ex, "Error enviando novedades");
         }
     }
 
-    private string GenerarHtmlNovedades(IEnumerable<Funko> funkos)
+    private static string GenerarHtmlNovedades(IEnumerable<Funko> funkos)
     {
         var items = string.Join("", funkos.Select(f =>
             $@"<div style=""margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 8px;"">
                 <h3 style=""margin: 0 0 10px 0; color: #4CAF50;"">{f.Nombre}</h3>
                 <p><strong>Precio:</strong> {f.Precio:C}</p>
-                <p><strong>Categoria:</strong> {f.Categoria.Nombre}</p>
             </div>"
         ));
 
         return $@"<!DOCTYPE html>
-<html>
-<head><meta charset=""UTF-8""></head>
-<body style=""font-family: Arial, sans-serif; padding: 20px;"">
-    <h1 style=""color: #4CAF50;"">Nuevos Funkos disponibles!</h1>
+<html><head><meta charset=""UTF-8""></head>
+<body style=""font-family: Arial; padding: 20px;"">
+    <h1 style=""color: #4CAF50;"">Nuevos Funkos disponibles</h1>
     {items}
-    <p style=""color: #666; margin-top: 30px;"">No te los pierdas!</p>
-</body>
-</html>";
+</body></html>";
     }
 }
 ```
 
-### 26.6.2. Con Hangfire
+### 22.6.2. Con Hangfire
 
 ```csharp
-public class NovedadesEmailService
+public class NovedadesEmailService(
+    IFunkoService funkoService,
+    IEmailService emailService,
+    IUserService userService,
+    ILogger<NovedadesEmailService> logger)
 {
-    private readonly IFunkoService _funkoService;
-    private readonly IEmailService _emailService;
-    private readonly IUserService _userService;
-    private readonly ILogger<NovedadesEmailService> _logger;
-
-    public NovedadesEmailService(
-        IFunkoService funkoService,
-        IEmailService emailService,
-        IUserService userService,
-        ILogger<NovedadesEmailService> logger)
-    {
-        _funkoService = funkoService;
-        _emailService = emailService;
-        _userService = userService;
-        _logger = logger;
-    }
-
     public async Task EnviarNovedadesDiarias()
     {
-        _logger.LogInformation("Enviando novedades diarias");
+        logger.LogInformation("Enviando novedades diarias");
 
         var ayer = DateTime.Now.AddDays(-1);
-        var nuevosFunkos = await _funkoService.GetNuevosDesdeAsync(ayer);
+        var nuevosFunkos = await funkoService.GetNuevosDesdeAsync(ayer);
 
         if (!nuevosFunkos.Any())
         {
-            _logger.LogInformation("No hay funkos nuevos para enviar");
+            logger.LogInformation("No hay funkos nuevos para enviar");
             return;
         }
 
         var htmlBody = GenerarHtmlNovedades(nuevosFunkos);
-        var usuarios = await _userService.GetAllSuscritosAsync();
+        var usuarios = await userService.GetAllSuscritosAsync();
 
         foreach (var usuario in usuarios)
         {
-            await _emailService.SendHtmlEmailAsync(
-                usuario.Email,
-                "Nuevos Funkos en la tienda",
-                htmlBody
-            );
+            await emailService.SendHtmlEmailAsync(usuario.Email, "Nuevos Funkos en la tienda", htmlBody);
         }
 
-        _logger.LogInformation("Novedades enviadas a {Count} usuarios", usuarios.Count());
+        logger.LogInformation("Novedades enviadas a {Count} usuarios", usuarios.Count());
     }
 
-    private string GenerarHtmlNovedades(IEnumerable<Funko> funkos)
+    private static string GenerarHtmlNovedades(IEnumerable<Funko> funkos)
     {
-        // Mismo codigo que antes
+        // Mismo código que antes
+        return string.Empty;
     }
 }
 ```
@@ -770,38 +630,21 @@ public class NovedadesEmailService
 **Registro en Program.cs:**
 
 ```csharp
-// Tarea diaria a las 8:30 AM
 RecurringJob.AddOrUpdate<NovedadesEmailService>(
     "novedades-diarias",
     service => service.EnviarNovedadesDiarias(),
-    "30 8 * * *"
-);
-
-// Tambien puedes usar helpers
-RecurringJob.AddOrUpdate<NovedadesEmailService>(
-    "novedades-diarias",
-    service => service.EnviarNovedadesDiarias(),
-    Cron.Daily(8, 30)  // 8:30 AM
+    Cron.Daily(8, 30) // 8:30 AM
 );
 ```
 
-💡 **Tip del Examinador**: Hangfire maneja automaticamente los reintentos. Si un email falla, Hangfire lo reintentara automaticamente segun la configuración.
+> 💡 **Consejo:** Hangfire maneja automáticamente los reintentos. Si un email falla, Hangfire lo reintentará según la configuración. Con BackgroundService, tú solo controlas eso con tu propio try-catch.
 
----
-
-## 26.7. Monitoreo y Logging
+## 22.7. Monitoreo y Logging
 
 ```csharp
-public class MonitoredScheduledTask : BackgroundService
+public class MonitoredScheduledTask(ILogger<MonitoredScheduledTask> logger) : BackgroundService
 {
-    private readonly ILogger<MonitoredScheduledTask> _logger;
-    private readonly TimeSpan _interval;
-
-    public MonitoredScheduledTask(ILogger<MonitoredScheduledTask> logger)
-    {
-        _logger = logger;
-        _interval = TimeSpan.FromMinutes(5);
-    }
+    private readonly TimeSpan _interval = TimeSpan.FromMinutes(5);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -811,24 +654,22 @@ public class MonitoredScheduledTask : BackgroundService
 
             try
             {
-                _logger.LogInformation("Iniciando tarea programada");
+                logger.LogInformation("Iniciando tarea programada");
 
                 await DoWorkAsync();
 
                 stopwatch.Stop();
-                _logger.LogInformation(
+                logger.LogInformation(
                     "Tarea completada en {Duration}ms",
-                    stopwatch.ElapsedMilliseconds
-                );
+                    stopwatch.ElapsedMilliseconds);
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
-                _logger.LogError(
+                logger.LogError(
                     ex,
-                    "Error en tarea programada (duracion: {Duration}ms)",
-                    stopwatch.ElapsedMilliseconds
-                );
+                    "Error en tarea programada (duración: {Duration}ms)",
+                    stopwatch.ElapsedMilliseconds);
             }
 
             await Task.Delay(_interval, stoppingToken);
@@ -842,44 +683,11 @@ public class MonitoredScheduledTask : BackgroundService
 }
 ```
 
-**Metricas personalizadas:**
+📌 **Ejemplo real:** En Netflix, cada tarea programada registra cuánto tarda y si tuvo errores. Si la tarea de generación de thumbnails tarda más de 5 minutos, el equipo recibe una alerta automáticamente.
 
-```csharp
-public interface IMetricsService
-{
-    void RecordTaskExecution(string taskName, long durationMs, bool success);
-    void IncrementJobsProcessed(string jobType);
-}
+> 💡 **Analogía:** El monitoreo de tareas programadas es como tener un panel de control en una fábrica. Te muestra qué máquinas están trabajando, cuántas piezas producen, y si hay algún problema.
 
-public class MetricsService : IMetricsService
-{
-    private readonly ILogger<MetricsService> _logger;
-
-    public MetricsService(ILogger<MetricsService> logger)
-    {
-        _logger = logger;
-    }
-
-    public void RecordTaskExecution(string taskName, long durationMs, bool success)
-    {
-        _logger.LogInformation(
-            "Metricas - Tarea: {Task}, Duracion: {Duration}ms, Exito: {Success}",
-            taskName, durationMs, success
-        );
-    }
-
-    public void IncrementJobsProcessed(string jobType)
-    {
-        _logger.LogDebug("Job procesado: {JobType}", jobType);
-    }
-}
-```
-
-🧠 **Analogia**: El monitoreo de tareas programadas es como tener un panel de control en una fabrica. Te muestra que maquinas estan trabajando, cuantas piezas producen, y si hay algum problema.
-
----
-
-## 26.8. Testing de tareas programadas
+## 22.8. Testing de tareas programadas
 
 ```csharp
 using Moq;
@@ -897,7 +705,6 @@ public class SimpleScheduledTaskTests
         // Arrange
         var loggerMock = new Mock<ILogger<SimpleScheduledTask>>();
         using var cts = new CancellationTokenSource();
-        
         var task = new SimpleScheduledTask(loggerMock.Object);
 
         // Act
@@ -906,7 +713,7 @@ public class SimpleScheduledTaskTests
         await task.StopAsync(cts.Token);
 
         // Assert
-        loggerMock.Invocations.Should().Contain(x => 
+        loggerMock.Invocations.Should().Contain(x =>
             x.Arguments[0]?.ToString()?.Contains("Ejecutando tarea") == true);
     }
 
@@ -916,7 +723,6 @@ public class SimpleScheduledTaskTests
         // Arrange
         var loggerMock = new Mock<ILogger<SimpleScheduledTask>>();
         using var cts = new CancellationTokenSource();
-        
         var task = new SimpleScheduledTask(loggerMock.Object);
 
         // Act
@@ -927,7 +733,7 @@ public class SimpleScheduledTaskTests
         await task.StopAsync(cts.Token);
 
         // Assert
-        loggerMock.Invocations.Should().Contain(x => 
+        loggerMock.Invocations.Should().Contain(x =>
             x.Arguments[0]?.ToString()?.Contains("cancelada") == true);
     }
 }
@@ -946,7 +752,7 @@ public class CleanupServiceTests
         var loggerMock = new Mock<ILogger<CleanupService>>();
         var environmentMock = new Mock<IWebHostEnvironment>();
         environmentMock.Setup(e => e.ContentRootPath).Returns("/tmp");
-        
+
         var service = new CleanupService(loggerMock.Object, environmentMock.Object);
 
         // Act
@@ -959,151 +765,162 @@ public class CleanupServiceTests
 }
 ```
 
----
+## 22.9. Buenas prácticas
 
-## 26.9. Buenas practicas
-
-| Practica | Descripcion | Ejemplo |
+| Práctica | Descripción | Ejemplo |
 |:---------|:------------|:--------|
 | **Usar scopes** | Crear scopes para servicios Scoped | `using var scope = ...` |
-| **Manejo de errores** | No dejar que excepciones detengan la tarea | try-catch en cada iteracion |
-| **Logging detallado** | Registrar inicio, fin, duracion y errores | `LogInformation` en cada paso |
-| **Configuracion flexible** | Usar appsettings.json para intervalos | `_configuration.GetValue()` |
-| **Idempotencia** | La tarea debe poder ejecutarse multiples veces | Verificar antes de crear |
+| **Manejo de errores** | No dejar que excepciones detengan la tarea | try-catch en cada iteración |
+| **Logging detallado** | Registrar inicio, fin, duración y errores | `LogInformation` en cada paso |
+| **Configuración flexible** | Usar appsettings.json para intervalos | `_configuration.GetValue()` |
+| **Idempotencia** | La tarea debe poder ejecutarse múltiples veces | Verificar antes de crear |
 | **Timeout** | Implementar timeouts para evitar bloqueos | `CancellationToken` |
-| **Monitoreo** | Metricas y alertas para tareas criticas | Application Insights |
-| **Testing** | Testear logica separada de planificacion | Mock del scheduler |
+| **Monitoreo** | Métricas y alertas para tareas críticas | Application Insights |
+| **Testing** | Testear lógica separada de planificación | Mock del scheduler |
 
-⚠️ **Advertencias importantes:**
-
-1. **Nunca uses servicios Scoped directamente** en BackgroundService sin crear un scope primero
-2. **Maneja OperationCanceledException** cuando la aplicacion se cierra
-3. **Usa CancellationToken** para permitir shutdown graceful
-4. **No uses Thread.Sleep** - usa Task.Delay con CancellationToken
-5. **Evita fire-and-forget** sin manejo de errores
+> ⚠️ **Advertencia:** Nunca uses servicios Scoped directamente en BackgroundService sin crear un scope primero. Obtendrás errores de "captive dependency" difíciles de detectar.
 
 ```csharp
-// Correcto
-protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+// ❌ MALO: Servicio Scoped usado directamente (captive dependency)
+public class BadTask(MyDbContext db) : BackgroundService
 {
-    while (!stoppingToken.IsCancellationRequested)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await DoWorkAsync();
-        await Task.Delay(_interval, stoppingToken);
+        // ¡Error! MyDbContext es Scoped, no se puede usar así
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await DoWorkAsync(db);
+            await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+        }
     }
 }
 
-// Incorrecto
-protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+// ✅ BUENO: Crear scope para servicios Scoped
+public class GoodTask(IServiceProvider serviceProvider) : BackgroundService
 {
-    while (!stoppingToken.IsCancellationRequested)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await DoWorkAsync();
-        Thread.Sleep(10000);  // No hacer esto
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            using var scope = serviceProvider.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<MyDbContext>();
+            await DoWorkAsync(db);
+            await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+        }
     }
 }
 ```
 
----
+```csharp
+// ❌ MALO: Thread.Sleep bloquea el hilo
+await Task.Delay(_interval, stoppingToken);  // Esto es correcto
+Thread.Sleep(10000);                          // ¡NUNCA hacer esto!
 
-## 26.10. Comparacion de opciones
+// ✅ BUENO: Task.Delay es no bloqueante y respeta CancellationToken
+await Task.Delay(_interval, stoppingToken);
+```
 
-| Caracteristica | BackgroundService | NCronTab | Hangfire | Quartz.NET |
+## 22.10. Comparación de opciones
+
+| Característica | BackgroundService | NCronTab | Hangfire | Quartz.NET |
 |:---------------|:------------------|:---------|:---------|:-----------|
 | **Complejidad** | Simple | Media | Media-Alta | Alta |
-| **Expresiones Cron** | Manual | Automatico | Automatico | Automatico |
-| **Dashboard** | No | No | Si | Opcional |
-| **Persistencia** | No (en memoria) | No (en memoria) | Si (base de datos) | Si (base de datos) |
-| **Reintentos** | Manual | Manual | Automatico | Automatico |
+| **Expresiones Cron** | Manual | Automático | Automático | Automático |
+| **Dashboard** | No | No | Sí | Opcional |
+| **Persistencia** | No (en memoria) | No (en memoria) | Sí (base de datos) | Sí (base de datos) |
+| **Reintentos** | Manual | Manual | Automático | Automático |
 | **Escalabilidad** | Limitada | Limitada | Alta | Alta |
 | **Dependencias** | Ninguna extra | NCronTab | Hangfire.SqlServer | Quartz |
 
-**Recomendacion por escenario:**
+📌 **Ejemplo real:** Spotify usa Hangfire o similar para gestionar millones de tareas diarias (actualizar playlists, procesar pagos, enviar notificaciones). Para un proyecto académico como FunkoApp, BackgroundService es más que suficiente.
 
-| Escenario | Opcion recomendada |
+**Recomendación por escenario:**
+
+| Escenario | Opción recomendada |
 |:----------|:-------------------|
 | Desarrollo/Aprendizaje | BackgroundService |
 | Proyectos personales | BackgroundService + NCronTab |
-| Produccion pequena | Hangfire |
-| Produccion enterprise | Hangfire o Quartz.NET |
+| Producción pequeña | Hangfire |
+| Producción enterprise | Hangfire o Quartz.NET |
 | Microservicios | Hangfire con Redis |
 
-📝 **Nota del Profesor**: Para la mayoria de proyectos academicos y aplicaciones de pequeno/mediano tamano, **BackgroundService** es suficiente. Usa **Hangfire** cuando necesites dashboard, persistencia, o alta disponibilidad.
+> 📝 **Nota:** Para la mayoría de proyectos académicos y aplicaciones de pequeño/mediano tamaño, **BackgroundService** es suficiente. Usa **Hangfire** cuando necesites dashboard, persistencia o alta disponibilidad.
 
----
+## 22.11. Reto: Sistema de Tareas para FunkoApp
 
-## 26.11. Resumen
+> Antes de irte, implementa un sistema completo de tareas programadas para FunkoApp. Piensa primero en el diseño antes de escribir código.
 
-| Concepto | Descripcion |
-|----------|-------------|
-| **BackgroundService** | Forma mas simple de implementar tareas programadas, ideal para desarrollo y proyectos simples |
-| **NCronTab** | Anade soporte para expresiones Cron precisas, util cuando necesitas horarios especificos complejos |
-| **Hangfire** | Opcion recomendada para produccion, ofreciendo dashboard visual, persistencia en BD, reintentos automaticos y alta escalabilidad |
-| **Expresiones Cron** | Siguen el formato `minuto hora dia-mes mes dia-semana` y permiten definir horarios precisos |
-| **Monitoreo y logging** | Es crucial para identificar problemas en tareas que ejecutan en segundo plano |
-| **Buenas practicas** | Incluyen usar scopes, manejar errores, CancellationToken, y testing |
-| **Configuracion flexible** | Mediante appsettings.json permite cambiar intervalos sin recompilar |
+### Objetivo
 
----
+Implementar un sistema completo de tareas programadas para la aplicación de **FunkoApp** que gestione productos, stock y notificaciones de forma automática.
 
-## 26.12. Ejercicio Propuesto: Sistema de Tareas para Funkos
-
-### 26.12.1. Requisitos
-
-**Objetivo**: Implementar un sistema completo de tareas programadas para la aplicacion de Funkos.
-
-**Tareas a implementar:**
+### Tareas a implementar
 
 | # | Tarea | Frecuencia | Complejidad |
-|:---|:------|:-----------|:------------|
+|:--|:------|:-----------|:------------|
 | 1 | Limpieza de Funkos sin stock (>6 meses) | Diaria | Simple |
 | 2 | Resumen semanal de ventas | Semanal (Lunes 9:00) | Media |
-| 3 | Registro de ejecuciones en BD | Cada ejecucion | Simple |
+| 3 | Registro de ejecuciones en BD | Cada ejecución | Simple |
 | 4 | Alerta de stock bajo (<10 unidades) | Horaria | Media |
-| 5 | Generacion de reporte PDF con estadisticas | Mensual | Alta |
+| 5 | Generación de reporte PDF con estadísticas | Mensual | Alta |
 
-**Pasos a implementar:**
+### Pasos a implementar
 
-| # | Paso | Verificacion |
-|:---|:-----|:-------------|
-| 1 | Implementar BackgroundService base | ✅ |
-| 2 | Crear servicio de limpieza de Funkos eliminados | ✅ |
-| 3 | Implementar resumen semanal con envio de email | ✅ |
-| 4 | Crear tabla de logs de tareas ejecutadas | ✅ |
-| 5 | Implementar alerta de stock bajo | ✅ |
-| 6 | Configurar Hangfire para produccion | ✅ |
-| 7 | Crear dashboard de monitoreo | ✅ |
-| 8 | Escribir tests unitarios | ✅ |
-| 9 | Documentar configuración | ✅ |
+| # | Paso | Verificación |
+|:--|:-----|:-------------|
+| 1 | Implementar BackgroundService base | La tarea se ejecuta y registra en logs |
+| 2 | Crear servicio de limpieza de Funkos eliminados | Los Funkos antiguos se eliminan automáticamente |
+| 3 | Implementar resumen semanal con envío de email | Se envía un email con el resumen cada lunes |
+| 4 | Crear tabla de logs de tareas ejecutadas | Cada ejecución queda registrada en la BD |
+| 5 | Implementar alerta de stock bajo | Se envía un email cuando un Funko tiene <10 unidades |
+| 6 | Configurar Hangfire para producción | Hangfire conecta a SQL Server |
+| 7 | Crear dashboard de monitoreo | Acceso a `/hangfire` con autenticación |
+| 8 | Escribir tests unitarios | Los tests pasan con cobertura >80% |
 
-**Criterios de Evaluacion:**
+### Criterios de evaluación
 
 | Criterio | Puntos |
 |:---------|:-------|
 | Limpieza de datos funciona correctamente | 1.5 |
-| Resumen semanal se genera y envia | 2.0 |
+| Resumen semanal se genera y envía | 2.0 |
 | Sistema de logging de ejecuciones | 1.5 |
 | Alertas de stock bajo | 1.5 |
-| Configuracion de Hangfire | 1.5 |
+| Configuración de Hangfire | 1.5 |
 | Tests unitarios | 1.0 |
-| Documentacion | 1.0 |
+| Documentación | 1.0 |
 
 **Total: 10 puntos**
 
-**Extras (opcional):**
+### Extras (opcional)
 
-- Implementar tarea de sincronizacion con proveedor externo
+- Implementar tarea de sincronización con proveedor externo
 - Crear sistema de dependencias entre tareas
 - Implementar dashboard personalizado
-- Anadir notificaciones por Slack/Teams
+- Añadir notificaciones por Slack/Teams
 
-**Recursos utiles:**
+### Recursos útiles
 
-| Recurso | Descripcion |
+| Recurso | Descripción |
 |:--------|:------------|
-| [Microsoft: Background tasks](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/hosted-services) | Documentacion oficial de BackgroundService |
-| [Hangfire Documentation](https://docs.hangfire.io/) | Documentacion completa de Hangfire |
+| [Microsoft: Background tasks](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/hosted-services) | Documentación oficial de BackgroundService |
+| [Hangfire Documentation](https://docs.hangfire.io/) | Documentación completa de Hangfire |
 | [NCronTab GitHub](https://github.com/atifaziz/NCrontab) | Repositorio oficial de NCronTab |
 | [Crontab Guru](https://crontab.guru/) | Generador visual de expresiones Cron |
-| [Quartz.NET](https://www.quartz-scheduler.net/) | Scheduler empresarial |
-| [CronMaker](http://www.cronmaker.com/) | Generador de expresiones Cron online |
+
+---
+
+**Resumen del punto:**
+
+| Concepto | Descripción |
+|----------|-------------|
+| **BackgroundService** | Forma más simple de implementar tareas programadas, ideal para desarrollo y proyectos simples |
+| **NCronTab** | Añade soporte para expresiones Cron precisas, útil cuando necesitas horarios específicos complejos |
+| **Hangfire** | Opción recomendada para producción: dashboard visual, persistencia en BD, reintentos automáticos y alta escalabilidad |
+| **Expresiones Cron** | Siguen el formato `minuto hora día-mes mes día-semana` y permiten definir horarios precisos |
+| **Monitoreo y logging** | Es crucial para identificar problemas en tareas que ejecutan en segundo plano |
+| **Buenas prácticas** | Incluyen usar scopes, manejar errores, CancellationToken y testing |
+| **Configuración flexible** | Mediante appsettings.json permite cambiar intervalos sin recompilar |
+
+**¿Qué viene después?**
+
+En el siguiente punto veremos **optimización de consultas y rendimiento**: cómo medir, mejorar y monitorear el rendimiento de tu API REST para que responda rápido incluso con miles de peticiones concurrentes.
