@@ -15,17 +15,23 @@
     - [30.4.2. Producto con relaciones embebidas](#3042-producto-con-relaciones-embebidas)
     - [30.4.3. Otras opciones para lecturas](#3043-otras-opciones-para-lecturas)
   - [30.5. Sincronización SQL → MongoDB](#305-sincronización-sql--mongodb)
-    - [30.5.1. BackgroundService de sincronización](#3051-backgroundservice-de-sincronización)
-    - [30.5.2. Patron de publicación](#3052-patron-de-publicación)
+    - [30.5.1. Opciones de sincronización](#3051-opciones-de-sincronización)
+    - [30.5.2. BackgroundService](#3052-backgroundservice)
+    - [30.5.3. Domain Events](#3053-domain-events)
+    - [30.5.4. CDC con Kafka](#3054-cdc-con-kafka)
+    - [30.5.5. RX.NET Observables](#3055-rxnet-observables)
+    - [30.5.6. Comparativa](#3056-comparativa)
   - [30.6. Consistencia Eventual](#306-consistencia-eventual)
-    - [30.6.1. Qué es la consistencia eventual](#3061-qué-es-la-consistencia-eventual)
-    - [30.6.2. Ventana de inconsistencia](#3062-ventana-de-inconsistencia)
-    - [30.6.3. Cómo manejarla](#3063-cómo-manejarla)
   - [30.7. Ventajas y Desventajas](#307-ventajas-y-desventajas)
   - [30.8. Kafka: la opción profesional](#308-kafka-la-opción-profesional)
-  - [30.9. Testing de CQRS](#309-testing-de-cqrs)
-  - [30.10. Buenas Prácticas](#3010-buenas-prácticas)
-  - [30.11. Reto](#3011-reto)
+  - [30.9. MediatR: Implementando CQRS](#309-mediatr-implementando-cqrs)
+    - [30.9.1. ¿Qué es MediatR?](#3091-qué-es-mediatr)
+    - [30.9.2. Commands con MediatR](#3092-commands-con-mediatr)
+    - [30.9.3. Queries con MediatR](#3093-queries-con-mediatr)
+    - [30.9.4. Pipeline Behaviors](#3094-pipeline-behaviors)
+  - [30.10. Testing de CQRS](#3010-testing-de-cqrs)
+  - [30.11. Buenas Prácticas](#3011-buenas-prácticas)
+  - [30.12. Reto](#3012-reto)
 
 ---
 
@@ -783,7 +789,141 @@ return Ok(new {
 
 📌 Ejemplo real: **LinkedIn** usa Kafka para sincronizar datos entre cientos de microservicios. Cuando actualizas tu perfil, el evento viaja por Kafka y actualiza ElasticSearch, caches y sistemas de recomendación.
 
-## 30.9. Testing de CQRS
+## 30.9. MediatR: Implementando CQRS
+
+### 30.9.1. ¿Qué es MediatR?
+
+**MediatR** es una librería de .NET que implementa el patrón **Mediator**. En CQRS, MediatR separa quién envía un command/query (el controller) de quién lo procesa (el handler). Esto desacopla completamente las capas.
+
+📌 Ejemplo real: **eBay** usa un patrón similar. Cuando un vendedor actualiza un producto, el controller solo envía un `UpdateProductCommand`. MediatR se encarga de buscar el handler correcto, ejecutar la lógica y devolver el resultado. El controller no sabe nada de la implementación.
+
+```mermaid
+flowchart LR
+    subgraph TRADICIONAL["Sin MediatR"]
+        A[Controller] -->|llama directamente| B[Service]
+        B -->|accede| C[Repository]
+    end
+
+    subgraph CON_MEDIATR["Con MediatR"]
+        D[Controller] -->|envía Command| E[MediatR]
+        E -->|despacha| F[Handler]
+        F -->|accede| G[Repository]
+    end
+
+    style TRADICIONAL fill:#f44336,color:#fff
+    style CON_MEDIATR fill:#4CAF50,color:#fff
+```
+
+**Instalación:**
+
+```bash
+dotnet add package MediatR
+dotnet add package MediatR.Extensions.Microsoft.DependencyInjection
+```
+
+### 30.9.2. Commands con MediatR
+
+Un **Command** es un objeto que representa una intención de modificar datos. MediatR lo envía al **Handler** correspondiente.
+
+```csharp
+// Command: representa la intención de crear un producto
+public record CreateProductoCommand(
+    string Nombre,
+    decimal Precio,
+    long CategoriaId,
+    long ProveedorId
+) : IRequest<Producto>;
+```
+
+```csharp
+// Handler: ejecuta la lógica del command
+public class CreateProductoHandler(
+    IProductoRepository repository,
+    IMediator mediator) : IRequestHandler<CreateProductoCommand, Producto>
+{
+    public async Task<Producto> Handle(
+        CreateProductoCommand request,
+        CancellationToken cancellationToken)
+    {
+        var producto = new Producto
+        {
+            Nombre = request.Nombre,
+            Precio = request.Precio,
+            CategoriaId = request.CategoriaId,
+            ProveedorId = request.ProveedorId
+        };
+
+        var creado = repository.Add(producto);
+
+        // Publicar evento para sincronización
+        await mediator.Publish(new ProductoCreadoEvent(creado.Id), cancellationToken);
+
+        return creado;
+    }
+}
+```
+
+```csharp
+// En el Controller
+[HttpPost]
+public async Task<IActionResult> Create([FromBody] CreateProductoInput input)
+{
+    var command = new CreateProductoCommand(
+        input.Nombre, input.Precio, input.CategoriaId, input.ProveedorId);
+    
+    var producto = await _mediator.Send(command);
+    return CreatedAtAction(nameof(GetById), new { id = producto.Id }, producto);
+}
+```
+
+### 30.9.3. Queries con MediatR
+
+Una **Query** es un objeto que representa una intención de leer datos.
+
+```csharp
+// Query: representa la intención de buscar productos
+public record SearchProductosQuery(string Termino) : IRequest<List<Producto>>;
+```
+
+```csharp
+// Handler
+public class SearchProductosHandler(
+    IProductoReadRepository repository) : IRequestHandler<SearchProductosQuery, List<Producto>>
+{
+    public Task<List<Producto>> Handle(
+        SearchProductosQuery request,
+        CancellationToken cancellationToken)
+    {
+        return repository.SearchAsync(request.Termino, cancellationToken);
+    }
+}
+```
+
+### 30.9.4. Pipeline Behaviors
+
+Los **Behaviors** son middleware que se ejecutan antes/después de cada handler. Útiles para logging, validación, caching, etc.
+
+```csharp
+// Logging Behavior
+public class LoggingBehavior<TRequest, TResponse>(
+    ILogger<LoggingBehavior<TRequest, TResponse>> logger)
+    : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : IRequest<TResponse>
+{
+    public async Task<TResponse> Handle(
+        TRequest request,
+        RequestHandlerDelegate<TResponse> next,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Handling {RequestType}", typeof(TRequest).Name);
+        var response = await next();
+        logger.LogInformation("Handled {ResponseType}", typeof(TResponse).Name);
+        return response;
+    }
+}
+```
+
+📌 Ejemplo real: **Uber** usa behaviors para validar que el conductor tenga licencia antes de procesar un viaje. El behavior se ejecuta antes del handler y verifica los permisos.
 
 ```csharp
 [Test]
@@ -805,7 +945,29 @@ public async Task Sync_ProductoCreado_SeSincronizaMongoDB()
 }
 ```
 
-## 30.10. Buenas Prácticas
+## 30.10. Testing de CQRS
+
+```csharp
+[Test]
+public async Task Sync_ProductoCreado_SeSincronizaMongoDB()
+{
+    // Arrange
+    var producto = new Producto { Nombre = "Teclado", Precio = 89.99m, CategoriaId = 1 };
+    await sqlContext.Productos.AddAsync(producto);
+    await sqlContext.SaveChangesAsync();
+
+    // Act
+    await syncService.SyncProductosAsync();
+
+    // Assert
+    var read = await mongoContext.Productos.FirstOrDefaultAsync(p => p.Id == producto.Id);
+    read.Should().NotBeNull();
+    read!.Nombre.Should().Be("Teclado");
+    read.Categoria.Should().NotBeNull();
+}
+```
+
+## 30.11. Buenas Prácticas
 
 - **Sincronización periódica**: No en tiempo real, usa intervals (5min, 15min)
 - **Upsert en MongoDB**: `ReplaceOne` con `IsUpsert = true` para crear o actualizar
@@ -814,7 +976,7 @@ public async Task Sync_ProductoCreado_SeSincronizaMongoDB()
 - **Logs detallados**: Registra cada sync para debugging
 - **Aceptar la inconsistencia**: Si 5min es aceptable, no compliques el sistema
 
-## 30.11. Reto
+## 30.12. Reto
 
 > Implementa CQRS para FunkoApp: PostgreSQL para escrituras, MongoDB para lecturas.
 
