@@ -19,7 +19,7 @@
     - [8.3.4. Cuándo usar cada una](#834-cuándo-usar-cada-una)
     - [8.3.5. Integración con ASP.NET Core](#835-integración-con-aspnet-core)
     - [8.3.6. ¿Qué pasa cuando la validación falla? (Middleware)](#836-qué-pasa-cuando-la-validación-falla-middleware)
-    - [8.3.7. Resumen: Validación en ASP.NET Core](#837-resumen-validación-en-aspnet-core)
+    - [8.3.7. Validación en ASP.NET Core](#837-validación-en-aspnet-core)
   - [8.4. Consultas avanzadas en endpoints](#84-consultas-avanzadas-en-endpoints)
     - [8.4.1. Filtrado múltiple](#841-filtrado-múltiple)
     - [8.4.2. Ordenación](#842-ordenación)
@@ -66,8 +66,6 @@ En este punto aprenderás a transferir datos entre capas con DTOs, a mapear mode
 - Diseñar consultas avanzadas con query parameters
 - Conocer el nuevo método HTTP QUERY
 - Implementar HATEOAS para APIs navegables
-
----
 
 ## 8.1. DTOs para Request y Responses
 
@@ -157,8 +155,6 @@ graph TD
     style E fill:#4CAF50,color:#fff
     style F fill:#2196F3,color:#fff
 ```
-
----
 
 ## 8.2. Mapeadores
 
@@ -278,8 +274,6 @@ var modelo = mapper.Map<CreateProductoDto>(dto);
 | **Recomendado para** | Proyectos pequeños/medianos | Proyectos grandes con muchos modelos |
 
 > 💡 **Consejo:** Empieza con funciones de extensión. Cuando tengas 10+ modelos y sientas que es tedioso, migra a AutoMapper.
-
----
 
 ## 8.3. Validaciones
 
@@ -716,8 +710,6 @@ flowchart TD
     style J fill:#4CAF50,color:#fff
 ```
 
----
-
 ## 8.4. Consultas avanzadas en endpoints
 
 ```mermaid
@@ -824,8 +816,6 @@ public IActionResult Search([FromQuery] string q)
 
 📌 Ejemplo real: **Mercado Libre** tiene un endpoint de búsqueda que acepta `?q=laptop+gamer` y devuelve productos que contengan esa frase en el título o descripción. El parámetro `q` es el estándar para búsquedas.
 
----
-
 ## 8.5. Parámetros de consulta (Query Parameters)
 
 ### 8.5.1. ¿Qué son los query parameters?
@@ -895,8 +885,6 @@ app.MapGet("/api/productos", (
 | Límites | `pageSize` máximo 100 |
 | Nombres consistentes | `page`, `pageSize`, `sortBy`, `q` |
 | Opcionales | `string?`, `decimal?`, `int?` |
-
----
 
 ## 8.6. El nuevo método HTTP QUERY (RFC 10008)
 
@@ -980,8 +968,6 @@ Content-Type: application/json
 QUERY es un RFC reciente. ASP.NET Core no lo soporta nativamente todavía. Para usarlo, necesitarías un middleware personalizado o esperar a que se implemente en el framework.
 
 📌 Ejemplo real: **GitHub** usa un patrón similar con sus API de búsqueda. Cuando haces una búsqueda compleja con muchos filtros, en lugar de colgar la URL con 20 query parameters, envía un cuerpo JSON. QUERY formaliza ese patrón.
-
----
 
 ## 8.7. HATEOAS
 
@@ -1080,8 +1066,6 @@ public IActionResult GetAll([FromQuery] int page = 1, [FromQuery] int pageSize =
 ```
 
 > 💡 **Consejo:** Los enlaces en headers son más profesionales (separan datos de metadatos). Los enlaces en el body son más fáciles de consumir para clientes web. Usa el que mejor se adapte a tu caso.
-
----
 
 ## 8.8. Negociación de Contenido
 
@@ -1242,8 +1226,6 @@ public record ProductoDto(
 
 > 💡 **Consejo:** Para APIs modernas, JSON es el estándar. Usa XML solo si necesitas compatibilidad con sistemas legacy. La negociación de contenido es útil cuando tu API consume clientes heterogéneos (app móvil, web, sistemas empresariales).
 
----
-
 ## 8.9. Buenas prácticas
 
 - **DTOs siempre en producción:** Separa el dominio de la API
@@ -1254,8 +1236,6 @@ public record ProductoDto(
 - **HATEOAS:** Incluye enlaces de paginación en headers o body
 - **Consistencia:** Usa los mismos nombres de query parameters en todos los endpoints
 - **JSON por defecto:** Usa JSON como formato estándar, XML solo para compatibilidad
-
----
 
 ## 8.10. Reto
 

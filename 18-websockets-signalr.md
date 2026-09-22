@@ -44,6 +44,12 @@
 
 > **Punto de partida:** Cuando publicas un producto en una tienda online, los administradores deberian ver el cambio al instante sin recargar la pagina. En el modelo HTTP tradicional, el cliente debe preguntar periodicamente al servidor si hay novedades (polling). La **comunicacion en tiempo real** elimina ese problema: el servidor emite datos a los clientes conectados tan pronto como ocurre un evento.
 
+**Objetivos de aprendizaje:**
+- Comprender la diferencia entre HTTP tradicional y comunicación en tiempo real
+- Implementar WebSockets nativos en ASP.NET Core
+- Desarrollar hubs con SignalR para comunicación bidireccional simplificada
+- Integrar SignalR con JWT e Identity para seguridad
+
 ## 18.1. Introduccion
 
 ### 18.1.1. Que es la Comunicacion en Tiempo Real

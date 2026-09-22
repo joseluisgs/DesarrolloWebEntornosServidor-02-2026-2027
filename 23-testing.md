@@ -37,15 +37,20 @@
     - [Configuracion de Paralelismo](#configuracion-de-paralelismo)
     - [Niveles de Paralelismo](#niveles-de-paralelismo)
     - [Cuando Usar Paralelismo vs Secuencial](#cuando-usar-paralelismo-vs-secuencial)
-  - [21.12. Resumen](#2112-resumen)
-    - [Comandos Utiles](#comandos-utiles)
+  - [21.12. Comandos Utiles](#2112-comandos-utiles)
   - [21.13. Ejercicio Propuesto](#2113-ejercicio-propuesto)
     - [Requisitos](#requisitos)
     - [Entidades](#entidades)
     - [Tareas](#tareas)
     - [Criterios de Evaluacion](#criterios-de-evaluacion)
 
----
+> **Punto de partida:** ¿Cómo sabes que tu código funciona correctamente? ¿Y cómo verifies que los cambios no rompen funcionalidades existentes? Los tests automatizados son la respuesta: ejecutan tu código de forma controlada y detectan errores antes de que lleguen a producción.
+
+**Objetivos de aprendizaje:**
+- Comprender los fundamentos del testing y la pirámide de tests
+- Escribir test unitarios con NUnit, FluentAssertions y Moq
+- Implementar tests de integración con TestContainers y WebApplicationFactory
+- Configurar paralelismo y medir cobertura de código
 
 ## 21.1. Conceptos Fundamentales
 
@@ -60,20 +65,20 @@ flowchart LR
         A2 --> A3["Usuario final"]
         A3 --> A4["Reporte bug"]
         A4 --> A1
-        style A1 fill:#B71C1C
-        style A2 fill:#B71C1C
-        style A3 fill:#B71C1C
-        style A4 fill:#B71C1C
+        style A1 fill:#f44336
+        style A2 fill:#f44336
+        style A3 fill:#f44336
+        style A4 fill:#f44336
     end
     
     subgraph "Con Tests"
         B1["Desarrollar"] --> B2["Tests automaticos"]
         B2 --> B3["Feedback inmediato"]
         B3 --> B4["Confianza"]
-        style B1 fill:#2E7D32
-        style B2 fill:#2E7D32
-        style B3 fill:#2E7D32
-        style B4 fill:#2E7D32
+        style B1 fill:#4CAF50
+        style B2 fill:#4CAF50
+        style B3 fill:#4CAF50
+        style B4 fill:#4CAF50
     end
 ```
 
@@ -87,8 +92,6 @@ flowchart LR
 | Miedo a refactorizar | Refactorizacion segura |
 | Regresiones no detectadas | Tests regresivos automaticos |
 | Deploys arriesgados | Confianza en el codigo |
-
----
 
 ## 21.2. Tipos de Tests
 
@@ -108,27 +111,27 @@ flowchart TD
         B1["Rapidos ms"]
         B2["Aislados"]
         B3["Sin dependencias externas"]
-        style B1 fill:#1565C0
-        style B2 fill:#1565C0
-        style B3 fill:#1565C0
+        style B1 fill:#2196F3
+        style B2 fill:#2196F3
+        style B3 fill:#2196F3
     end
     
     subgraph "Integration Tests"
         C1["Medios segundos"]
         C2["Con base de datos real"]
         C3["Con servicios externos"]
-        style C1 fill:#E65100
-        style C2 fill:#E65100
-        style C3 fill:#E65100
+        style C1 fill:#FF9800
+        style C2 fill:#FF9800
+        style C3 fill:#FF9800
     end
     
     subgraph "E2E Tests"
         D1["Lentos minutos"]
         D2["Browser/app completo"]
         D3["Escenario completo"]
-        style D1 fill:#6A1B9A
-        style D2 fill:#6A1B9A
-        style D3 fill:#6A1B9A
+        style D1 fill:#9C27B0
+        style D2 fill:#9C27B0
+        style D3 fill:#9C27B0
     end
 ```
 
@@ -155,8 +158,6 @@ Los tests de integracion prueban multiples componentes trabajando juntos sin moc
 
 Los tests End-to-End simulan un usuario real, probando la aplicación completa desde la interfaz.
 
----
-
 ## 21.3. Frameworks de Testing en .NET
 
 .NET tiene tres frameworks principales de testing:
@@ -178,8 +179,6 @@ En este proyecto usamos **NUnit** por su sintaxis clara y atributos descriptivos
 | **Moq** | Crear mocks |
 | **TestContainers** | Contenedores Docker para tests de integracion |
 | **coverlet** | Medir cobertura de codigo |
-
----
 
 ## 21.4. Estructura del Proyecto de Tests
 
@@ -243,8 +242,6 @@ TuProyecto.Tests/
 
 </Project>
 ```
-
----
 
 ## 21.5. Anatomia de un Test Unitario
 
@@ -327,8 +324,6 @@ flowchart TD
     A3 --> B1
     B1 --> C1 --> C2 --> C3
 ```
-
----
 
 ## 21.6. NUnit Basics
 
@@ -433,8 +428,6 @@ public class ProductoServiceTests
 }
 ```
 
----
-
 ## 21.7. FluentAssertions
 
 **FluentAssertions** permite escribir assertions de forma mas legible y con mensajes de error claros.
@@ -523,8 +516,6 @@ public class FluentAssertionsExamples
     }
 }
 ```
-
----
 
 ## 21.8. Moq - Creando Mocks
 
@@ -1063,8 +1054,6 @@ public class ProductoServiceCompleteTests
 | `It.IsAny<T>()` | Cualquier valor | `GetByIdAsync(It.IsAny<long>())` |
 | `It.Is<T>(condition)` | Condicion especifica | `GetByIdAsync(It.Is<long>(id => id > 0))` |
 
----
-
 ## 21.9. TestContainers
 
 **TestContainers** es una libreria que permite crear contenedores Docker durante los tests de integracion. Esto proporciona bases de datos reales y otros servicios en entornos aislados.
@@ -1077,18 +1066,18 @@ flowchart LR
         A1["Mock de base de datos"]
         A2["No testa SQL real"]
         A3["No testa migrations"]
-        style A1 fill:#B71C1C
-        style A2 fill:#B71C1C
-        style A3 fill:#B71C1C
+        style A1 fill:#f44336
+        style A2 fill:#f44336
+        style A3 fill:#f44336
     end
     
     subgraph "Con TestContainers"
         B1["PostgreSQL real en contenedor"]
         B2["Redis real en contenedor"]
         B3["Tests mas realistas"]
-        style B1 fill:#2E7D32
-        style B2 fill:#2E7D32
-        style B3 fill:#2E7D32
+        style B1 fill:#4CAF50
+        style B2 fill:#4CAF50
+        style B3 fill:#4CAF50
     end
 ```
 
@@ -1313,8 +1302,6 @@ public class ProductoRepositoryIntegrationTests : IntegrationTestBase
 }
 ```
 
----
-
 ## 21.10. Tests de Controladores
 
 Los tests de controladores verifican que los endpoints de la API funcionan correctamente usando `HttpClient` para simular requests.
@@ -1450,8 +1437,6 @@ public class ProductosControllerTests
 }
 ```
 
----
-
 ## 21.11. Tests en Paralelo vs Secuenciales
 
 NUnit puede ejecutar tests en paralelo para acelerar el tiempo de ejecucion.
@@ -1511,9 +1496,7 @@ public class ProductoServiceTests
 | Tests con TestContainers | **Limitado** | Cada contenedor es pesado |
 | Tests de integracion | **Limitado** | Recursos externos limitados |
 
----
-
-## 21.12. Resumen
+**Resumen del punto:**
 
 | Concepto | Descripcion |
 |----------|-------------|
@@ -1545,8 +1528,6 @@ dotnet test --filter "Category=Integration"
 # Tests paralelos
 dotnet test --max-cpu-count 4
 ```
-
----
 
 ## 21.13. Ejercicio Propuesto
 

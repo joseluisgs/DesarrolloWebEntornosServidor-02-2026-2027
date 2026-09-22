@@ -21,8 +21,8 @@ $ForbiddenColors = @(
 function Test-Document {
     param([string]$FilePath)
 
-    $content = Get-Content $FilePath -Raw -Encoding UTF8
-    $lines = Get-Content $FilePath -Encoding UTF8
+    $content = [System.IO.File]::ReadAllText($FilePath, [System.Text.Encoding]::UTF8)
+    $lines = [System.IO.File]::ReadAllLines($FilePath, [System.Text.Encoding]::UTF8)
     $filename = Split-Path $FilePath -Leaf
     $fileErrors = @()
     $fileWarnings = @()
@@ -54,7 +54,7 @@ function Test-Document {
     }
 
     # 4. Resumen: debe tener Que viene despues
-    if ($content -match 'Resumen del punto' -and $content -notmatch 'vienne despues') {
+    if ($content -match 'Resumen del punto' -and $content -notmatch 'viene despue') {
         $fileErrors += "Resumen: Falta '**Que viene despues?**'"
     }
 

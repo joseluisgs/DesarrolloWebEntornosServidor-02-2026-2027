@@ -23,6 +23,12 @@
 
 > 💡 **Punto de partida:** ¿Cómo sabes que tu código funciona? ¿Y cómo lo pasas a producción? En este punto aprendemos a **probar** y **desplegar**.
 
+**Objetivos de aprendizaje:**
+- Escribir test unitarios con NUnit y FluentAssertions
+- Aislar dependencias con mocks usando Moq
+- Medir la calidad del código con informes de cobertura
+- Empaquetar y desplegar aplicaciones con Docker y Podman
+
 Hasta ahora hemos creado APIs que funcionan. Pero "funcionar" no es suficiente. Necesitamos:
 - **Probar** que cada pieza funciona por separado (test unitarios)
 - **Simular** dependencias externas para aislar la lógica (mocks)
@@ -379,8 +385,6 @@ flowchart TD
 | **Verify siempre** | Comprobar que se llamó a los métodos correctos del mock |
 | **Dockerfile multi-stage** | Imagenes pequeñas y seguras |
 | **No subir secrets al Dockerfile** | Usar variables de entorno o docker-compose |
-
----
 
 ## 10.7. Reto
 

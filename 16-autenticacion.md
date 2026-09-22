@@ -42,6 +42,12 @@
 
 > 💡 **Punto de partida:** Cuando abres Instagram, introduces tu email y contraseña. Instagram comprueba que eres quien dices ser y te da acceso a tu feed. Ese proceso se llama **autenticación**. Pero en una API REST, ¿cómo sabe el servidor quién eres en cada petición? La respuesta está en JWT y BCrypt.
 
+**Objetivos de aprendizaje:**
+- Entender la diferencia entre autenticación y autorización
+- Implementar autenticación stateless con JWT (JSON Web Token)
+- Hashear contraseñas de forma segura con BCrypt
+- Configurar OAuth2 para login con proveedores externos (Google, GitHub)
+
 ## 16.1. Introducción
 
 ### 16.1.1. ¿Qué es la Autenticación?

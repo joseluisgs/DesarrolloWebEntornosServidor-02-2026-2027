@@ -32,6 +32,12 @@
 
 > 💡 **Punto de partida:** Has conseguido que Instagram sepa quién eres (autenticación). Pero... ¿puedes borrar la cuenta de otro usuario? ¿Puedes ver estadísticas de negocio? Eso lo decide la **autorización**: qué puedes hacer una vez autenticado.
 
+**Objetivos de aprendizaje:**
+- Comprender la diferencia entre autenticación y autorización
+- Implementar autorización basada en roles, claims y policies
+- Crear requirements y handlers personalizados para reglas de negocio complejas
+- Aplicar autorización basada en recursos (resource-based authorization)
+
 ## 17.1. Introducción
 
 ### 17.1.1. ¿Qué es la Autorización?

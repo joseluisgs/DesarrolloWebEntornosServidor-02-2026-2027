@@ -31,8 +31,6 @@ En este punto aprenderás a configurar tu aplicación para distintos entornos (d
 - Configurar Serilog para consola y fichero con rotación
 - Entender los niveles de log y cuándo usar cada uno
 
----
-
 ## 9.1. Configuración en ASP.NET Core
 
 ### 9.1.1. appsettings.json
@@ -204,8 +202,6 @@ flowchart TD
     style E fill:#4CAF50,color:#fff
     style F fill:#4CAF50,color:#fff
 ```
-
----
 
 ## 9.2. Logging en ASP.NET Core
 
@@ -393,8 +389,6 @@ Log.Logger = new LoggerConfiguration()
 
 > 💡 **Consejo:** Para proyectos pequeños, configura Serilog en código (más simple). Para proyectos grandes con muchos entornos, usa `appsettings.json` (más flexible, no requiere recompilar).
 
----
-
 ## 9.3. Buenas prácticas
 
 9.1. **Nunca guardes secrets en appsettings.json:** Usa variables de entorno o `dotnet user-secrets`
@@ -410,8 +404,6 @@ Log.Logger = new LoggerConfiguration()
 9.6. **Logging estructurado:** Usa interpolación de strings de Serilog (`{Variable}`) en lugar de concatenación (`"Valor: " + variable`)
 
 9.7. **`Log.CloseAndFlush()` en el finally:** Asegúrate de que todos los logs se escriben antes de que la aplicación termine
-
----
 
 ## 9.4. Reto
 

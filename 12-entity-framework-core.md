@@ -1,15 +1,15 @@
-﻿# 12. Entity Framework Core
+# 12. Entity Framework Core
 
 - [12. Entity Framework Core](#12-entity-framework-core)
   - [12.1. Fundamentos](#121-fundamentos)
-    - [12.1.1. ¿Qué es un ORM?](#1211-qué-es-un-orm)
+    - [12.1.1. �Qu� es un ORM?](#1211-qu�-es-un-orm)
     - [12.1.2. DbContext](#1212-dbcontext)
     - [12.1.3. Componentes del DbContext](#1213-componentes-del-dbcontext)
     - [12.1.4. Ventajas de EF Core](#1214-ventajas-de-ef-core)
     - [12.1.5. Change Tracker](#1215-change-tracker)
-  - [12.2. Configuración Inicial](#122-configuración-inicial)
+  - [12.2. Configuraci�n Inicial](#122-configuraci�n-inicial)
     - [12.2.1. Paquetes NuGet](#1221-paquetes-nuget)
-    - [12.2.2. Conexión](#1222-conexión)
+    - [12.2.2. Conexi�n](#1222-conexi�n)
     - [12.2.3. Registro del DbContext](#1223-registro-del-dbcontext)
     - [12.2.4. EnsureCreated vs Migrate](#1224-ensurecreated-vs-migrate)
   - [12.3. Data Annotations](#123-data-annotations)
@@ -17,7 +17,7 @@
     - [12.3.2. Atributos de clave](#1232-atributos-de-clave)
     - [12.3.3. Atributos de tabla](#1233-atributos-de-tabla)
     - [12.3.4. Atributos de concurrencia](#1234-atributos-de-concurrencia)
-    - [12.3.5. Atributos de generación](#1235-atributos-de-generación)
+    - [12.3.5. Atributos de generaci�n](#1235-atributos-de-generaci�n)
   - [12.4. Fluent API](#124-fluent-api)
     - [12.4.1. Propiedades](#1241-propiedades)
     - [12.4.2. Claves](#1242-claves)
@@ -40,28 +40,28 @@
     - [12.10.3. Explicit Loading](#12103-explicit-loading)
     - [12.10.4. AsSplitQuery](#12104-assplitquery)
   - [12.11. Consultas con LINQ](#1211-consultas-con-linq)
-    - [12.11.1. Básicas](#12111-básicas)
-    - [12.11.2. Elemento único](#12112-elemento-único)
+    - [12.11.1. B�sicas](#12111-b�sicas)
+    - [12.11.2. Elemento �nico](#12112-elemento-�nico)
     - [12.11.3. Condicionales](#12113-condicionales)
-    - [12.11.4. Joins explícitos](#12114-joins-explícitos)
-    - [12.11.5. GroupBy y agregación](#12115-groupby-y-agregación)
+    - [12.11.4. Joins expl�citos](#12114-joins-expl�citos)
+    - [12.11.5. GroupBy y agregaci�n](#12115-groupby-y-agregaci�n)
     - [12.11.6. Subconsultas](#12116-subconsultas)
     - [12.11.7. ToQueryString](#12117-toquerystring)
     - [12.11.8. AsNoTracking](#12118-asnotracking)
     - [12.11.9. SQL nativo](#12119-sql-nativo)
   - [12.12. ExecuteUpdate y ExecuteDelete](#1212-executeupdate-y-executedelete)
-  - [12.13. Repositorio CRUD con Borrado Físico y Lógico](#1213-repositorio-crud-con-borrado-físico-y-lógico)
-    - [12.13.1. Entidad y configuración del modelo](#12131-entidad-y-configuración-del-modelo)
+  - [12.13. Repositorio CRUD con Borrado F�sico y L�gico](#1213-repositorio-crud-con-borrado-f�sico-y-l�gico)
+    - [12.13.1. Entidad y configuraci�n del modelo](#12131-entidad-y-configuraci�n-del-modelo)
     - [12.13.2. Interfaz del repositorio](#12132-interfaz-del-repositorio)
-    - [12.13.3. Implementación: Create, GetById, GetAll, Update](#12133-implementación-create-getbyid-getall-update)
-    - [12.13.4. Borrado físico (Delete)](#12134-borrado-físico-delete)
-    - [12.13.5. Borrado lógico (SoftDelete + Query Filters)](#12135-borrado-lógico-softdelete--query-filters)
-    - [12.13.6. Consultas típicas del repositorio](#12136-consultas-típicas-del-repositorio)
+    - [12.13.3. Implementaci�n: Create, GetById, GetAll, Update](#12133-implementaci�n-create-getbyid-getall-update)
+    - [12.13.4. Borrado f�sico (Delete)](#12134-borrado-f�sico-delete)
+    - [12.13.5. Borrado l�gico (SoftDelete + Query Filters)](#12135-borrado-l�gico-softdelete--query-filters)
+    - [12.13.6. Consultas t�picas del repositorio](#12136-consultas-t�picas-del-repositorio)
   - [12.14. Migraciones](#1214-migraciones)
-    - [12.14.1. Crear migración](#12141-crear-migración)
+    - [12.14.1. Crear migraci�n](#12141-crear-migraci�n)
     - [12.14.2. Aplicar migraciones](#12142-aplicar-migraciones)
     - [12.14.3. Rollback](#12143-rollback)
-    - [12.14.4. Eliminar migración](#12144-eliminar-migración)
+    - [12.14.4. Eliminar migraci�n](#12144-eliminar-migraci�n)
     - [12.14.5. Listar y generar script](#12145-listar-y-generar-script)
     - [12.14.6. Deployment (Migrate vs EnsureCreated)](#12146-deployment-migrate-vs-ensurecreated)
   - [12.15. Seed Data](#1215-seed-data)
@@ -70,7 +70,7 @@
     - [12.15.3. Ficheros SQL](#12153-ficheros-sql)
   - [12.16. Logging](#1216-logging)
     - [12.16.1. LogTo y ILoggerFactory](#12161-logto-y-iloggerfactory)
-    - [12.16.2. Filtrar por categoría](#12162-filtrar-por-categoría)
+    - [12.16.2. Filtrar por categor�a](#12162-filtrar-por-categor�a)
     - [12.16.3. SensitiveDataLogging](#12163-sensitivedatalogging)
     - [12.16.4. Suprimir logs de consultas](#12164-suprimir-logs-de-consultas)
   - [12.17. Control de Concurrencia](#1217-control-de-concurrencia)
@@ -79,33 +79,31 @@
   - [12.18. Testing con EF Core](#1218-testing-con-ef-core)
     - [12.18.1. InMemory Database](#12181-inmemory-database)
     - [12.18.2. TestContainers (PostgreSQL)](#12182-testcontainers-postgresql)
-    - [12.18.3. Buenas prácticas con TestContainers](#12183-buenas-prácticas-con-testcontainers)
-    - [12.18.4. Patrón AAA](#12184-patrón-aaa)
-  - [12.19. Buenas prácticas](#1219-buenas-prácticas)
+    - [12.18.3. Buenas pr�cticas con TestContainers](#12183-buenas-pr�cticas-con-testcontainers)
+    - [12.18.4. Patr�n AAA](#12184-patr�n-aaa)
+  - [12.19. Buenas pr�cticas](#1219-buenas-pr�cticas)
   - [12.20. Reto](#1220-reto)
 
 
 ---
 
-> 💡 **Punto de partida:** ¿Alguna vez has tenido que copiar y pegar el mismo código SQL una y otra vez? ¿O cambiar 50 líneas de código cuando la base de datos cambia una columna? Entity Framework Core resuelve eso: hablas en C# y él traduce a SQL por ti.
+> ?? **Punto de partida:** �Alguna vez has tenido que copiar y pegar el mismo c�digo SQL una y otra vez? �O cambiar 50 l�neas de c�digo cuando la base de datos cambia una columna? Entity Framework Core resuelve eso: hablas en C# y �l traduce a SQL por ti.
 
 **Objetivos de aprendizaje:**
-- Comprender qué es un ORM y por qué se usa
+- Comprender qu� es un ORM y por qu� se usa
 - Configurar EF Core con Data Annotations y Fluent API
 - Definir relaciones entre entidades
 - Realizar consultas CRUD con LINQ
 - Gestionar migraciones de la base de datos
 - Configurar logging para inspeccionar las consultas
-- Implementar un repositorio con borrado físico y lógico
+- Implementar un repositorio con borrado f�sico y l�gico
 - Testear con InMemory y TestContainers
 
----
+12.1. Fundamentos
 
-## 12.1. Fundamentos
+### 12.1.1. �Qu� es un ORM?
 
-### 12.1.1. ¿Qué es un ORM?
-
-Un **ORM** (Object-Relational Mapping) es una técnica que mapea objetos C# a tablas de base de datos. En vez de escribir SQL a mano, trabajas con clases y el ORM traduce automáticamente. Piensa en él como un **traductor automático** entre tu código y la BD.
+Un **ORM** (Object-Relational Mapping) es una t�cnica que mapea objetos C# a tablas de base de datos. En vez de escribir SQL a mano, trabajas con clases y el ORM traduce autom�ticamente. Piensa en �l como un **traductor autom�tico** entre tu c�digo y la BD.
 
 **Sin ORM** (SQL puro):
 
@@ -135,18 +133,18 @@ var productos = await context.Productos
     .ToListAsync();
 ```
 
-📌 **Ejemplo real:** **Netflix** usa ORMs internamente para consultar catálogos de películas sin escribir SQL manualmente. Cada vez que buscas "series de terror", el ORM construye la consulta. **Instagram** usa Django ORM para gestionar usuarios, posts y comentarios. **Amazon** usa Entity Framework para su catálogo de productos.
+?? **Ejemplo real:** **Netflix** usa ORMs internamente para consultar cat�logos de pel�culas sin escribir SQL manualmente. Cada vez que buscas "series de terror", el ORM construye la consulta. **Instagram** usa Django ORM para gestionar usuarios, posts y comentarios. **Amazon** usa Entity Framework para su cat�logo de productos.
 
 ```mermaid
 flowchart TB
-    subgraph "Tu código C#"
+    subgraph "Tu c�digo C#"
         A1["Clase Producto"] --> A2["DbContext.Productos"]
         A2 --> A3["LINQ: Where, Select..."]
     end
 
     subgraph "EF Core (el ORM)"
         B1["Change Tracker"] --> B2["Generador SQL"]
-        B2 --> B3["Traductor LINQ → SQL"]
+        B2 --> B3["Traductor LINQ ? SQL"]
     end
 
     subgraph "Base de Datos"
@@ -179,7 +177,7 @@ flowchart TB
 
 ### 12.1.2. DbContext
 
-El `DbContext` es la **sesión** con la base de datos. Es tu punto de entrada para todo: leer, insertar, actualizar y borrar datos. Cada `DbContext` representa una **conversación** con la BD.
+El `DbContext` es la **sesi�n** con la base de datos. Es tu punto de entrada para todo: leer, insertar, actualizar y borrar datos. Cada `DbContext` representa una **conversaci�n** con la BD.
 
 ```csharp
 public class AppDbContext : DbContext
@@ -191,32 +189,32 @@ public class AppDbContext : DbContext
 }
 ```
 
-> 💡 **Analogía:** El `DbContext` es como un **cajero de banco**. Tú le dices qué quieres hacer (sacar dinero, hacer una transferencia) y él ejecuta las operaciones. Si le dices "guarda" (`SaveChanges`), él persiste todo. Si cierras la sesión (`Dispose`), se libera la conexión.
+> ?? **Analog�a:** El `DbContext` es como un **cajero de banco**. T� le dices qu� quieres hacer (sacar dinero, hacer una transferencia) y �l ejecuta las operaciones. Si le dices "guarda" (`SaveChanges`), �l persiste todo. Si cierras la sesi�n (`Dispose`), se libera la conexi�n.
 
 ### 12.1.3. Componentes del DbContext
 
-| Componente | Función |
+| Componente | Funci�n |
 |------------|---------|
 | `DbSet<T>` | Representa una tabla de la base de datos |
 | `OnModelCreating` | Configura el modelo (relaciones, restricciones) |
 | `SaveChanges` | Persiste todos los cambios pendientes |
-| `Change Tracker` | Detecta qué entidades han cambiado |
+| `Change Tracker` | Detecta qu� entidades han cambiado |
 | `Database` | Acceso directo a la base de datos |
 
 ### 12.1.4. Ventajas de EF Core
 
-| Ventaja | Descripción |
+| Ventaja | Descripci�n |
 |---------|-------------|
-| **Productividad** | Menos código, más legible |
-| **Multi-DB** | SQL Server, PostgreSQL, SQLite, MySQL con el mismo código |
-| **Migraciones** | Versionado automático del esquema |
+| **Productividad** | Menos c�digo, m�s legible |
+| **Multi-DB** | SQL Server, PostgreSQL, SQLite, MySQL con el mismo c�digo |
+| **Migraciones** | Versionado autom�tico del esquema |
 | **LINQ** | Consultas tipadas en C# |
 | **Change Tracker** | Solo persiste lo que cambia |
 | **Lazy/Eager Loading** | Carga de relaciones controlada |
 
 ### 12.1.5. Change Tracker
 
-El Change Tracker es el **corazón** de EF Core. Es el sistema que **rastrea todos los cambios** en las entidades que cargas desde la BD. Sin él, EF Core no sabría qué INSERTar, qué UPDATEar o qué DELETEar. Es lo que diferencia a un ORM de un generador de SQL.
+El Change Tracker es el **coraz�n** de EF Core. Es el sistema que **rastrea todos los cambios** en las entidades que cargas desde la BD. Sin �l, EF Core no sabr�a qu� INSERTar, qu� UPDATEar o qu� DELETEar. Es lo que diferencia a un ORM de un generador de SQL.
 
 Cuando cargas una entidad con `FindAsync()` o `Include()`, EF Core guarda una **copia del original**. Cuando modificas una propiedad, el Change Tracker lo detecta. Cuando llamas a `SaveChanges`, compara el estado actual con el original y genera las sentencias SQL correspondientes.
 
@@ -227,7 +225,7 @@ flowchart LR
         B --> C["Change Tracker guarda original"]
     end
 
-    subgraph "Modificación"
+    subgraph "Modificaci�n"
         D["producto.Stock = 5"] --> E["Change Tracker detecta cambio"]
         E --> F["Estado: Modified"]
     end
@@ -253,35 +251,35 @@ flowchart LR
 
 **Estados de la entidad:**
 
-| Estado | Descripción | Qué hace SaveChanges |
+| Estado | Descripci�n | Qu� hace SaveChanges |
 |--------|-------------|----------------------|
 | `Added` | Nueva entidad sin Id | INSERT |
-| `Modified` | Modificada desde que se cargó | UPDATE |
+| `Modified` | Modificada desde que se carg� | UPDATE |
 | `Deleted` | Marcada para borrar | DELETE |
-| `Unchanged` | Sin cambios desde la última carga | Nada |
-| `Detached` | No está siendo rastreada | Nada |
+| `Unchanged` | Sin cambios desde la �ltima carga | Nada |
+| `Detached` | No est� siendo rastreada | Nada |
 
 ```csharp
 // Ver estado actual de una entidad
 var entry = context.Entry(producto);
 Console.WriteLine(entry.State);  // "Modified" (si modificaste algo)
 
-// Forzar estado (útil para borrado sin cargar la entidad)
+// Forzar estado (�til para borrado sin cargar la entidad)
 context.Entry(producto).State = EntityState.Deleted;
 await context.SaveChangesAsync();  // Ejecuta DELETE
 ```
 
-> 📝 **Nota:** Cuando haces `FindAsync()` o `Include()`, las entidades se cargan como `Unchanged`. Si modificas una propiedad, EF Core la cambia a `Modified` automáticamente.
+> ?? **Nota:** Cuando haces `FindAsync()` o `Include()`, las entidades se cargan como `Unchanged`. Si modificas una propiedad, EF Core la cambia a `Modified` autom�ticamente.
 
 **DetectChanges:**
 
-EF Core detecta cambios **automáticamente** antes de `SaveChanges`. Esto implica comparar cada propiedad de cada entidad rastreada con su valor original. Para muchas entidades, esto puede ser costoso. Puedes desactivarlo para mejorar rendimiento.
+EF Core detecta cambios **autom�ticamente** antes de `SaveChanges`. Esto implica comparar cada propiedad de cada entidad rastreada con su valor original. Para muchas entidades, esto puede ser costoso. Puedes desactivarlo para mejorar rendimiento.
 
 ```csharp
-// Desactivar detección automática (mejora rendimiento en batch)
+// Desactivar detecci�n autom�tica (mejora rendimiento en batch)
 context.ChangeTracker.AutoDetectChangesEnabled = false;
 
-// Forzar detección manual (cuando la necesitas)
+// Forzar detecci�n manual (cuando la necesitas)
 context.ChangeTracker.DetectChanges();
 
 // Ver todas las entidades modificadas
@@ -297,44 +295,42 @@ foreach (var entry in modificadas)
     {
         if (prop.IsModified)
         {
-            Console.WriteLine($"  {prop.Metadata.Name}: {prop.OriginalValue} → {prop.CurrentValue}");
+            Console.WriteLine($"  {prop.Metadata.Name}: {prop.OriginalValue} ? {prop.CurrentValue}");
         }
     }
 }
 ```
 
-> 💡 **Consejo:** Desactiva `AutoDetectChangesEnabled` en operaciones batch con muchas entidades (ej: importar 1000 registros). Actívalo antes de `SaveChanges` o llama a `DetectChanges()` manualmente.
+> ?? **Consejo:** Desactiva `AutoDetectChangesEnabled` en operaciones batch con muchas entidades (ej: importar 1000 registros). Act�valo antes de `SaveChanges` o llama a `DetectChanges()` manualmente.
 
 **Attach vs Update:**
 
-Ambos métodos marcan una entidad como rastreada, pero se comportan diferente:
+Ambos m�todos marcan una entidad como rastreada, pero se comportan diferente:
 
-- **`Attach`**: Marca como `Unchanged`. Solo rastrea, no modifica nada. Útil para actualizaciones parciales.
+- **`Attach`**: Marca como `Unchanged`. Solo rastrea, no modifica nada. �til para actualizaciones parciales.
 - **`Update`**: Marca **todas** las propiedades como `Modified`. Actualiza todo al guardar.
 
 ```csharp
-// Attach: solo actualizo Stock (actualización parcial)
+// Attach: solo actualizo Stock (actualizaci�n parcial)
 context.Attach(producto);
 context.Entry(producto).Property(p => p.Stock).IsModified = true;
 await context.SaveChangesAsync();  // Solo genera: UPDATE Productos SET Stock = ... WHERE Id = ...
 
-// Update: actualizo todo (actualización completa)
+// Update: actualizo todo (actualizaci�n completa)
 context.Update(producto);
 await context.SaveChangesAsync();  // Genera: UPDATE Productos SET Nombre = ..., Precio = ..., Stock = ... WHERE Id = ...
 ```
 
-> 💡 **Consejo:** Usa `Attach` + `IsModified` para actualizaciones parciales. Es más eficiente porque solo genera SQL para las propiedades que cambiaste. `Update` es más cómodo pero menos eficiente.
+> ?? **Consejo:** Usa `Attach` + `IsModified` para actualizaciones parciales. Es m�s eficiente porque solo genera SQL para las propiedades que cambiaste. `Update` es m�s c�modo pero menos eficiente.
 
----
-
-## 12.2. Configuración Inicial
+12.2. Configuraci�n Inicial
 
 ### 12.2.1. Paquetes NuGet
 
 Dependiendo de la base de datos:
 
 ```bash
-# PostgreSQL (más usado en desarrollo)
+# PostgreSQL (m�s usado en desarrollo)
 dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL
 
 # SQL Server
@@ -347,7 +343,7 @@ dotnet add package Microsoft.EntityFrameworkCore.Sqlite
 dotnet add package Microsoft.EntityFrameworkCore.Design
 ```
 
-### 12.2.2. Conexión
+### 12.2.2. Conexi�n
 
 **appsettings.json:**
 ```json
@@ -372,20 +368,18 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 ### 12.2.4. EnsureCreated vs Migrate
 
-| Método | Cuándo usar | Limitaciones |
+| M�todo | Cu�ndo usar | Limitaciones |
 |--------|-------------|--------------|
-| `EnsureCreated()` | Prototipos, tests rápidos | No soporta migraciones posteriores |
-| `Migrate()` | Producción y desarrollo real | Aplica migraciones pendientes |
+| `EnsureCreated()` | Prototipos, tests r�pidos | No soporta migraciones posteriores |
+| `Migrate()` | Producci�n y desarrollo real | Aplica migraciones pendientes |
 
-> ⚠️ **Advertencia:** NUNCA uses `EnsureCreated()` en producción. Si cambias el modelo, no podrá aplicar migraciones.
+> ?? **Advertencia:** NUNCA uses `EnsureCreated()` en producci�n. Si cambias el modelo, no podr� aplicar migraciones.
 
----
+12.3. Data Annotations
 
-## 12.3. Data Annotations
+Las Data Annotations son atributos C# que configuran el modelo directamente en la entidad. Son la forma m�s r�pida de configurar, pero menos potente que Fluent API.
 
-Las Data Annotations son atributos C# que configuran el modelo directamente en la entidad. Son la forma más rápida de configurar, pero menos potente que Fluent API.
-
-📌 **Ejemplo real:** **Amazon** usa Data Annotations para configurar productos: `[Required]` en nombre, `[StringLength]` en descripción, `[Precision]` en precio.
+?? **Ejemplo real:** **Amazon** usa Data Annotations para configurar productos: `[Required]` en nombre, `[StringLength]` en descripci�n, `[Precision]` en precio.
 
 ### 12.3.1. Atributos de columna
 
@@ -410,17 +404,17 @@ public class Producto
 }
 ```
 
-| Atributo | Función | Genera en SQL |
+| Atributo | Funci�n | Genera en SQL |
 |----------|---------|---------------|
 | `[Required]` | No permite nulos | `NOT NULL` |
-| `[StringLength(n)]` | Longitud máxima + permite nulos | `NVARCHAR(n)` |
-| `[MaxLength(n)]` | Longitud máxima | `NVARCHAR(n)` |
+| `[StringLength(n)]` | Longitud m�xima + permite nulos | `NVARCHAR(n)` |
+| `[MaxLength(n)]` | Longitud m�xima | `NVARCHAR(n)` |
 | `[Column(TypeName)]` | Tipo de columna exacto | Tipo personalizado |
-| `[Precision(p,s)]` | Precisión decimal | `DECIMAL(p,s)` |
+| `[Precision(p,s)]` | Precisi�n decimal | `DECIMAL(p,s)` |
 
-> 💡 **Consejo:** Usa `[Precision]` en vez de `[Column(TypeName)]` para decimales. Es más portable entre bases de datos.
+> ?? **Consejo:** Usa `[Precision]` en vez de `[Column(TypeName)]` para decimales. Es m�s portable entre bases de datos.
 
-> 📝 **Nota:** `[StringLength]` y `[MaxLength]` parecen iguales pero `[StringLength]` también genera validación de longitud mínima si se especifica.
+> ?? **Nota:** `[StringLength]` y `[MaxLength]` parecen iguales pero `[StringLength]` tambi�n genera validaci�n de longitud m�nima si se especifica.
 
 ### 12.3.2. Atributos de clave
 
@@ -438,13 +432,13 @@ public class Producto
 }
 ```
 
-| Atributo | Función |
+| Atributo | Funci�n |
 |----------|---------|
 | `[Key]` | Marca la clave primaria |
-| `[ForeignKey("NombrePropiedad")]` | Define la clave foránea |
-| `[InverseProperty("NombrePropiedad")]` | Especifica la propiedad de navegación inversa |
+| `[ForeignKey("NombrePropiedad")]` | Define la clave for�nea |
+| `[InverseProperty("NombrePropiedad")]` | Especifica la propiedad de navegaci�n inversa |
 
-> 💡 **Consejo:** `[Key]` solo es necesario si la propiedad no se llama `Id` o `NombreClaseId`. EF Core los detecta automáticamente.
+> ?? **Consejo:** `[Key]` solo es necesario si la propiedad no se llama `Id` o `NombreClaseId`. EF Core los detecta autom�ticamente.
 
 ### 12.3.3. Atributos de tabla
 
@@ -460,13 +454,13 @@ public class Producto
 }
 ```
 
-| Atributo | Función |
+| Atributo | Funci�n |
 |----------|---------|
 | `[Table("nombre")]` | Nombre de la tabla en la BD |
-| `[Table("nombre", Schema = "schema")]` | Nombre con schema específico |
+| `[Table("nombre", Schema = "schema")]` | Nombre con schema espec�fico |
 | `[NotMapped]` | Excluye una propiedad del mapeo a BD |
 
-> 📝 **Nota:** `[NotMapped]` se usa para propiedades calculadas en C# que no deben persistirse. También se puede usar con `Ignore()` en Fluent API.
+> ?? **Nota:** `[NotMapped]` se usa para propiedades calculadas en C# que no deben persistirse. Tambi�n se puede usar con `Ignore()` en Fluent API.
 
 ### 12.3.4. Atributos de concurrencia
 
@@ -484,14 +478,14 @@ public class Producto
 }
 ```
 
-| Atributo | Función | Cuándo usar |
+| Atributo | Funci�n | Cu�ndo usar |
 |----------|---------|-------------|
-| `[ConcurrencyCheck]` | Verifica cambios en una propiedad específica | Cuando quieres controlar una propiedad concreta |
-| `[Timestamp]` | Campo de versión para concurrencia optimista | Campo binario auto-generado por la BD |
+| `[ConcurrencyCheck]` | Verifica cambios en una propiedad espec�fica | Cuando quieres controlar una propiedad concreta |
+| `[Timestamp]` | Campo de versi�n para concurrencia optimista | Campo binario auto-generado por la BD |
 
-> ⚠️ **Advertencia:** `[Timestamp]` no es un timestamp de tiempo. Es un contador binario que cambia cada vez que se modifica la fila.
+> ?? **Advertencia:** `[Timestamp]` no es un timestamp de tiempo. Es un contador binario que cambia cada vez que se modifica la fila.
 
-### 12.3.5. Atributos de generación
+### 12.3.5. Atributos de generaci�n
 
 ```csharp
 public class Producto
@@ -508,47 +502,45 @@ public class Producto
 }
 ```
 
-| Valor | Función | Ejemplo |
+| Valor | Funci�n | Ejemplo |
 |-------|---------|---------|
 | `Identity` | Autoincremental (default para int) | `IDENTITY(1,1)` |
-| `None` | Sin generación automática | Valor asignado por la aplicación |
+| `None` | Sin generaci�n autom�tica | Valor asignado por la aplicaci�n |
 | `Computed` | Calculado por la BD | `precio * 1.21` |
 
 ### 12.3.6. Tabla resumen de todos los atributos
 
-| Categoría | Atributo | Función |
+| Categor�a | Atributo | Funci�n |
 |-----------|----------|---------|
 | **Columna** | `[Required]` | NOT NULL |
-| | `[StringLength(n)]` | NVARCHAR(n) con validación |
+| | `[StringLength(n)]` | NVARCHAR(n) con validaci�n |
 | | `[MaxLength(n)]` | NVARCHAR(n) |
 | | `[Column(TypeName)]` | Tipo de columna SQL |
-| | `[Precision(p,s)]` | Precisión decimal |
+| | `[Precision(p,s)]` | Precisi�n decimal |
 | **Clave** | `[Key]` | Clave primaria |
-| | `[ForeignKey]` | Clave foránea |
-| | `[InverseProperty]` | Navegación inversa |
+| | `[ForeignKey]` | Clave for�nea |
+| | `[InverseProperty]` | Navegaci�n inversa |
 | **Tabla** | `[Table]` | Nombre de tabla |
 | | `[NotMapped]` | Excluir del mapeo |
 | **Concurrencia** | `[ConcurrencyCheck]` | Verificar cambios |
-| | `[Timestamp]` | Versión para optimista |
-| **Generación** | `[DatabaseGenerated]` | Estrategia de generación |
-| **Validación** | `[Range(min,max)]` | Rango de valores |
+| | `[Timestamp]` | Versi�n para optimista |
+| **Generaci�n** | `[DatabaseGenerated]` | Estrategia de generaci�n |
+| **Validaci�n** | `[Range(min,max)]` | Rango de valores |
 | | `[Url]` | Validar formato URL |
 | | `[EmailAddress]` | Validar email |
-| | `[Phone]` | Validar teléfono |
-| | `[CreditCard]` | Validar tarjeta crédito |
-| | `[DataType]` | Tipo de dato semántico |
+| | `[Phone]` | Validar tel�fono |
+| | `[CreditCard]` | Validar tarjeta cr�dito |
+| | `[DataType]` | Tipo de dato sem�ntico |
 
-> 💡 **Consejo:** Los atributos de validación (`[Range]`, `[Url]`, etc.) se usan en capa de presentación (MVC, API). No afectan a la BD directamente.
+> ?? **Consejo:** Los atributos de validaci�n (`[Range]`, `[Url]`, etc.) se usan en capa de presentaci�n (MVC, API). No afectan a la BD directamente.
 
----
+12.4. Fluent API
 
-## 12.4. Fluent API
+La Fluent API ofrece m�s control que las Data Annotations. Se configura en `OnModelCreating`. Es la forma **recomendada** para configuraciones complejas.
 
-La Fluent API ofrece más control que las Data Annotations. Se configura en `OnModelCreating`. Es la forma **recomendada** para configuraciones complejas.
+?? **Ejemplo real:** **Stripe** usa configuraci�n similar para entidades de pago: precisi�n en montos, �ndices en transacciones, relaciones con clientes.
 
-📌 **Ejemplo real:** **Stripe** usa configuración similar para entidades de pago: precisión en montos, índices en transacciones, relaciones con clientes.
-
-> 💡 **Consejo:** Si Data Annotations y Fluent API dan el mismo resultado, usa Fluent API. Permite separar la configuración de la entidad y es más potente.
+> ?? **Consejo:** Si Data Annotations y Fluent API dan el mismo resultado, usa Fluent API. Permite separar la configuraci�n de la entidad y es m�s potente.
 
 ### 12.4.1. Propiedades
 
@@ -557,13 +549,13 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
     modelBuilder.Entity<Producto>(entity =>
     {
-        // Requerido + longitud máxima
+        // Requerido + longitud m�xima
         entity.Property(e => e.Nombre)
             .IsRequired()
             .HasMaxLength(100)
             .IsUnicode(false);  // VARCHAR en vez de NVARCHAR
 
-        // Precisión decimal (recomendado sobre [Column(TypeName)])
+        // Precisi�n decimal (recomendado sobre [Column(TypeName)])
         entity.Property(e => e.Precio)
             .HasPrecision(18, 2);
 
@@ -579,7 +571,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
         entity.Property(e => e.FechaActualizacion)
             .ValueGeneratedOnUpdate();
 
-        // Sin generación automática
+        // Sin generaci�n autom�tica
         entity.Property(e => e.CodigoInterno)
             .ValueGeneratedNever();
 
@@ -591,7 +583,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 }
 ```
 
-| Método | Función |
+| M�todo | Funci�n |
 |--------|---------|
 | `IsRequired()` | NOT NULL |
 | `HasMaxLength(n)` | NVARCHAR(n) |
@@ -600,7 +592,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 | `HasDefaultValue(v)` | Valor por defecto en C# |
 | `HasDefaultValueSql("sql")` | Valor por defecto en SQL |
 | `ValueGeneratedOnUpdate()` | Se actualiza en cada UPDATE |
-| `ValueGeneratedNever()` | Nunca se genera automáticamente |
+| `ValueGeneratedNever()` | Nunca se genera autom�ticamente |
 
 ### 12.4.2. Claves
 
@@ -611,15 +603,15 @@ entity.HasKey(e => e.Id);
 // Clave primaria compuesta
 entity.HasKey(e => new { e.ProductoId, e.PedidoId });
 
-// Clave alterna (única)
+// Clave alterna (�nica)
 entity.HasAlternateKey(e => e.CodigoBarras);
 
-// Múltiples claves alternas
+// M�ltiples claves alternas
 entity.HasAlternateKey(e => e.Email);
 entity.HasAlternateKey(e => e.CodigoUnico);
 ```
 
-> 📝 **Nota:** Las claves alternas generan un índice único en la BD. Son útiles para campos que deben ser únicos pero no son la PK.
+> ?? **Nota:** Las claves alternas generan un �ndice �nico en la BD. Son �tiles para campos que deben ser �nicos pero no son la PK.
 
 ### 12.4.3. Tablas y vistas
 
@@ -630,7 +622,7 @@ entity.ToTable("tbl_productos", "tienda");
 // Mapear a vista
 entity.ToView("vista_productos");
 
-// Mapear a función de tabla (table-valued function)
+// Mapear a funci�n de tabla (table-valued function)
 entity.ToTable("fn_productos_por_categoria");
 
 // Comentario en tabla
@@ -672,10 +664,10 @@ entity.HasOne(e => e.Etiqueta)
 
 ### 12.4.5. IEntityTypeConfiguration y ApplyConfigurationsFromAssembly
 
-En vez de todo en `OnModelCreating`, puedes separar la configuración por entidad:
+En vez de todo en `OnModelCreating`, puedes separar la configuraci�n por entidad:
 
 ```csharp
-// Configuración de Producto
+// Configuraci�n de Producto
 public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
 {
     public void Configure(EntityTypeBuilder<Producto> builder)
@@ -692,32 +684,30 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
 // En AppDbContext
 protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
-    // Busca automáticamente todas las configuraciones
+    // Busca autom�ticamente todas las configuraciones
     modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 }
 ```
 
-> 💡 **Consejo:** `ApplyConfigurationsFromAssembly` busca automáticamente todas las clases que implementan `IEntityTypeConfiguration<T>` en el ensamblado. No tienes que añadirlas una por una. Cuando creas una nueva entidad, solo crea su configuración y se aplica automáticamente.
+> ?? **Consejo:** `ApplyConfigurationsFromAssembly` busca autom�ticamente todas las clases que implementan `IEntityTypeConfiguration<T>` en el ensamblado. No tienes que a�adirlas una por una. Cuando creas una nueva entidad, solo crea su configuraci�n y se aplica autom�ticamente.
 
 ### 12.4.6. Data Annotations vs Fluent API
 
-| Característica | Data Annotations | Fluent API |
+| Caracter�stica | Data Annotations | Fluent API |
 |----------------|------------------|------------|
-| Sintaxis | Atributos C# | Método chaining (chaining) |
-| Separación | Mezclada con la entidad | Separada en configuración |
-| Potencia | Básica | Compleja |
-| Legibilidad | Rápida de leer | Más verbosa |
+| Sintaxis | Atributos C# | M�todo chaining (chaining) |
+| Separaci�n | Mezclada con la entidad | Separada en configuraci�n |
+| Potencia | B�sica | Compleja |
+| Legibilidad | R�pida de leer | M�s verbosa |
 | Control | Limitado | Total |
 
-> 💡 **Consejo:** Usa un **enfoque híbrido**. Data Annotations para lo simple (`[Required]`, `[StringLength]`, `[Key]`). Fluent API para lo complejo (relaciones, índices, filtros, owned types).
+> ?? **Consejo:** Usa un **enfoque h�brido**. Data Annotations para lo simple (`[Required]`, `[StringLength]`, `[Key]`). Fluent API para lo complejo (relaciones, �ndices, filtros, owned types).
 
----
-
-## 12.5. Relaciones
+12.5. Relaciones
 
 ### 12.5.1. Uno a Uno
 
-Una relación uno a uno significa que cada registro de una tabla se relaciona con **como máximo un** registro de otra tabla. Por ejemplo, cada producto tiene como máximo un detalle extendido.
+Una relaci�n uno a uno significa que cada registro de una tabla se relaciona con **como m�ximo un** registro de otra tabla. Por ejemplo, cada producto tiene como m�ximo un detalle extendido.
 
 ```mermaid
 erDiagram
@@ -772,11 +762,11 @@ modelBuilder.Entity<ProductoDetalle>(entity =>
 });
 ```
 
-> 📝 **Nota:** En una relación 1:1, la clave foránea va en la entidad que "depende". Aquí `ProductoDetalle` depende de `Producto`, por eso `ProductoId` está en `ProductoDetalle`.
+> ?? **Nota:** En una relaci�n 1:1, la clave for�nea va en la entidad que "depende". Aqu� `ProductoDetalle` depende de `Producto`, por eso `ProductoId` est� en `ProductoDetalle`.
 
 ### 12.5.2. Uno a Muchos
 
-Es la relación más común. Una categoría tiene muchos productos, pero cada producto pertenece a una sola categoría.
+Es la relaci�n m�s com�n. Una categor�a tiene muchos productos, pero cada producto pertenece a una sola categor�a.
 
 ```mermaid
 erDiagram
@@ -801,7 +791,7 @@ public class Categoria
     public int Id { get; set; }
     public string Nombre { get; set; } = string.Empty;
 
-    // Navegación: una categoría tiene muchos productos
+    // Navegaci�n: una categor�a tiene muchos productos
     public List<Producto> Productos { get; set; } = new();
 }
 
@@ -814,7 +804,7 @@ public class Producto
     [ForeignKey(nameof(Categoria))]
     public int CategoriaId { get; set; }
 
-    // Navegación: un producto pertenece a una categoría
+    // Navegaci�n: un producto pertenece a una categor�a
     public Categoria Categoria { get; set; } = null!;
 }
 ```
@@ -831,13 +821,13 @@ modelBuilder.Entity<Producto>(entity =>
 });
 ```
 
-> 💡 **Consejo:** `[ForeignKey]` solo es necesario si la propiedad FK no se llama `NombreEntidadId`. Si la FK se llama `CategoriaId`, EF Core la detecta automáticamente.
+> ?? **Consejo:** `[ForeignKey]` solo es necesario si la propiedad FK no se llama `NombreEntidadId`. Si la FK se llama `CategoriaId`, EF Core la detecta autom�ticamente.
 
 ### 12.5.3. Muchos a Muchos
 
 Un producto puede tener muchas etiquetas, y una etiqueta puede estar en muchos productos. Se resuelve con una **tabla intermedia**.
 
-**Con Data Annotations (tabla intermedia explícita):**
+**Con Data Annotations (tabla intermedia expl�cita):**
 
 ```csharp
 public class ProductoEtiqueta
@@ -858,7 +848,7 @@ public class ProductoEtiqueta
 }
 ```
 
-**Con Fluent API (tabla intermedia explícita — recomendado):**
+**Con Fluent API (tabla intermedia expl�cita � recomendado):**
 
 ```csharp
 modelBuilder.Entity<ProductoEtiqueta>(entity =>
@@ -875,7 +865,7 @@ modelBuilder.Entity<ProductoEtiqueta>(entity =>
 });
 ```
 
-**Con Fluent API (sin tabla intermedia — EF Core 5+):**
+**Con Fluent API (sin tabla intermedia � EF Core 5+):**
 
 ```csharp
 modelBuilder.Entity<Producto>(entity =>
@@ -885,42 +875,42 @@ modelBuilder.Entity<Producto>(entity =>
 });
 ```
 
-> 📝 **Nota:** EF Core crea automáticamente una tabla intermedia `ProductoEtiqueta` sin configuración explícita. Pero si necesitas columnas adicionales (como `FechaAsignación`), debes crear la entidad intermedia manualmente.
+> ?? **Nota:** EF Core crea autom�ticamente una tabla intermedia `ProductoEtiqueta` sin configuraci�n expl�cita. Pero si necesitas columnas adicionales (como `FechaAsignaci�n`), debes crear la entidad intermedia manualmente.
 
-> ⚠️ **Advertencia:** Con Data Annotations para claves compuestas, necesitas `[Column(Order = 0)]` y `[Column(Order = 1)]` para definir el orden. Con Fluent API es más limpio con `HasKey(e => new { ... })`.
+> ?? **Advertencia:** Con Data Annotations para claves compuestas, necesitas `[Column(Order = 0)]` y `[Column(Order = 1)]` para definir el orden. Con Fluent API es m�s limpio con `HasKey(e => new { ... })`.
 
 ### 12.5.4. Navegabilidad
 
 La navegabilidad define si una entidad tiene referencia a otra. Hay dos tipos fundamentales:
 
-- **Bidireccional:** Ambas entidades se "ven" entre sí. `Producto` tiene `Categoria` y `Categoria` tiene `List<Producto>`. Útil cuando necesitas recorrer la relación en ambas direcciones.
-- **Unidireccional:** Solo una entidad conoce a la otra. `Producto` tiene `Categoria`, pero `Categoria` no tiene lista de productos. Más limpio, menos acoplamiento.
+- **Bidireccional:** Ambas entidades se "ven" entre s�. `Producto` tiene `Categoria` y `Categoria` tiene `List<Producto>`. �til cuando necesitas recorrer la relaci�n en ambas direcciones.
+- **Unidireccional:** Solo una entidad conoce a la otra. `Producto` tiene `Categoria`, pero `Categoria` no tiene lista de productos. M�s limpio, menos acoplamiento.
 
-| Tipo | Descripción | Cuándo usar |
+| Tipo | Descripci�n | Cu�ndo usar |
 |------|-------------|-------------|
 | **Bidireccional** | Ambas entidades tienen referencia la una a la otra | Cuando necesitas navegar en ambas direcciones |
-| **Unidireccional** | Solo una entidad tiene la referencia | Cuando solo necesitas navegar en una dirección |
+| **Unidireccional** | Solo una entidad tiene la referencia | Cuando solo necesitas navegar en una direcci�n |
 
-En Data Annotations, la navegabilidad bidireccional se crea poniendo propiedades de navegación en **ambas** entidades. La unidireccional solo la pone en una.
+En Data Annotations, la navegabilidad bidireccional se crea poniendo propiedades de navegaci�n en **ambas** entidades. La unidireccional solo la pone en una.
 
-En Fluent API, controlas la navegabilidad con `.WithMany()` (agrega navegación en el padre) o `.WithOne()` (agrega navegación en el hijo). Si no especificas el lado de la navegación, EF Core crea la relación unidireccional por defecto.
+En Fluent API, controlas la navegabilidad con `.WithMany()` (agrega navegaci�n en el padre) o `.WithOne()` (agrega navegaci�n en el hijo). Si no especificas el lado de la navegaci�n, EF Core crea la relaci�n unidireccional por defecto.
 
-> 💡 **Consejo:** Prefiere la navegabilidad unidireccional cuando sea posible. Menos acoplamiento, más limpio. Solo usa bidireccional cuando realmente necesites navegar en ambas direcciones.
+> ?? **Consejo:** Prefiere la navegabilidad unidireccional cuando sea posible. Menos acoplamiento, m�s limpio. Solo usa bidireccional cuando realmente necesites navegar en ambas direcciones.
 
 ### 12.5.5. Cascada (DeleteBehavior)
 
-El comportamiento de borrado define qué pasa con los registros hijos cuando borras el padre. Es una de las configuraciones más importantes de las relaciones porque afecta a la integridad referencial de la BD.
+El comportamiento de borrado define qu� pasa con los registros hijos cuando borras el padre. Es una de las configuraciones m�s importantes de las relaciones porque afecta a la integridad referencial de la BD.
 
 En Data Annotations, el comportamiento por defecto es `Cascade` (borrar padre borra hijos). Para cambiarlo, necesitas Fluent API, ya que no hay atributo para esto.
 
 En Fluent API, se configura con `.OnDelete()`:
 
-| Comportamiento | Función | Ejemplo real |
+| Comportamiento | Funci�n | Ejemplo real |
 |----------------|---------|--------------|
 | `Cascade` | Borrar padre borra hijos (default) | Borrar un cliente borra sus pedidos |
-| `Restrict` | No permite borrar padre si tiene hijos | No puedes borrar una categoría si tiene productos |
+| `Restrict` | No permite borrar padre si tiene hijos | No puedes borrar una categor�a si tiene productos |
 | `SetNull` | Al borrar padre, pone FK a null | Al borrar un empleado, su jefe se pone a null |
-| `NoAction` | No hace nada (puede dejar huérfanas) | Borrar una categoría deja los productos sin categoría |
+| `NoAction` | No hace nada (puede dejar hu�rfanas) | Borrar una categor�a deja los productos sin categor�a |
 
 ```csharp
 // Fluent API
@@ -929,21 +919,19 @@ modelBuilder.Entity<Producto>(entity =>
     entity.HasOne(e => e.Categoria)
         .WithMany(c => c.Productos)
         .HasForeignKey(e => e.CategoriaId)
-        .OnDelete(DeleteBehavior.Restrict);  // No permitir borrar categoría con productos
+        .OnDelete(DeleteBehavior.Restrict);  // No permitir borrar categor�a con productos
 });
 ```
 
-> ⚠️ **Advertencia:** En SQL Server, `Restrict` y `NoAction` son equivalentes. En PostgreSQL y SQLite sí hay diferencia: `Restrict` falla inmediatamente, `NoAction` falla al final de la transacción.
+> ?? **Advertencia:** En SQL Server, `Restrict` y `NoAction` son equivalentes. En PostgreSQL y SQLite s� hay diferencia: `Restrict` falla inmediatamente, `NoAction` falla al final de la transacci�n.
 
-> 📝 **Nota:** No hay forma de configurar `DeleteBehavior` con Data Annotations. Siempre necesitas Fluent API para esto. Es una de las razones por las que Fluent API es más potente.
+> ?? **Nota:** No hay forma de configurar `DeleteBehavior` con Data Annotations. Siempre necesitas Fluent API para esto. Es una de las razones por las que Fluent API es m�s potente.
 
----
+12.6. Owned Types
 
-## 12.6. Owned Types
+Los Owned Types permiten agrupar propiedades relacionadas en una clase separada que se almacena en la **misma tabla**. Son ideales para Value Objects en DDD (Domain-Driven Design). Por ejemplo, una direcci�n de env�o y una direcci�n de facturaci�n son del mismo tipo (`Direccion`) pero son propiedades independientes dentro de un `Cliente`.
 
-Los Owned Types permiten agrupar propiedades relacionadas en una clase separada que se almacena en la **misma tabla**. Son ideales para Value Objects en DDD (Domain-Driven Design). Por ejemplo, una dirección de envío y una dirección de facturación son del mismo tipo (`Direccion`) pero son propiedades independientes dentro de un `Cliente`.
-
-No puedes usar `[Key]` en un Owned Type porque no tiene tabla propia: sus columnas viven en la tabla del propietario. En Data Annotations, se marca la propiedad con `[Owned]` (aunque EF Core lo detecta automáticamente por la convención). En Fluent API, se configura con `OwnsOne()`.
+No puedes usar `[Key]` en un Owned Type porque no tiene tabla propia: sus columnas viven en la tabla del propietario. En Data Annotations, se marca la propiedad con `[Owned]` (aunque EF Core lo detecta autom�ticamente por la convenci�n). En Fluent API, se configura con `OwnsOne()`.
 
 ```csharp
 public class Direccion
@@ -963,7 +951,7 @@ public class Cliente
 }
 ```
 
-**Configuración con Fluent API:**
+**Configuraci�n con Fluent API:**
 
 ```csharp
 protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -987,7 +975,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 }
 ```
 
-> 📝 **Nota:** Por defecto, EF Core nombra las columnas con el prefijo de la propiedad (ej: `DireccionEnvio_Calle`). Puedes personalizar los nombres con `HasColumnName()` o usar `ToJson()` para guardar todo como JSON.
+> ?? **Nota:** Por defecto, EF Core nombra las columnas con el prefijo de la propiedad (ej: `DireccionEnvio_Calle`). Puedes personalizar los nombres con `HasColumnName()` o usar `ToJson()` para guardar todo como JSON.
 
 **Owned como JSON (EF Core 8+):**
 
@@ -998,13 +986,11 @@ entity.OwnsOne(e => e.DireccionEnvio, d =>
 });
 ```
 
-> 💡 **Consejo:** Con `ToJson()`, la dirección se guarda como `{ "Calle": "...", "Ciudad": "..." }` en una sola columna JSON. Útil cuando no necesitas consultar campos individuales de la dirección. Pero si necesitas hacer `WHERE Ciudad = 'Madrid'`, mejor usar columnas separadas con `HasColumnName()`.
+> ?? **Consejo:** Con `ToJson()`, la direcci�n se guarda como `{ "Calle": "...", "Ciudad": "..." }` en una sola columna JSON. �til cuando no necesitas consultar campos individuales de la direcci�n. Pero si necesitas hacer `WHERE Ciudad = 'Madrid'`, mejor usar columnas separadas con `HasColumnName()`.
 
-📌 **Ejemplo real:** **Amazon** guarda direcciones de envío y facturación como Owned Types. Cada cliente puede tener múltiples direcciones, pero cada dirección no existe sin el cliente.
+?? **Ejemplo real:** **Amazon** guarda direcciones de env�o y facturaci�n como Owned Types. Cada cliente puede tener m�ltiples direcciones, pero cada direcci�n no existe sin el cliente.
 
----
-
-## 12.7. Value Converters
+12.7. Value Converters
 
 Los Value Converters transforman tipos de C# a tipos que la BD entiende, y viceversa. Son necesarios cuando el tipo que usas en tu modelo no es directamente soportado por la BD. Por ejemplo, un `enum` en C# se guarda como `int` o `string` en la BD, y un `DateOnly` (EF Core 7+) se guarda como un string o fecha.
 
@@ -1019,7 +1005,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
         entity.Property(e => e.Estado)
             .HasConversion<string>();
 
-        // Enum a int (por defecto, más compacto)
+        // Enum a int (por defecto, m�s compacto)
         entity.Property(e => e.Estado)
             .HasConversion<int>();
 
@@ -1056,21 +1042,19 @@ entity.Property(e => e.ColorHex)
     );
 ```
 
-> 📝 **Nota:** Las conversiones personalizadas usan dos lambdas: la primera convierte C# → BD, la segunda BD → C#. EF Core las aplica automáticamente en consultas e inserciones.
+> ?? **Nota:** Las conversiones personalizadas usan dos lambdas: la primera convierte C# ? BD, la segunda BD ? C#. EF Core las aplica autom�ticamente en consultas e inserciones.
 
-> ⚠️ **Advertencia:** Al usar Value Converters, pierdes eficiencia en consultas. EF Core no puede traducir la conversión a SQL optimizado. Por ejemplo, si conviertes un `enum` a `string`, el `WHERE` será `WHERE Estado = 'Activo'` en vez de `WHERE Estado = 0`.
+> ?? **Advertencia:** Al usar Value Converters, pierdes eficiencia en consultas. EF Core no puede traducir la conversi�n a SQL optimizado. Por ejemplo, si conviertes un `enum` a `string`, el `WHERE` ser� `WHERE Estado = 'Activo'` en vez de `WHERE Estado = 0`.
 
-📌 **Ejemplo real:** **Amazon** guarda preferencias de usuario como JSON en una columna usando Value Converters. No necesita tablas separadas para cada preferencia.
+?? **Ejemplo real:** **Amazon** guarda preferencias de usuario como JSON en una columna usando Value Converters. No necesita tablas separadas para cada preferencia.
 
----
+12.8. Shadow Properties
 
-## 12.8. Shadow Properties
-
-Las Shadow Properties existen en la BD pero **no en la clase C#**. Son columnas que EF Core gestiona automáticamente sin que las declares en tu modelo. Se usan principalmente para auditoría (quién creó, cuándo, quién modificó) y para relaciones donde la FK no está en la entidad.
+Las Shadow Properties existen en la BD pero **no en la clase C#**. Son columnas que EF Core gestiona autom�ticamente sin que las declares en tu modelo. Se usan principalmente para auditor�a (qui�n cre�, cu�ndo, qui�n modific�) y para relaciones donde la FK no est� en la entidad.
 
 En Data Annotations, no hay forma de crear Shadow Properties. Se configuran **exclusivamente con Fluent API** usando `entity.Property<T>("Nombre")`.
 
-Las Shadow Properties son útiles cuando no quieres ensuciar tu modelo con propiedades de auditoría, pero necesitas ese dato en la BD. También son la base del patrón de auditoría automática con `SaveChanges` override.
+Las Shadow Properties son �tiles cuando no quieres ensuciar tu modelo con propiedades de auditor�a, pero necesitas ese dato en la BD. Tambi�n son la base del patr�n de auditor�a autom�tica con `SaveChanges` override.
 
 ```csharp
 protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -1088,7 +1072,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 **Uso de Shadow Properties:**
 
 ```csharp
-// Asignar valores (no puedes usar la propiedad directamente, solo vía Entry)
+// Asignar valores (no puedes usar la propiedad directamente, solo v�a Entry)
 context.Entry(producto)["CreatedAt"] = DateTime.UtcNow;
 context.Entry(producto)["CreatedBy"] = "admin@email.com";
 
@@ -1101,9 +1085,9 @@ var productosRecientes = await context.Productos
     .ToListAsync();
 ```
 
-> 📝 **Nota:** Para acceder a Shadow Properties en código, usas `context.Entry(entidad)["NombrePropiedad"]` o `EF.Property<T>(entidad, "NombrePropiedad")`. No puedes acceder directamente como `entidad.CreatedAt` porque no existe en la clase C#.
+> ?? **Nota:** Para acceder a Shadow Properties en c�digo, usas `context.Entry(entidad)["NombrePropiedad"]` o `EF.Property<T>(entidad, "NombrePropiedad")`. No puedes acceder directamente como `entidad.CreatedAt` porque no existe en la clase C#.
 
-**Patrón de auditoría completo (override de SaveChanges):**
+**Patr�n de auditor�a completo (override de SaveChanges):**
 
 ```csharp
 public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -1124,11 +1108,9 @@ public override async Task<int> SaveChangesAsync(CancellationToken cancellationT
 }
 ```
 
-> 💡 **Consejo:** Si prefieres que las propiedades de auditoría estén en tu modelo C# (no como Shadow Properties), crea una clase base `BaseEntity` con `CreatedAt`, `UpdatedAt`, etc. Así puedes acceder a ellas directamente sin usar `Entry()["..."]`.
+> ?? **Consejo:** Si prefieres que las propiedades de auditor�a est�n en tu modelo C# (no como Shadow Properties), crea una clase base `BaseEntity` con `CreatedAt`, `UpdatedAt`, etc. As� puedes acceder a ellas directamente sin usar `Entry()["..."]`.
 
----
-
-## 12.9. [NotMapped] y propiedades calculadas
+12.9. [NotMapped] y propiedades calculadas
 
 El atributo `[NotMapped]` le dice a EF Core que una propiedad **no se mapee a la BD**. Se usa para propiedades calculadas en C#, datos temporales o campos que no necesitan persistencia.
 
@@ -1160,27 +1142,25 @@ modelBuilder.Entity<Producto>(entity =>
 **Propiedad calculada en la BD (diferente de [NotMapped]):**
 
 ```csharp
-// Esta SÍ está en la BD, calculada por el motor SQL
+// Esta S� est� en la BD, calculada por el motor SQL
 entity.Property(e => e.PrecioConIva)
     .HasComputedColumnSql("[Precio] * (1 + [Iva])");
 ```
 
-> 📝 **Nota:** `[NotMapped]` se calcula **en C#** cada vez que accedes a la propiedad. `HasComputedColumnSql` se calcula **en la BD** (se almacena y se actualiza automáticamente cuando cambian las columnas base). Si necesitas consultar por `PrecioConIva`, usa `HasComputedColumnSql`. Si solo lo muestras en pantalla, `[NotMapped]` es más rápido.
+> ?? **Nota:** `[NotMapped]` se calcula **en C#** cada vez que accedes a la propiedad. `HasComputedColumnSql` se calcula **en la BD** (se almacena y se actualiza autom�ticamente cuando cambian las columnas base). Si necesitas consultar por `PrecioConIva`, usa `HasComputedColumnSql`. Si solo lo muestras en pantalla, `[NotMapped]` es m�s r�pido.
 
-> 💡 **Consejo:** `[NotMapped]` también es útil para propiedades que solo usas en tiempo de ejecución, como un `bool IsValid` que se calcula según reglas de negocio pero no necesitas guardar.
+> ?? **Consejo:** `[NotMapped]` tambi�n es �til para propiedades que solo usas en tiempo de ejecuci�n, como un `bool IsValid` que se calcula seg�n reglas de negocio pero no necesitas guardar.
 
----
+12.10. Carga de Datos
 
-## 12.10. Carga de Datos
-
-Cuando consultas una entidad con relaciones, EF Core tiene tres estrategias para cargar los datos relacionados. Elegir la estrategia correcta afecta directamente al rendimiento de tu aplicación. Una mala decisión puede causar el problema **N+1** (miles de consultas innecesarias) o cargar demasiados datos en memoria.
+Cuando consultas una entidad con relaciones, EF Core tiene tres estrategias para cargar los datos relacionados. Elegir la estrategia correcta afecta directamente al rendimiento de tu aplicaci�n. Una mala decisi�n puede causar el problema **N+1** (miles de consultas innecesarias) o cargar demasiados datos en memoria.
 
 ### 12.10.1. Eager Loading (Include, ThenInclude)
 
-Carga las entidades relacionadas **en la misma consulta SQL**. EF Core genera un `JOIN` o varias consultas dependiendo de la configuración. Es la estrategia más usada y la más predecible.
+Carga las entidades relacionadas **en la misma consulta SQL**. EF Core genera un `JOIN` o varias consultas dependiendo de la configuraci�n. Es la estrategia m�s usada y la m�s predecible.
 
 ```csharp
-// Incluir una relación
+// Incluir una relaci�n
 var productos = await context.Productos
     .Include(p => p.Categoria)
     .ToListAsync();
@@ -1188,16 +1168,16 @@ var productos = await context.Productos
 // Incluir relaciones anidadas (ThenInclude)
 var productos = await context.Productos
     .Include(p => p.Categoria)
-        .ThenInclude(c => c.Padre)  // Categoría padre de la categoría
+        .ThenInclude(c => c.Padre)  // Categor�a padre de la categor�a
     .Include(p => p.Etiquetas)       // Muchos a muchos
     .ToListAsync();
 ```
 
-> 💡 **Consejo:** Usa `Include` cuando **siempre** necesitas la relación cargada. Si solo la necesitas a veces, considera Eager Loading condicional o Explicit Loading.
+> ?? **Consejo:** Usa `Include` cuando **siempre** necesitas la relaci�n cargada. Si solo la necesitas a veces, considera Eager Loading condicional o Explicit Loading.
 
 ### 12.10.2. Lazy Loading
 
-Carga las relaciones **automáticamente** al acceder a ellas. Cada vez que usas `producto.Categoria.Nombre`, EF Core ejecuta una consulta SQL para cargar la categoría. Es transparente pero peligroso si no controlas las accesos.
+Carga las relaciones **autom�ticamente** al acceder a ellas. Cada vez que usas `producto.Categoria.Nombre`, EF Core ejecuta una consulta SQL para cargar la categor�a. Es transparente pero peligroso si no controlas las accesos.
 
 ```csharp
 // Configurar (requiere paquete Microsoft.EntityFrameworkCore.Proxies)
@@ -1205,26 +1185,26 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString)
            .UseLazyLoadingProxies());
 
-// Uso: la categoría se carga automáticamente
+// Uso: la categor�a se carga autom�ticamente
 var producto = await context.Productos.FindAsync(1);
-var nombreCategoria = producto.Categoria.Nombre;  // ¡SQL aquí!
+var nombreCategoria = producto.Categoria.Nombre;  // �SQL aqu�!
 ```
 
-> ⚠️ **Advertencia:** El Lazy Loading puede causar el problema **N+1**: si recorres 100 productos y accedes a su categoría, se ejecutan 101 consultas (1 para productos + 100 para categorías). En producción, esto puede colapsar la BD. **No se recomienda** para APIs.
+> ?? **Advertencia:** El Lazy Loading puede causar el problema **N+1**: si recorres 100 productos y accedes a su categor�a, se ejecutan 101 consultas (1 para productos + 100 para categor�as). En producci�n, esto puede colapsar la BD. **No se recomienda** para APIs.
 
 ### 12.10.3. Explicit Loading
 
-Carga la relación **manualmente** cuando la necesitas. Más control que Lazy Loading, sin el riesgo de N+1.
+Carga la relaci�n **manualmente** cuando la necesitas. M�s control que Lazy Loading, sin el riesgo de N+1.
 
 ```csharp
 var producto = await context.Productos.FindAsync(1);
 
-// Cargar una referencia (relación uno)
+// Cargar una referencia (relaci�n uno)
 await context.Entry(producto)
     .Reference(p => p.Categoria)
     .LoadAsync();
 
-// Cargar una colección (relación muchos) con filtro
+// Cargar una colecci�n (relaci�n muchos) con filtro
 await context.Entry(producto)
     .Collection(p => p.Etiquetas)
     .Query()
@@ -1232,11 +1212,11 @@ await context.Entry(producto)
     .LoadAsync();
 ```
 
-> 💡 **Consejo:** Explicit Loading es ideal cuando cargas primero la entidad principal y luego decides **condicionalmente** si necesitas las relaciones. Ejemplo: "si el producto está en oferta, carga las etiquetas".
+> ?? **Consejo:** Explicit Loading es ideal cuando cargas primero la entidad principal y luego decides **condicionalmente** si necesitas las relaciones. Ejemplo: "si el producto est� en oferta, carga las etiquetas".
 
 ### 12.10.4. AsSplitQuery
 
-Cuando haces muchos `Include`, EF Core genera una sola consulta gigante con múltiples JOINs. `AsSplitQuery()` divide esto en **varias consultas pequeñas**, una por cada `Include`. Reduce el tiempo de respuesta en relaciones complejas.
+Cuando haces muchos `Include`, EF Core genera una sola consulta gigante con m�ltiples JOINs. `AsSplitQuery()` divide esto en **varias consultas peque�as**, una por cada `Include`. Reduce el tiempo de respuesta en relaciones complejas.
 
 ```csharp
 var productos = await context.Productos
@@ -1247,22 +1227,20 @@ var productos = await context.Productos
     .ToListAsync();
 ```
 
-> 📝 **Nota:** `AsSplitQuery` genera más round-trips a la BD pero cada consulta es más simple y rápida. Es mejor cuando tienes tablas grandes y relaciones complejas. Con pocos Include, la consulta única suele ser más rápida.
+> ?? **Nota:** `AsSplitQuery` genera m�s round-trips a la BD pero cada consulta es m�s simple y r�pida. Es mejor cuando tienes tablas grandes y relaciones complejas. Con pocos Include, la consulta �nica suele ser m�s r�pida.
 
-> ⚠️ **Advertencia:** `AsSplitQuery` puede causar problemas con relaciones de muchos a muchos si no usas filtrado. Para la mayoría de casos, la consulta única (por defecto) es suficiente.
+> ?? **Advertencia:** `AsSplitQuery` puede causar problemas con relaciones de muchos a muchos si no usas filtrado. Para la mayor�a de casos, la consulta �nica (por defecto) es suficiente.
 
----
-
-## 12.11. Consultas con LINQ
+12.11. Consultas con LINQ
 
 EF Core traduce consultas LINQ de C# a SQL. Es una de las grandes ventajas del ORM: escribes C# y el motor genera el SQL optimizado para la BD que uses. Las consultas se ejecutan **diferidamente** (lazy): solo se ejecutan cuando iteras el resultado o llamas a `ToListAsync()`, `FirstOrDefaultAsync()`, etc.
 
-### 12.11.1. Básicas
+### 12.11.1. B�sicas
 
 Estas son las operaciones fundamentales de cualquier consulta. Filtrar, ordenar, proyectar y paginar son las cuatro operaciones que cubren el 80% de los casos de uso.
 
 ```csharp
-// Obtener todos (⚠️ cuidado con tablas grandes)
+// Obtener todos (?? cuidado con tablas grandes)
 var todos = await context.Productos.ToListAsync();
 
 // Filtrar con Where
@@ -1281,12 +1259,12 @@ var ordenadosDesc = await context.Productos
     .ThenBy(p => p.Nombre)
     .ToListAsync();
 
-// Proyección (solo campos necesarios → más rápido)
+// Proyecci�n (solo campos necesarios ? m�s r�pido)
 var proyectados = await context.Productos
     .Select(p => new { p.Id, p.Nombre, p.Precio })
     .ToListAsync();
 
-// Paginación (Skip + Take)
+// Paginaci�n (Skip + Take)
 var pagina = await context.Productos
     .OrderBy(p => p.Id)
     .Skip((page - 1) * pageSize)
@@ -1294,47 +1272,47 @@ var pagina = await context.Productos
     .ToListAsync();
 ```
 
-> 💡 **Consejo:** Siempre usa `Select()` para proyectar solo los campos que necesitas. En vez de traer toda la entidad, traer `Id`, `Nombre` y `Precio` es mucho más rápido y consume menos memoria.
+> ?? **Consejo:** Siempre usa `Select()` para proyectar solo los campos que necesitas. En vez de traer toda la entidad, traer `Id`, `Nombre` y `Precio` es mucho m�s r�pido y consume menos memoria.
 
-### 12.11.2. Elemento único
+### 12.11.2. Elemento �nico
 
-Cuando necesitas **un solo registro**, hay varios métodos. Elegir el correcto depende de si esperas resultados o no, y de si puede haber duplicados.
+Cuando necesitas **un solo registro**, hay varios m�todos. Elegir el correcto depende de si esperas resultados o no, y de si puede haber duplicados.
 
-| Método | Sin resultado | Con resultado | Más de uno | Uso típico |
+| M�todo | Sin resultado | Con resultado | M�s de uno | Uso t�pico |
 |--------|---------------|---------------|------------|------------|
 | `FirstOrDefault()` | null | primer elemento | primer elemento | "dame el primero que encuentres" |
-| `First()` | excepción | primer elemento | primer elemento | "sé que existe" |
-| `SingleOrDefault()` | null | elemento | **excepción** | "solo debe haber uno" |
-| `Single()` | excepción | elemento | **excepción** | "solo debe haber uno y sé que existe" |
-| `Find()` | null | por PK | — | "búsqueda por clave primaria" |
+| `First()` | excepci�n | primer elemento | primer elemento | "s� que existe" |
+| `SingleOrDefault()` | null | elemento | **excepci�n** | "solo debe haber uno" |
+| `Single()` | excepci�n | elemento | **excepci�n** | "solo debe haber uno y s� que existe" |
+| `Find()` | null | por PK | � | "b�squeda por clave primaria" |
 
 ```csharp
-// Búsqueda flexible (devuelve null si no existe)
+// B�squeda flexible (devuelve null si no existe)
 var producto = await context.Productos
     .FirstOrDefaultAsync(p => p.Nombre == "Iron Man");
 
-// Búsqueda por PK (usa Find si está en el tracking)
+// B�squeda por PK (usa Find si est� en el tracking)
 var producto = await context.Productos.FindAsync(id);
 
-// Búsqueda estricta (excepción si no existe o hay duplicados)
+// B�squeda estricta (excepci�n si no existe o hay duplicados)
 var producto = await context.Productos
     .SingleAsync(p => p.CodigoBarras == "123456789");
 ```
 
-> ⚠️ **Advertencia:** `Find()` solo busca en el Change Tracker. Si la entidad ya está cacheada, la devuelve sin ir a la BD. Si no está, ejecuta `SELECT * WHERE Id = @id`. No funciona con composiciones complejas.
+> ?? **Advertencia:** `Find()` solo busca en el Change Tracker. Si la entidad ya est� cacheada, la devuelve sin ir a la BD. Si no est�, ejecuta `SELECT * WHERE Id = @id`. No funciona con composiciones complejas.
 
 ### 12.11.3. Condicionales
 
-Métodos que responden preguntas sobre la colección. Son útiles para validaciones y estadísticas rápidas.
+M�todos que responden preguntas sobre la colecci�n. Son �tiles para validaciones y estad�sticas r�pidas.
 
 ```csharp
-// ¿Existen productos caros? (devuelve true/false)
+// �Existen productos caros? (devuelve true/false)
 var hayCaros = await context.Productos.AnyAsync(p => p.Precio > 100);
 
-// ¿Todos son baratos?
+// �Todos son baratos?
 var todosBaratos = await context.Productos.AllAsync(p => p.Precio < 50);
 
-// ¿Contiene un producto con ese nombre?
+// �Contiene un producto con ese nombre?
 var nombres = new[] { "Iron Man", "Batman" };
 var hayCoincidencia = await context.Productos
     .AnyAsync(p => nombres.Contains(p.Nombre));  // Traduce a SQL IN
@@ -1343,21 +1321,21 @@ var hayCoincidencia = await context.Productos
 var total = await context.Productos.CountAsync();
 var totalCaros = await context.Productos.CountAsync(p => p.Precio > 50);
 
-// Sumar, mínimo, máximo
+// Sumar, m�nimo, m�ximo
 var sumaStock = await context.Productos.SumAsync(p => p.Stock);
 var precioMin = await context.Productos.MinAsync(p => p.Precio);
 var precioMax = await context.Productos.MaxAsync(p => p.Precio);
 var precioMedio = await context.Productos.AverageAsync(p => p.Precio);
 ```
 
-> 📝 **Nota:** `AnyAsync()` es más eficiente que `CountAsync() > 0`. `Any` solo necesita encontrar **un** registro, `Count` tiene que contar **todos**.
+> ?? **Nota:** `AnyAsync()` es m�s eficiente que `CountAsync() > 0`. `Any` solo necesita encontrar **un** registro, `Count` tiene que contar **todos**.
 
-### 12.11.4. Joins explícitos
+### 12.11.4. Joins expl�citos
 
-Aunque EF Core resuelve relaciones con `Include()`, a veces necesitas joins explícitos para consultas más controladas o para cruzar tablas que no tienen relación directa.
+Aunque EF Core resuelve relaciones con `Include()`, a veces necesitas joins expl�citos para consultas m�s controladas o para cruzar tablas que no tienen relaci�n directa.
 
 ```csharp
-// Join con sintaxis de método (lambda)
+// Join con sintaxis de m�todo (lambda)
 var productosConCategoria = await context.Productos
     .Join(
         context.Categorias,
@@ -1384,19 +1362,19 @@ var todosLosProductos = await context.Productos
     )
     .SelectMany(
         x => x.Categorias.DefaultIfEmpty(),
-        (x, c) => new { x.Producto.Nombre, Categoria = c?.Nombre ?? "Sin categoría" }
+        (x, c) => new { x.Producto.Nombre, Categoria = c?.Nombre ?? "Sin categor�a" }
     )
     .ToListAsync();
 ```
 
-> 💡 **Consejo:** Para joins simples entre entidades relacionadas, es más sencillo usar `Include()` + `Select()`. Los joins explícitos son útiles cuando necesitas cruzar tablas no relacionadas o cuando el `Include` genera un SQL ineficiente.
+> ?? **Consejo:** Para joins simples entre entidades relacionadas, es m�s sencillo usar `Include()` + `Select()`. Los joins expl�citos son �tiles cuando necesitas cruzar tablas no relacionadas o cuando el `Include` genera un SQL ineficiente.
 
-### 12.11.5. GroupBy y agregación
+### 12.11.5. GroupBy y agregaci�n
 
 `GroupBy` agrupa los resultados por una clave y permite calcular agregados (count, avg, sum, etc.) por grupo. Es como el `GROUP BY` de SQL.
 
 ```csharp
-// Agrupar por categoría y calcular estadísticas
+// Agrupar por categor�a y calcular estad�sticas
 var productosPorCategoria = await context.Productos
     .GroupBy(p => p.CategoriaId)
     .Select(g => new
@@ -1411,14 +1389,14 @@ var productosPorCategoria = await context.Productos
     .ToListAsync();
 ```
 
-> 📝 **Nota:** EF Core traduce `GroupBy` a SQL `GROUP BY` cuando es posible. Pero si usas funciones complejas en el `Select` que no se pueden traducir, EF Core cargará todos los datos en memoria y agrupará en C#. Para evitarlo, revisa el SQL generado con `ToQueryString()`.
+> ?? **Nota:** EF Core traduce `GroupBy` a SQL `GROUP BY` cuando es posible. Pero si usas funciones complejas en el `Select` que no se pueden traducir, EF Core cargar� todos los datos en memoria y agrupar� en C#. Para evitarlo, revisa el SQL generado con `ToQueryString()`.
 
 ### 12.11.6. Subconsultas
 
 Las subconsultas son consultas anidadas dentro de otra. EF Core las traduce a subconsultas SQL cuando es posible.
 
 ```csharp
-// Productos más caros que la media
+// Productos m�s caros que la media
 var productosCaros = await context.Productos
     .Where(p => p.Precio > context.Productos.Average(p2 => p2.Precio))
     .ToListAsync();
@@ -1442,7 +1420,7 @@ var productosConConteo = await context.Productos
 
 ### 12.11.7. ToQueryString
 
-Muestra el SQL que EF Core generó **sin ejecutarlo**. Es la herramienta de depuración más importante para entender qué está haciendo EF Core.
+Muestra el SQL que EF Core gener� **sin ejecutarlo**. Es la herramienta de depuraci�n m�s importante para entender qu� est� haciendo EF Core.
 
 ```csharp
 var query = context.Productos
@@ -1457,11 +1435,11 @@ Console.WriteLine(sql);
 // ORDER BY p."Nombre"
 ```
 
-> 💡 **Consejo:** Usa `ToQueryString()` siempre que tengas una consulta que no funciona como esperabas. Te dice exactamente qué SQL se ejecuta. Si el SQL es correcto pero la consulta es lenta, el problema está en la BD, no en EF Core.
+> ?? **Consejo:** Usa `ToQueryString()` siempre que tengas una consulta que no funciona como esperabas. Te dice exactamente qu� SQL se ejecuta. Si el SQL es correcto pero la consulta es lenta, el problema est� en la BD, no en EF Core.
 
 ### 12.11.8. AsNoTracking
 
-No rastrea las entidades en el Change Tracker. **Más rápido** para solo lectura porque EF Core no necesita comparar ni rastrear cambios.
+No rastrea las entidades en el Change Tracker. **M�s r�pido** para solo lectura porque EF Core no necesita comparar ni rastrear cambios.
 
 ```csharp
 var productos = await context.Productos
@@ -1473,9 +1451,9 @@ var productos = await context.Productos
 // Si intentas modificar y guardar, EF Core las inserta como nuevas (no actualiza)
 ```
 
-> 💡 **Consejo:** Usa `AsNoTracking()` en **todas** las consultas de solo lectura (GET). Reduce el uso de memoria y mejora el rendimiento. Solo quítalo cuando necesites modificar y guardar la entidad.
+> ?? **Consejo:** Usa `AsNoTracking()` en **todas** las consultas de solo lectura (GET). Reduce el uso de memoria y mejora el rendimiento. Solo qu�talo cuando necesites modificar y guardar la entidad.
 
-> 📝 **Nota:** `AsNoTracking()` se puede configurar globalmente: `optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)`. Así todas las consultas son de solo lectura por defecto.
+> ?? **Nota:** `AsNoTracking()` se puede configurar globalmente: `optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)`. As� todas las consultas son de solo lectura por defecto.
 
 ### 12.11.9. SQL nativo
 
@@ -1487,7 +1465,7 @@ var productos = await context.Productos
     .FromSqlRaw("SELECT * FROM \"Productos\" WHERE \"Precio\" > {0}", 30)
     .ToListAsync();
 
-// Con interpolación (seguro contra SQL injection)
+// Con interpolaci�n (seguro contra SQL injection)
 var nombre = "Iron Man";
 var producto = await context.Productos
     .FromSqlInterpolated($"SELECT * FROM \"Productos\" WHERE \"Nombre\" = {nombre}")
@@ -1498,13 +1476,11 @@ await context.Database.ExecuteSqlRawAsync(
     "UPDATE \"Productos\" SET \"Stock\" = \"Stock\" - 1 WHERE \"Id\" = {0}", id);
 ```
 
-> ⚠️ **Advertencia:** Usa `FromSqlInterpolated` **siempre** en vez de concatenar strings. La interpolación de EF Core parametriza la consulta, evitando SQL injection. Nunca hagas `$"SELECT ... WHERE Name = '{variable}'"`.
+> ?? **Advertencia:** Usa `FromSqlInterpolated` **siempre** en vez de concatenar strings. La interpolaci�n de EF Core parametriza la consulta, evitando SQL injection. Nunca hagas `$"SELECT ... WHERE Name = '{variable}'"`.
 
----
+12.12. ExecuteUpdate y ExecuteDelete
 
-## 12.12. ExecuteUpdate y ExecuteDelete
-
-Estas operaciones **bulk** (en masa) ejecutan UPDATE o DELETE directamente en la BD **sin cargar entidades en memoria**. SonMuchísimo más rápidas que el patrón clásico de: buscar → modificar → guardar, porque evitan el overhead del Change Tracker y generan una sola sentencia SQL.
+Estas operaciones **bulk** (en masa) ejecutan UPDATE o DELETE directamente en la BD **sin cargar entidades en memoria**. SonMuch�simo m�s r�pidas que el patr�n cl�sico de: buscar ? modificar ? guardar, porque evitan el overhead del Change Tracker y generan una sola sentencia SQL.
 
 Disponibles desde **EF Core 7+**.
 
@@ -1514,7 +1490,7 @@ await context.Productos
     .ExecuteUpdateAsync(s => s
         .SetProperty(p => p.Precio, p => p.Precio * 1.1m));
 
-// Actualizar múltiples propiedades
+// Actualizar m�ltiples propiedades
 await context.Productos
     .Where(p => p.Stock == 0)
     .ExecuteUpdateAsync(s => s
@@ -1526,25 +1502,23 @@ await context.Productos
     .Where(p => p.Stock == 0)
     .ExecuteDeleteAsync();
 
-// Borrar todos (⚠️ peligroso)
+// Borrar todos (?? peligroso)
 await context.Productos.ExecuteDeleteAsync();
 ```
 
-> 📝 **Nota:** Estas operaciones van **directamente a la BD**. No pasan por el Change Tracker, no disparan `SaveChanges`, no ejecutan validaciones. Son ideales para operaciones de limpieza, actualizaciones masivas o migraciones de datos.
+> ?? **Nota:** Estas operaciones van **directamente a la BD**. No pasan por el Change Tracker, no disparan `SaveChanges`, no ejecutan validaciones. Son ideales para operaciones de limpieza, actualizaciones masivas o migraciones de datos.
 
-> ⚠️ **Advertencia:** `ExecuteDeleteAsync()` no respeta los `Query Filters` de borrado lógico. Si tienes `HasQueryFilter(p => !p.IsDeleted)`, el `ExecuteDelete` **sí borrará** los registros marcados como borrados. Para respetar el filtro, usa `.Where(p => !p.IsDeleted).ExecuteDeleteAsync()`.
+> ?? **Advertencia:** `ExecuteDeleteAsync()` no respeta los `Query Filters` de borrado l�gico. Si tienes `HasQueryFilter(p => !p.IsDeleted)`, el `ExecuteDelete` **s� borrar�** los registros marcados como borrados. Para respetar el filtro, usa `.Where(p => !p.IsDeleted).ExecuteDeleteAsync()`.
 
-> 💡 **Consejo:** Para operaciones bulk en tablas muy grandes (millones de registros), considera procesar por lotes de 1000-5000 registros para no bloquear la BD demasiado tiempo.
+> ?? **Consejo:** Para operaciones bulk en tablas muy grandes (millones de registros), considera procesar por lotes de 1000-5000 registros para no bloquear la BD demasiado tiempo.
 
----
+12.13. Repositorio CRUD con Borrado F�sico y L�gico
 
-## 12.13. Repositorio CRUD con Borrado Físico y Lógico
+Veamos un ejemplo completo de patr�n Repository usando EF Core con una entidad `Producto` que soporta ambos tipos de borrado. El **borrado f�sico** elimina el registro de la BD. El **borrado l�gico** marca el registro como eliminado pero lo mantiene en la BD (con `IsDeleted = true`), permitiendo recuperarlo despu�s.
 
-Veamos un ejemplo completo de patrón Repository usando EF Core con una entidad `Producto` que soporta ambos tipos de borrado. El **borrado físico** elimina el registro de la BD. El **borrado lógico** marca el registro como eliminado pero lo mantiene en la BD (con `IsDeleted = true`), permitiendo recuperarlo después.
+> ?? **Nota:** Este es un ejemplo gen�rico. En el Reto de la pr�ctica 08, aplicar�s este patr�n a FunkoApp.
 
-> 📝 **Nota:** Este es un ejemplo genérico. En el Reto de la práctica 08, aplicarás este patrón a FunkoApp.
-
-### 12.13.1. Entidad y configuración del modelo
+### 12.13.1. Entidad y configuraci�n del modelo
 
 ```csharp
 public enum EstadoProducto
@@ -1564,12 +1538,12 @@ public class Producto
     public EstadoProducto Estado { get; set; } = EstadoProducto.Activo;
     public int CategoriaId { get; set; }
 
-    // Borrado lógico
+    // Borrado l�gico
     public bool IsDeleted { get; set; } = false;
     public DateTime? DeletedAt { get; set; }
     public string? DeletedBy { get; set; }
 
-    // Auditoría
+    // Auditor�a
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 
@@ -1586,10 +1560,10 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
         builder.Property(e => e.Precio).HasPrecision(18, 2);
         builder.Property(e => e.Estado).HasConversion<string>().HasMaxLength(20);
 
-        // Filtro de borrado lógico
+        // Filtro de borrado l�gico
         builder.HasQueryFilter(p => !p.IsDeleted);
 
-        // Índices
+        // �ndices
         builder.HasIndex(e => e.Nombre);
         builder.HasIndex(e => e.CategoriaId);
         builder.HasIndex(e => e.Estado);
@@ -1607,16 +1581,16 @@ public interface IProductoRepository
     Task<List<Producto>> GetByCategoriaAsync(int categoriaId);
     Task<Producto> CreateAsync(Producto producto);
     Task<Producto?> UpdateAsync(Producto producto);
-    Task<bool> DeleteAsync(int id);           // Borrado lógico
-    Task<bool> DeleteHardAsync(int id);       // Borrado físico
+    Task<bool> DeleteAsync(int id);           // Borrado l�gico
+    Task<bool> DeleteHardAsync(int id);       // Borrado f�sico
     Task<List<Producto>> GetDeletedAsync();   // Ver borrados
-    Task<bool> RestoreAsync(int id);          // Restaurar borrado lógico
+    Task<bool> RestoreAsync(int id);          // Restaurar borrado l�gico
 }
 ```
 
-### 12.13.3. Implementación: Create, GetById, GetAll, Update
+### 12.13.3. Implementaci�n: Create, GetById, GetAll, Update
 
-Los métodos CRUD básicos son la columna vertebral de cualquier repositorio. Cada uno tiene sus particularidades: `Create` asigna timestamp y guarda, `GetById` incluye relaciones, `GetAll` ordena por defecto, `Update` copia campo por campo (parcial update).
+Los m�todos CRUD b�sicos son la columna vertebral de cualquier repositorio. Cada uno tiene sus particularidades: `Create` asigna timestamp y guarda, `GetById` incluye relaciones, `GetAll` ordena por defecto, `Update` copia campo por campo (parcial update).
 
 ```csharp
 public class ProductoRepository : IProductoRepository
@@ -1665,7 +1639,7 @@ public class ProductoRepository : IProductoRepository
         var existing = await _context.Productos.FindAsync(producto.Id);
         if (existing == null) return null;
 
-        // Copiar campo por campo (actualización parcial)
+        // Copiar campo por campo (actualizaci�n parcial)
         existing.Nombre = producto.Nombre;
         existing.Descripcion = producto.Descripcion;
         existing.Precio = producto.Precio;
@@ -1680,11 +1654,11 @@ public class ProductoRepository : IProductoRepository
 }
 ```
 
-> 💡 **Consejo:** En `Create`, `SaveChanges` genera el `Id` automático (si es `IDENTITY` o `SERIAL`). El objeto pasado por parámetro se modifica con el `Id` asignado. En `Update`, es mejor buscar primero (`FindAsync`) y copiar campo por campo, para evitar sobrescribir campos que otro usuario pudo haber modificado.
+> ?? **Consejo:** En `Create`, `SaveChanges` genera el `Id` autom�tico (si es `IDENTITY` o `SERIAL`). El objeto pasado por par�metro se modifica con el `Id` asignado. En `Update`, es mejor buscar primero (`FindAsync`) y copiar campo por campo, para evitar sobrescribir campos que otro usuario pudo haber modificado.
 
-### 12.13.4. Borrado físico (Delete)
+### 12.13.4. Borrado f�sico (Delete)
 
-El borrado físico elimina el registro permanentemente de la BD. Es irreversible. Usa `Remove()` y luego `SaveChanges()`.
+El borrado f�sico elimina el registro permanentemente de la BD. Es irreversible. Usa `Remove()` y luego `SaveChanges()`.
 
 ```csharp
 public async Task<bool> DeleteHardAsync(int id)
@@ -1698,11 +1672,11 @@ public async Task<bool> DeleteHardAsync(int id)
 }
 ```
 
-> ⚠️ **Advertencia:** El borrado físico puede fallar si hay relaciones con `DeleteBehavior.Restrict`. Por ejemplo, si un producto tiene pedidos asociados y la restricción es `Restrict`, el `SaveChanges` lanzará una excepción de integridad referencial.
+> ?? **Advertencia:** El borrado f�sico puede fallar si hay relaciones con `DeleteBehavior.Restrict`. Por ejemplo, si un producto tiene pedidos asociados y la restricci�n es `Restrict`, el `SaveChanges` lanzar� una excepci�n de integridad referencial.
 
-### 12.13.5. Borrado lógico (SoftDelete + Query Filters)
+### 12.13.5. Borrado l�gico (SoftDelete + Query Filters)
 
-El borrado lógico marca el registro como eliminado pero lo mantiene en la BD. Usa campos como `IsDeleted`, `DeletedAt` y `DeletedBy`. El `Query Filter` (`HasQueryFilter`) hace que las consultas automáticas **excluyan** los registros borrados lógicamente.
+El borrado l�gico marca el registro como eliminado pero lo mantiene en la BD. Usa campos como `IsDeleted`, `DeletedAt` y `DeletedBy`. El `Query Filter` (`HasQueryFilter`) hace que las consultas autom�ticas **excluyan** los registros borrados l�gicamente.
 
 ```csharp
 public async Task<bool> DeleteAsync(int id)
@@ -1719,7 +1693,7 @@ public async Task<bool> DeleteAsync(int id)
     return true;
 }
 
-// Ver borrados (ignorando el filtro automático)
+// Ver borrados (ignorando el filtro autom�tico)
 public async Task<List<Producto>> GetDeletedAsync()
 {
     return await _context.Productos
@@ -1729,7 +1703,7 @@ public async Task<List<Producto>> GetDeletedAsync()
         .ToListAsync();
 }
 
-// Restaurar un borrado lógico
+// Restaurar un borrado l�gico
 public async Task<bool> RestoreAsync(int id)
 {
     var producto = await _context.Productos
@@ -1747,19 +1721,19 @@ public async Task<bool> RestoreAsync(int id)
 }
 ```
 
-> 📝 **Nota:** `IgnoreQueryFilters()` desactiva el filtro `HasQueryFilter` para esa consulta. Es necesario para ver los registros borrados lógicamente, ya que el filtro los excluye automáticamente de todas las consultas.
+> ?? **Nota:** `IgnoreQueryFilters()` desactiva el filtro `HasQueryFilter` para esa consulta. Es necesario para ver los registros borrados l�gicamente, ya que el filtro los excluye autom�ticamente de todas las consultas.
 
-> 💡 **Consejo:** El borrado lógico es el estándar en aplicaciones empresariales. Permite recuperar datos, mantener historial y cumplir con regulaciones de protección de datos (RGPD).
+> ?? **Consejo:** El borrado l�gico es el est�ndar en aplicaciones empresariales. Permite recuperar datos, mantener historial y cumplir con regulaciones de protecci�n de datos (RGPD).
 
-### 12.13.6. Consultas típicas del repositorio
+### 12.13.6. Consultas t�picas del repositorio
 
 ```csharp
-// Productos activos con stock (el filtro automático excluye borrados)
+// Productos activos con stock (el filtro autom�tico excluye borrados)
 var conStock = await context.Productos
     .Where(p => p.Stock > 0 && p.Estado == EstadoProducto.Activo)
     .ToListAsync();
 
-// Productos más caros por categoría
+// Productos m�s caros por categor�a
 var carosPorCategoria = await context.Productos
     .GroupBy(p => p.CategoriaId)
     .Select(g => new
@@ -1770,39 +1744,37 @@ var carosPorCategoria = await context.Productos
     })
     .ToListAsync();
 
-// Búsqueda por texto
+// B�squeda por texto
 var resultados = await context.Productos
     .Where(p => p.Nombre.Contains("iron") || p.Descripcion.Contains("iron"))
     .ToListAsync();
 
-// Productos sin categoría
+// Productos sin categor�a
 var sinCategoria = await context.Productos
     .Where(p => !context.Categorias.Any(c => c.Id == p.CategoriaId))
     .ToListAsync();
 ```
 
----
+12.14. Migraciones
 
-## 12.14. Migraciones
+Las migraciones son el sistema de **control de versiones de la BD** de EF Core. Cada migraci�n es un conjunto de cambios (tablas, columnas, �ndices, datos) que se pueden aplicar o revertir. Cuando modificas tu modelo C# y quieres que la BD se actualice, creas una migraci�n.
 
-Las migraciones son el sistema de **control de versiones de la BD** de EF Core. Cada migración es un conjunto de cambios (tablas, columnas, índices, datos) que se pueden aplicar o revertir. Cuando modificas tu modelo C# y quieres que la BD se actualice, creas una migración.
+> ?? **Consejo:** Piensa en las migraciones como commits de Git pero para la BD. Cada migraci�n describe qu� cambi�, y puedes ir hacia adelante o hacia atr�s.
 
-> 💡 **Consejo:** Piensa en las migraciones como commits de Git pero para la BD. Cada migración describe qué cambió, y puedes ir hacia adelante o hacia atrás.
-
-### 12.14.1. Crear migración
+### 12.14.1. Crear migraci�n
 
 ```bash
-# Migración inicial (crea todas las tablas desde cero)
+# Migraci�n inicial (crea todas las tablas desde cero)
 dotnet ef migrations add InitialCreate
 
-# Migración con nombre descriptivo
+# Migraci�n con nombre descriptivo
 dotnet ef migrations add AddProductoTable
 
-# Especificar proyecto y contexto (útil en soluciones multi-proyecto)
+# Especificar proyecto y contexto (�til en soluciones multi-proyecto)
 dotnet ef migrations add AddStock -p ../MiProyecto/MiProyecto.csproj -c AppDbContext
 ```
 
-> 📝 **Nota:** Las migraciones se guardan en una carpeta `Migrations/` del proyecto. Cada migración tiene un archivo de diseño (cómo se ve el modelo) y un archivo de operaciones (qué cambios aplicar).
+> ?? **Nota:** Las migraciones se guardan en una carpeta `Migrations/` del proyecto. Cada migraci�n tiene un archivo de dise�o (c�mo se ve el modelo) y un archivo de operaciones (qu� cambios aplicar).
 
 ### 12.14.2. Aplicar migraciones
 
@@ -1810,26 +1782,26 @@ dotnet ef migrations add AddStock -p ../MiProyecto/MiProyecto.csproj -c AppDbCon
 # Aplicar todas las migraciones pendientes
 dotnet ef database update
 
-# Aplicar hasta una migración específica
+# Aplicar hasta una migraci�n espec�fica
 dotnet ef database update AddProductoTable
 ```
 
 ### 12.14.3. Rollback
 
 ```bash
-# Revertir a la migración anterior
+# Revertir a la migraci�n anterior
 dotnet ef database update PreviousMigrationName
 
-# Revertir la última migración (desaplicar)
+# Revertir la �ltima migraci�n (desaplicar)
 dotnet ef migrations remove
 ```
 
-> ⚠️ **Advertencia:** `migrations remove` solo funciona si la migración **NO está aplicada** en la BD. Si ya está aplicada, primero debes hacer rollback con `database update` y luego `migrations remove`.
+> ?? **Advertencia:** `migrations remove` solo funciona si la migraci�n **NO est� aplicada** en la BD. Si ya est� aplicada, primero debes hacer rollback con `database update` y luego `migrations remove`.
 
-### 12.14.4. Eliminar migración
+### 12.14.4. Eliminar migraci�n
 
 ```bash
-# Solo funciona si la migración NO está aplicada
+# Solo funciona si la migraci�n NO est� aplicada
 dotnet ef migrations remove
 ```
 
@@ -1842,31 +1814,31 @@ dotnet ef migrations list
 # Generar script SQL completo (todas las migraciones)
 dotnet ef migrations script -o script.sql
 
-# Generar script idempotente (se puede ejecutar múltiples veces sin errores)
+# Generar script idempotente (se puede ejecutar m�ltiples veces sin errores)
 dotnet ef migrations script --idempotent -o script.sql
 ```
 
-> 💡 **Consejo:** El script idempotente comprueba si cada migración ya está aplicada antes de ejecutarla. Es ideal para entornos de producción donde no quieres romper la BD si ya tiene cambios previos.
+> ?? **Consejo:** El script idempotente comprueba si cada migraci�n ya est� aplicada antes de ejecutarla. Es ideal para entornos de producci�n donde no quieres romper la BD si ya tiene cambios previos.
 
 ### 12.14.6. Deployment (Migrate vs EnsureCreated)
 
-| Método | Producción | Desarrollo | Tests |
+| M�todo | Producci�n | Desarrollo | Tests |
 |--------|------------|------------|-------|
-| `Migrate()` | ✅ SÍ | ✅ SÍ | ⚠️ Más lento |
-| `EnsureCreated()` | ❌ NO | ⚠️ Solo prototipos | ✅ Rápido |
+| `Migrate()` | ? S� | ? S� | ?? M�s lento |
+| `EnsureCreated()` | ? NO | ?? Solo prototipos | ? R�pido |
 
 ```csharp
-// En Program.cs para producción
+// En Program.cs para producci�n
 using var scope = app.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 db.Database.Migrate();  // Aplica migraciones pendientes
 ```
 
-> 📝 **Nota:** `EnsureCreated()` crea la BD desde cero **sin migraciones**. No se puede usar con migraciones existentes. Solo sirve para prototipos rápidos o tests con InMemory/SQLite. En producción, **siempre** usa `Migrate()`.
+> ?? **Nota:** `EnsureCreated()` crea la BD desde cero **sin migraciones**. No se puede usar con migraciones existentes. Solo sirve para prototipos r�pidos o tests con InMemory/SQLite. En producci�n, **siempre** usa `Migrate()`.
 
-#### Patrón condicional: Development vs Production
+#### Patr�n condicional: Development vs Production
 
-Lo habitual es **migrar automáticamente en desarrollo** pero **no tocar nada en producción** (la BD se gestiona con scripts o CI/CD). Este patrón se implementa en `Program.cs` comprobando el entorno:
+Lo habitual es **migrar autom�ticamente en desarrollo** pero **no tocar nada en producci�n** (la BD se gestiona con scripts o CI/CD). Este patr�n se implementa en `Program.cs` comprobando el entorno:
 
 ```csharp
 var app = builder.Build();
@@ -1883,13 +1855,13 @@ app.UseSerilogRequestLogging();
 // ... resto del pipeline
 ```
 
-¿Por qué `Migrate()` y no `EnsureCreated()`? Porque `Migrate()`:
+�Por qu� `Migrate()` y no `EnsureCreated()`? Porque `Migrate()`:
 
-1. **Aplica migraciones pendientes** — si cambias el modelo, se actualiza la BD
-2. **Ejecuta el seed data** — los datos de `HasData` se insertan durante la migración
-3. **Es seguro ejecutar多次** — si ya está todo aplicado, no hace nada
+1. **Aplica migraciones pendientes** � si cambias el modelo, se actualiza la BD
+2. **Ejecuta el seed data** � los datos de `HasData` se insertan durante la migraci�n
+3. **Es seguro ejecutar??** � si ya est� todo aplicado, no hace nada
 
-En producción, la migración se gestiona normalmente con:
+En producci�n, la migraci�n se gestiona normalmente con:
 
 ```bash
 # Script idempotente para ejecutar manualmente o en CI/CD
@@ -1899,17 +1871,15 @@ dotnet ef migrations script --idempotent -o migrate.sql
 dotnet ef database update
 ```
 
-> 💡 **Consejo:** En desarrollo, `Migrate()` al arrancar es cómodo porque siempre tienes la BD actualizada con el último modelo y los datos de ejemplo. En producción, nunca ejecutes `Migrate()` automáticamente — un cambio inesperado en la BD puede ser catastrófico.
+> ?? **Consejo:** En desarrollo, `Migrate()` al arrancar es c�modo porque siempre tienes la BD actualizada con el �ltimo modelo y los datos de ejemplo. En producci�n, nunca ejecutes `Migrate()` autom�ticamente � un cambio inesperado en la BD puede ser catastr�fico.
 
----
+12.15. Seed Data
 
-## 12.15. Seed Data
-
-El Seed Data (datos semilla) son datos iniciales que se insertan automáticamente en la BD. Es útil para datos de referencia (categorías,Roles) o para datos de prueba en desarrollo.
+El Seed Data (datos semilla) son datos iniciales que se insertan autom�ticamente en la BD. Es �til para datos de referencia (categor�as,Roles) o para datos de prueba en desarrollo.
 
 ### 12.15.1. HasData
 
-La forma más simple de sembrar datos. Se define en `OnModelCreating` y EF Core los inserta en la BD durante la migración. Los datos se guardan en el archivo de migración como `INSERT`.
+La forma m�s simple de sembrar datos. Se define en `OnModelCreating` y EF Core los inserta en la BD durante la migraci�n. Los datos se guardan en el archivo de migraci�n como `INSERT`.
 
 ```csharp
 protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -1926,13 +1896,13 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 }
 ```
 
-> 📝 **Nota:** `HasData` requiere que especifiques **todas** las propiedades, incluyendo el `Id`. Los datos se insertan en la migración, no en runtime. Si necesitas datos dinámicos, usa el DataSeeder.
+> ?? **Nota:** `HasData` requiere que especifiques **todas** las propiedades, incluyendo el `Id`. Los datos se insertan en la migraci�n, no en runtime. Si necesitas datos din�micos, usa el DataSeeder.
 
-> ⚠️ **Advertencia:** Si modificas un registro de `HasData` después de haberlo insertado, EF Core **no lo actualiza**. Solo inserta nuevos registros. Para actualizar, crea una nueva migración con `HasData` modificado o usa un DataSeeder.
+> ?? **Advertencia:** Si modificas un registro de `HasData` despu�s de haberlo insertado, EF Core **no lo actualiza**. Solo inserta nuevos registros. Para actualizar, crea una nueva migraci�n con `HasData` modificado o usa un DataSeeder.
 
 ### 12.15.2. Servicio DataSeeder
 
-Para datos dinámicos o que dependen de lógica de negocio (ej: hashear contraseñas), usa un servicio que se ejecuta al iniciar la aplicación.
+Para datos din�micos o que dependen de l�gica de negocio (ej: hashear contrase�as), usa un servicio que se ejecuta al iniciar la aplicaci�n.
 
 ```csharp
 public class DataSeeder
@@ -1942,7 +1912,7 @@ public class DataSeeder
 
     public async Task SeedAsync()
     {
-        // Solo sembrar si la BD está vacía
+        // Solo sembrar si la BD est� vac�a
         if (!await _context.Categorias.AnyAsync())
         {
             _context.Categorias.AddRange(
@@ -1950,7 +1920,7 @@ public class DataSeeder
                 new Categoria { Nombre = "DC", Descripcion = "Universo DC" }
             );
             await _context.SaveChangesAsync();
-            _logger.LogInformation("Categorías sembradas correctamente");
+            _logger.LogInformation("Categor�as sembradas correctamente");
         }
     }
 }
@@ -1961,11 +1931,11 @@ var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
 await seeder.SeedAsync();
 ```
 
-> 💡 **Consejo:** El DataSeeder siempre debe comprobar si ya existen datos (`AnyAsync`) antes de insertar. Así es seguro ejecutarlo múltiples veces sin duplicar datos.
+> ?? **Consejo:** El DataSeeder siempre debe comprobar si ya existen datos (`AnyAsync`) antes de insertar. As� es seguro ejecutarlo m�ltiples veces sin duplicar datos.
 
 ### 12.15.3. Ficheros SQL
 
-Para datos voluminosos o complejos, puedes usar scripts SQL directamente. Es la opción más rápida para grandes cantidades de datos.
+Para datos voluminosos o complejos, puedes usar scripts SQL directamente. Es la opci�n m�s r�pida para grandes cantidades de datos.
 
 ```sql
 -- seed.sql
@@ -1983,25 +1953,23 @@ var sql = File.ReadAllText("Data/seed.sql");
 await connection.ExecuteAsync(sql);
 ```
 
-> 📝 **Nota:** `ON CONFLICT DO NOTHING` evita errores si los registros ya existen. En PostgreSQL es `ON CONFLICT DO NOTHING`, en SQL Server es `IF NOT EXISTS`.
+> ?? **Nota:** `ON CONFLICT DO NOTHING` evita errores si los registros ya existen. En PostgreSQL es `ON CONFLICT DO NOTHING`, en SQL Server es `IF NOT EXISTS`.
 
----
+12.16. Logging
 
-## 12.16. Logging
-
-El logging de EF Core te permite ver las **consultas SQL** que se ejecutan, los **errores** y el **tiempo** de ejecución. Es la herramienta de depuración más poderosa cuando algo no funciona como esperabas.
+El logging de EF Core te permite ver las **consultas SQL** que se ejecutan, los **errores** y el **tiempo** de ejecuci�n. Es la herramienta de depuraci�n m�s poderosa cuando algo no funciona como esperabas.
 
 ### 12.16.1. LogTo y ILoggerFactory
 
-Hay dos formas de configurar el logging. `LogTo` es rápido para depuración. `ILoggerFactory` es el método recomendado porque se integra con el sistema de logging de la aplicación (Serilog, NLog, etc.).
+Hay dos formas de configurar el logging. `LogTo` es r�pido para depuraci�n. `ILoggerFactory` es el m�todo recomendado porque se integra con el sistema de logging de la aplicaci�n (Serilog, NLog, etc.).
 
 ```csharp
-// Opción 1: LogTo (directo a consola, para depuración rápida)
+// Opci�n 1: LogTo (directo a consola, para depuraci�n r�pida)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString)
            .LogTo(Console.WriteLine, LogLevel.Information));
 
-// Opción 2: ILoggerFactory (recomendado, integra con la app)
+// Opci�n 2: ILoggerFactory (recomendado, integra con la app)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 ```
@@ -2011,9 +1979,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 ```
 
-### 12.16.2. Filtrar por categoría
+### 12.16.2. Filtrar por categor�a
 
-Puedes filtrar qué tipo de logs quieres ver. Esto es útil para ver solo las consultas SQL sin el ruido de conexiones y transacciones.
+Puedes filtrar qu� tipo de logs quieres ver. Esto es �til para ver solo las consultas SQL sin el ruido de conexiones y transacciones.
 
 ```csharp
 // Solo logs de comandos SQL
@@ -2022,26 +1990,26 @@ optionsBuilder.LogTo(Console.WriteLine,
     LogLevel.Information);
 ```
 
-| Categoría | Qué loguea |
+| Categor�a | Qu� loguea |
 |-----------|------------|
-| `Database.Command` | Consultas SQL ejecutadas (la más útil) |
+| `Database.Command` | Consultas SQL ejecutadas (la m�s �til) |
 | `Database.Connection` | Conexiones abiertas/cerradas |
 | `Database.Transaction` | Transacciones |
 | `Model` | Cambios en el modelo |
 | `Query` | Consultas LINQ generadas |
-| `Update` | Operaciones de inserción/actualización/borrado |
+| `Update` | Operaciones de inserci�n/actualizaci�n/borrado |
 
-> 💡 **Consejo:** Para depurar rendimiento, usa solo `Database.Command`. Te muestra el SQL exacto, los parámetros y el tiempo de ejecución. Es lo que necesitas para detectar consultas lentas.
+> ?? **Consejo:** Para depurar rendimiento, usa solo `Database.Command`. Te muestra el SQL exacto, los par�metros y el tiempo de ejecuci�n. Es lo que necesitas para detectar consultas lentas.
 
 ### 12.16.3. SensitiveDataLogging
 
 ```csharp
 optionsBuilder
-    .EnableSensitiveDataLogging()  // Muestra parámetros reales (nombres, emails)
-    .EnableDetailedErrors();       // Errores más detallados (valores de columnas)
+    .EnableSensitiveDataLogging()  // Muestra par�metros reales (nombres, emails)
+    .EnableDetailedErrors();       // Errores m�s detallados (valores de columnas)
 ```
 
-> ⚠️ **Advertencia:** `EnableSensitiveDataLogging` muestra **datos reales** en los logs (contraseñas, emails, números de tarjeta). **NUNCA** usar en producción. Solo para desarrollo local.
+> ?? **Advertencia:** `EnableSensitiveDataLogging` muestra **datos reales** en los logs (contrase�as, emails, n�meros de tarjeta). **NUNCA** usar en producci�n. Solo para desarrollo local.
 
 ### 12.16.4. Suprimir logs de consultas
 
@@ -2065,17 +2033,15 @@ ORDER BY p."Nombre"
     Parameters=[@__p_0='30'], CommandType='Text', CommandTimeout='30'
 ```
 
-> 📝 **Nota:** El tiempo entre corchetes `(12ms)` te dice cuánto tardó la consulta. Si ves tiempos altos (>100ms), necesitas optimizar la consulta o añadir índices.
+> ?? **Nota:** El tiempo entre corchetes `(12ms)` te dice cu�nto tard� la consulta. Si ves tiempos altos (>100ms), necesitas optimizar la consulta o a�adir �ndices.
 
----
+12.17. Control de Concurrencia
 
-## 12.17. Control de Concurrencia
-
-La concurrencia ocurre cuando **dos usuarios modifican el mismo registro** al mismo tiempo. Hay dos estrategias para manejarlo: optimista (asume que no habrá conflictos) y pessimista (bloquea el registro antes de modificarlo).
+La concurrencia ocurre cuando **dos usuarios modifican el mismo registro** al mismo tiempo. Hay dos estrategias para manejarlo: optimista (asume que no habr� conflictos) y pessimista (bloquea el registro antes de modificarlo).
 
 ### 12.18.1. Optimista (RowVersion)
 
-La estrategia **optimista** añade una columna `RowVersion` (timestamp) que cambia automáticamente cada vez que se modifica el registro. Al guardar, EF Core comprueba que el `RowVersion` sea el mismo que cuando cargaste la entidad. Si otro usuario lo modificó, el `RowVersion` habrá cambiado y EF Core lanza una excepción.
+La estrategia **optimista** a�ade una columna `RowVersion` (timestamp) que cambia autom�ticamente cada vez que se modifica el registro. Al guardar, EF Core comprueba que el `RowVersion` sea el mismo que cuando cargaste la entidad. Si otro usuario lo modific�, el `RowVersion` habr� cambiado y EF Core lanza una excepci�n.
 
 ```csharp
 public class Producto
@@ -2110,20 +2076,20 @@ catch (DbUpdateConcurrencyException ex)
         throw new Exception("El producto fue eliminado por otro usuario");
     }
 
-    // Mostrar diferencias y pedir confirmación al usuario
+    // Mostrar diferencias y pedir confirmaci�n al usuario
     var currentValues = entry.CurrentValues;
     Console.WriteLine("Conflicto detectado:");
     Console.WriteLine($"  Tu valor: {currentValues["Stock"]}");
     Console.WriteLine($"  Valor actual: {databaseValues["Stock"]}");
-    // Resolución: sobrescribir, fusionar o cancelar
+    // Resoluci�n: sobrescribir, fusionar o cancelar
 }
 ```
 
-> 📝 **Nota:** El optimista es el estándar para aplicaciones web. No bloquea registros, es escalable y funciona bien con miles de usuarios concurrentes. Solo falla cuando dos usuarios modifican exactamente el mismo registro al mismo tiempo.
+> ?? **Nota:** El optimista es el est�ndar para aplicaciones web. No bloquea registros, es escalable y funciona bien con miles de usuarios concurrentes. Solo falla cuando dos usuarios modifican exactamente el mismo registro al mismo tiempo.
 
 ### 12.18.2. Pessimista
 
-La estrategia **pessimista** bloquea el registro antes de modificarlo, impidiendo que otros usuarios lo modifiquen hasta que termines. Usa `FOR UPDATE` en SQL y una transacción con nivel `Serializable`.
+La estrategia **pessimista** bloquea el registro antes de modificarlo, impidiendo que otros usuarios lo modifiquen hasta que termines. Usa `FOR UPDATE` en SQL y una transacci�n con nivel `Serializable`.
 
 ```csharp
 using var transaction = await context.Database.BeginTransactionAsync(
@@ -2147,19 +2113,17 @@ catch
 }
 ```
 
-> ⚠️ **Advertencia:** El pessimista **bloquea** registros, lo que puede causar deadlocks (bloqueos mutuos) y reducir el rendimiento en concurrencia alta. Solo úsalo cuando el optimista no es suficiente (ej: billetes de avión, entradas limitadas).
+> ?? **Advertencia:** El pessimista **bloquea** registros, lo que puede causar deadlocks (bloqueos mutuos) y reducir el rendimiento en concurrencia alta. Solo �salo cuando el optimista no es suficiente (ej: billetes de avi�n, entradas limitadas).
 
-> 💡 **Consejo:** En la práctica 08 (FunkoApp), usa concurrencia optimista. Es más simple, no necesita transacciones y funciona bien para el caso de uso.
+> ?? **Consejo:** En la pr�ctica 08 (FunkoApp), usa concurrencia optimista. Es m�s simple, no necesita transacciones y funciona bien para el caso de uso.
 
----
+12.18. Testing con EF Core
 
-## 12.18. Testing con EF Core
-
-Probar repositorios que usan EF Core requiere una BD de prueba. Hay dos opciones principales: **InMemory** (rápido, sin persistencia real) y **TestContainers** (contenedor Docker con BD real, más realista).
+Probar repositorios que usan EF Core requiere una BD de prueba. Hay dos opciones principales: **InMemory** (r�pido, sin persistencia real) y **TestContainers** (contenedor Docker con BD real, m�s realista).
 
 ### 12.18.1. InMemory Database
 
-EF Core incluye un proveedor InMemory que guarda los datos en memoria. Es **muy rápido** pero no soporta todas las funcionalidades de una BD real (restricciones, triggers, SQL nativo).
+EF Core incluye un proveedor InMemory que guarda los datos en memoria. Es **muy r�pido** pero no soporta todas las funcionalidades de una BD real (restricciones, triggers, SQL nativo).
 
 ```csharp
 // Arrange: configurar la BD en memoria
@@ -2178,11 +2142,11 @@ var result = await repository.CreateAsync(producto);
 result.Id.Should().BeGreaterThan(0);
 ```
 
-> 💡 **Consejo:** InMemory es ideal para tests unitarios rápidos. Cada test debe crear su propia BD aislada (usar un nombre único). No compartas BD entre tests.
+> ?? **Consejo:** InMemory es ideal para tests unitarios r�pidos. Cada test debe crear su propia BD aislada (usar un nombre �nico). No compartas BD entre tests.
 
 ### 12.18.2. TestContainers (PostgreSQL)
 
-TestContainers crea un **contenedor Docker real** con la BD que usas en producción. Es más lento que InMemory pero prueba exactamente lo que se ejecuta en producción.
+TestContainers crea un **contenedor Docker real** con la BD que usas en producci�n. Es m�s lento que InMemory pero prueba exactamente lo que se ejecuta en producci�n.
 
 ```csharp
 public class ProductoRepositoryTests : IAsyncLifetime
@@ -2242,24 +2206,24 @@ public class ProductoRepositoryTests : IAsyncLifetime
 }
 ```
 
-> 📝 **Nota:** TestContainers necesita Docker instalado y ejecutándose. Los tests son más lentos pero son **mucho más realistas**. Son la opción recomendada para tests de integración.
+> ?? **Nota:** TestContainers necesita Docker instalado y ejecut�ndose. Los tests son m�s lentos pero son **mucho m�s realistas**. Son la opci�n recomendada para tests de integraci�n.
 
-### 12.18.3. Buenas prácticas con TestContainers
+### 12.18.3. Buenas pr�cticas con TestContainers
 
-> ⚠️ **Advertencia — Errores habituales con TestContainers**
+> ?? **Advertencia � Errores habituales con TestContainers**
 >
 > **Principio fundamental: cada test debe ser aislado**
 >
-> Un test no debe depender del estado que haya dejado otro test anterior. Si el test A inserta 3 productos y el test B espera encontrar exactamente 5 productos (2 suyos + 3 del test A), el test B falla... ¡aunque el código sea correcto! Por eso, cada test debe empezar con una **BD limpia y con los mismos datos base**. Así todos los tests se ejecutan en las mismas condiciones, sin importar el orden.
+> Un test no debe depender del estado que haya dejado otro test anterior. Si el test A inserta 3 productos y el test B espera encontrar exactamente 5 productos (2 suyos + 3 del test A), el test B falla... �aunque el c�digo sea correcto! Por eso, cada test debe empezar con una **BD limpia y con los mismos datos base**. As� todos los tests se ejecutan en las mismas condiciones, sin importar el orden.
 >
 > ```mermaid
 > flowchart LR
 >     T1["Test A: inserta 3 productos"] --> T2["Test B: espera 2 productos"]
->     T2 --> FAIL["❌ FALLA: encuentra 5"]
+>     T2 --> FAIL["? FALLA: encuentra 5"]
 >
->     T1B["Test A: inserta 3 productos"] --> CLEAN["🧹 Limpieza"]
+>     T1B["Test A: inserta 3 productos"] --> CLEAN["?? Limpieza"]
 >     CLEAN --> T2B["Test B: BD limpia, inserta 2"]
->     T2B --> OK["✅ PASA: encuentra solo 2"]
+>     T2B --> OK["? PASA: encuentra solo 2"]
 >
 >     style FAIL fill:#f44336,color:#fff
 >     style OK fill:#4CAF50,color:#fff
@@ -2268,17 +2232,17 @@ public class ProductoRepositoryTests : IAsyncLifetime
 >
 > **1. Container como campo instance, nunca `static`**
 >
-> Si el contenedor es `static readonly`, se comparte entre todos los `[TestFixture]` de la solución. Pero NUnit ejecuta cada `[TestFixture]` en un ensamblado diferente, y el contenedor se destruye al terminar el primero. El siguiente fixture intenta usar un contenedor muerto → errores raros.
+> Si el contenedor es `static readonly`, se comparte entre todos los `[TestFixture]` de la soluci�n. Pero NUnit ejecuta cada `[TestFixture]` en un ensamblado diferente, y el contenedor se destruye al terminar el primero. El siguiente fixture intenta usar un contenedor muerto ? errores raros.
 >
 > ```csharp
-> // ❌ MALO: static readonly — compartido entre fixtures, se destruye antes de tiempo
+> // ? MALO: static readonly � compartido entre fixtures, se destruye antes de tiempo
 > public class IntegrationTestBase : IAsyncLifetime
 > {
 >     private static readonly PostgreSqlContainer _container = new PostgreSqlBuilder()
 >         .WithImage("postgres:17-alpine").Build();
 > }
 >
-> // ✅ BUENO: instance field — cada fixture obtiene su propio contenedor
+> // ? BUENO: instance field � cada fixture obtiene su propio contenedor
 > public class IntegrationTestBase : IAsyncLifetime
 > {
 >     private readonly PostgreSqlContainer _container = new PostgreSqlBuilder()
@@ -2288,7 +2252,7 @@ public class ProductoRepositoryTests : IAsyncLifetime
 >
 > **2. `[OneTimeTearDown]` para dispose del contenedor**
 >
-> Usa `[OneTimeTearDown]` (no `[TearDown]`) para destruir el contenedor. Así se ejecuta una sola vez al final de todos los tests del fixture, no después de cada test.
+> Usa `[OneTimeTearDown]` (no `[TearDown]`) para destruir el contenedor. As� se ejecuta una sola vez al final de todos los tests del fixture, no despu�s de cada test.
 >
 > ```csharp
 > [OneTimeTearDown]
@@ -2300,7 +2264,7 @@ public class ProductoRepositoryTests : IAsyncLifetime
 >
 > **3. `TRUNCATE ... RESTART IDENTITY CASCADE` en `[SetUp]`**
 >
-> TestContainers no recrea la BD entre tests. Si no limpias los datos, los tests se contaminan entre sí (un test encuentra datos del anterior). Usa `TRUNCATE` en `[SetUp]` para reiniciar el estado antes de cada test:
+> TestContainers no recrea la BD entre tests. Si no limpias los datos, los tests se contaminan entre s� (un test encuentra datos del anterior). Usa `TRUNCATE` en `[SetUp]` para reiniciar el estado antes de cada test:
 >
 > ```csharp
 > [SetUp]
@@ -2317,11 +2281,11 @@ public class ProductoRepositoryTests : IAsyncLifetime
 > }
 > ```
 >
-> 🔧 **Truco:** Si olvidas el `RESTART IDENTITY`, los IDs siguen incrementándose. Aunque la tabla esté vacía, el próximo registro empieza desde el último ID, no desde 1. Esto puede causar confusiones en los tests.
+> ?? **Truco:** Si olvidas el `RESTART IDENTITY`, los IDs siguen increment�ndose. Aunque la tabla est� vac�a, el pr�ximo registro empieza desde el �ltimo ID, no desde 1. Esto puede causar confusiones en los tests.
 
-### 12.18.4. Patrón AAA
+### 12.18.4. Patr�n AAA
 
-Todos los tests deben seguir el patrón **AAA** (Arrange-Act-Assert) para que sean legibles y mantenibles:
+Todos los tests deben seguir el patr�n **AAA** (Arrange-Act-Assert) para que sean legibles y mantenibles:
 
 ```csharp
 [Test]
@@ -2342,25 +2306,22 @@ public async Task GetById_ProductoExists_ReturnsProducto()
 }
 ```
 
-> 💡 **Consejo:** Usa InMemory para tests unitarios (rápidos, <1s) y TestContainers para tests de integración (realistas, >5s). En CI/CD, ejecuta ambos: InMemory para feedback rápido, TestContainers para verificación final.
+> ?? **Consejo:** Usa InMemory para tests unitarios (r�pidos, <1s) y TestContainers para tests de integraci�n (realistas, >5s). En CI/CD, ejecuta ambos: InMemory para feedback r�pido, TestContainers para verificaci�n final.
 
----
-## 12.19. Buenas prácticas
+## 12.19. Buenas pr�cticas
 
-1. **Usa Fluent API sobre Data Annotations** cuando necesites configuración avanzada (relaciones complejas, índices, filtros). Para lo simple (`[Required]`, `[StringLength]`), Data Annotations es suficiente.
-2. **Separa configuraciones** con `IEntityTypeConfiguration<T>` y usa `ApplyConfigurationsFromAssembly` para que se apliquen automáticamente.
+1. **Usa Fluent API sobre Data Annotations** cuando necesites configuraci�n avanzada (relaciones complejas, �ndices, filtros). Para lo simple (`[Required]`, `[StringLength]`), Data Annotations es suficiente.
+2. **Separa configuraciones** con `IEntityTypeConfiguration<T>` y usa `ApplyConfigurationsFromAssembly` para que se apliquen autom�ticamente.
 3. **Usa `AsNoTracking()`** en todas las consultas de solo lectura. Reduce memoria y mejora rendimiento.
-4. **Prefiere `ExecuteUpdate/ExecuteDelete`** sobre cargar-modificar-guardar para operaciones bulk. SonMuch más rápidas.
-5. **NUNCA uses `EnsureCreated()` en producción** — usa `Migrate()`. `EnsureCreated` no soporta migraciones.
+4. **Prefiere `ExecuteUpdate/ExecuteDelete`** sobre cargar-modificar-guardar para operaciones bulk. SonMuch m�s r�pidas.
+5. **NUNCA uses `EnsureCreated()` en producci�n** � usa `Migrate()`. `EnsureCreated` no soporta migraciones.
 6. **Configura logging** en desarrollo para inspeccionar consultas SQL. Usa `ToQueryString()` para verificar.
-7. **Usa `HasPrecision(18, 2)`** en vez de `[Column(TypeName="decimal(18,2)")]` para decimales. Más portable entre BDs.
-8. **Implementa borrado lógico** con `HasQueryFilter(p => !p.IsDeleted)` en vez de borrar físicamente. Permite recuperación y auditoría.
-9. **Testea con TestContainers** para tests de integración con BD real. InMemory para tests unitarios.
+7. **Usa `HasPrecision(18, 2)`** en vez de `[Column(TypeName="decimal(18,2)")]` para decimales. M�s portable entre BDs.
+8. **Implementa borrado l�gico** con `HasQueryFilter(p => !p.IsDeleted)` en vez de borrar f�sicamente. Permite recuperaci�n y auditor�a.
+9. **Testea con TestContainers** para tests de integraci�n con BD real. InMemory para tests unitarios.
 10. **Revisa `ToQueryString()`** siempre que tengas una consulta que no funciona como esperabas.
 
----
-
-## 12.20. Reto
+12.20. Reto
 
 > Aplica todo lo visto en el tema a la API de Funkos.
 
@@ -2390,45 +2351,45 @@ erDiagram
     }
 ```
 
-**Añade a tu API:**
+**A�ade a tu API:**
 
-1. **Entidades:** `Funko` y `Categoria` con Data Annotations por defecto (`[Required]`, `[StringLength]`, `[Key]`, etc.) y Fluent API solo para relaciones (1:N), índices, `HasPrecision` y `HasQueryFilter`
-2. **Borrado lógico:** Campo `IsDeleted` con `HasQueryFilter(f => !f.IsDeleted)`, método para listar borrados con `IgnoreQueryFilters()` y restaurar
+1. **Entidades:** `Funko` y `Categoria` con Data Annotations por defecto (`[Required]`, `[StringLength]`, `[Key]`, etc.) y Fluent API solo para relaciones (1:N), �ndices, `HasPrecision` y `HasQueryFilter`
+2. **Borrado l�gico:** Campo `IsDeleted` con `HasQueryFilter(f => !f.IsDeleted)`, m�todo para listar borrados con `IgnoreQueryFilters()` y restaurar
 3. **Timestamps:** `CreatedAt` al crear, `UpdatedAt` al modificar (en el repositorio o con `SaveChangesAsync` override)
-4. **Repository Pattern:** `IFunkRepository` con CRUD completo (Create, Read, Update, Delete lógico, Delete físico, GetDeleted, Restore) e `ICategoriaRepository` solo lectura (GetAll, GetById, GetByNombre)
-5. **Seed Data:** 5 categorías y 10 Funkos que se insertan automáticamente al iniciar la aplicación
-6. **Endpoints de Categorías:** Solo `GET /api/categorias` y `GET /api/categorias/{id}` (sin POST, PUT ni DELETE)
-7. **Tests con TestContainers:** Tests de integración con PostgreSQL real: Create, GetById, GetAll, Delete lógico, Restore, código duplicado
+4. **Repository Pattern:** `IFunkRepository` con CRUD completo (Create, Read, Update, Delete l�gico, Delete f�sico, GetDeleted, Restore) e `ICategoriaRepository` solo lectura (GetAll, GetById, GetByNombre)
+5. **Seed Data:** 5 categor�as y 10 Funkos que se insertan autom�ticamente al iniciar la aplicaci�n
+6. **Endpoints de Categor�as:** Solo `GET /api/categorias` y `GET /api/categorias/{id}` (sin POST, PUT ni DELETE)
+7. **Tests con TestContainers:** Tests de integraci�n con PostgreSQL real: Create, GetById, GetAll, Delete l�gico, Restore, c�digo duplicado
 8. **Arquitectura:** Estructura `Models/`, `Repositories/`, `Services/`, `Entity/`, `Infrastructure/` con Config classes, DTOs como records, primary constructors
 
 **Puntos extra:**
 
-- Paginación en `GetAll`
-- Búsqueda por texto en Funkos
+- Paginaci�n en `GetAll`
+- B�squeda por texto en Funkos
 - Logging para ver las consultas SQL
 
 ---
 
 **Resumen del punto:**
 
-| Concepto | Descripción |
+| Concepto | Descripci�n |
 |----------|-------------|
 | **ORM** | Traduce objetos C# a SQL |
-| **DbContext** | Sesión con la base de datos |
-| **Change Tracker** | Detecta qué entidades han cambiado |
-| **Fluent API** | Configuración avanzada de entidades |
+| **DbContext** | Sesi�n con la base de datos |
+| **Change Tracker** | Detecta qu� entidades han cambiado |
+| **Fluent API** | Configuraci�n avanzada de entidades |
 | **Data Annotations** | Atributos C# para mapear |
 | **Relaciones** | 1:1, 1:N, N:M |
 | **Owned Types** | Value Objects en la misma tabla |
-| **Value Converters** | Transformar tipos C# ↔ BD |
+| **Value Converters** | Transformar tipos C# ? BD |
 | **Shadow Properties** | Propiedades solo en la BD |
-| **Query Filters** | Filtros globales automáticos |
+| **Query Filters** | Filtros globales autom�ticos |
 | **AsNoTracking** | Sin tracking para solo lectura |
-| **ExecuteUpdate/Delete** | Operaciones bulk rápidas |
+| **ExecuteUpdate/Delete** | Operaciones bulk r�pidas |
 | **Migraciones** | Versionado del esquema |
 | **Concurrencia** | Optimista vs Pessimista |
 | **TestContainers** | Tests con BD real en Docker |
 
-**¿Qué viene después?**
+**�Qu� viene despu�s?**
 
-En el siguiente punto veremos **MongoDB**: una base de datos NoSQL orientada a documentos que no usa tablas ni SQL. Verás cómo trabajar con colecciones de documentos JSON y cómo muchos conceptos de EF Core (repositorios, mapeo, configuración) tienen su equivalente en el mundo NoSQL con el **MongoDB.Driver**.
+En el siguiente punto veremos **MongoDB**: una base de datos NoSQL orientada a documentos que no usa tablas ni SQL. Ver�s c�mo trabajar con colecciones de documentos JSON y c�mo muchos conceptos de EF Core (repositorios, mapeo, configuraci�n) tienen su equivalente en el mundo NoSQL con el **MongoDB.Driver**.

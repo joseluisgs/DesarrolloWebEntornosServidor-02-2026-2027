@@ -54,8 +54,6 @@ En este punto aprenderás a manejar errores de negocio de forma explícita, sin 
 - Crear errores de dominio tipados con `DomainError`
 - Integrar Result con controladores ASP.NET Core
 
----
-
 ## 7.1. Modelando el dominio: casos correctos e incorrectos
 
 ### 7.1.1. ¿Qué es el dominio?
@@ -141,8 +139,6 @@ public Result<Producto, DomainError> GetById(int id)
 ```
 
 Ahora el método dice: "devuelvo un Producto **o** un error". El llamador **sabe** que debe manejar ambos casos. No hay sorpresas.
-
----
 
 ## 7.2. Excepciones: qué son y cuándo usarlas
 
@@ -232,8 +228,6 @@ catch (ConflictException ex) { return Conflict(ex.Message); }
 | Overhead | Crear stack trace para algo "normal" |
 | Fácil olvidar catch | Si olvidas uno, el error llega al cliente como 500 |
 
----
-
 ## 7.3. Excepciones en ASP.NET Core
 
 ### 7.3.1. Middleware UseExceptionHandler
@@ -285,8 +279,6 @@ sequenceDiagram
 ```
 
 > 💡 **Consejo:** El middleware de excepciones es un **backup de seguridad**. No debes usarlo como mecanismo principal de manejo de errores. Para errores de negocio, usa el patrón Result.
-
----
 
 ## 7.4. El Patrón Result
 
@@ -341,8 +333,6 @@ UnitResult<DomainError> Delete(int id);
 ```
 
 El llamador **sabe** que puede haber errores y **debe** manejarlos. No hay sorpresas.
-
----
 
 ## 7.5. Opción 1: Union Types (C# 15 / .NET 11)
 
@@ -416,8 +406,6 @@ of its input type (it is not exhaustive).
 | **Boxing** | Si mezclas value types con reference types, hay boxing |
 
 > 📝 **Nota del profesor:** Los Union Types son el futuro de C# para modelar Result. Pero como todavía es preview, en proyectos actuales usaremos CSharpFunctionalExtensions. Cuando .NET 11 sea estable, podréis migrar.
-
----
 
 ## 7.6. Opción 2: CSharpFunctionalExtensions
 
@@ -495,8 +483,6 @@ Result<Producto, DomainError> resultado = service.GetById(id);
 // Si es ValidationError, devolver 400
 // Si es ConflictError, devolver 409
 ```
-
----
 
 ## 7.7. Errores de Dominio tipados
 
@@ -602,8 +588,6 @@ public Result<Producto, DomainError> Create(ProductoDto dto)
     return Result.Success<Producto, DomainError>(producto);
 }
 ```
-
----
 
 ## 7.8. Integración con Controladores
 
@@ -761,8 +745,6 @@ public IActionResult Create([FromBody] ProductoDto dto)
 
 > 💡 **Consejo:** Empezar con la **Opción B**. Es la más equilibrada: un solo switch por controlador, flexible por endpoint, sin dependencias extra. Cuando el proyecto crezca, migrar a Opción C.
 
----
-
 ## 7.9. Buenas prácticas
 
 - **Los errores de negocio son parte del dominio:** No son excepciones, son estados válidos que debes modelar
@@ -774,8 +756,6 @@ public IActionResult Create([FromBody] ProductoDto dto)
 - **Match siempre:** No uses `IsSuccess`/`IsFailure` directamente — usa `Match` para forzar el manejo de ambos casos
 
 > 💡 **Consejo:** Aunque uses Result Pattern, **siempre** debes tener un middleware de excepciones global como safety net. Si se te escapa un bug, una excepción de BD, o un error inesperado, el middleware lo captura y devuelve una respuesta 500 coherente en lugar de un HTML crudo. Es como el airbag de tu coche: confías en que no lo necesitarás, pero ahí está por si acaso.
-
----
 
 ## 7.10. Reto
 

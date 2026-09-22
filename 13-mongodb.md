@@ -61,9 +61,7 @@
 - Comparar ambas aproximaciones (Driver vs EF Core)
 - Testear con TestContainers
 
----
-
-## 13.1. Fundamentos NoSQL
+13.1. Fundamentos NoSQL
 
 ### 13.1.1. ¿Qué es MongoDB?
 
@@ -154,9 +152,7 @@ Una **colección** es un conjunto de documentos (equivalente a una tabla). Las c
 
 > ⚠️ **Advertencia:** La flexibilidad es una navaja de dos cortes. Sin un esquema definido, puedes terminar con documentos inconsistentes que son difíciles de mantener. Siempre define un modelo claro en tu aplicación.
 
----
-
-## 13.2. Diseño NoSQL: de SQL a MongoDB
+13.2. Diseño NoSQL: de SQL a MongoDB
 
 ### 13.2.1. Tablas → Colecciones, Filas → Documentos
 
@@ -282,9 +278,7 @@ Solución: **Subset Pattern** — guarda solo los últimos N elementos embebidos
 | **Schema Versioning** | Versiona el esquema para migraciones | v1: nombre, v2: nombre + email |
 | **Computed** | Pre-calcula datos que se leen mucho | Total de ventas pre-calculado |
 
----
-
-## 13.3. MongoDB con Driver Nativo
+13.3. MongoDB con Driver Nativo
 
 ### 13.3.1. Paquete NuGet
 
@@ -546,9 +540,7 @@ indices.CreateOne(new CreateIndexModel<Producto>(
         .Descending(p => p.Precio)));
 ```
 
----
-
-## 13.4. MongoDB con EF Core
+13.4. MongoDB con EF Core
 
 ### 13.4.1. Paquete NuGet
 
@@ -828,9 +820,7 @@ var existe = await db.Productos.AnyAsync(p => p.Nombre == "Teclado");
 
 > 📝 **Nota:** El proveedor MongoDB EF Core está en desarrollo activo. Algunas features pueden añadirse en el futuro. Consulta siempre la [documentación oficial](https://www.mongodb.com/es/docs/entity-framework/current/limitations/) para ver el estado actual.
 
----
-
-## 13.5. Driver Nativo vs EF Core: Comparativa
+13.5. Driver Nativo vs EF Core: Comparativa
 
 ```mermaid
 graph TD
@@ -858,7 +848,7 @@ graph TD
     style D2 fill:#EF6C00,color:#fff
     style D3 fill:#F57C00,color:#fff
     style D4 fill:#f44336,color:#fff
-    style E1 fill:#6A1B9A,color:#fff
+    style E1 fill:#9C27B0,color:#fff
     style E2 fill:#7B1FA2,color:#fff
     style E3 fill:#8E24AA,color:#fff
     style E4 fill:#f44336,color:#fff
@@ -883,9 +873,7 @@ graph TD
 
 📌 Ejemplo real: **TiendaAPI** usa el Driver Nativo para MongoDB porque necesita agregaciones y consultas complejas que EF Core no soporta. Pero para PostgreSQL usa EF Core porque las migraciones y el LINQ son muy útiles.
 
----
-
-## 13.6. Repositorio CRUD con MongoDB
+13.6. Repositorio CRUD con MongoDB
 
 ### 13.6.1. Modelo y configuración
 
@@ -1025,9 +1013,7 @@ public class FunkoEfCoreRepository(TiendaDbContext db) : IFunkoRepository
 }
 ```
 
----
-
-## 13.7. Testing con MongoDB
+13.7. Testing con MongoDB
 
 ### 13.7.1. Compatibilidad de versiones: EF Core + MongoDB
 
@@ -1300,9 +1286,7 @@ public class FunkoEfCoreTests : MongoTestBase
 }
 ```
 
----
-
-## 13.8. Semilla de datos (Seed)
+13.8. Semilla de datos (Seed)
 
 ### Con Driver Nativo
 
@@ -1342,9 +1326,7 @@ if (app.Environment.IsDevelopment())
 
 > 💡 **Consejo:** El seeder siempre debe comprobar si ya existes datos (`CountDocumentsAsync` o `AnyAsync`) antes de insertar. Así es seguro ejecutarlo múltiples veces sin duplicar datos.
 
----
-
-## 13.9. Buenas prácticas
+13.9. Buenas prácticas
 
 ```csharp
 // ❌ MALO: Crear un MongoClient por petición — agota el pool de conexiones
@@ -1382,9 +1364,7 @@ public ObjectId Id { get; set; } // Indexado automáticamente, búsqueda óptima
 9. **EF Core para CRUD simple** — Si vienes de EF Core relacional, es más fácil
 10. **TestContainers para tests** — Un MongoDB real en Docker, sin depender de instalación local
 
----
-
-## 13.10. Reto
+13.10. Reto
 
 Implementa un repositorio CRUD de **Funkos con Categorías embebidas** usando MongoDB.
 
@@ -1486,7 +1466,7 @@ graph TD
     style REF fill:#2196F3,color:#fff
     style PAT fill:#2196F3,color:#fff
     style DRIVER fill:#FF9800,color:#fff
-    style EF fill:#6A1B9A,color:#fff
+    style EF fill:#9C27B0,color:#fff
     style CRUD1 fill:#EF6C00,color:#fff
     style CRUD2 fill:#7B1FA2,color:#fff
     style TC fill:#7B1FA2,color:#fff

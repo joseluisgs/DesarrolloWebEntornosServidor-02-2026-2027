@@ -340,8 +340,6 @@ app.Run();
 - **Pipeline ordenado:** El orden de middlewares importa. Siempre: ExceptionHandler → HTTPS → CORS → Authentication → Authorization → Routing → Endpoints
 - **Config classes para DI:** Organiza el registro de dependencias en clases estáticas (RepositoriesConfig, ServicesConfig) en lugar de llenar Program.cs
 
----
-
 ## 5.7. Reto: Traza una petición HTTP
 
 > Antes de irte, dibuja el camino completo de una petición.
