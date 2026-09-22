@@ -371,23 +371,6 @@ builder.Services.AddHealthChecks()
 
 > ⚠️ **Advertencia:** Los logs en produccion deben tener nivel Warning o superior. Los logs Debug e Information en produccion generan demasiado volumen y pueden impactar el rendimiento.
 
-**Resumen del punto:**
-
-| Concepto | Descripcion |
-|----------|-------------|
-| **Logging** | Registro de eventos para debugging y auditoria |
-| **Serilog** | Biblioteca de logging estructurado para .NET |
-| **Logging Estructurado** | Logs en formato JSON con campos clave-valor |
-| **Niveles de Log** | Debug, Information, Warning, Error, Critical |
-| **Correlation ID** | Identificador unico para trazabilidad de requests |
-| **Health Checks** | Verificacion de salud de la aplicacion y dependencias |
-| **Sinks** | Destinos de los logs (Console, File, Seq, etc.) |
-| **Enrichers** | Informacion contextual añadida automaticamente a los logs |
-
-**¿Qué viene despues?**
-
-En el siguiente punto veremos **Testing de Servicios Web**: como escribir tests unitarios con NUnit, usar FluentAssertions para aserciones legibles, crear mocks con Moq y implementar tests de integracion con TestContainers.
-
 ## 27.7. Reto: Implementa Logging en FunkoApp
 
 > Antes de irte, implementa un sistema completo de logging y monitoreo para tu API de Funkos.
@@ -405,3 +388,20 @@ Tu API de Funkos necesita un sistema de logging para debugear errores en desarro
 5. Configura niveles de log diferentes por entorno
 
 > 💡 **Consejo:** Usa `logger.LogInformation` para eventos normales, `logger.LogWarning` para situaciones anomolas y `logger.LogError` para errores. Nunca uses `logger.LogDebug` en produccion.
+
+**Resumen del punto:**
+
+| Concepto | Descripcion |
+|----------|-------------|
+| **Logging** | Registro de eventos para debugging y auditoria |
+| **Serilog** | Biblioteca de logging estructurado para .NET |
+| **Logging Estructurado** | Logs en formato JSON con campos clave-valor |
+| **Niveles de Log** | Debug, Information, Warning, Error, Critical |
+| **Correlation ID** | Identificador unico para trazabilidad de requests |
+| **Health Checks** | Verificacion de salud de la aplicacion y dependencias |
+| **Sinks** | Destinos de los logs (Console, File, Seq, etc.) |
+| **Enrichers** | Informacion contextual añadida automaticamente a los logs |
+
+**¿Qué viene despues?**
+
+En el siguiente punto veremos **Testing de Servicios Web**: como escribir tests unitarios con NUnit, usar FluentAssertions para aserciones legibles, crear mocks con Moq y implementar tests de integracion con TestContainers.

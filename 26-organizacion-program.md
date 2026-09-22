@@ -381,22 +381,6 @@ app.Run();
 
 > ⚠️ **Advertencia:** No sobre-organices. Para proyectos pequenos, un Program.cs bien estructurado puede ser suficiente. La organizacion modular es para proyectos que crecen.
 
-**Resumen del punto:**
-
-| Concepto | Descripcion |
-|----------|-------------|
-| **Program.cs monolitico** | Archivo grande, dificil de mantener y navegar |
-| **Extension methods** | Metodos de extension para encapsular configuraciones |
-| **Infrastructures/** | Carpeta recomendada para archivos de configuracion |
-| **Separacion de responsabilidades** | Cada archivo maneja una unica configuracion |
-| **Reutilizacion** | Las configuraciones pueden reutilizarse en otros proyectos |
-| **Testabilidad** | Cada configuracion puede probarse de forma aislada |
-| **Legibilidad** | Program.cs se convierte en un indice claro |
-
-**¿Qué viene despues?**
-
-En el siguiente punto veremos **Logging y Monitoreo**: como configurar Serilog para logging estructurado, implementar correlation IDs para trazabilidad y configurar health checks para monitorizar la salud de la aplicacion.
-
 ## 26.8. Reto: Refactoriza el Program.cs de FunkoApp
 
 > Antes de irte, refactoriza un Program.cs monolitico utilizando el patron de extension methods.
@@ -420,3 +404,19 @@ Tu API de Funkos tiene un Program.cs creciente con configuraciones de base de da
 5. Añade documentacion XML a cada extension method
 
 > 💡 **Consejo:** El objetivo es que Program.cs sea un indice legible, no un archivo de configuracion. Cada linea debe representar un modulo funcional claro.
+
+**Resumen del punto:**
+
+| Concepto | Descripcion |
+|----------|-------------|
+| **Program.cs monolitico** | Archivo grande, dificil de mantener y navegar |
+| **Extension methods** | Metodos de extension para encapsular configuraciones |
+| **Infrastructures/** | Carpeta recomendada para archivos de configuracion |
+| **Separacion de responsabilidades** | Cada archivo maneja una unica configuracion |
+| **Reutilizacion** | Las configuraciones pueden reutilizarse en otros proyectos |
+| **Testabilidad** | Cada configuracion puede probarse de forma aislada |
+| **Legibilidad** | Program.cs se convierte en un indice claro |
+
+**¿Qué viene despues?**
+
+En el siguiente punto veremos **Logging y Monitoreo**: como configurar Serilog para logging estructurado, implementar correlation IDs para trazabilidad y configurar health checks para monitorizar la salud de la aplicacion.

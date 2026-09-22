@@ -607,25 +607,6 @@ dotnet test --filter "Category=Integration"
 
 > ⚠️ **Advertencia:** No sobre-testear. Tests que testean el framework o la implementacion interna son fragiles y se rompen con cambios de refactorizacion. Testea el comportamiento, no la implementacion.
 
-**Resumen del punto:**
-
-| Concepto | Descripcion |
-|----------|-------------|
-| **Test Unitario** | Prueba una unidad de codigo de forma aislada con mocks |
-| **Test de Integracion** | Prueba multiples componentes juntos con dependencias reales |
-| **Test E2E** | Simula un usuario real en la aplicacion completa |
-| **NUnit** | Framework de testing con atributos descriptivos |
-| **FluentAssertions** | Assertions legibles y expresivos |
-| **Moq** | Creacion de objetos mocks para dependencias |
-| **TestContainers** | Contenedores Docker para tests de integracion |
-| **WebApplicationFactory** | Servidor en memoria para tests de API |
-| **Patron AAA** | Arrange-Act-Assert para estructurar tests |
-| **Cobertura** | Porcentaje de codigo ejecutado por tests |
-
-**¿Qué viene despues?**
-
-En el siguiente punto veremos **Docker y Despliegue**: como crear Dockerfiles optimizados, usar Docker Compose para orquestar multiples contenedores, implementar multi-stage builds y configurar CI/CD con GitHub Actions.
-
 ## 28.14. Reto: Tests para FunkoApp
 
 > Antes de irte, implementa una suite completa de tests para tu API de Funkos.
@@ -646,3 +627,22 @@ Tu API de Funkos necesita tests automatizados para garantizar que cada cambio no
 5. Genera reporte de cobertura (>80%)
 
 > 💡 **Consejo:** Usa el patron AAA en cada test. Comenta las secciones Arrange, Act y Assert para que el codigo sea legible.
+
+**Resumen del punto:**
+
+| Concepto | Descripcion |
+|----------|-------------|
+| **Test Unitario** | Prueba una unidad de codigo de forma aislada con mocks |
+| **Test de Integracion** | Prueba multiples componentes juntos con dependencias reales |
+| **Test E2E** | Simula un usuario real en la aplicacion completa |
+| **NUnit** | Framework de testing con atributos descriptivos |
+| **FluentAssertions** | Assertions legibles y expresivos |
+| **Moq** | Creacion de objetos mocks para dependencias |
+| **TestContainers** | Contenedores Docker para tests de integracion |
+| **WebApplicationFactory** | Servidor en memoria para tests de API |
+| **Patron AAA** | Arrange-Act-Assert para estructurar tests |
+| **Cobertura** | Porcentaje de codigo ejecutado por tests |
+
+**¿Qué viene despues?**
+
+En el siguiente punto veremos **Docker y Despliegue**: como crear Dockerfiles optimizados, usar Docker Compose para orquestar multiples contenedores, implementar multi-stage builds y configurar CI/CD con GitHub Actions.

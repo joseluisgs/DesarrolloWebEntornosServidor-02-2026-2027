@@ -474,24 +474,6 @@ builder.Configuration.AddAzureAppConfiguration(options =>
 | **Usar IWebHostEnvironment** | Para comportamiento condicional segun el entorno |
 | **No exponer detalles de error** | En produccion, oculta los detalles de excepciones al cliente |
 
-**Resumen del punto:**
-
-| Concepto | Descripcion |
-|----------|-------------|
-| **Entornos** | Development, Staging, Production permiten configurar la app de forma diferente |
-| **appsettings.json** | Organiza la configuracion por entorno con prioridad |
-| **Variables de entorno** | Son la forma mas segura de configurar secretos en produccion |
-| **IWebHostEnvironment** | Permite acceder al entorno actual desde cualquier parte del codigo |
-| **User Secrets** | Almacenan datos sensibles de forma segura en desarrollo |
-| **Swagger** | Debe estar deshabilitado en produccion por seguridad |
-| **Logging** | Debe ser detallado en desarrollo y minimo en produccion |
-| **Validacion de configuracion** | Previene errores de inicio por configuracion incompleta |
-| **Prioridad de configuracion** | appsettings.json < appsettings.{Env}.json < variables de entorno < user secrets |
-
-**¿Qué viene despues?**
-
-En el siguiente punto veremos **Organizacion de Program.cs**: como refactorizar un Program.cs monolitico usando extension methods y el patron Infrastructure para mantener el codigo limpio y mantenible.
-
 ## 25.12. Reto: Configura Entornos para FunkoApp
 
 > Antes de irte, configura los entornos de desarrollo y produccion para tu API de Funkos.
@@ -510,3 +492,21 @@ Tu API de Funkos necesita funcionar correctamente tanto en desarrollo como en pr
 6. Implementa un servicio que se comporte diferente segun el entorno
 
 > 💡 **Consejo:** Asegurate de que el .gitignore excluya archivos sensibles como .env y secrets.json. Los secretos nunca deben llegar al repositorio.
+
+**Resumen del punto:**
+
+| Concepto | Descripcion |
+|----------|-------------|
+| **Entornos** | Development, Staging, Production permiten configurar la app de forma diferente |
+| **appsettings.json** | Organiza la configuracion por entorno con prioridad |
+| **Variables de entorno** | Son la forma mas segura de configurar secretos en produccion |
+| **IWebHostEnvironment** | Permite acceder al entorno actual desde cualquier parte del codigo |
+| **User Secrets** | Almacenan datos sensibles de forma segura en desarrollo |
+| **Swagger** | Debe estar deshabilitado en produccion por seguridad |
+| **Logging** | Debe ser detallado en desarrollo y minimo en produccion |
+| **Validacion de configuracion** | Previene errores de inicio por configuracion incompleta |
+| **Prioridad de configuracion** | appsettings.json < appsettings.{Env}.json < variables de entorno < user secrets |
+
+**¿Qué viene despues?**
+
+En el siguiente punto veremos **Organizacion de Program.cs**: como refactorizar un Program.cs monolitico usando extension methods y el patron Infrastructure para mantener el codigo limpio y mantenible.

@@ -528,22 +528,6 @@ builder.Services.AddSwaggerGen(options =>
 
 > ⚠️ **Advertencia:** La documentacion desactualizada es peor que ninguna documentacion. Manten siempre sincronizada la documentacion con el codigo.
 
-**Resumen del punto:**
-
-| Concepto | Descripcion |
-|----------|-------------|
-| **CORS** | Controla el acceso cross-domain entre navegadores y APIs |
-| **Swagger/OpenAPI** | Genera documentacion interactiva automaticamente |
-| **Swashbuckle** | Integra Swagger en ASP.NET Core |
-| **Atributos de documentacion** | Enriquecen la documentacion con descripciones |
-| **JWT en Swagger** | Permite probar endpoints protegidos desde la UI |
-| **Versionado de API** | Permite evolucionar sin romper clientes existentes |
-| **Filtros personalizados** | Permiten customizar la documentacion generada |
-
-**¿Qué viene después?**
-
-En el siguiente punto veremos **Configuracion de Entornos**: cómo manejar diferentes configuraciones para desarrollo y producción, variables de entorno, User Secrets y Azure App Configuration.
-
 ## 24.11. Reto: Documenta la API de FunkoApp
 
 > Antes de irte, documenta completamente la API de Funkos. No escribas codigo: diseña la documentacion.
@@ -573,3 +557,19 @@ Vas a documentar una API REST para gestionar una **coleccion de Funkos** con Swa
 6. Configura CORS con politica restrictiva
 
 > 💡 **Consejo:** Usa comentarios XML en todos los modelos y endpoints. Los comentarios XML se convierten automaticamente en la documentacion de Swagger.
+
+**Resumen del punto:**
+
+| Concepto | Descripcion |
+|----------|-------------|
+| **CORS** | Controla el acceso cross-domain entre navegadores y APIs |
+| **Swagger/OpenAPI** | Genera documentacion interactiva automaticamente |
+| **Swashbuckle** | Integra Swagger en ASP.NET Core |
+| **Atributos de documentacion** | Enriquecen la documentacion con descripciones |
+| **JWT en Swagger** | Permite probar endpoints protegidos desde la UI |
+| **Versionado de API** | Permite evolucionar sin romper clientes existentes |
+| **Filtros personalizados** | Permiten customizar la documentacion generada |
+
+**¿Qué viene después?**
+
+En el siguiente punto veremos **Configuracion de Entornos**: cómo manejar diferentes configuraciones para desarrollo y producción, variables de entorno, User Secrets y Azure App Configuration.

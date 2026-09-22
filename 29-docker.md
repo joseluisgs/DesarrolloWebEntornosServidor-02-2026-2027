@@ -514,25 +514,6 @@ jobs:
 
 > ⚠️ **Advertencia:** Nunca guardes secretos en el Dockerfile o en el codigo fuente. Usa variables de entorno o archivos .env que nunca se suban al repositorio.
 
-**Resumen del punto:**
-
-| Concepto | Descripcion |
-|----------|-------------|
-| **Contenedor** | Unidad de software portable con todas las dependencias |
-| **Imagen Docker** | Plantilla de solo lectura para crear contenedores |
-| **Dockerfile** | Instrucciones para construir una imagen |
-| **Multi-stage** | Construir en etapas para reducir tamanio final |
-| **Docker Compose** | Orquestar multiples contenedores |
-| **Variables de entorno** | Configurar la aplicacion sin modificar el codigo |
-| **Health Check** | Verificacion de salud del contenedor |
-| **CI/CD** | Automatizacion de build, test y deploy |
-| **GitHub Actions** | Plataforma de CI/CD integrada en GitHub |
-| **Alpine Linux** | Imagenes mas ligeras para produccion |
-
-**¿Que viene despues?**
-
-En la siguiente unidad veremos **Clean Architecture**: como organizar una aplicacion ASP.NET Core en capas (Domain, Application, Infrastructure, Presentation) siguiendo principios SOLID y patrones de diseño.
-
 ## 29.10. Reto: Despliega FunkoApp con Docker
 
 > Antes de irte, despliega tu API de Funkos completamente con Docker.
@@ -563,3 +544,22 @@ FunkoApp/
 ```
 
 > 💡 **Consejo:** Prueba primero con `docker compose up -d` para verificar que todo funciona. Luego configura el CI/CD para automatizar el proceso.
+
+**Resumen del punto:**
+
+| Concepto | Descripcion |
+|----------|-------------|
+| **Contenedor** | Unidad de software portable con todas las dependencias |
+| **Imagen Docker** | Plantilla de solo lectura para crear contenedores |
+| **Dockerfile** | Instrucciones para construir una imagen |
+| **Multi-stage** | Construir en etapas para reducir tamanio final |
+| **Docker Compose** | Orquestar multiples contenedores |
+| **Variables de entorno** | Configurar la aplicacion sin modificar el codigo |
+| **Health Check** | Verificacion de salud del contenedor |
+| **CI/CD** | Automatizacion de build, test y deploy |
+| **GitHub Actions** | Plataforma de CI/CD integrada en GitHub |
+| **Alpine Linux** | Imagenes mas ligeras para produccion |
+
+**¿Que viene despues?**
+
+En la siguiente unidad veremos **Clean Architecture**: como organizar una aplicacion ASP.NET Core en capas (Domain, Application, Infrastructure, Presentation) siguiendo principios SOLID y patrones de diseño.
