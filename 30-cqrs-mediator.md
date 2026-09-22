@@ -504,9 +504,22 @@ MongoDB es solo **una opción**. También puedes usar:
 
 ## 30.5. Sincronización SQL → MongoDB
 
-### 30.5.1. BackgroundService de sincronización
+La sincronización es el corazón de CQRS. Hay varias formas de pasar datos de PostgreSQL a MongoDB, cada una con diferentes niveles de complejidad y latencia.
 
-Un `BackgroundService` escucha cambios en PostgreSQL y los propaga a MongoDB:
+### 30.5.1. Opciones de sincronización
+
+| Opción | Latencia | Complejidad | Cuándo usar |
+|--------|----------|-------------|-------------|
+| **BackgroundService (polling)** | 1-5 min | Baja | Datos que cambian poco, prototipos |
+| **Domain Events** | Segundos | Media | Cuando ya tienes el patrón implementado |
+| **Change Data Capture (CDC)** | Muy baja | Alta | Producción con millones de registros |
+| **RX.NET Observables** | Segundos | Media | Cuando necesitas reactividad en tiempo real |
+
+📌 Ejemplo real: **Amazon** usa CDC con Kafka para sincronizar datos entre cientos de microservicios. Cada cambio en PostgreSQL genera un evento que actualiza ElasticSearch en menos de 1 segundo.
+
+### 30.5.2. Opción 1: BackgroundService (polling)
+
+La forma más simple. Un servicio en segundo plano consulta PostgreSQL periódicamente y actualiza MongoDB.
 
 ```csharp
 public class SyncBackgroundService : BackgroundService
@@ -527,7 +540,8 @@ public class SyncBackgroundService : BackgroundService
                 _logger.LogError(ex, "Error en sincronización");
             }
 
-            await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+            // Intervalo de 1 minuto (no 5, que es demasiado)
+            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
     }
 
@@ -562,25 +576,130 @@ public class SyncBackgroundService : BackgroundService
 }
 ```
 
-### 30.5.2. Patron de publicación
+✅ **Ventajas**: Simple de implementar, no necesita herramientas extra
+❌ **Desventajas**: Latencia de 1-5 minutos, consume recursos periódicamente
+
+### 30.5.3. Opción 2: Domain Events
+
+Cuando se crea/modifica/elimina un producto, se publica un evento que el servicio de sincronización escucha.
+
+```csharp
+// Publicar evento después de crear producto
+public class ProductoService
+{
+    private readonly IProductoRepository _repository;
+    private readonly IEventBus _eventBus;
+
+    public async Task<Producto> CreateAsync(CreateProductoDto dto)
+    {
+        var producto = _repository.Add(dto.ToModel());
+        
+        // Publicar evento
+        await _eventBus.PublishAsync(new ProductoCreadoEvent(producto.Id, producto.Nombre));
+        
+        return producto;
+    }
+}
+
+// Escuchar evento
+public class SyncEventHandler
+{
+    private readonly IMongoDbContext _mongoContext;
+    private readonly ISqlDbContext _sqlContext;
+
+    public async Task Handle(ProductoCreadoEvent evento)
+    {
+        var producto = await _sqlContext.Productos
+            .Include(p => p.Categoria)
+            .Include(p => p.Proveedor)
+            .FirstAsync(p => p.Id == evento.ProductoId);
+
+        await _mongoContext.Productos.ReplaceOneAsync(
+            p => p.Id == producto.Id, producto.ToRead(),
+            new ReplaceOptions { IsUpsert = true });
+    }
+}
+```
+
+✅ **Ventajas**: Latencia de segundos, no consume recursos periódicamente
+❌ **Desventajas**: Más código, necesita implementar el patrón de eventos
+
+### 30.5.4. Opción 3: Change Data Capture (CDC)
+
+CDC captura los cambios en PostgreSQL y los propaga a MongoDB automáticamente. La herramienta más común es **Debezium** con **Kafka**.
 
 ```mermaid
 sequenceDiagram
     participant Admin as Admin
-    participant SQL as PostgreSQL (Escrituras)
-    participant Sync as BackgroundService
-    participant Mongo as MongoDB (Lecturas)
-    participant Cliente as Cliente
+    participant SQL as PostgreSQL
+    participant CDC as Debezium (CDC)
+    participant Kafka as Kafka
+    participant Consumer as Sync Service
+    participant Mongo as MongoDB
 
-    Admin->>SQL: CreateProducto (Command)
-    SQL-->>SQL: INSERT INTO Productos
-    SQL-->>SQL: INSERT INTO Categorias
-    Sync->>SQL: Polling cada 5 min
-    SQL-->>Sync: Productos con relaciones
-    Sync->>Mongo: ReplaceOne (upsert)
-    Cliente->>Mongo: GetProducto (Query)
-    Mongo-->>Cliente: Documento con categoría embebida
+    Admin->>SQL: INSERT INTO Productos
+    SQL-->>CDC: WAL change event
+    CDC->>Kafka: Publish event
+    Kafka->>Consumer: Consume event
+    Consumer->>Mongo: Insert into productos_read
 ```
+
+✅ **Ventajas**: Latencia de segundos, escalable, profesional
+❌ **Desventajas**: Complejo de configurar, necesita Kafka + Debezium
+
+### 30.5.5. Opción 4: RX.NET con Observables
+
+Usa programación reactiva para escuchar cambios en tiempo real:
+
+```csharp
+public class ReactiveSyncService
+{
+    private readonly Subject<Producto> _productoChanges = new();
+
+    public void OnProductoChanged(Producto producto)
+    {
+        _productoChanges.OnNext(producto);
+    }
+
+    public IDisposable Subscribe(Action<Producto> onSync)
+    {
+        return _productoChanges
+            .Throttle(TimeSpan.FromSeconds(30)) // Esperar 30s de calma
+            .Subscribe(producto => onSync(producto));
+    }
+}
+
+// En ProductoService:
+public class ProductoService
+{
+    private readonly ReactiveSyncService _syncService;
+
+    public async Task<Producto> CreateAsync(CreateProductoDto dto)
+    {
+        var producto = _repository.Add(dto.ToModel());
+        _syncService.OnProductoChanged(producto); // Publicar cambio
+        return producto;
+    }
+}
+```
+
+✅ **Ventajas**: Reactivo, latencia baja, no consume recursos periódicamente
+❌ **Desventajas**: Más complejo, necesita entender programación reactiva
+
+### 30.5.6. Comparativa de opciones
+
+| Criterio | BackgroundService | Domain Events | CDC | RX.NET |
+|----------|-------------------|---------------|-----|--------|
+| **Latencia** | 1-5 min | Segundos | < 1s | Segundos |
+| **Complejidad** | Baja | Media | Alta | Media |
+| **Herramientas** | Ninguna | Ninguna | Kafka + Debezium | RX.NET |
+| **Escalabilidad** | Limitada | Buena | Excelente | Buena |
+| **Coste** | Bajo | Bajo | Medio-Alto | Bajo |
+| **Producción** | Solo datos lentos | Recomendado | Ideal | Alternativa |
+
+> 📝 **Nota:** Para este curso usamos **BackgroundService con 1 minuto** por simplicidad pedagógica. En producción real, usarías **Domain Events** o **CDC** según la escala de tu aplicación.
+
+📌 Ejemplo real: **LinkedIn** usa CDC con Kafka para sincronizar datos entre cientos de microservicios. Cuando actualizas tu perfil, el evento viaja por Kafka y actualiza ElasticSearch, caches y sistemas de recomendación en menos de 1 segundo.
 
 ## 30.6. Consistencia Eventual
 
