@@ -1,90 +1,42 @@
-# 21. Testing con NUnit
+- [28. Testing de Servicios Web](#28-testing-de-servicios-web)
+  - [28.1. Conceptos Fundamentales](#281-conceptos-fundamentales)
+  - [28.2. Tipos de Tests](#282-tipos-de-tests)
+    - [28.2.1. Piramide de Testing](#2821-piramide-de-testing)
+    - [28.2.2. Test Unitario](#2822-test-unitario)
+    - [28.2.3. Test de Integracion](#2823-test-de-integracion)
+    - [28.2.4. Test E2E](#2824-test-e2e)
+  - [28.3. Frameworks de Testing en .NET](#283-frameworks-de-testing-en-net)
+  - [28.4. Estructura del Proyecto de Tests](#284-estructura-del-proyecto-de-tests)
+  - [28.5. Patron AAA (Arrange-Act-Assert)](#285-patron-aaa-arrange-act-assert)
+  - [28.6. NUnit Basics](#286-nunit-basics)
+  - [28.7. FluentAssertions](#287-fluentassertions)
+  - [28.8. Moq - Creando Mocks](#288-moq---creando-mocks)
+  - [28.9. TestContainers](#289-testcontainers)
+  - [28.10. Tests de Controladores con WebApplicationFactory](#2810-tests-de-controladores-con-webapplicationfactory)
+  - [28.11. Tests en Paralelo vs Secuenciales](#2811-tests-en-paralelo-vs-secuenciales)
+  - [28.12. Comandos Utiles](#2812-comandos-utiles)
+  - [28.13. Buenas Practicas](#2813-buenas-practicas)
+  - [28.14. Reto: Tests para FunkoApp](#2814-reto-tests-para-funkoapp)
 
-## Indice
+---
 
-- [21. Testing con NUnit](#21-testing-con-nunit)
-  - [21.1. Conceptos Fundamentales](#211-conceptos-fundamentales)
-    - [Por que hacer Testing](#por-que-hacer-testing)
-    - [Beneficios del Testing](#beneficios-del-testing)
-  - [21.2. Tipos de Tests](#212-tipos-de-tests)
-    - [Piramide de Testing](#piramide-de-testing)
-    - [Test Unitario](#test-unitario)
-    - [Test de Integracion](#test-de-integracion)
-    - [Test E2E](#test-e2e)
-  - [21.3. Frameworks de Testing en .NET](#213-frameworks-de-testing-en-net)
-    - [Librerias Principales](#librerias-principales)
-  - [21.4. Estructura del Proyecto de Tests](#214-estructura-del-proyecto-de-tests)
-    - [Archivo de Proyecto (.csproj)](#archivo-de-proyecto-csproj)
-  - [21.5. Anatomia de un Test Unitario](#215-anatomia-de-un-test-unitario)
-    - [Partes del Test](#partes-del-test)
-  - [21.6. NUnit Basics](#216-nunit-basics)
-    - [Atributos Principales](#atributos-principales)
-    - [Ejemplo Completo](#ejemplo-completo)
-  - [21.7. FluentAssertions](#217-fluentassertions)
-    - [Assertions Comunes](#assertions-comunes)
-  - [21.8. Moq - Creando Mocks](#218-moq---creando-mocks)
-    - [Conceptos de Moq](#conceptos-de-moq)
-    - [Ejemplos de Moq](#ejemplos-de-moq)
-  - [21.9. TestContainers](#219-testcontainers)
-    - [Por que usar TestContainers](#por-que-usar-testcontainers)
-    - [Fixture con TestContainers](#fixture-con-testcontainers)
-    - [Buenas prácticas con TestContainers](#buenas-prácticas-con-testcontainers)
-    - [Test de Repository con TestContainers](#test-de-repository-con-testcontainers)
-  - [21.10. Tests de Controladores](#2110-tests-de-controladores)
-    - [WebApplicationFactory](#webapplicationfactory)
-    - [Tests de Controlador Completos](#tests-de-controlador-completos)
-  - [21.11. Tests en Paralelo vs Secuenciales](#2111-tests-en-paralelo-vs-secuenciales)
-    - [Configuracion de Paralelismo](#configuracion-de-paralelismo)
-    - [Niveles de Paralelismo](#niveles-de-paralelismo)
-    - [Cuando Usar Paralelismo vs Secuencial](#cuando-usar-paralelismo-vs-secuencial)
-  - [21.12. Comandos Utiles](#2112-comandos-utiles)
-  - [21.13. Ejercicio Propuesto](#2113-ejercicio-propuesto)
-    - [Requisitos](#requisitos)
-    - [Entidades](#entidades)
-    - [Tareas](#tareas)
-    - [Criterios de Evaluacion](#criterios-de-evaluacion)
+# 28. Testing de Servicios Web
 
-> **Punto de partida:** ¿Cómo sabes que tu código funciona correctamente? ¿Y cómo verifies que los cambios no rompen funcionalidades existentes? Los tests automatizados son la respuesta: ejecutan tu código de forma controlada y detectan errores antes de que lleguen a producción.
+> **Punto de partida:** Como sabes que tu codigo funciona correctamente? Y como verificas que los cambios no rompen funcionalidades existentes? Los tests automatizados son la respuesta: ejecutan tu codigo de forma controlada y detectan errores antes de que lleguen a produccion.
+
+En este punto aprenderás a escribir tests unitarios con NUnit, usar FluentAssertions para aserciones legibles, crear mocks con Moq y implementar tests de integracion con TestContainers y WebApplicationFactory.
 
 **Objetivos de aprendizaje:**
-- Comprender los fundamentos del testing y la pirámide de tests
+- Comprender los fundamentos del testing y la piramide de tests
 - Escribir test unitarios con NUnit, FluentAssertions y Moq
-- Implementar tests de integración con TestContainers y WebApplicationFactory
-- Configurar paralelismo y medir cobertura de código
+- Implementar tests de integracion con TestContainers y WebApplicationFactory
+- Configurar paralelismo y medir cobertura de codigo
 
-## 21.1. Conceptos Fundamentales
+## 28.1. Conceptos Fundamentales
 
 **Testing** es el proceso de verificar que el codigo funciona correctamente. En lugar de esperar que los usuarios encuentren errores, los tests automatizados detectan problemas antes de llegar a produccion.
 
-### Por que hacer Testing
-
-```mermaid
-flowchart LR
-    subgraph "Sin Tests"
-        A1["Desarrollar"] --> A2["Manual QA"]
-        A2 --> A3["Usuario final"]
-        A3 --> A4["Reporte bug"]
-        A4 --> A1
-        style A1 fill:#f44336
-        style A2 fill:#f44336
-        style A3 fill:#f44336
-        style A4 fill:#f44336
-    end
-    
-    subgraph "Con Tests"
-        B1["Desarrollar"] --> B2["Tests automaticos"]
-        B2 --> B3["Feedback inmediato"]
-        B3 --> B4["Confianza"]
-        style B1 fill:#4CAF50
-        style B2 fill:#4CAF50
-        style B3 fill:#4CAF50
-        style B4 fill:#4CAF50
-    end
-```
-
-🧠 **Analogia**: Los tests son como el entrenamiento de un atleta. Antes de competir en una carrera importante (producción), el atleta entrena exhaustivamente en diferentes condiciones (tests unitarios, integración, E2E) para asegurar que su rendimiento será óptimo cuando importa de verdad.
-
-### Beneficios del Testing
+📌 **Ejemplo real:** Cuando Amazon despliega una nueva version de su web, ejecutan miles de tests automaticos en minutos. Si alguno falla, el despliegue se detiene automaticamente.
 
 | Problema sin Tests | Solucion con Tests |
 |-------------------|-------------------|
@@ -93,46 +45,18 @@ flowchart LR
 | Regresiones no detectadas | Tests regresivos automaticos |
 | Deploys arriesgados | Confianza en el codigo |
 
-## 21.2. Tipos de Tests
+## 28.2. Tipos de Tests
 
-No todos los tests son iguales. Cada tipo tiene un proposito diferente.
-
-### Piramide de Testing
+### 28.2.1. Piramide de Testing
 
 ```mermaid
 flowchart TD
-    subgraph "Piramide de Tests"
-        A1["Unit Tests (Base - Muchos)"]
-        A2["Integration Tests (Medio)"]
-        A3["E2E Tests (Punta - Pocos)"]
-    end
-    
-    subgraph "Unit Tests"
-        B1["Rapidos ms"]
-        B2["Aislados"]
-        B3["Sin dependencias externas"]
-        style B1 fill:#2196F3
-        style B2 fill:#2196F3
-        style B3 fill:#2196F3
-    end
-    
-    subgraph "Integration Tests"
-        C1["Medios segundos"]
-        C2["Con base de datos real"]
-        C3["Con servicios externos"]
-        style C1 fill:#FF9800
-        style C2 fill:#FF9800
-        style C3 fill:#FF9800
-    end
-    
-    subgraph "E2E Tests"
-        D1["Lentos minutos"]
-        D2["Browser/app completo"]
-        D3["Escenario completo"]
-        style D1 fill:#9C27B0
-        style D2 fill:#9C27B0
-        style D3 fill:#9C27B0
-    end
+    A["E2E Tests (Punta - Pocos)"] --> B["Integration Tests (Medio)"]
+    B --> C["Unit Tests (Base - Muchos)"]
+
+    style A fill:#9C27B0,color:#fff
+    style B fill:#FF9800,color:#fff
+    style C fill:#4CAF50,color:#fff
 ```
 
 | Tipo | Que testea | Velocidad | Aislamiento | Cantidad |
@@ -141,26 +65,19 @@ flowchart TD
 | **Integration** | Multiples componentes juntos | Medio (~s) | Medio | Medio |
 | **E2E** | Flujo completo de usuario | Lento (~min) | Bajo | Pocos |
 
-### Test Unitario
+### 28.2.2. Test Unitario
 
-Un test unitario verifica que una **unica unidad** de codigo funciona correctamente. Esta unidad suele ser un metodo. Un buen test unitario:
+Un test unitario verifica que una **unica unidad** de codigo funciona correctamente. Un buen test unitario es rapido, aislado, determinista e independiente.
 
-1. **Es rapido**: Se ejecuta en milisegundos
-2. **Es aislado**: No depende de bases de datos, redes o archivos
-3. **Es determinista**: Siempre da el mismo resultado
-4. **Es independiente**: No depende de otros tests
+### 28.2.3. Test de Integracion
 
-### Test de Integracion
+Los tests de integracion prueban multiples componentes trabajando juntos, generalmente con bases de datos reales o servicios externos en contenedores Docker.
 
-Los tests de integracion prueban multiples componentes trabajando juntos sin mocks o con mocks limitados.
+### 28.2.4. Test E2E
 
-### Test E2E
+Los tests End-to-End simulan un usuario real, probando la aplicacion completa desde la interfaz hasta la base de datos.
 
-Los tests End-to-End simulan un usuario real, probando la aplicación completa desde la interfaz.
-
-## 21.3. Frameworks de Testing en .NET
-
-.NET tiene tres frameworks principales de testing:
+## 28.3. Frameworks de Testing en .NET
 
 | Framework | Caracteristicas |
 |-----------|-----------------|
@@ -170,162 +87,82 @@ Los tests End-to-End simulan un usuario real, probando la aplicación completa d
 
 En este proyecto usamos **NUnit** por su sintaxis clara y atributos descriptivos.
 
-### Librerias Principales
-
 | Libreria | Proposito |
 |----------|-----------|
 | **NUnit** | Framework de testing |
 | **FluentAssertions** | Assertions mas legibles |
-| **Moq** | Crear mocks |
+| **Moq** | Crear mocks de interfaces |
 | **TestContainers** | Contenedores Docker para tests de integracion |
 | **coverlet** | Medir cobertura de codigo |
 
-## 21.4. Estructura del Proyecto de Tests
+## 28.4. Estructura del Proyecto de Tests
 
 ```
-TuProyecto.Tests/
+FunkoApp.Tests/
 ├── Unit/
 │   ├── Services/
-│   │   ├── ProductoServiceTests.cs
-│   │   └── CategoriaServiceTests.cs
-│   ├── Validators/
-│   │   └── ProductoValidatorTests.cs
-│   └── Repositories/
-│       └── ProductoRepositoryTests.cs
+│   │   └── FunkoServiceTests.cs
+│   └── Validators/
+│       └── FunkoValidatorTests.cs
 ├── Integration/
 │   ├── Controllers/
-│   │   └── ProductosControllerTests.cs
-│   ├── Repositories/
-│   │   └── ProductoRepositoryIntegrationTests.cs
-│   └── Services/
-│       └── ProductoServiceIntegrationTests.cs
+│   │   └── FunkosControllerTests.cs
+│   └── Repositories/
+│       └── FunkoRepositoryTests.cs
 ├── Fixtures/
-│   ├── TuApiWebApplicationFactory.cs
+│   ├── FunkoAppWebApplicationFactory.cs
 │   └── TestContainersFixture.cs
-├── Helpers/
-│   ├── TestDataFactory.cs
-│   └── AssertionHelpers.cs
-└── TuProyecto.Tests.csproj
+└── FunkoApp.Tests.csproj
 ```
 
-### Archivo de Proyecto (.csproj)
+## 28.5. Patron AAA (Arrange-Act-Assert)
 
-```xml
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
-  </PropertyGroup>
-
-  <!-- Paquetes de testing -->
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-    <PackageReference Include="NUnit" Version="4.2.2" />
-    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
-    <PackageReference Include="FluentAssertions" Version="6.12.0" />
-    <PackageReference Include="Moq" Version="4.20.70" />
-    <PackageReference Include="TestContainers" Version="3.8.0" />
-    <PackageReference Include="TestContainers.PostgreSql" Version="3.8.0" />
-    <PackageReference Include="coverlet.collector" Version="6.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
-  </ItemGroup>
-
-  <!-- Referencia al proyecto principal -->
-  <ItemGroup>
-    <ProjectReference Include="..\TuApi.Core\TuApi.Core.csproj" />
-    <ProjectReference Include="..\TuApi.Apis\TuApi.Apis.csproj" />
-  </ItemGroup>
-
-</Project>
-```
-
-## 21.5. Anatomia de un Test Unitario
-
-Un test unitario sigue el patron **Arrange-Act-Assert**:
+Todo test debe seguir el patron **Arrange-Act-Assert**:
 
 ```csharp
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
-using TuApi.Core.Interfaces;
-using TuApi.Core.Models;
-using TuApi.Core.Services;
-
-namespace TuApi.Tests.Unit.Services;
 
 [TestFixture]
-public class ProductoServiceTests
+public class FunkoServiceTests
 {
     [Test]
-    public void GetById_ProductoExistente_ReturnSuccess()
+    public void GetById_FunkoExistente_ReturnSuccess()
     {
         // =====================================
         // ARRANGE: Preparar el escenario
         // =====================================
-        var productoId = 1L;
-        var productoEsperado = new Producto
+        var funkoId = 1L;
+        var funkoEsperado = new Funko
         {
-            Id = productoId,
-            Nombre = "Laptop",
-            Precio = 999.99m
+            Id = funkoId,
+            Nombre = "Iron Man",
+            Precio = 29.99m
         };
 
-        // Crear mock del repositorio
-        var repositoryMock = new Mock<IProductoRepository>();
-        repositoryMock.Setup(r => r.GetByIdAsync(productoId))
-            .ReturnsAsync(productoEsperado);
+        var repositoryMock = new Mock<IFunkoRepository>();
+        repositoryMock.Setup(r => r.GetByIdAsync(funkoId))
+            .ReturnsAsync(funkoEsperado);
 
-        // Crear el servicio con el mock
-        var service = new ProductoService(repositoryMock.Object);
+        var service = new FunkoService(repositoryMock.Object);
 
         // =====================================
         // ACT: Ejecutar la accion a testear
         // =====================================
-        var resultado = service.GetByIdAsync(productoId);
+        var resultado = service.GetByIdAsync(funkoId);
 
         // =====================================
         // ASSERT: Verificar el resultado
         // =====================================
         resultado.Should().NotBeNull();
-        resultado.Result.Should().BeSuccess();
-        resultado.Result.Value.Should().NotBeNull();
-        resultado.Result.Value.Nombre.Should().Be("Laptop");
-        resultado.Result.Value.Precio.Should().Be(999.99m);
+        resultado.Result.IsSuccess.Should().BeTrue();
+        resultado.Result.Value.Nombre.Should().Be("Iron Man");
     }
 }
 ```
 
-### Partes del Test
-
-```mermaid
-flowchart TD
-    subgraph "ARRANGE"
-        A1["Preparar datos"]
-        A2["Crear mocks"]
-        A3["Inicializar sistema"]
-    end
-    
-    subgraph "ACT"
-        B1["Ejecutar metodo"]
-        B2["Llamar al test"]
-    end
-    
-    subgraph "ASSERT"
-        C1["Verificar resultado"]
-        C2["Assert con FluentAssertions"]
-        C3["Verify mocks"]
-    end
-    
-    A1 --> A2 --> A3
-    A3 --> B1
-    B1 --> C1 --> C2 --> C3
-```
-
-## 21.6. NUnit Basics
+## 28.6. NUnit Basics
 
 ### Atributos Principales
 
@@ -336,35 +173,22 @@ flowchart TD
 | `[SetUp]` | Se ejecuta antes de cada test | `SetUp() {}` |
 | `[TearDown]` | Se ejecuta despues de cada test | `TearDown() {}` |
 | `[OneTimeSetUp]` | Una vez antes de todos | `OneTimeSetUp() {}` |
-| `[OneTimeTearDown]` | Una vez despues de todos | `OneTimeTearDown() {}` |
 | `[Category]` | Categorizar tests | `[Category("Slow")]` |
-| `[Ignore]` | Omitir test | `[Ignore("Pendiente")]` |
-| `[Retry]` | Reintentar test | `[Retry(3)]` |
-| `[Timeout]` | Limite de tiempo | `[Timeout(5000)]` |
 
 ### Ejemplo Completo
 
 ```csharp
-using FluentAssertions;
-using Moq;
-using NUnit.Framework;
-using TuApi.Core.Interfaces;
-using TuApi.Core.Models;
-using TuApi.Core.Services;
-
-namespace TuApi.Tests.Unit.Services;
-
 [TestFixture]
-public class ProductoServiceTests
+public class FunkoServiceTests
 {
-    private Mock<IProductoRepository> _repositoryMock = null!;
-    private ProductoService _service = null!;
+    private Mock<IFunkoRepository> _repositoryMock = null!;
+    private FunkoService _service = null!;
 
     [SetUp]
     public void SetUp()
     {
-        _repositoryMock = new Mock<IProductoRepository>();
-        _service = new ProductoService(_repositoryMock.Object);
+        _repositoryMock = new Mock<IFunkoRepository>();
+        _service = new FunkoService(_repositoryMock.Object);
     }
 
     [TearDown]
@@ -374,65 +198,35 @@ public class ProductoServiceTests
     }
 
     [Test]
-    public void GetById_ProductoExistente_ReturnSuccess()
+    public void GetById_FunkoExistente_ReturnSuccess()
     {
-        // Arrange
-        var productoId = 1L;
-        var producto = new Producto { Id = productoId, Nombre = "Laptop" };
-        
-        _repositoryMock.Setup(r => r.GetByIdAsync(productoId))
-            .ReturnsAsync(producto);
+        var funko = new Funko { Id = 1, Nombre = "Iron Man" };
+        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(funko);
 
-        // Act
-        var result = _service.GetByIdAsync(productoId);
+        var result = _service.GetByIdAsync(1);
 
-        // Assert
-        result.Should().NotBeNull();
         result.Result.IsSuccess.Should().BeTrue();
-    }
-
-    [Test]
-    public void GetById_ProductoNoExistente_ReturnFailure()
-    {
-        // Arrange
-        var productoId = 999L;
-        
-        _repositoryMock.Setup(r => r.GetByIdAsync(productoId))
-            .ReturnsAsync((Producto?)null);
-
-        // Act
-        var result = _service.GetByIdAsync(productoId);
-
-        // Assert
-        result.Result.IsFailure.Should().BeTrue();
     }
 
     [TestCase(1L)]
     [TestCase(2L)]
     [TestCase(100L)]
-    public void GetById_DiferentesIds_ReturnCorrecto(long productoId)
+    public void GetById_DiferentesIds_ReturnCorrecto(long funkoId)
     {
-        // Arrange
-        var producto = new Producto { Id = productoId, Nombre = "Producto" };
-        
-        _repositoryMock.Setup(r => r.GetByIdAsync(productoId))
-            .ReturnsAsync(producto);
+        var funko = new Funko { Id = funkoId, Nombre = "Funko" };
+        _repositoryMock.Setup(r => r.GetByIdAsync(funkoId)).ReturnsAsync(funko);
 
-        // Act
-        var result = _service.GetByIdAsync(productoId);
+        var result = _service.GetByIdAsync(funkoId);
 
-        // Assert
         result.Result.IsSuccess.Should().BeTrue();
-        result.Result.Value.Id.Should().Be(productoId);
+        result.Result.Value.Id.Should().Be(funkoId);
     }
 }
 ```
 
-## 21.7. FluentAssertions
+## 28.7. FluentAssertions
 
 **FluentAssertions** permite escribir assertions de forma mas legible y con mensajes de error claros.
-
-### Assertions Comunes
 
 ```csharp
 using FluentAssertions;
@@ -440,541 +234,88 @@ using FluentAssertions;
 public class FluentAssertionsExamples
 {
     [Test]
-    public void StringExamples()
+    public void EjemplosDeAssertions()
     {
-        var nombre = "Laptop Gaming";
+        // Valores simples
+        var resultado = 42;
+        resultado.Should().Be(42);
+        resultado.Should().NotBe(0);
+        resultado.Should().BeGreaterThan(10);
 
-        nombre.Should().NotBeNull();
-        nombre.Should().Be("Laptop Gaming");
+        // Strings
+        var nombre = "Iron Man";
         nombre.Should().NotBeEmpty();
-        nombre.Should().HaveLength(14);
-        nombre.Should().StartWith("Laptop");
-        nombre.Should().EndWith("Gaming");
-        nombre.Should().Contain("Gaming");
-        nombre.Should().Match("* *");
-    }
+        nombre.Should().StartWith("Iron");
+        nombre.Should().Contain("Man");
 
-    [Test]
-    public void NumericExamples()
-    {
-        var precio = 999.99m;
+        // Colecciones
+        var funkos = new List<Funko> { new() { Id = 1 }, new() { Id = 2 } };
+        funkos.Should().HaveCount(2);
+        funkos.Should().Contain(f => f.Id == 1);
 
-        precio.Should().Be(999.99m);
-        precio.Should().BeGreaterThan(100);
-        precio.Should().BeLessThan(1000);
-        precio.Should().BeInRange(100, 1000);
-        precio.Should().BePositive();
-        precio.Should().NotBe(0);
-    }
+        // Excepciones
+        Action accion = () => throw new ArgumentException("Error");
+        accion.Should().Throw<ArgumentException>()
+            .WithMessage("*Error*");
 
-    [Test]
-    public void CollectionExamples()
-    {
-        var productos = new List<Producto>
-        {
-            new() { Id = 1, Nombre = "A" },
-            new() { Id = 2, Nombre = "B" }
-        };
-
-        productos.Should().NotBeNull();
-        productos.Should().HaveCount(2);
-        productos.Should().Contain(p => p.Nombre == "A");
-        productos.Should().ContainSingle(p => p.Id == 1);
-        productos.Should().BeInAscendingOrder(p => p.Id);
-    }
-
-    [Test]
-    public void ObjectExamples()
-    {
-        var producto = new Producto { Id = 1, Nombre = "Laptop" };
-
-        producto.Should().NotBeNull();
-        producto.Should().BeOfType<Producto>();
-        producto.Should().Match<Producto>(p => p.Id > 0);
-    }
-
-    [Test]
-    public void ResultExamples()
-    {
-        var successResult = Result.Success<int, Error>(42);
-        var failureResult = Result.Failure<int, Error>(Error.NotFound());
-
-        successResult.IsSuccess.Should().BeTrue();
-        successResult.IsFailure.Should().BeFalse();
-        successResult.Value.Should().Be(42);
-
-        failureResult.IsFailure.Should().BeTrue();
-    }
-
-    [Test]
-    public void ExceptionExamples()
-    {
-        Action action = () => throw new ArgumentException("Error");
-
-        action.Should().Throw<ArgumentException>();
-        action.Should().Throw<ArgumentException>().WithMessage("Error");
+        // Objetos
+        var funko = new Funko { Id = 1, Nombre = "Batman" };
+        funko.Should().NotBeNull();
+        funko.Nombre.Should().Be("Batman");
     }
 }
 ```
 
-## 21.8. Moq - Creando Mocks
+📌 **Ejemplo real:** FluentAssertions es como hablar en espanol en vez de un lenguaje tecnico cryptico. `resultado.Should().Be(42)` es mucho mas legible que `Assert.AreEqual(42, resultado)`.
 
-**Moq** es una libreria que permite crear objetos falsos (mocks) para aislar el codigo bajo test.
+## 28.8. Moq - Creando Mocks
 
-### El Patron AAA con Moq
+**Moq** permite crear objetos falsos (mocks) para aislar el codigo bajo test.
 
-Todo test con Moq debe seguir el patron **Arrange-Act-Assert**:
-
-```mermaid
-flowchart TD
-    subgraph "ARRANGE - Preparar"
-        A1["Crear mocks"]
-        A2["Configurar comportamiento"]
-        A3["Inicializar sistema bajo test"]
-    end
-    
-    subgraph "ACT - Ejecutar"
-        B1["Llamar al metodo"]
-    end
-    
-    subgraph "ASSERT - Verificar"
-        C1["Verificar resultado"]
-        C2["Verify interacciones con mocks"]
-        C3["Verify excepciones"]
-    end
-    
-    A1 --> A2 --> A3
-    A3 --> B1
-    B1 --> C1 --> C2 --> C3
-```
-
-### 21.8.1. Configurar Comportamiento con Setup
+### Configurar Comportamiento con Setup
 
 ```csharp
 [TestFixture]
-public class ProductoServiceTests
+public class FunkoServiceMockTests
 {
-    private Mock<IProductoRepository> _repositoryMock = null!;
-    private Mock<ILogger<ProductoService>> _loggerMock = null!;
-    private ProductoService _service = null!;
+    private Mock<IFunkoRepository> _repositoryMock = null!;
+    private Mock<ILogger<FunkoService>> _loggerMock = null!;
+    private FunkoService _service = null!;
 
     [SetUp]
     public void SetUp()
     {
-        _repositoryMock = new Mock<IProductoRepository>();
-        _loggerMock = new Mock<ILogger<ProductoService>>();
-        _service = new ProductoService(
-            _repositoryMock.Object,
-            _loggerMock.Object);
+        _repositoryMock = new Mock<IFunkoRepository>();
+        _loggerMock = new Mock<ILogger<FunkoService>>();
+        _service = new FunkoService(_repositoryMock.Object, _loggerMock.Object);
     }
 
     [Test]
-    public void GetById_ProductoExistente_ReturnSuccess()
+    public async Task GetById_FunkoExistente_ReturnSuccess()
     {
-        // =====================================
-        // ARRANGE: Preparar el escenario
-        // =====================================
-        var productoId = 1L;
-        var productoEsperado = new Producto
+        // Arrange
+        var funkoId = 1L;
+        var funkoEsperado = new Funko
         {
-            Id = productoId,
-            Nombre = "Laptop Gaming",
-            Precio = 1499.99m,
-            Stock = 10,
-            CategoriaId = 1
-        };
-
-        // CONFIGURAR el mock: cuando se llame a GetById con 1, devuelve el producto
-        _repositoryMock
-            .Setup(r => r.GetByIdAsync(productoId))
-            .ReturnsAsync(productoEsperado);
-
-        // =====================================
-        // ACT: Ejecutar la accion
-        // =====================================
-        var resultado = _service.GetByIdAsync(productoId);
-
-        // =====================================
-        // ASSERT: Verificar el resultado
-        // =====================================
-        resultado.Should().NotBeNull();
-        resultado.Result.IsSuccess.Should().BeTrue();
-        resultado.Result.Value.Nombre.Should().Be("Laptop Gaming");
-
-        // VERIFY: Verificar que se llamo al metodo exactamente una vez
-        _repositoryMock.Verify(
-            r => r.GetByIdAsync(productoId), 
-            Times.Once);
-    }
-}
-```
-
-### 21.8.2. Tipos de Setup
-
-```csharp
-[Test]
-public void SetupExamples()
-{
-    // Setup con valor fijo
-    _repositoryMock
-        .Setup(r => r.GetCountAsync())
-        .ReturnsAsync(42);
-
-    // Setup con expresion lambda
-    _repositoryMock
-        .Setup(r => r.GetByIdAsync(It.IsAny<long>()))
-        .ReturnsAsync((long id) => new Producto { Id = id });
-
-    // Setup con condicion
-    _repositoryMock
-        .Setup(r => r.GetByIdAsync(It.Is<long>(id => id > 0)))
-        .ReturnsAsync((long id) => new Producto { Id = id });
-
-    // Setup que lanza excepcion
-    _repositoryMock
-        .Setup(r => r.DeleteAsync(It.IsAny<long>()))
-        .ThrowsAsync(new InvalidOperationException("No encontrado"));
-
-    // Setup que devuelve null
-    _repositoryMock
-        .Setup(r => r.GetByIdAsync(It.IsAny<long>()))
-        .ReturnsAsync((Producto?)null);
-
-    // SetupSequence - diferentes valores en cada llamada
-    _repositoryMock
-        .SetupSequence(r => r.GetCountAsync())
-        .ReturnsAsync(0)
-        .ReturnsAsync(1)
-        .ReturnsAsync(2)
-        .ReturnsAsync(3);
-}
-```
-
-### 21.8.3. Verify - Verificar Interacciones
-
-El **Verify** es crucial para asegurar que el codigo llama las dependencias correctamente.
-
-```csharp
-[Test]
-public void VerifyExamples()
-{
-    // Arrange
-    var productoId = 1L;
-    var producto = new Producto { Id = productoId, Nombre = "Test" };
-
-    _repositoryMock
-        .Setup(r => r.GetByIdAsync(productoId))
-        .ReturnsAsync(producto);
-
-    // Act
-    var resultado = await _service.GetByIdAsync(productoId);
-
-    // =====================================
-    // ASSERT - Verificar con Moq Verify
-    // =====================================
-
-    // Verify basic: verificar que se llamo una vez
-    _repositoryMock.Verify(
-        r => r.GetByIdAsync(productoId), 
-        Times.Once);
-
-    // Verify que nunca se llamo
-    _repositoryMock.Verify(
-        r => r.DeleteAsync(It.IsAny<long>()), 
-        Times.Never);
-
-    // Verify que se llamo al menos una vez
-    _repositoryMock.Verify(
-        r => r.GetByIdAsync(It.IsAny<long>()), 
-        Times.AtLeastOnce());
-
-    // Verify con numero exacto de llamadas
-    _repositoryMock.Verify(
-        r => r.GetByIdAsync(It.IsAny<long>()), 
-        Times.Exactly(2));
-
-    // VerifyGet - verificar que se leyo una propiedad
-    _repositoryMock.VerifyGet(
-        r => r.Count, 
-        Times.Once);
-
-    // VerifySet - verificar que se asigno una propiedad
-    _repositoryMock.VerifySet(
-        r => r.LastModified, 
-        Times.Once);
-
-    // Verificar con callback
-    var capturedId = 0L;
-    _repositoryMock
-        .Setup(r => r.GetByIdAsync(It.IsAny<long>()))
-        .Callback<long>(id => capturedId = id)
-        .ReturnsAsync((long id) => new Producto { Id = id });
-
-    await _service.GetByIdAsync(5);
-    capturedId.Should().Be(5);
-
-    // VerifyAll - verificar todos los setups
-    _repositoryMock.VerifyAll();
-
-    // VerifyNoOtherCalls - verificar que no hubo otras llamadas
-    _repositoryMock.VerifyNoOtherCalls();
-}
-```
-
-### 21.8.4. It - Matchers de Moq
-
-```csharp
-[Test]
-public void ItMatchersExamples()
-{
-    // It.IsAny<T> - cualquier valor del tipo
-    _repositoryMock
-        .Setup(r => r.GetByIdAsync(It.IsAny<long>()))
-        .ReturnsAsync(new Producto());
-
-    // It.Is<T> - valor que cumple una condicion
-    _repositoryMock
-        .Setup(r => r.GetByIdAsync(It.Is<long>(id => id > 0)))
-        .ReturnsAsync((long id) => new Producto { Id = id });
-
-    // It.IsInRange - valor dentro de un rango
-    _repositoryMock
-        .Setup(r => r.GetByIdAsync(It.IsInRange(1L, 100L, Range.Inclusive)))
-        .ReturnsAsync(new Producto());
-
-    // It.IsIn - valor en una lista
-    _repositoryMock
-        .Setup(r => r.GetByIdAsync(It.IsIn(1L, 2L, 3L)))
-        .ReturnsAsync(new Producto());
-
-    // Combinacion de matchers
-    _repositoryMock
-        .Setup(r => r.GetByIdAsync(
-            It.Is<long>(id => id > 0 && id < 1000)))
-        .ReturnsAsync(new Producto());
-}
-```
-
-### 21.8.5. Ejemplo Completo de Test con Moq
-
-```csharp
-[TestFixture]
-public class ProductoServiceCompleteTests
-{
-    private Mock<IProductoRepository> _repositoryMock = null!;
-    private Mock<ICacheService> _cacheMock = null!;
-    private Mock<ILogger<ProductoService>> _loggerMock = null!;
-    private ProductoService _service = null!;
-
-    private readonly List<Producto> _productosTest = new()
-    {
-        new Producto { Id = 1, Nombre = "Laptop", Precio = 999.99m, Stock = 10 },
-        new Producto { Id = 2, Nombre = "Mouse", Precio = 29.99m, Stock = 50 },
-        new Producto { Id = 3, Nombre = "Teclado", Precio = 79.99m, Stock = 25 }
-    };
-
-    [SetUp]
-    public void SetUp()
-    {
-        _repositoryMock = new Mock<IProductoRepository>();
-        _cacheMock = new Mock<ICacheService>();
-        _loggerMock = new Mock<ILogger<ProductoService>>();
-
-        _service = new ProductoService(
-            _repositoryMock.Object,
-            _cacheMock.Object,
-            _loggerMock.Object);
-    }
-
-    [Test]
-    public async Task GetAllAsync_CacheHit_ReturnsFromCache()
-    {
-        // Arrange
-        var cachedProductos = _productosTest;
-        _cacheMock
-            .Setup(c => c.GetAsync<IEnumerable<Producto>>("productos:all"))
-            .ReturnsAsync(cachedProductos);
-
-        // Act
-        var resultado = await _service.GetAllAsync();
-
-        // Assert
-        resultado.IsSuccess.Should().BeTrue();
-        resultado.Value.Should().HaveCount(3);
-
-        // Verify: NO debe llamar a la base de datos
-        _repositoryMock.Verify(
-            r => r.GetAllAsync(), 
-            Times.Never);
-
-        // Verify: SI debe haber consultado el cache
-        _cacheMock.Verify(
-            c => c.GetAsync<IEnumerable<Producto>>("productos:all"), 
-            Times.Once);
-
-        // Verify: SI debe haber guardado en cache (lazy loading)
-        _cacheMock.Verify(
-            c => c.SetAsync(
-                "productos:all",
-                It.IsAny<IEnumerable<Producto>>(),
-                It.IsAny<TimeSpan>()), 
-            Times.Once);
-    }
-
-    [Test]
-    public async Task GetAllAsync_CacheMiss_QueriesDbAndCaches()
-    {
-        // Arrange
-        _cacheMock
-            .Setup(c => c.GetAsync<IEnumerable<Producto>>("productos:all"))
-            .ReturnsAsync((IEnumerable<Producto>?)null);
-
-        _repositoryMock
-            .Setup(r => r.GetAllAsync())
-            .ReturnsAsync(_productosTest);
-
-        // Act
-        var resultado = await _service.GetAllAsync();
-
-        // Assert
-        resultado.IsSuccess.Should().BeTrue();
-        resultado.Value.Should().HaveCount(3);
-
-        // Verify: SI debe haber consultado el cache
-        _cacheMock.Verify(
-            c => c.GetAsync<IEnumerable<Producto>>("productos:all"), 
-            Times.Once);
-
-        // Verify: SI debe haber consultado la base de datos
-        _repositoryMock.Verify(
-            r => r.GetAllAsync(), 
-            Times.Once);
-
-        // Verify: SI debe haber guardado en cache
-        _cacheMock.Verify(
-            c => c.SetAsync(
-                "productos:all",
-                resultado.Value,
-                It.IsAny<TimeSpan>()), 
-            Times.Once);
-    }
-
-    [Test]
-    public async Task GetByIdAsync_ProductoExistente_ReturnSuccess()
-    {
-        // Arrange
-        var productoId = 1L;
-        var productoEsperado = _productosTest[0];
-
-        _cacheMock
-            .Setup(c => c.GetAsync<Producto>($"productos:{productoId}"))
-            .ReturnsAsync((Producto?)null);
-
-        _repositoryMock
-            .Setup(r => r.GetByIdAsync(productoId))
-            .ReturnsAsync(productoEsperado);
-
-        // Act
-        var resultado = await _service.GetByIdAsync(productoId);
-
-        // Assert
-        resultado.IsSuccess.Should().BeTrue();
-        resultado.Value.Nombre.Should().Be("Laptop");
-
-        // Verify interacciones
-        _repositoryMock.Verify(
-            r => r.GetByIdAsync(productoId), 
-            Times.Once);
-
-        _cacheMock.Verify(
-            c => c.SetAsync(
-                $"productos:{productoId}",
-                productoEsperado,
-                It.IsAny<TimeSpan>()), 
-            Times.Once);
-    }
-
-    [Test]
-    public async Task GetByIdAsync_ProductoNoExistente_ReturnFailure()
-    {
-        // Arrange
-        var productoId = 999L;
-
-        _cacheMock
-            .Setup(c => c.GetAsync<Producto>($"productos:{productoId}"))
-            .ReturnsAsync((Producto?)null);
-
-        _repositoryMock
-            .Setup(r => r.GetByIdAsync(productoId))
-            .ReturnsAsync((Producto?)null);
-
-        // Act
-        var resultado = await _service.GetByIdAsync(productoId);
-
-        // Assert
-        resultado.IsFailure.Should().BeTrue();
-        resultado.Error.Code.Should().Be("PRODUCTO_NOT_FOUND");
-
-        // Verify: se consulto cache y base de datos
-        _cacheMock.Verify(
-            c => c.GetAsync<Producto>($"productos:{productoId}"), 
-            Times.Once);
-
-        _repositoryMock.Verify(
-            r => r.GetByIdAsync(productoId), 
-            Times.Once);
-    }
-
-    [Test]
-    public async Task CreateAsync_ProductoValido_ReturnSuccess()
-    {
-        // Arrange
-        var nuevoProducto = new CreateProductoDto
-        {
-            Nombre = "Nuevo Producto",
-            Precio = 99.99m,
-            Stock = 10,
-            CategoriaId = 1
-        };
-
-        var productoCreado = new Producto
-        {
-            Id = 4,
-            Nombre = nuevoProducto.Nombre,
-            Precio = nuevoProducto.Precio,
-            Stock = nuevoProducto.Stock
+            Id = funkoId,
+            Nombre = "Iron Man",
+            Precio = 29.99m
         };
 
         _repositoryMock
-            .Setup(r => r.GetByNombreAsync(nuevoProducto.Nombre))
-            .ReturnsAsync((Producto?)null);
-
-        _repositoryMock
-            .Setup(r => r.CreateAsync(It.IsAny<Producto>()))
-            .ReturnsAsync(productoCreado);
+            .Setup(r => r.GetByIdAsync(funkoId))
+            .ReturnsAsync(funkoEsperado);
 
         // Act
-        var resultado = await _service.CreateAsync(nuevoProducto);
+        var resultado = await _service.GetByIdAsync(funkoId);
 
         // Assert
         resultado.IsSuccess.Should().BeTrue();
-        resultado.Value.Id.Should().Be(4);
+        resultado.Value.Nombre.Should().Be("Iron Man");
 
-        // Verify: se verifico duplicado
+        // Verify: verificar que se llamo al metodo exactamente una vez
         _repositoryMock.Verify(
-            r => r.GetByNombreAsync(nuevoProducto.Nombre), 
-            Times.Once);
-
-        // Verify: se creo el producto
-        _repositoryMock.Verify(
-            r => r.CreateAsync(It.Is<Producto>(
-                p => p.Nombre == nuevoProducto.Nombre &&
-                     p.Precio == nuevoProducto.Precio)), 
-            Times.Once);
-
-        // Verify: se limpio el cache
-        _cacheMock.Verify(
-            c => c.RemoveAsync("productos:all"), 
+            r => r.GetByIdAsync(funkoId),
             Times.Once);
     }
 
@@ -982,352 +323,169 @@ public class ProductoServiceCompleteTests
     public async Task CreateAsync_Duplicado_ReturnConflict()
     {
         // Arrange
-        var nuevoProducto = new CreateProductoDto
+        var nuevoFunko = new CreateFunkoDto
         {
-            Nombre = "Laptop", // Ya existe
-            Precio = 99.99m,
-            Stock = 10
-        };
-
-        var productoExistente = new Producto
-        {
-            Id = 1,
-            Nombre = "Laptop"
+            Nombre = "Iron Man", // Ya existe
+            Precio = 29.99m,
+            Categoria = "Marvel"
         };
 
         _repositoryMock
-            .Setup(r => r.GetByNombreAsync(nuevoProducto.Nombre))
-            .ReturnsAsync(productoExistente);
+            .Setup(r => r.GetByNombreAsync(nuevoFunko.Nombre))
+            .ReturnsAsync(new Funko { Id = 1, Nombre = "Iron Man" });
 
         // Act
-        var resultado = await _service.CreateAsync(nuevoProducto);
+        var resultado = await _service.CreateAsync(nuevoFunko);
 
         // Assert
         resultado.IsFailure.Should().BeTrue();
-        resultado.Error.Code.Should().Be("PRODUCTO_CONFLICT");
 
         // Verify: NO debe crear
         _repositoryMock.Verify(
-            r => r.CreateAsync(It.IsAny<Producto>()), 
+            r => r.CreateAsync(It.IsAny<Funko>()),
             Times.Never);
-    }
-
-    [Test]
-    public async Task DeleteAsync_ProductoExistente_ReturnSuccess()
-    {
-        // Arrange
-        var productoId = 1L;
-
-        _repositoryMock
-            .Setup(r => r.DeleteAsync(productoId))
-            .ReturnsAsync(true);
-
-        // Act
-        var resultado = await _service.DeleteAsync(productoId);
-
-        // Assert
-        resultado.IsSuccess.Should().BeTrue();
-
-        // Verify: se elimino
-        _repositoryMock.Verify(
-            r => r.DeleteAsync(productoId), 
-            Times.Once);
-
-        // Verify: se limpio el cache
-        _cacheMock.Verify(c => c.RemoveAsync($"productos:{productoId}"), Times.Once);
-        _cacheMock.Verify(c => c.RemoveAsync("productos:all"), Times.Once);
     }
 }
 ```
 
-### Resumen de Moq
+### Tipos de Setup
 
-| Concepto | Descripcion | Ejemplo |
-|----------|-------------|---------|
-| `Mock<T>` | Crear mock de una interfaz | `new Mock<IProductoRepository>()` |
-| `.Setup()` | Configurar comportamiento | `Setup(r => r.GetByIdAsync(1))` |
-| `.ReturnsAsync()` | Valor de retorno async | `ReturnsAsync(producto)` |
-| `.ThrowsAsync()` | Lanzar excepcion | `ThrowsAsync(new Exception())` |
-| `.Verify()` | Verificar llamada | `Verify(r => r.GetByIdAsync(1), Times.Once)` |
-| `Times.Once` | Una vez | Verifica exactamente una llamada |
-| `Times.Never` | Nunca | Verifica que no se llamo |
-| `It.IsAny<T>()` | Cualquier valor | `GetByIdAsync(It.IsAny<long>())` |
-| `It.Is<T>(condition)` | Condicion especifica | `GetByIdAsync(It.Is<long>(id => id > 0))` |
+```csharp
+// Setup con valor fijo
+_repositoryMock.Setup(r => r.GetCountAsync()).ReturnsAsync(42);
 
-## 21.9. TestContainers
+// Setup con expresion lambda
+_repositoryMock
+    .Setup(r => r.GetByIdAsync(It.IsAny<long>()))
+    .ReturnsAsync((long id) => new Funko { Id = id });
 
-**TestContainers** es una libreria que permite crear contenedores Docker durante los tests de integracion. Esto proporciona bases de datos reales y otros servicios en entornos aislados.
+// Setup que lanza excepcion
+_repositoryMock
+    .Setup(r => r.DeleteAsync(It.IsAny<long>()))
+    .ThrowsAsync(new InvalidOperationException("No encontrado"));
 
-### Por que usar TestContainers
-
-```mermaid
-flowchart LR
-    subgraph "Sin TestContainers"
-        A1["Mock de base de datos"]
-        A2["No testa SQL real"]
-        A3["No testa migrations"]
-        style A1 fill:#f44336
-        style A2 fill:#f44336
-        style A3 fill:#f44336
-    end
-    
-    subgraph "Con TestContainers"
-        B1["PostgreSQL real en contenedor"]
-        B2["Redis real en contenedor"]
-        B3["Tests mas realistas"]
-        style B1 fill:#4CAF50
-        style B2 fill:#4CAF50
-        style B3 fill:#4CAF50
-    end
+// SetupSequence - diferentes valores en cada llamada
+_repositoryMock
+    .SetupSequence(r => r.GetCountAsync())
+    .ReturnsAsync(0)
+    .ReturnsAsync(1)
+    .ReturnsAsync(2);
 ```
 
-| Aspecto | Base de datos en memoria | TestContainers |
-|---------|-------------------------|----------------|
-| **Realismo** | Bajo | Alto |
-| **SQL features** | Limitado | Completo |
-| **Migrations** | No testeadas | Testeadas |
-| **Velocidad** | Rapido | Mas lento |
-| **Setup** | Easy | Requiere Docker |
+### Verify - Verificar Interacciones
 
-### Fixture con TestContainers
+```csharp
+// Verificar que se llamo una vez
+_repositoryMock.Verify(r => r.GetByIdAsync(1), Times.Once);
+
+// Verificar que NUNCA se llamo
+_repositoryMock.Verify(r => r.DeleteAsync(It.IsAny<long>()), Times.Never);
+
+// Verificar que se llamo al menos una vez
+_repositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<long>()), Times.AtLeastOnce());
+
+// Verificar todos los setups
+_repositoryMock.VerifyAll();
+```
+
+## 28.9. TestContainers
+
+**TestContainers** permite crear contenedores Docker durante los tests de integracion, proporcionando bases de datos reales en entornos aislados.
 
 ```csharp
 using NUnit.Framework;
 using TestContainers.PostgreSql;
 
-namespace TuApi.Tests.Fixtures;
-
 [TestFixture]
 [Parallelizable(ParallelScope.None)]
-public class IntegrationTestBase : IDisposable
+public class IntegrationTestBase : IAsyncLifetime
 {
-    protected PostgreSqlContainer _postgresContainer = null!;
-    protected TuDbContext _context = null!;
+    protected PostgreSqlContainer _container = null!;
+    protected FunkoDbContext _context = null!;
 
-    [SetUp]
-    public async Task SetUpAsync()
+    public async Task InitializeAsync()
     {
-        _postgresContainer = new PostgreSqlBuilder()
-            .WithImage("postgres:15-alpine")
-            .WithDatabase("tiendadb_test")
+        _container = new PostgreSqlBuilder()
+            .WithImage("postgres:17-alpine")
+            .WithDatabase("funkoapp_test")
             .WithUsername("test")
             .WithPassword("test")
-            .WithCleanUp(true)
             .Build();
 
-        await _postgresContainer.StartAsync();
+        await _container.StartAsync();
 
-        var options = new DbContextOptionsBuilder<TuDbContext>()
-            .UseNpgsql(_postgresContainer.GetConnectionString())
+        var options = new DbContextOptionsBuilder<FunkoDbContext>()
+            .UseNpgsql(_container.GetConnectionString())
             .Options;
 
-        _context = new TuDbContext(options);
+        _context = new FunkoDbContext(options);
         _context.Database.EnsureCreated();
     }
 
-    [TearDown]
-    public async Task TearDownAsync()
+    public async Task DisposeAsync()
     {
         await _context.DisposeAsync();
-        await _postgresContainer.DisposeAsync();
-    }
-
-    protected async Task SeedDataAsync(params object[] entities)
-    {
-        foreach (var entity in entities)
-        {
-            _context.Add(entity);
-        }
-        await _context.SaveChangesAsync();
-    }
-
-    public void Dispose()
-    {
-        _context?.Dispose();
+        await _container.DisposeAsync();
     }
 }
 ```
-
-### Buenas prácticas con TestContainers
-
-> ⚠️ **Advertencia — Errores habituales con TestContainers**
->
-> **Principio fundamental: cada test debe ser aislado**
->
-> Un test no debe depender del estado que haya dejado otro test anterior. Si el test A inserta 3 productos y el test B espera encontrar exactamente 2 productos, el test B falla... ¡aunque el código sea correcto! Por eso, cada test debe empezar con una **BD limpia y con los mismos datos base**. Así todos los tests se ejecutan en las mismas condiciones, sin importar el orden.
->
-> ```mermaid
-> flowchart LR
->     T1["Test A: inserta 3 productos"] --> T2["Test B: espera 2 productos"]
->     T2 --> FAIL["❌ FALLA: encuentra 5"]
->
->     T1B["Test A: inserta 3 productos"] --> CLEAN["🧹 Limpieza"]
->     CLEAN --> T2B["Test B: BD limpia, inserta 2"]
->     T2B --> OK["✅ PASA: encuentra solo 2"]
->
->     style FAIL fill:#f44336,color:#fff
->     style OK fill:#4CAF50,color:#fff
->     style CLEAN fill:#FF9800,color:#fff
-> ```
->
-> **1. Container como campo instance, nunca `static`**
->
-> Si el contenedor es `static readonly`, se comparte entre todos los `[TestFixture]` de la solución. Pero NUnit ejecuta cada `[TestFixture]` en un ensamblado diferente, y el contenedor se destruye al terminar el primero. El siguiente fixture intenta usar un contenedor muerto → errores raros.
->
-> ```csharp
-> // ❌ MALO: static readonly — compartido entre fixtures, se destruye antes de tiempo
-> public class IntegrationTestBase : IAsyncLifetime
-> {
->     private static readonly PostgreSqlContainer _container = new PostgreSqlBuilder()
->         .WithImage("postgres:17-alpine").Build();
-> }
->
-> // ✅ BUENO: instance field — cada fixture obtiene su propio contenedor
-> public class IntegrationTestBase : IAsyncLifetime
-> {
->     private readonly PostgreSqlContainer _container = new PostgreSqlBuilder()
->         .WithImage("postgres:17-alpine").Build();
-> }
-> ```
->
-> **2. `[OneTimeTearDown]` para dispose del contenedor**
->
-> Usa `[OneTimeTearDown]` (no `[TearDown]`) para destruir el contenedor. Así se ejecuta una sola vez al final de todos los tests del fixture, no después de cada test.
->
-> ```csharp
-> [OneTimeTearDown]
-> public void OneTimeTearDown()
-> {
->     _container?.Dispose();
-> }
-> ```
->
-> **3. Limpieza de datos entre tests**
->
-> TestContainers no recrea la BD entre tests. Si no limpias los datos, los tests se contaminan entre sí. Cada test debe empezar con la **BD limpia y con los mismos datos base**. Para **SQL** (PostgreSQL), usa `TRUNCATE` en `[SetUp]`:
->
-> ```csharp
-> [SetUp]
-> public void SetUp()
-> {
->     // Cada test empieza con la BD limpia y los mismos datos base
->     using var conn = new NpgsqlConnection(_container.GetConnectionString());
->     conn.Open();
->     using var cmd = conn.CreateCommand();
->     cmd.CommandText = @"
->         TRUNCATE TABLE Productos, Categorias
->         RESTART IDENTITY CASCADE";
->     cmd.ExecuteNonQuery();
-> }
-> ```
->
-> Para **MongoDB**, usa `DeleteMany`:
->
-> ```csharp
-> [SetUp]
-> public void SetUp()
-> {
->     // Cada test empieza con la BD limpia y los mismos datos base
->     Database.GetCollection<BsonDocument>("productos").DeleteMany(FilterDefinition<BsonDocument>.Empty);
-> }
-> ```
->
-> 🔧 **Truco:** Si olvidas el `RESTART IDENTITY` en SQL, los IDs siguen incrementándose. Aunque la tabla esté vacía, el próximo registro empieza desde el último ID, no desde 1.
-
-### Test de Repository con TestContainers
 
 ```csharp
-using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
-using NUnit.Framework;
-using TuApi.Core.Data;
-using TuApi.Core.Models;
-using TuApi.Tests.Fixtures;
-
-namespace TuApi.Tests.Integration.Repositories;
-
-public class ProductoRepositoryIntegrationTests : IntegrationTestBase
+public class FunkoRepositoryTests : IntegrationTestBase
 {
-    private ProductoRepository _repository = null!;
+    private FunkoRepository _repository = null!;
 
     [SetUp]
-    public override async Task SetUpAsync()
+    public override async Task InitializeAsync()
     {
-        await base.SetUpAsync();
-        _repository = new ProductoRepository(_context);
+        await base.InitializeAsync();
+        _repository = new FunkoRepository(_context);
     }
 
     [Test]
-    public async Task AddAsync_ProductoValido_ReturnSuccess()
+    public async Task AddAsync_FunkoValido_ReturnSuccess()
     {
         // Arrange
-        var producto = new Producto
+        var funko = new Funko
         {
-            Nombre = "Laptop Gaming",
-            Descripcion = "Potente laptop para gaming",
-            Precio = 1499.99m,
-            Stock = 10,
-            CategoriaId = 1
-        };
-
-        // Act
-        var result = await _repository.AddAsync(producto);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        producto.Id.Should().BeGreaterThan(0);
-    }
-
-    [Test]
-    public async Task GetByIdAsync_ProductoExistente_ReturnProducto()
-    {
-        // Arrange
-        var producto = new Producto
-        {
-            Nombre = "Mouse Inalambrico",
+            Nombre = "Batman",
             Precio = 29.99m,
-            Stock = 100,
-            CategoriaId = 1
+            Categoria = "DC"
         };
 
-        await SeedDataAsync(producto);
-
         // Act
-        var result = await _repository.GetByIdAsync(producto.Id);
+        var result = await _repository.AddAsync(funko);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Nombre.Should().Be("Mouse Inalambrico");
+        funko.Id.Should().BeGreaterThan(0);
     }
 }
 ```
 
-## 21.10. Tests de Controladores
+> ⚠️ **Advertencia:** Cada test debe empezar con la BD limpia. Usa `TRUNCATE TABLE ... RESTART IDENTITY` en SQL o `DeleteMany` en MongoDB para limpiar datos entre tests.
 
-Los tests de controladores verifican que los endpoints de la API funcionan correctamente usando `HttpClient` para simular requests.
+## 28.10. Tests de Controladores con WebApplicationFactory
 
-### WebApplicationFactory
+`WebApplicationFactory` crea un servidor en memoria para probar endpoints HTTP sin necesidad de un servidor real.
 
 ```csharp
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using TuApi.Core.Data;
 
-namespace TuApi.Tests.Integration;
-
-public class TuApiWebApplicationFactory : WebApplicationFactory<Program>
+public class FunkoAppWebApplicationFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
         {
             var descriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DbContextOptions<TuDbContext>));
+                d => d.ServiceType == typeof(DbContextOptions<FunkoDbContext>));
             if (descriptor != null)
                 services.Remove(descriptor);
 
-            services.AddDbContext<TuDbContext>(options =>
+            services.AddDbContext<FunkoDbContext>(options =>
             {
                 options.UseInMemoryDatabase("TestDatabase");
             });
@@ -1336,19 +494,8 @@ public class TuApiWebApplicationFactory : WebApplicationFactory<Program>
 }
 ```
 
-### Tests de Controlador Completos
-
 ```csharp
-using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.Testing;
-using NUnit.Framework;
-using System.Net;
-using System.Net.Http.Json;
-using TuApi.Core.Models.Dto;
-
-namespace TuApi.Tests.Integration.Controllers;
-
-public class ProductosControllerTests
+public class FunkosControllerTests
 {
     private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
@@ -1356,7 +503,7 @@ public class ProductosControllerTests
     [SetUp]
     public void SetUp()
     {
-        _factory = new TuApiWebApplicationFactory();
+        _factory = new FunkoAppWebApplicationFactory();
         _client = _factory.CreateClient();
     }
 
@@ -1368,140 +515,104 @@ public class ProductosControllerTests
     }
 
     [Test]
-    public async Task Get_Productos_ReturnsOkWithLista()
+    public async Task Get_Funkos_ReturnsOkWithLista()
     {
         // Act
-        var response = await _client.GetAsync("/api/productos");
+        var response = await _client.GetAsync("/api/funkos");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        
-        var productos = await response.Content.ReadFromJsonAsync<List<Producto>>();
-        productos.Should().NotBeNull();
+
+        var funkos = await response.Content.ReadFromJsonAsync<List<Funko>>();
+        funkos.Should().NotBeNull();
     }
 
     [Test]
-    public async Task Get_ProductoExistente_ReturnsOk()
+    public async Task Post_FunkoValido_ReturnsCreated()
     {
         // Arrange
-        var productoId = 1L;
-
-        // Act
-        var response = await _client.GetAsync($"/api/productos/{productoId}");
-
-        // Assert
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.NotFound);
-    }
-
-    [Test]
-    public async Task Post_ProductoValido_ReturnsCreated()
-    {
-        // Arrange
-        var request = new CreateProductoRequest
+        var request = new CreateFunkoDto
         {
-            Nombre = "Teclado Mecanico",
-            Descripcion = "Teclado con switches rojos",
-            Precio = 149.99m,
-            Stock = 10,
-            CategoriaId = 1
+            Nombre = "Spider-Man",
+            Precio = 24.99m,
+            Categoria = "Marvel"
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/productos", request);
+        var response = await _client.PostAsJsonAsync("/api/funkos", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-        
-        var producto = await response.Content.ReadFromJsonAsync<Producto>();
-        producto.Should().NotBeNull();
-        producto.Id.Should().BeGreaterThan(0);
-    }
-
-    [Test]
-    public async Task Post_ProductoInvalido_ReturnsBadRequest()
-    {
-        // Arrange
-        var request = new CreateProductoRequest
-        {
-            Nombre = "",
-            Precio = -10,
-            CategoriaId = 0
-        };
-
-        // Act
-        var response = await _client.PostAsJsonAsync("/api/productos", request);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 }
 ```
 
-## 21.11. Tests en Paralelo vs Secuenciales
+📌 **Ejemplo real:** Netflix usa WebApplicationFactory para testear sus APIs internas antes de cada despliegue. Cada endpoint se prueba con requests HTTP reales sin levantar un servidor completo.
+
+## 28.11. Tests en Paralelo vs Secuenciales
 
 NUnit puede ejecutar tests en paralelo para acelerar el tiempo de ejecucion.
 
-### Configuracion de Paralelismo
-
 ```csharp
-using NUnit.Framework;
-
 [assembly: LevelOfParallelism(4)]
 
-namespace TuApi.Tests.Unit.Services;
-
-[TestFixture]
+// Este test se ejecuta en paralelo
 [Parallelizable(ParallelScope.All)]
-public class ProductoServiceTests
-{
-    private Mock<IProductoRepository> _repositoryMock = null!;
-    private ProductoService _service = null!;
+public class FunkoServiceTests { }
 
-    [SetUp]
-    public void SetUp()
-    {
-        _repositoryMock = new Mock<IProductoRepository>();
-        _service = new ProductoService(_repositoryMock.Object);
-    }
-
-    [Test]
-    public void GetById_ProductoExistente_ReturnSuccess()
-    {
-        // Este test se ejecutara en paralelo con otros
-        var producto = new Producto { Id = 1, Nombre = "Laptop" };
-        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(producto);
-
-        var result = _service.GetByIdAsync(1);
-
-        result.Result.IsSuccess.Should().BeTrue();
-    }
-}
+// Este test se ejecuta en secuencia (porque usa TestContainers)
+[Parallelizable(ParallelScope.None)]
+public class FunkoIntegrationTests { }
 ```
-
-### Niveles de Paralelismo
-
-```csharp
-[Parallelizable(ParallelScope.None)]           // No paralelizable
-[Parallelizable(ParallelScope.Self)]            // Solo esta clase
-[Parallelizable(ParallelScope.Children)]        // Tests dentro de la clase
-[Parallelizable(ParallelScope.All)]             // Todo
-```
-
-### Cuando Usar Paralelismo vs Secuencial
 
 | Escenario | Recomendacion | Razon |
 |-----------|---------------|-------|
 | Tests unitarios con mocks | **Paralelo** | Rapidos, sin estado compartido |
 | Tests que comparten base de datos | **Secuencial** | Evitar conflictos |
 | Tests con TestContainers | **Limitado** | Cada contenedor es pesado |
-| Tests de integracion | **Limitado** | Recursos externos limitados |
+
+## 28.12. Comandos Utiles
+
+```bash
+# Ejecutar todos los tests
+dotnet test
+
+# Ejecutar tests con verbosidad
+dotnet test --verbosity normal
+
+# Ejecutar tests con cobertura
+dotnet test --collect:"XPlat Code Coverage"
+
+# Tests especificos
+dotnet test --filter "FullyQualifiedName~FunkoServiceTests"
+
+# Tests de integracion
+dotnet test --filter "Category=Integration"
+```
+
+## 28.13. Buenas Practicas
+
+| Practica | Descripcion |
+|----------|-------------|
+| **Patron AAA** | Siempre usar Arrange-Act-Assert en cada test |
+| **Nombres descriptivos** | `Metodo_Condicion_ResultadoEsperado` |
+| **Tests aislados** | Cada test debe poder ejecutarse independientemente |
+| **Un test, una afirmacion** | Cada test debe verificar una sola cosa |
+| **Usar SetUp/TearDown** | Para configuracion comun y limpieza |
+| **Mockear dependencias** | Para aislar la unidad bajo test |
+| **Testear el comportamiento** | No testear implementacion, testear resultados |
+| **Cobertura > 80%** | Objetivo minimo de cobertura de codigo |
+| **No testear codigo trivial** | Propiedades auto, getters/setters |
+| **Tests rapidos** | Los unitarios deben ejecutarse en milisegundos |
+
+> ⚠️ **Advertencia:** No sobre-testear. Tests que testean el framework o la implementacion interna son fragiles y se rompen con cambios de refactorizacion. Testea el comportamiento, no la implementacion.
 
 **Resumen del punto:**
 
 | Concepto | Descripcion |
 |----------|-------------|
 | **Test Unitario** | Prueba una unidad de codigo de forma aislada con mocks |
-| **Test de Integracion** | Prueba multiples componentes juntos |
+| **Test de Integracion** | Prueba multiples componentes juntos con dependencias reales |
 | **Test E2E** | Simula un usuario real en la aplicacion completa |
 | **NUnit** | Framework de testing con atributos descriptivos |
 | **FluentAssertions** | Assertions legibles y expresivos |
@@ -1509,77 +620,29 @@ public class ProductoServiceTests
 | **TestContainers** | Contenedores Docker para tests de integracion |
 | **WebApplicationFactory** | Servidor en memoria para tests de API |
 | **Patron AAA** | Arrange-Act-Assert para estructurar tests |
+| **Cobertura** | Porcentaje de codigo ejecutado por tests |
 
-### Comandos Utiles
+**¿Qué viene despues?**
 
-```bash
-# Ejecutar todos los tests
-dotnet test
+En el siguiente punto veremos **Docker y Despliegue**: como crear Dockerfiles optimizados, usar Docker Compose para orquestar multiples contenedores, implementar multi-stage builds y configurar CI/CD con GitHub Actions.
 
-# Ejecutar tests con cobertura
-dotnet test --collect:"XPlat Code Coverage"
+## 28.14. Reto: Tests para FunkoApp
 
-# Tests especificos
-dotnet test --filter "FullyQualifiedName~ProductoServiceTests"
+> Antes de irte, implementa una suite completa de tests para tu API de Funkos.
 
-# Tests de integracion
-dotnet test --filter "Category=Integration"
+### Contexto
 
-# Tests paralelos
-dotnet test --max-cpu-count 4
-```
+Tu API de Funkos necesita tests automatizados para garantizar que cada cambio no rompe funcionalidades existentes.
 
-## 21.13. Ejercicio Propuesto
+### Ejercicio
 
-### Requisitos
-
-Implementar una suite completa de tests unitarios y de integracion para un servicio de gestion de productos.
-
-### Entidades
-
-```csharp
-public class Producto
-{
-    public long Id { get; set; }
-    public string Nombre { get; set; } = string.Empty;
-    public string? Descripcion { get; set; }
-    public decimal Precio { get; set; }
-    public int Stock { get; set; }
-    public long CategoriaId { get; set; }
-    public Categoria Categoria { get; set; } = null!;
-    public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
-    public bool Activo { get; set; } = true;
-}
-
-public class Categoria
-{
-    public long Id { get; set; }
-    public string Nombre { get; set; } = string.Empty;
-    public string? Descripcion { get; set; }
-    public ICollection<Producto> Productos { get; set; } = new List<Producto>();
-}
-```
-
-### Tareas
-
-1. Crear proyecto de tests con NUnit, FluentAssertions y Moq
-2. Implementar tests unitarios para `ProductoService`
-   - Mockear `IProductoRepository`
+1. Crea un proyecto de tests con NUnit, FluentAssertions y Moq
+2. Implementa tests unitarios para `FunkoService`:
+   - Mockear `IFunkoRepository`
    - Testear CRUD completo
    - Verificar casos de exito y error
-3. Implementar tests unitarios para `ProductosController`
-   - Mockear `IProductoService`
-   - Verificar codigos HTTP correctos
-4. Implementar tests de integracion usando `WebApplicationFactory`
-5. Generar reporte de cobertura (>80%)
+3. Implementa tests de integracion usando `WebApplicationFactory`
+4. Verifica los codigos HTTP correctos (200, 201, 400, 404)
+5. Genera reporte de cobertura (>80%)
 
-### Criterios de Evaluacion
-
-| Criterio | Puntos |
-|----------|--------|
-| Proyecto de tests configurado correctamente | 1 |
-| Tests unitarios del servicio con mocks | 2 |
-| Tests unitarios del controlador | 2 |
-| Tests de integracion completos | 2 |
-| Cobertura >80% | 2 |
-| Uso correcto de FluentAssertions | 1 |
+> 💡 **Consejo:** Usa el patron AAA en cada test. Comenta las secciones Arrange, Act y Assert para que el codigo sea legible.
