@@ -42,8 +42,6 @@
 
 > **Punto de partida:** Cuando publicas un producto en una tienda online, los administradores deberian ver el cambio al instante sin recargar la pagina. En el modelo HTTP tradicional, el cliente debe preguntar periodicamente al servidor si hay novedades (polling). La **comunicacion en tiempo real** elimina ese problema: el servidor emite datos a los clientes conectados tan pronto como ocurre un evento.
 
----
-
 ## 18.1. Introduccion
 
 ### 18.1.1. Que es la Comunicacion en Tiempo Real
@@ -158,8 +156,6 @@ Sec-WebSocket-Accept: s3pPLMBiTxaq9kYG3hVMrTJSsWw=
 
 Una vez completado el handshake, la conexion queda abierta y ambos lados pueden enviar mensajes sin seguir el patron request-response.
 
----
-
 ## 18.2. WebSocket vs SignalR
 
 ### 18.2.1. Que es SignalR
@@ -196,8 +192,6 @@ Una vez completado el handshake, la conexion queda abierta y ambos lados pueden 
 | API con actualizaciones ocasionales | **REST** (ni WebSocket ni SignalR) | No justifica conexion persistente |
 
 > **Consejo:** Si no sabes cual elegir, usa **SignalR**. Solo considera WebSocket nativo si tienes requisitos de rendimiento extremo o necesitas control total sobre el protocolo.
-
----
 
 ## 18.3. WebSocket Nativo en ASP.NET Core
 
@@ -371,8 +365,6 @@ app.Map("/ws", async (HttpContext context) =>
 
 > **Advertencia:** WebSocket nativo no tiene grupos, reconexion automatica ni integracion con Identity. Tienes que implementar todo manualmente. Para aplicaciones reales, usa SignalR.
 
----
-
 ## 18.4. SignalR en ASP.NET Core
 
 ### 18.4.1. Configuracion
@@ -495,8 +487,6 @@ public class ProductosHub : Hub
 
 > **Ejemplo real:** Cuando un usuario se conecta a **Slack**, automaticamente se une a los canales de su workspace. En SignalR, `OnConnectedAsync` hace exactamente eso: al conectarte, te asigna a los grupos que te corresponden.
 
----
-
 ## 18.5. SignalR con Identity y JWT
 
 ### 18.5.1. Proteccion de Hubs
@@ -573,8 +563,6 @@ app.MapHub<ProductosHub>("/hubs/productos")
 ```
 
 En el cliente JavaScript, el token se pasa via `accessTokenFactory` (lo veremos en la seccion 18.8).
-
----
 
 ## 18.6. Sistema de Grupos
 
@@ -663,8 +651,6 @@ await Groups.AddToGroupAsync(Context.ConnectionId, "zona-madrid");
 | **Por recurso** | `producto-{id}` | Actualizaciones de un producto concreto |
 | **Por zona** | `zona-{nombre}` | Notificaciones geolocalizadas |
 
----
-
 ## 18.7. IHubContext: Notificaciones desde Servicios
 
 ### 18.7.1. Patron de Inyeccion
@@ -725,8 +711,6 @@ await hubContext.Clients
     .Others
     .SendAsync("AlguienEscribio", mensaje);
 ```
-
----
 
 ## 18.8. Cliente JavaScript
 
@@ -820,8 +804,6 @@ connection.start();
 
 > **Consejo:** Siempre implementa `withAutomaticReconnect` en produccion. Las conexiones WebSocket se caen por timeouts de red, cambios de WiFi o actualizaciones del navegador. La reconexion automatica evita que el usuario tenga que recargar la pagina.
 
----
-
 ## 18.9. Escalabilidad con Redis
 
 Cuando despliegues tu aplicacion en multiples instancias (ej: 3 contenedores Docker), necesitas que las notificaciones lleguen a todos los clientes, no solo a los conectados a la misma instancia. **Redis Backplane** resuelve esto.
@@ -871,8 +853,6 @@ flowchart TB
 
 Sin Redis, si el Cliente A esta en la Instancia 1 y el Cliente B en la Instancia 2, un mensaje enviado desde la Instancia 1 no llega al Cliente B. Redis actua como canal de comunicacion entre instancias.
 
----
-
 ## 18.10. Seguridad
 
 | Amenaza | Proteccion |
@@ -907,8 +887,6 @@ public class ProductosHub : Hub
 ```
 
 > **Advertencia:** Nunca confies en que el cliente envia datos validos. Siempre valida en el Hub, igual que lo harias en un Controller. Un usuario malicioso puede enviar cualquier cosa al Hub usando herramientas como la consola del navegador.
-
----
 
 ## 18.11. Buenas Practicas
 
@@ -982,8 +960,6 @@ public class ProductosHub(IProductoService service, IHubContext<ProductosHub> hu
     }
 }
 ```
-
----
 
 ## 18.12. Testing
 
@@ -1069,8 +1045,6 @@ public class ProductosHubTests
 }
 ```
 
----
-
 ## 18.13. Reto
 
 > Implementa un sistema de notificaciones en tiempo real para FunkoApp.
@@ -1090,8 +1064,6 @@ public class ProductosHubTests
 - Rate limiting en el Hub (max 100 mensajes por conexion)
 - Grupo por coleccion de funkos (suscripcion a colecciones)
 - Redis Backplane para escalabilidad
-
----
 
 ## 18.14. Resumen
 

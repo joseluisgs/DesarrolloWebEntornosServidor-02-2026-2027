@@ -58,8 +58,6 @@
 - Proteger APIs GraphQL con JWT y autorizacion
 - Testear endpoints GraphQL
 
----
-
 ## 19.1. Introduccion
 
 ## 19.1. Introduccion
@@ -138,8 +136,6 @@ flowchart TD
 | Datos relacionados frecuentemente | Archivos multimedia (REST + streaming) |
 
 > **Nota:** GraphQL **no reemplaza** REST. Son complementarios. Muchas aplicaciones usan REST para operaciones simples y GraphQL para consultas complejas.
-
----
 
 ## 19.2. HotChocolate en ASP.NET Core
 
@@ -238,8 +234,6 @@ sequenceDiagram
 ```
 
 > **Nota:** El playground de HotChocolate (Banana Cake Pop) se accede en `/graphql` en modo desarrollo. Permite explorar el esquema, ejecutar consultas y depurar suscripciones.
-
----
 
 ## 19.3. Tipos y Esquema
 
@@ -365,8 +359,6 @@ descriptor.Field(p => p.Nombre)
 
 > **Consejo:** Solo crea campos calculados cuando el cliente los pide. Si nadie usa `precioConDescuento`, no lo incluyas en el esquema.
 
----
-
 ## 19.4. Inputs y Validacion
 
 Los Input Types representan datos de entrada para las Mutations, equivalentes a los DTOs en REST.
@@ -446,8 +438,6 @@ public record UpdateProductoInput(
 ```
 
 > **Nota:** Todos los campos son nullable para permitir actualizaciones parciales. Solo se actualizan los campos que el cliente envia.
-
----
 
 ## 19.5. Queries
 
@@ -580,8 +570,6 @@ query {
 | `contains` | Contiene texto | `nombre: { contains: "Iron" }` |
 | `startsWith` | Empieza con | `nombre: { startsWith: "Funko" }` |
 | `in` | En lista | `categoriaId: { in: [1, 2, 3] }` |
-
----
 
 ## 19.6. Mutations
 
@@ -724,8 +712,6 @@ mutation EliminarProducto {
 }
 ```
 
----
-
 ## 19.7. Subscriptions y Tiempo Real
 
 Las Subscriptions permiten recibir actualizaciones en tiempo real mediante WebSockets.
@@ -864,8 +850,6 @@ sequenceDiagram
     WS->>C: Evento en tiempo real
 ```
 
----
-
 ## 19.8. DataLoaders y Problema N+1
 
 El problema N+1 ocurre cuando una query causa N+1 consultas a la base de datos. Es el problema de rendimiento mas comun en GraphQL.
@@ -1003,8 +987,6 @@ public class ProductoResolvers
 }
 ```
 
----
-
 ## 19.9. Autorizacion
 
 HotChocolate se integra directamente con ASP.NET Core Identity y JWT.
@@ -1111,8 +1093,6 @@ builder.Services.AddAuthorization(options =>
                 c.Value == "premium")));
 });
 ```
-
----
 
 ## 19.10. Testing
 
@@ -1260,8 +1240,6 @@ public async Task Mutation_CrearProducto_ReturnsNewProduct()
 }
 ```
 
----
-
 ## 19.11. Buenas Practicas
 
 ```csharp
@@ -1317,8 +1295,6 @@ public async Task<Categoria> GetCategoria(
 8. **Subscriptions solo cuando sea necesario** — No las uses para datos que cambian poco
 9. **Testing** — Testea queries y mutations como si fueran endpoints REST
 10. **Error handling** — HotChocolate convierte excepciones en errores GraphQL automaticamente
-
----
 
 ## 19.12. Reto
 
@@ -1389,8 +1365,6 @@ FunkosGraphQL/
 └── FunkosGraphQL.Test/
     └── GraphQLTests.cs
 ```
-
----
 
 ## 19.13. Resumen
 

@@ -30,8 +30,6 @@
 
 > 💡 **Punto de partida:** Has conseguido que Instagram sepa quién eres (autenticación). Pero... ¿puedes borrar la cuenta de otro usuario? ¿Puedes ver estadísticas de negocio? Eso lo decide la **autorización**: qué puedes hacer una vez autenticado.
 
----
-
 ## 17.1. Introducción
 
 ### 17.1.1. ¿Qué es la Autorización?
@@ -190,8 +188,6 @@ sequenceDiagram
     S->>S: Ejecutar Update(1)
     S-->>C: 200 OK
 ```
-
----
 
 ## 17.2. Conceptos Fundamentales
 
@@ -394,8 +390,6 @@ flowchart LR
 ```
 
 > 💡 **Consejo:** Usa Requirements y Handlers cuando la lógica de autorización es demasiado compleja para una política simple o cuando necesitas acceder a recursos de la base de datos para tomar la decisión.
-
----
 
 ## 17.3. Autorización con Roles
 
@@ -666,8 +660,6 @@ bool isAdmin = await userManager.IsInRoleAsync(user, "ADMIN");
 
 > 📝 **Nota:** La configuración de políticas con `AddAuthorizationBuilder()` es **idéntica** en ambos enfoques. Solo cambia cómo se crean y asignan los roles (RoleManager vs tu propia lógica).
 
----
-
 ## 17.4. Autorización con Claims
 
 Los claims van un paso más allá de los roles. Mientras que un rol te dice "este usuario es ADMIN", un claim te dice "este usuario pertenece al departamento IT y tiene nivel senior". Los claims permiten condiciones de autorización mucho más granulares.
@@ -783,8 +775,6 @@ public IActionResult GetProfile()
 
 > 💡 **Consejo:** Con Identity, los claims se almacenan en la tabla `AspNetUserClaims` y se cargan automáticamente en el `ClaimsPrincipal` durante la autenticación. Con el enfoque manual, los claims viajan dentro del JWT y se extraen al validar el token.
 
----
-
 ## 17.5. Políticas de Autorización
 
 Las políticas son la forma más potente de definir reglas de autorización. En lugar de escribir condiciones sueltas por toda la aplicación, defines una política una vez y la reutilizas. Esto hace tu código más limpio y más fácil de mantener.
@@ -887,8 +877,6 @@ services.AddAuthorizationBuilder()
 ```
 
 > 📝 **Nota:** Las políticas de autorización son **independientes** del sistema de autenticación. Funcionan exactamente igual con JWT manual, Identity, cookies o cualquier otro esquema. Solo necesitan un `ClaimsPrincipal` válido, que viene del middleware de autenticación.
-
----
 
 ## 17.6. Requirements y Handlers Personalizados
 
@@ -1062,8 +1050,6 @@ services.AddSingleton<IAuthorizationHandler, ResourceOwnerHandler>();
 
 > 💡 **Consejo:** Los handlers son la pieza más flexible del sistema de autorización. Pueden acceder a la base de datos, servicios externos o cualquier lógica de negocio para tomar la decisión. Usa `AddSingleton` si el handler no tiene estado dependiente de la request, o `AddScoped` si necesita servicios Scoped.
 
----
-
 ## 17.7. Autorización Basada en Recursos
 
 La autorización basada en recursos verifica permisos sobre un **objeto concreto**, no sobre una acción genérica. Por ejemplo: "solo el dueño de un producto puede editarlo". Esto va más allá de los roles y claims porque necesita acceder al recurso real para tomar la decisión.
@@ -1170,8 +1156,6 @@ public class AuthorizationService(
 
 > ⚠️ **Advertencia:** La autorización basada en recursos requiere acceso al objeto real desde la base de datos. Esto implica una consulta adicional por cada request protegido. Úsala solo cuando sea estrictamente necesario y considera cachear los resultados.
 
----
-
 ## 17.8. Comparación de Enfoques
 
 Hemos visto dos caminos para implementar autorización: el enfoque manual (tú gestionas todo) y el enfoque Identity (el framework te ayuda). La siguiente tabla resume las diferencias clave para que puedas decidir cuál se adapta mejor a tu proyecto:
@@ -1211,8 +1195,6 @@ flowchart TD
 ```
 
 > 💡 **Consejo:** La autorización (roles, claims, policies, handlers) funciona **exactamente igual** en ambos enfoques. La única diferencia es cómo gestionas la identidad del usuario. Elige el enfoque de autenticación que mejor se adapte a tu proyecto y la autorización será la misma.
-
----
 
 ## 17.9. Buenas Prácticas
 
@@ -1320,8 +1302,6 @@ await dbContext.SaveChangesAsync();
 
 > ⚠️ **Advertencia:** **Nunca** confíes en que el frontend filtra lo que el usuario puede ver. Si un usuario malicioso llama directamente a tu API con un token válido pero sin permisos, el servidor debe denegar el acceso. La autorización **siempre** se verifica en el backend.
 
----
-
 ## 17.10. Reto
 
 > Aplica autorización completa a FunkoApp usando Identity.
@@ -1343,8 +1323,6 @@ await dbContext.SaveChangesAsync();
 - Claims personalizados (`department`, `level`)
 - Handler de autorización basado en recursos con `IAuthorizationService`
 - Rate limiting por rol (más requests para ADMIN, menos para USER)
-
----
 
 ## 17.11. Resumen
 

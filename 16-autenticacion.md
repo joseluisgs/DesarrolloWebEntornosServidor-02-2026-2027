@@ -40,8 +40,6 @@
 
 > 💡 **Punto de partida:** Cuando abres Instagram, introduces tu email y contraseña. Instagram comprueba que eres quien dices ser y te da acceso a tu feed. Ese proceso se llama **autenticación**. Pero en una API REST, ¿cómo sabe el servidor quién eres en cada petición? La respuesta está en JWT y BCrypt.
 
----
-
 ## 16.1. Introducción
 
 ### 16.1.1. ¿Qué es la Autenticación?
@@ -190,8 +188,6 @@ sequenceDiagram
     S->>S: Validar JWT (firma incorrecta)
     S-->>C: 401 Unauthorized (firma invalida)
 ```
-
----
 
 ## 16.2. JWT en Profundidad
 
@@ -373,8 +369,6 @@ options.TokenValidationParameters = new TokenValidationParameters
 
 > 💡 **Consejo:** Establecer `ClockSkew = TimeSpan.Zero` elimina la tolerancia de 5 minutos por defecto. Si el token expira a las 12:00:00, se considera expirado exactamente a las 12:00:00. Sin esto, un token expirado seguiria siendo valido durante 5 minutos mas.
 
----
-
 ## 16.3. BCrypt: Hash de Contrasenas
 
 ### 16.3.1. Por qué no MD5 ni SHA256
@@ -496,8 +490,6 @@ string hash = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 11);
 | **Argon2** | Muy lento | Excelente | Si | El mejor (ganador PHC) |
 
 > 📝 **Nota:** BCrypt genera un salt unico automaticamente en cada hash. No necesitas almacenar el salt por separado: esta incrustado en el propio hash. Esto protege contra ataques de rainbow tables, donde un atacante usa tablas precalculadas de hashes comunes.
-
----
 
 ## 16.4. Enfoque Manual (Estilo Tienda)
 
@@ -978,8 +970,6 @@ flowchart LR
     style A4 fill:#2196F3,color:#fff
 ```
 
----
-
 ## 16.5. OAuth2 y Autenticacion con Proveedores Externos
 
 ### 16.5.1. ¿Qué es OAuth2?
@@ -1071,8 +1061,6 @@ flowchart TD
 ```
 
 📌 Ejemplo real: **Spotify** usa este flujo exacto. Cuando haces "Conectar con Spotify" en una app de terceros, Spotify te redirige a su pagina de autorizacion, tú eliges que datos compartir (nombre, playlists, etc.), y la app recibe un token con esos permisos.
-
----
 
 ## 16.6. Enfoque Identity
 
@@ -1462,8 +1450,6 @@ public async Task<IActionResult> ExternalLoginCallback(
 
 > 📝 **Nota:** Cuando un usuario se registra con Google por primera vez, Identity crea el usuario en tu BD y asocia el proveedor externo. En el segundo login, simplemente lo reconoce. El usuario nunca necesita crear una contrasena local.
 
----
-
 ## 16.7. Comparacion de Enfoques
 
 ```mermaid
@@ -1513,8 +1499,6 @@ flowchart TD
 | **Auditoria de seguridad** | Identity | Logs y lockout integrados |
 
 > 📝 **Nota:** Ambos enfoques usan el **mismo middleware** de autenticacion/autorizacion de ASP.NET Core. Los atributos `[Authorize]`, `[Authorize(Roles="Admin")]` y la inyeccion de `HttpContext.User` funcionan exactamente igual. Solo cambia como se gestiona el usuario y se genera el token.
-
----
 
 ## 16.8. Buenas Practicas
 
@@ -1591,8 +1575,6 @@ public static class SeedService
 }
 ```
 
----
-
 ## 16.9. Reto
 
 > Implementa autenticacion completa en FunkoApp con ambos enfoques.
@@ -1612,8 +1594,6 @@ public static class SeedService
 - Refresh tokens: endpoint `POST /auth/refresh` que renueva el access token
 - Rate limiting en login (maximo 5 intentos por minuto por IP)
 - Validacion de fortaleza de contrasena (minimo 8 caracteres, mayuscula, minuscula, numero)
-
----
 
 ## 16.10. Resumen
 
