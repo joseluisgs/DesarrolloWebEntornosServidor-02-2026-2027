@@ -19,7 +19,8 @@
     - [5.5.1. Estructura básica](#551-estructura-básica)
     - [5.5.2. Registro de servicios](#552-registro-de-servicios)
     - [5.5.3. Configuración del pipeline](#553-configuración-del-pipeline)
-  - [5.6. Reto: Traza una petición HTTP](#56-reto-traza-una-petición-http)
+  - [5.6. Buenas Prácticas](#56-buenas-prácticas)
+  - [5.7. Reto: Traza una petición HTTP](#57-reto-traza-una-petición-http)
 
 ---
 
@@ -52,7 +53,7 @@ flowchart TD
     A --> D["📄 Razor Pages"]
     A --> E["🎮 Blazor"]
     A --> F["📡 Web API"]
-    style A fill:#7c3aed,color:#fff
+    style A fill:#9C27B0,color:#fff
     style B fill:#4CAF50,color:#fff
     style C fill:#4CAF50,color:#fff
     style D fill:#2196F3,color:#fff
@@ -280,7 +281,7 @@ flowchart TD
     A["Program.cs"] --> B["builder.Build()<br/>Configurar servicios"]
     B --> C["app.*<br/>Configurar pipeline"]
     C --> D["app.Run()<br/>Arrancar servidor"]
-    style A fill:#7c3aed,color:#fff
+    style A fill:#9C27B0,color:#fff
     style B fill:#4CAF50,color:#fff
     style C fill:#FF9800,color:#fff
     style D fill:#2196F3,color:#fff
@@ -330,13 +331,24 @@ app.MapControllers();
 app.Run();
 ```
 
-## 5.6. Reto: Traza una petición HTTP
+## 5.6. Buenas Prácticas
+
+- **Separación de responsabilidades:** Cada capa (Controller, Service, Repository) tiene una única responsabilidad. El Controller coordina, el Service aplica lógica de negocio, el Repository accede a datos
+- **Principio de dependencia:** Las dependencias siempre fluyen hacia abajo (Controller → Service → Repository). Nunca al revés
+- **Single Responsibility:** Una clase = una razón para cambiar. Si un servicio hace validación, persistencia y notificaciones, hay que dividirlo
+- **DTOs para expuestos:** Nunca devuelvas entidades de dominio directamente al cliente. Usa DTOs para filtrar datos sensibles
+- **Pipeline ordenado:** El orden de middlewares importa. Siempre: ExceptionHandler → HTTPS → CORS → Authentication → Authorization → Routing → Endpoints
+- **Config classes para DI:** Organiza el registro de dependencias en clases estáticas (RepositoriesConfig, ServicesConfig) en lugar de llenar Program.cs
+
+---
+
+## 5.7. Reto: Traza una petición HTTP
 
 > Antes de irte, dibuja el camino completo de una petición.
 
 ### Contexto
 
-Un cliente envía esta petición a tu API:
+Un cliente envía esta petición a FunkoApp:
 
 ```http
 GET /api/productos/1 HTTP/1.1
@@ -381,5 +393,7 @@ Para esta petición, indica qué componente de cada capa se ejecuta:
 | **Middleware** | Componente que procesa la petición |
 | **Kestrel** | Servidor web integrado |
 | **Program.cs** | Punto de entrada de la aplicación |
+
+**¿Qué viene después?**
 
 En el siguiente punto veremos la **Inyección de Dependencias**: cómo conectar las capas de la aplicación de forma flexible y testeable.

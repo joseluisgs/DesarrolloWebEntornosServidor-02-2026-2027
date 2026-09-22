@@ -384,7 +384,7 @@ flowchart TD
 
 ## 10.7. Reto
 
-> Testea el servicio de productos y despliega la API con Docker.
+> Testea FunkoApp y despliega la API con Docker.
 
 **Añade a tu API:**
 
@@ -418,5 +418,7 @@ flowchart TD
 | **Multi-stage build** | Fase de build + fase de runtime = imagen pequeña |
 | **Docker Compose** | Define servicios y dependencias |
 | **Podman** | Alternativa a Docker sin daemon |
+
+**¿Qué viene después?**
 
 En el siguiente punto veremos **Arquitecturas en Capas y Clean Architecture**: cómo organizar el código en capas para aplicaciones grandes y mantenibles.

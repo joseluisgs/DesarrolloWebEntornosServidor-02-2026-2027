@@ -1082,6 +1082,6 @@ public class ProductosHubTests
 | **Redis Backplane** | Escalabilidad horizontal con Redis Pub/Sub |
 | **`[Authorize]`** | Protege Hubs con autenticacion/autorizacion |
 
-**¿Que viene despues?**
+**¿Qué viene después?**
 
 En el siguiente punto veremos **GraphQL**: como crear APIs con un esquema autoexplicable donde el cliente decide que datos necesita. Veras como definir tipos, queries y mutations con Hot Chocolate en ASP.NET Core.

@@ -557,4 +557,6 @@ Se construye la URL **a mano** porque Minimal APIs no tienen un sistema de routi
 | **Results.NotFound()** | Respuesta 404 |
 | **Results.BadRequest()** | Respuesta 400 |
 
+**¿Qué viene después?**
+
 En el siguiente punto veremos los **Controladores y MVC**: una forma más estructurada de organizar endpoints con clases, atributos y separación de responsabilidades.

@@ -976,4 +976,6 @@ MiApi/
 | **DI en MVC** | Servicios se inyectan en el constructor del controller |
 | **Patrón Infrastructure** | Config classes separadas por responsabilidad |
 
+**¿Qué viene después?**
+
 En el siguiente punto veremos las **Excepciones y el Patrón Result**: cómo manejar errores de negocio de forma explícita sin depender de excepciones.

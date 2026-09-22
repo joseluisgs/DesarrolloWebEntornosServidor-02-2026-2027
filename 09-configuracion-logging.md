@@ -415,7 +415,7 @@ Log.Logger = new LoggerConfiguration()
 
 ## 9.4. Reto
 
-> Configura la aplicación con perfiles de entorno y Serilog.
+> Configura FunkoApp con perfiles de entorno y Serilog.
 
 **Añade a tu API:**
 
@@ -447,5 +447,7 @@ Log.Logger = new LoggerConfiguration()
 | **Sinks** | Destinos de logs (consola, fichero, Elasticsearch...) |
 | **Rolling** | Rotación automática de ficheros de log |
 | **Log.CloseAndFlush()** | Asegura que todos los logs se escriben al salir |
+
+**¿Qué viene después?**
 
 En el siguiente punto veremos **Pruebas y Despliegue Básicos**: cómo testear nuestro código con NUnit y Moq, y cómo empaquetarlo con Docker.

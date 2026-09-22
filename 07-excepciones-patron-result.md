@@ -781,7 +781,7 @@ public IActionResult Create([FromBody] ProductoDto dto)
 
 ## 7.10. Reto
 
-> Aplica el patrón Result a la API de productos que hiciste en puntos anteriores.
+> Aplica el patrón Result a FunkoApp.
 
 **Añade a tu API:**
 
@@ -824,5 +824,7 @@ public IActionResult Create([FromBody] ProductoDto dto)
 | **Errores por dominio** | Clases estáticas con métodos factory por dominio |
 | **Match** | Fuerza manejar ambos casos (éxito y error) |
 | **UnitResult** | Para operaciones sin retorno de valor |
+
+**¿Qué viene después?**
 
 En el siguiente punto veremos los **DTOs, Mapeadores, Validaciones y Consultas Avanzadas**: cómo transferir datos entre capas, mapear modelos, validar entradas y diseñar endpoints flexibles con query parameters y HATEOAS.

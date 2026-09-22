@@ -578,4 +578,6 @@ Crea un proyecto Web API y desarrolla `FunkosController`. Recuerda:
 | **ActionResult\<T\>** | Respuesta tipada (código + datos) |
 | **CreatedAtAction()** | Respuesta 201 con ubicación del recurso |
 
+**¿Qué viene después?**
+
 En el siguiente punto veremos la **Arquitectura y Pipeline HTTP**: cómo se procesa una petición desde que llega al servidor hasta que se devuelve la respuesta.

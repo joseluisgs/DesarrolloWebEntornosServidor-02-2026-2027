@@ -64,7 +64,7 @@ flowchart TD
     A --> C["📭 Sin Estado"]
     A --> D["💾 Cacheable"]
     A --> E["🧩 Uniforme"]
-    style A fill:#7c3aed,color:#fff
+    style A fill:#9C27B0,color:#fff
     style B fill:#4CAF50,color:#fff
     style C fill:#2196F3,color:#fff
     style D fill:#FF9800,color:#fff
@@ -498,5 +498,7 @@ Un Funko tiene estas propiedades:
 | **403** | No autorizado |
 | **404** | Recurso no encontrado |
 | **422** | Datos inválidos (validación) |
+
+**¿Qué viene después?**
 
 En el siguiente punto veremos **Minimal APIs**: una forma simplificada de crear endpoints en ASP.NET Core sin necesidad de controladores.

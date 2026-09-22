@@ -77,10 +77,10 @@ flowchart LR
         C --> D["HDD<br/>~5-10 ms"]
         D --> E["BD en Red<br/>~10-100 ms"]
     end
-    style A fill:#1B5E20,color:#fff
+    style A fill:#4CAF50,color:#fff
     style B fill:#4CAF50,color:#fff
-    style C fill:#8BC34A,color:#fff
-    style D fill:#FFEB3B,color:#000
+    style C fill:#4CAF50,color:#fff
+    style D fill:#FF9800,color:#000
     style E fill:#F44336,color:#fff
 ```
 
@@ -183,7 +183,7 @@ flowchart TD
     C -->|Sí| F["MemoryCache con límites"]
     C -->|No| G["MemoryCache sin límites"]
     style D fill:#4CAF50,color:#fff
-    style E fill:#8BC34A,color:#fff
+    style E fill:#4CAF50,color:#fff
     style F fill:#FF9800,color:#fff
     style G fill:#2196F3,color:#fff
 ```
@@ -306,7 +306,7 @@ flowchart TD
     B -->|No| D["Consultar BD"]
     D --> E["Guardar en caché"]
     E --> C
-    style C fill:#1B5E20,color:#fff
+    style C fill:#4CAF50,color:#fff
     style D fill:#B71C1C,color:#fff
     style E fill:#FF9800,color:#fff
 ```
@@ -347,7 +347,7 @@ flowchart TD
     C --> D["Respuesta OK"]
     style B fill:#2196F3,color:#fff
     style C fill:#FF9800,color:#fff
-    style D fill:#1B5E20,color:#fff
+    style D fill:#4CAF50,color:#fff
 ```
 
 **Ventajas:** Caché siempre sincronizado, lecturas siempre devuelven datos actualizados.
@@ -363,7 +363,7 @@ flowchart TD
     B --> C["Respuesta inmediata"]
     C --> D["Flush asíncrono a BD"]
     style B fill:#FF9800,color:#fff
-    style C fill:#1B5E20,color:#fff
+    style C fill:#4CAF50,color:#fff
     style D fill:#2196F3,color:#fff
 ```
 
@@ -381,7 +381,7 @@ flowchart TD
     B -->|No| D["Devolver dato"]
     C --> D
     style C fill:#FF9800,color:#fff
-    style D fill:#1B5E20,color:#fff
+    style D fill:#4CAF50,color:#fff
 ```
 
 ### 14.4.5. Cuál elegir
@@ -453,8 +453,8 @@ flowchart TD
     style C fill:#4CAF50,color:#fff
     style D fill:#FF9800,color:#fff
     style E fill:#9C27B0,color:#fff
-    style F fill:#00BCD4,color:#fff
-    style G fill:#795548,color:#fff
+    style F fill:#2196F3,color:#fff
+    style G fill:#607D8B,color:#fff
 ```
 
 | Estructura | Uso | Ejemplo |
@@ -1106,7 +1106,7 @@ await _cache.SetAsync("user:456:session", sesion);         // Sesión de usuario
 
 ## 14.14. Reto
 
-> Aplica caché a la API de productos del Ejemplo 11 (EF Core + PostgreSQL).
+> Aplica caché a FunkoApp.
 
 **Añade a tu API:**
 

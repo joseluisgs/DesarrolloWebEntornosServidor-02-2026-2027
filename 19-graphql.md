@@ -1423,6 +1423,6 @@ graph TD
 | **`[UseSorting]`** | Ordenamiento automatico en queries |
 | **`[Authorize]`** | Protege endpoints con autenticacion/autorizacion |
 
-**¿Que viene despues?**
+**¿Qué viene después?**
 
 En el siguiente punto veremos **Almacenamiento de Ficheros**: como gestionar upload y download de archivos, almacenamiento local y en la nube, y integracion con servicios como Azure Blob Storage o AWS S3.

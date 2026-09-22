@@ -98,12 +98,12 @@ graph TD
 
     style SQL fill:#2196F3,color:#fff
     style NOSQL fill:#4CAF50,color:#fff
-    style S1 fill:#1565C0,color:#fff
-    style S2 fill:#1976D2,color:#fff
-    style S3 fill:#1976D2,color:#fff
+    style S1 fill:#2196F3,color:#fff
+    style S2 fill:#2196F3,color:#fff
+    style S3 fill:#2196F3,color:#fff
     style S4 fill:#42A5F5,color:#fff
-    style M1 fill:#2E7D32,color:#fff
-    style M2 fill:#388E3C,color:#fff
+    style M1 fill:#4CAF50,color:#fff
+    style M2 fill:#4CAF50,color:#fff
     style M3 fill:#66BB6A,color:#fff
 ```
 
@@ -223,8 +223,8 @@ graph TD
     style EMB fill:#4CAF50,color:#fff
     style REF fill:#2196F3,color:#fff
     style SUBSET fill:#9C27B0,color:#fff
-    style OK fill:#388E3C,color:#fff
-    style OK2 fill:#1976D2,color:#fff
+    style OK fill:#4CAF50,color:#fff
+    style OK2 fill:#2196F3,color:#fff
     style OK3 fill:#7B1FA2,color:#fff
 ```
 
@@ -682,11 +682,11 @@ graph TD
 
     style CLASES fill:#2196F3,color:#fff
     style MONGO fill:#4CAF50,color:#fff
-    style C fill:#1565C0,color:#fff
-    style D fill:#1976D2,color:#fff
-    style M fill:#2E7D32,color:#fff
-    style N fill:#388E3C,color:#fff
-    style DIR fill:#388E3C,color:#fff
+    style C fill:#2196F3,color:#fff
+    style D fill:#2196F3,color:#fff
+    style M fill:#4CAF50,color:#fff
+    style N fill:#4CAF50,color:#fff
+    style DIR fill:#4CAF50,color:#fff
 ```
 
 ```csharp
@@ -854,7 +854,7 @@ graph TD
 
     style DRIVER fill:#FF9800,color:#fff
     style EF fill:#9C27B0,color:#fff
-    style D1 fill:#E65100,color:#fff
+    style D1 fill:#FF9800,color:#fff
     style D2 fill:#EF6C00,color:#fff
     style D3 fill:#F57C00,color:#fff
     style D4 fill:#f44336,color:#fff
@@ -1479,13 +1479,13 @@ graph TD
     style DESIGN fill:#2196F3,color:#fff
     style TOOLS fill:#FF9800,color:#fff
     style TEST fill:#9C27B0,color:#fff
-    style BSON fill:#388E3C,color:#fff
-    style COL fill:#388E3C,color:#fff
-    style DOC fill:#388E3C,color:#fff
-    style EMB fill:#1976D2,color:#fff
-    style REF fill:#1976D2,color:#fff
-    style PAT fill:#1976D2,color:#fff
-    style DRIVER fill:#E65100,color:#fff
+    style BSON fill:#4CAF50,color:#fff
+    style COL fill:#4CAF50,color:#fff
+    style DOC fill:#4CAF50,color:#fff
+    style EMB fill:#2196F3,color:#fff
+    style REF fill:#2196F3,color:#fff
+    style PAT fill:#2196F3,color:#fff
+    style DRIVER fill:#FF9800,color:#fff
     style EF fill:#6A1B9A,color:#fff
     style CRUD1 fill:#EF6C00,color:#fff
     style CRUD2 fill:#7B1FA2,color:#fff

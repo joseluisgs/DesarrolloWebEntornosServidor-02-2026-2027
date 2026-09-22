@@ -1259,7 +1259,7 @@ public record ProductoDto(
 
 ## 8.10. Reto
 
-> Aplica DTOs, mapeadores, validaciones y negociación de contenido a la API de productos.
+> Aplica DTOs, mapeadores, validaciones y negociación de contenido a FunkoApp.
 
 **Añade a tu API:**
 
@@ -1294,5 +1294,7 @@ public record ProductoDto(
 | **Query Parameters** | Filtros y paginación en la URL |
 | **HTTP QUERY** | Nuevo método con cuerpo JSON + caché |
 | **HATEOAS** | Enlaces de navegación en respuestas REST |
+
+**¿Qué viene después?**
 
 En el siguiente punto veremos la **Configuración de la Aplicación, uso de Perfiles y Logging**: cómo organizar la configuración, crear perfiles de entorno y registrar logs de manera eficiente.

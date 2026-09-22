@@ -78,7 +78,7 @@ flowchart LR
     A["Atomicidad"] --> C["Consistencia"]
     C --> I["Aislamiento"]
     I --> D["Durabilidad"]
-    style A fill:#1B5E20,color:#fff
+    style A fill:#4CAF50,color:#fff
     style C fill:#4CAF50,color:#fff
     style I fill:#2196F3,color:#fff
     style D fill:#FF9800,color:#fff

@@ -626,7 +626,7 @@ MiApi/
 
 ## 11.8. Reto
 
-> Diseña la arquitectura de una API para gestión de una biblioteca.
+> Diseña la arquitectura de FunkoApp.
 
 **Estructura a implementar:**
 
@@ -662,5 +662,7 @@ MiApi/
 | **Regla de Dependencia** | Las dependencias solo apuntan hacia adentro |
 | **CQRS** | Separa Commands (escrituras) de Queries (lecturas) |
 | **MediatR** | Librería que implementa el patrón Mediator |
+
+**¿Qué viene después?**
 
 En el siguiente punto veremos **Testing avanzado**: tests de integración, Testcontainers y pipelines automáticos de CI/CD.

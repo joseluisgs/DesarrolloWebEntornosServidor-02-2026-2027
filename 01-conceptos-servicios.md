@@ -96,7 +96,7 @@ flowchart TD
     A --> D["🔍 GraphQL"]
     A --> E["⚡ gRPC"]
     A --> F["🔌 WebSockets"]
-    style A fill:#7c3aed,color:#fff
+    style A fill:#9C27B0,color:#fff
     style B fill:#4CAF50,color:#fff
     style C fill:#f44336,color:#fff
     style D fill:#FF9800,color:#fff
@@ -468,5 +468,7 @@ Si abres Netflix y buscas "Star Wars", ¿qué petición HTTP se envía? Si añad
 | **NuGet** | Gestor de paquetes para instalar librerías |
 | **appsettings.json** | Configuración jerárquica por entornos |
 | **Hot Reload** | Recarga automática al modificar código |
+
+**¿Qué viene después?**
 
 En el siguiente punto veremos las **APIs REST**: cómo se diseñan los endpoints, qué métodos HTTP usar y cómo estructurar las respuestas.
