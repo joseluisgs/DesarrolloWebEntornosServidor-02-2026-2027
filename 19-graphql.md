@@ -48,7 +48,6 @@
   - [19.12. Reto](#1912-reto)
   - [19.13. Resumen](#1913-resumen)
 
-
 > **Punto de partida:** En una tienda online, un cliente movil solo necesita el nombre y precio de un producto, pero el administrador necesita el stock, la categoria y las ventas. Con REST, haces una peticion y recibes todo (over-fetching). O haces 3 peticiones para obtener 3 recursos diferentes (under-fetching). GraphQL resuelve esto: el cliente pide exactamente lo que necesita, ni mas ni menos, en una sola peticion.
 
 **Objetivos de aprendizaje:**
@@ -60,6 +59,8 @@
 - Testear endpoints GraphQL
 
 ---
+
+## 19.1. Introduccion
 
 ## 19.1. Introduccion
 
@@ -81,12 +82,12 @@ graph LR
 
     style REST fill:#f44336,color:#fff
     style GQL fill:#4CAF50,color:#fff
-    style R1 fill:#B71C1C,color:#fff
-    style R2 fill:#C62828,color:#fff
-    style R3 fill:#D32F2F,color:#fff
-    style G1 fill:#2E7D32,color:#fff
-    style G2 fill:#388E3C,color:#fff
-    style G3 fill:#43A047,color:#fff
+    style R1 fill:#f44336,color:#fff
+    style R2 fill:#f44336,color:#fff
+    style R3 fill:#f44336,color:#fff
+    style G1 fill:#4CAF50,color:#fff
+    style G2 fill:#4CAF50,color:#fff
+    style G3 fill:#4CAF50,color:#fff
 ```
 
 > **Analogia:** REST es como un menu fijo donde recibes el plato completo aunque solo quieras la ensalada. GraphQL es como un buffet donde sirves exactamente lo que quieres: "un poco de pollo, mucha ensalada, nada de arroz".
@@ -118,11 +119,13 @@ flowchart TD
 
     style REST_FLOW fill:#f44336,color:#fff
     style GQL_FLOW fill:#4CAF50,color:#fff
-    style A fill:#C62828,color:#fff
-    style B fill:#C62828,color:#fff
-    style C fill:#C62828,color:#fff
-    style D fill:#2E7D32,color:#fff
+    style A fill:#f44336,color:#fff
+    style B fill:#f44336,color:#fff
+    style C fill:#f44336,color:#fff
+    style D fill:#4CAF50,color:#fff
 ```
+
+📌 Ejemplo real: **GitHub** usa GraphQL para su API. La app móvil de GitHub usa la misma API que la web, pero cada cliente pide los campos que necesita. La versión móvil pide menos datos (más rápida), la web pide todos los campos (más completa). Si GitHub usara REST, tendría que crear endpoints separados para móvil y web, o devolver siempre todos los campos (over-fetching).
 
 ### 19.1.3. Cuando Usar GraphQL
 
@@ -206,13 +209,13 @@ flowchart TD
 
     style DI fill:#2196F3,color:#fff
     style ENDPOINT fill:#4CAF50,color:#fff
-    style A fill:#1565C0,color:#fff
-    style B fill:#1976D2,color:#fff
-    style C fill:#1976D2,color:#fff
-    style D fill:#1976D2,color:#fff
-    style E fill:#1976D2,color:#fff
-    style F fill:#2E7D32,color:#fff
-    style G fill:#388E3C,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#2196F3,color:#fff
+    style C fill:#2196F3,color:#fff
+    style D fill:#2196F3,color:#fff
+    style E fill:#2196F3,color:#fff
+    style F fill:#4CAF50,color:#fff
+    style G fill:#4CAF50,color:#fff
 ```
 
 ### 19.2.3. Flujo de Peticion GraphQL
@@ -506,6 +509,8 @@ HotChocolate incluye atributos listos para usar:
 
 **Productos paginados:**
 
+> 📝 **Nota:** En GraphQL, el cliente especifica exactamente que campos quiere recibir. No hay over-fetching (recibir mas datos de los necesarios) ni under-fetching (necesitar multiples peticiones).
+
 ```graphql
 query {
   productos(first: 10, skip: 0) {
@@ -753,12 +758,12 @@ graph TB
     style SERVIDOR fill:#FF9800,color:#fff
     style SUSCRIPCIONES fill:#9C27B0,color:#fff
     style CLIENTES fill:#4CAF50,color:#fff
-    style A fill:#1565C0,color:#fff
-    style B fill:#E65100,color:#fff
-    style C fill:#6A1B9A,color:#fff
-    style G fill:#2E7D32,color:#fff
-    style H fill:#2E7D32,color:#fff
-    style I fill:#2E7D32,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#FF9800,color:#fff
+    style C fill:#9C27B0,color:#fff
+    style G fill:#4CAF50,color:#fff
+    style H fill:#4CAF50,color:#fff
+    style I fill:#4CAF50,color:#fff
 ```
 
 📌 Ejemplo real: **Shopify** usa subscriptions para notificar a los comerciantes cuando se realiza un pedido nuevo. El panel de administracion se actualiza instantaneamente sin recargar la pagina.
@@ -884,7 +889,7 @@ graph TD
     style D1 fill:#f44336,color:#fff
     style D2 fill:#f44336,color:#fff
     style D3 fill:#f44336,color:#fff
-    style R fill:#B71C1C,color:#fff
+    style R fill:#f44336,color:#fff
 ```
 
 ### 19.8.2. Solucion con DataLoader
@@ -906,7 +911,7 @@ graph TD
     style DL fill:#FF9800,color:#fff
     style S2 fill:#4CAF50,color:#fff
     style DL2 fill:#FF9800,color:#fff
-    style R fill:#2E7D32,color:#fff
+    style R fill:#4CAF50,color:#fff
 ```
 
 ### 19.8.3. Implementacion de DataLoaders
@@ -1415,16 +1420,16 @@ graph TD
     style TOOLS fill:#FF9800,color:#fff
     style SECURITY fill:#9C27B0,color:#fff
     style TEST fill:#4CAF50,color:#fff
-    style QRY fill:#1565C0,color:#fff
-    style MUT fill:#1565C0,color:#fff
-    style SUB fill:#1565C0,color:#fff
-    style DL fill:#1565C0,color:#fff
-    style HC fill:#E65100,color:#fff
-    style TYPES fill:#E65100,color:#fff
-    style FILTERS fill:#E65100,color:#fff
-    style JWT fill:#6A1B9A,color:#fff
-    style AUTH fill:#6A1B9A,color:#fff
-    style NUNIT fill:#2E7D32,color:#fff
+    style QRY fill:#2196F3,color:#fff
+    style MUT fill:#2196F3,color:#fff
+    style SUB fill:#2196F3,color:#fff
+    style DL fill:#2196F3,color:#fff
+    style HC fill:#FF9800,color:#fff
+    style TYPES fill:#FF9800,color:#fff
+    style FILTERS fill:#FF9800,color:#fff
+    style JWT fill:#9C27B0,color:#fff
+    style AUTH fill:#9C27B0,color:#fff
+    style NUNIT fill:#4CAF50,color:#fff
 ```
 
 | Concepto | Descripcion |

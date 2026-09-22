@@ -30,6 +30,8 @@
 
 > 💡 **Punto de partida:** Has conseguido que Instagram sepa quién eres (autenticación). Pero... ¿puedes borrar la cuenta de otro usuario? ¿Puedes ver estadísticas de negocio? Eso lo decide la **autorización**: qué puedes hacer una vez autenticado.
 
+---
+
 ## 17.1. Introducción
 
 ### 17.1.1. ¿Qué es la Autorización?
@@ -303,11 +305,11 @@ flowchart LR
     C4 --> A2
     C5 --> A3
 
-    style C1 fill:#0D47A1,color:#fff
-    style C2 fill:#0D47A1,color:#fff
-    style C3 fill:#0D47A1,color:#fff
-    style C4 fill:#0D47A1,color:#fff
-    style C5 fill:#0D47A1,color:#fff
+    style C1 fill:#2196F3,color:#fff
+    style C2 fill:#2196F3,color:#fff
+    style C3 fill:#2196F3,color:#fff
+    style C4 fill:#2196F3,color:#fff
+    style C5 fill:#2196F3,color:#fff
 ```
 
 | Tipo de claim | Ejemplo | Uso |
@@ -1203,9 +1205,9 @@ flowchart TD
     style B fill:#4CAF50,color:#fff
     style D fill:#FF9800,color:#fff
     style E fill:#2196F3,color:#fff
-    style F fill:#1B5E20,color:#fff
-    style G fill:#E65100,color:#fff
-    style H fill:#0D47A1,color:#fff
+    style F fill:#4CAF50,color:#fff
+    style G fill:#FF9800,color:#fff
+    style H fill:#2196F3,color:#fff
 ```
 
 > 💡 **Consejo:** La autorización (roles, claims, policies, handlers) funciona **exactamente igual** en ambos enfoques. La única diferencia es cómo gestionas la identidad del usuario. Elige el enfoque de autenticación que mejor se adapte a tu proyecto y la autorización será la misma.

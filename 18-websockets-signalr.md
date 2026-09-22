@@ -42,11 +42,15 @@
 
 > **Punto de partida:** Cuando publicas un producto en una tienda online, los administradores deberian ver el cambio al instante sin recargar la pagina. En el modelo HTTP tradicional, el cliente debe preguntar periodicamente al servidor si hay novedades (polling). La **comunicacion en tiempo real** elimina ese problema: el servidor emite datos a los clientes conectados tan pronto como ocurre un evento.
 
+---
+
 ## 18.1. Introduccion
 
 ### 18.1.1. Que es la Comunicacion en Tiempo Real
 
 La **comunicacion en tiempo real** permite que el servidor envie datos a los clientes sin que estos lo soliciten. Elimina el patron request-response donde el cliente siempre inicia la comunicacion. Es fundamental para chat en vivo, dashboards de metricas, notificaciones push y aplicaciones colaborativas como Google Docs.
+
+> 📝 **Nota:** La comunicacion en tiempo real no reemplaza a HTTP. Se usa junto con HTTP para funcionalidades especificas donde el servidor necesita "hablar" primero. Las APIs REST siguen siendo ideales para CRUD operaciones normales.
 
 En HTTP tradicional, si quieres saber si hay nuevo contenido, debes preguntar periodicamente:
 
@@ -105,6 +109,8 @@ flowchart LR
 | **Colaboracion** | Google Docs, Figma | WebSocket |
 | **Gaming multiplayer** | .io games | WebSocket nativo |
 | **API simple** | CRUD de productos | REST |
+
+📌 Ejemplo real: **Slack** usa WebSocket para mantener abierta la conexion entre el navegador y sus servidores. Cuando alguien escribe un mensaje en un canal, todos los usuarios conectados lo ven al instante sin recargar la pagina. Sin WebSocket, Slack tendria que hacer polling cada 2 segundos, lo cual seria ineficiente y lento.
 
 > **Nota:** Para la mayoria de casos de uso en aplicaciones web empresariales, **SignalR es la mejor eleccion**. WebSocket nativo solo es necesario en escenarios de rendimiento extremo (gaming, streaming de video en tiempo real).
 

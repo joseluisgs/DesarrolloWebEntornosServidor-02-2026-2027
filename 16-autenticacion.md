@@ -40,6 +40,8 @@
 
 > 💡 **Punto de partida:** Cuando abres Instagram, introduces tu email y contraseña. Instagram comprueba que eres quien dices ser y te da acceso a tu feed. Ese proceso se llama **autenticación**. Pero en una API REST, ¿cómo sabe el servidor quién eres en cada petición? La respuesta está en JWT y BCrypt.
 
+---
+
 ## 16.1. Introducción
 
 ### 16.1.1. ¿Qué es la Autenticación?
@@ -220,9 +222,9 @@ flowchart TD
     T -->|Parte 3| S1
 
     style T fill:#607D8B,color:#fff
-    style H1 fill:#1B5E20,color:#fff
-    style P1 fill:#0D47A1,color:#fff
-    style S1 fill:#E65100,color:#fff
+    style H1 fill:#4CAF50,color:#fff
+    style P1 fill:#2196F3,color:#fff
+    style S1 fill:#FF9800,color:#fff
 ```
 
 **Header** — Define el algoritmo de firma y tipo de token. Es un JSON con dos campos obligatorios:
@@ -1482,8 +1484,8 @@ flowchart TD
     style F fill:#4CAF50,color:#fff
     style G fill:#FF9800,color:#fff
     style H fill:#4CAF50,color:#fff
-    style I fill:#E65100,color:#fff
-    style J fill:#1B5E20,color:#fff
+    style I fill:#FF9800,color:#fff
+    style J fill:#4CAF50,color:#fff
 ```
 
 | Aspecto | Manual (JWT + BCrypt) | Identity |
