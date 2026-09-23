@@ -37,7 +37,9 @@ UD02. Desarrollo de servicios web en .NET. 2DAW. Curso 2026-2027.
 27. [Logging y Monitoreo](27-logging.md)
 28. [Testing de Servicios Web](28-testing.md)
 29. [Docker y Despliegue](29-docker.md)
-30. [Resumen](30-resumen.md)
+30. [CQRS: Command Query Responsibility Segregation](30-cqrs-mediator.md)
+31. [API Gateway y Microservicios](31-api-gateway.md)
+32. [Resumen](32-resumen.md)
 
 ## Prácticas
 1.  [Prueba de C# y Terminal](practicas/01-test-csharp.md)
