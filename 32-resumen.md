@@ -1,1051 +1,733 @@
-# 28. Resumen General del Modulo ASP.NET Core
+- [32. Resumen y Conclusiones](#32-resumen-y-conclusiones)
+  - [32.1. Mapa Conceptual de la Unidad](#321-mapa-conceptual-de-la-unidad)
+  - [32.2. Conceptos Clave](#322-conceptos-clave)
+    - [Parte 1: Fundamentos de Servicios Web en .NET](#parte-1-fundamentos-de-servicios-web-en-net)
+      - [Tema 01: Conceptos de Servicios Web](#tema-01-conceptos-de-servicios-web)
+      - [Tema 02: REST API](#tema-02-rest-api)
+      - [Tema 03: Minimal APIs](#tema-03-minimal-apis)
+      - [Tema 04: Controladores MVC](#tema-04-controladores-mvc)
+      - [Tema 05: Arquitectura y Pipeline](#tema-05-arquitectura-y-pipeline)
+      - [Tema 06: Inyección de Dependencias](#tema-06-inyección-de-dependencias)
+      - [Tema 07: Excepciones y Patrón Result](#tema-07-excepciones-y-patrón-result)
+      - [Tema 08: DTOs, Mapeadores y Validaciones](#tema-08-dtos-mapeadores-y-validaciones)
+      - [Tema 09: Configuración y Logging](#tema-09-configuración-y-logging)
+      - [Tema 10: Pruebas y Despliegue](#tema-10-pruebas-y-despliegue)
+    - [Parte 2: Persistencia y Seguridad](#parte-2-persistencia-y-seguridad)
+      - [Tema 11: Clean Architecture](#tema-11-clean-architecture)
+      - [Tema 12: Entity Framework Core](#tema-12-entity-framework-core)
+      - [Tema 13: MongoDB](#tema-13-mongodb)
+      - [Tema 14: Cache Redis](#tema-14-cache-redis)
+      - [Tema 15: Transacciones e Identificadores](#tema-15-transacciones-e-identificadores)
+      - [Tema 16: Autenticación](#tema-16-autenticación)
+      - [Tema 17: Autorización](#tema-17-autorización)
+    - [Parte 3: APIs Especializadas](#parte-3-apis-especializadas)
+      - [Tema 18: WebSockets y SignalR](#tema-18-websockets-y-signalr)
+      - [Tema 19: GraphQL](#tema-19-graphql)
+      - [Tema 20: File Storage](#tema-20-file-storage)
+      - [Tema 21: Email Services](#tema-21-email-services)
+      - [Tema 22: Tareas Programadas](#tema-22-tareas-programadas)
+    - [Parte 4: Arquitectura y Operaciones](#parte-4-arquitectura-y-operaciones)
+      - [Tema 23: Optimización](#tema-23-optimización)
+      - [Tema 24: Documentación con Swagger/OpenAPI](#tema-24-documentación-con-swaggeropenapi)
+      - [Tema 25: Perfiles y Configuración](#tema-25-perfiles-y-configuración)
+      - [Tema 26: Organización de Program.cs](#tema-26-organización-de-programcs)
+      - [Tema 27: Logging Avanzado con Serilog](#tema-27-logging-avanzado-con-serilog)
+      - [Tema 28: Testing Profesional](#tema-28-testing-profesional)
+      - [Tema 29: Docker y Contenedores](#tema-29-docker-y-contenedores)
+      - [Tema 30: CQRS y Mediator](#tema-30-cqrs-y-mediator)
+      - [Tema 31: API Gateway](#tema-31-api-gateway)
+  - [32.3. Herramientas y Perfiles](#323-herramientas-y-perfiles)
+    - [SDK y CLI](#sdk-y-cli)
+    - [NuGet (paquetes habituales)](#nuget-paquetes-habituales)
+    - [IDE](#ide)
+  - [32.4. Errores Comunes a Evitar](#324-errores-comunes-a-evitar)
+  - [32.5. Checklist de Supervivencia](#325-checklist-de-supervivencia)
+    - [Parte 1: Fundamentos](#parte-1-fundamentos)
+    - [Parte 2: Persistencia y Seguridad](#parte-2-persistencia-y-seguridad)
+    - [Parte 3: APIs Especializadas](#parte-3-apis-especializadas)
+    - [Parte 4: Arquitectura y Operaciones](#parte-4-arquitectura-y-operaciones)
+  - [32.6. Glosario de Términos](#326-glosario-de-términos)
+  - [32.7. Ejercicios de Repaso](#327-ejercicios-de-repaso)
+  - [32.8. ¿Qué viene después?](#328-qué-viene-después)
+  - [32.9. Mapa de Conexiones entre Temas](#329-mapa-de-conexiones-entre-temas)
 
-## Indice
 
-- [28.1. Conceptos Fundamentales](#281-conceptos-fundamentales)
-  - [28.1.1. Fundamentos HTTP](#2811-fundamentos-http)
-  - [28.1.2. Servicios Web RESTful](#2812-servicios-web-restful)
-  - [28.1.3. ASP.NET Core](#2813-aspnet-core)
-  - [28.1.4. Inyeccion de Dependencias](#2814-inyeccion-de-dependencias)
-- [28.2. Patrones de Diseno y Arquitectura](#282-patrones-de-diseno-y-arquitectura)
-  - [28.2.1. Patron Result (ROP)](#2821-patron-result-rop)
-  - [28.2.2. Repository Pattern](#2822-repository-pattern)
-  - [28.2.3. Arquitectura Onion y Clean Architecture](#2823-arquitectura-onion-y-clean-architecture)
-  - [28.2.4. Mapeadores y DTOs](#2824-mapeadores-y-dtos)
-  - [28.2.5. Validacion en Cascada](#2825-validacion-en-cascada)
-- [28.3. Acceso a Datos](#283-acceso-a-datos)
-  - [28.3.1. Entity Framework Core](#2831-entity-framework-core)
-  - [28.3.2. MongoDB](#2832-mongodb)
-  - [28.3.3. Redis Caching](#2833-redis-caching)
-  - [28.3.4. Transacciones](#2834-transacciones)
-- [28.4. Seguridad](#284-seguridad)
-  - [28.4.1. JWT Authentication](#2841-jwt-authentication)
-  - [28.4.2. Autorizacion Roles y Claims](#2842-autorizacion-roles-y-claims)
-  - [28.4.3. Logging](#2843-logging)
-- [28.5. APIs Especializadas](#285-apis-especializadas)
-  - [28.5.1. GraphQL con HotChocolate](#2851-graphql-con-hotchocolate)
-  - [28.5.2. File Storage](#2852-file-storage)
-  - [28.5.3. WebSockets y SignalR](#2853-websockets-y-signalr)
-  - [28.5.4. Email Services](#2854-email-services)
-- [28.6. Testing y DevOps](#286-testing-y-devops)
-  - [28.6.1. Unit Testing con NUnit y Moq](#2861-unit-testing-con-nunit-y-moq)
-  - [28.6.2. Docker y Containers](#2862-docker-y-containers)
-  - [28.6.3. Optimizacion](#2863-optimizacion)
-- [28.7. Configuracion y Organizacion](#287-configuración-y-organización)
-  - [28.7.1. Documentacion con Swagger/OpenAPI](#2871-documentacion-con-swaggeropenapi)
-  - [28.7.2. Perfiles y Configuracion](#2872-perfiles-y-configuración)
-  - [28.7.3. Tareas Programadas](#2873-tareas-programadas)
-  - [28.7.4. Organizacion de Program.cs](#2874-organización-de-programcs)
-- [28.8. Mapa Mental del Ecosistema](#288-mapa-mental-del-ecosistema)
-- [28.9. Checklist de Conocimientos](#289-checklist-de-conocimientos)
-  - [28.9.1. Fundamentos y Patrones](#2891-fundamentos-y-patrones)
-  - [28.9.2. Acceso a Datos](#2892-acceso-a-datos)
-  - [28.9.3. Seguridad](#2893-seguridad)
-  - [28.9.4. APIs Especializadas](#2894-apis-especializadas)
-  - [28.9.5. Testing y DevOps](#2895-testing-y-devops)
-- [28.10. Recursos y Proximos Pasos](#2810-recursos-y-proximos-pasos)
+# 32. Resumen y Conclusiones
 
----
+> 💡 **Punto de partida:** Has completado la Unidad 02, que consta de cuatro partes fundamentales. La Parte 1 te dio los cimientos de ASP.NET Core y las APIs REST. La Parte 2 te enseñó a persistir datos y proteger la app. La Parte 3 te abrió las puertas a APIs especializadas (GraphQL, SignalR, email). La Parte 4 te dio las herramientas de arquitectura, testing y despliegue profesional. Este resumen consolida todo en una sola mirada.
 
-## 28.1. Conceptos Fundamentales
+Hemos visto el desarrollo completo de servicios web con ASP.NET Core. Este punto consolida todos los conceptos en una sola mirada.
 
-### 28.1.1. Fundamentos HTTP
+**Objetivos de aprendizaje:**
 
-HTTP es el protocolo fundamental de la web. Comprender sus metodos, codigos de estado y cabeceras es esencial para disenar APIs robustas.
+- Repasar los conceptos fundamentales de la unidad
+- Consolidar el vocabulario técnico
+- Tener una referencia rápida para el examen
 
-**Metodos HTTP:**
-
-| Metodo | Descripcion | Idempotente | Seguro |
-| :----- | :----------------------- | :---------- | :----- |
-| **GET** | Obtener recursos | ✅ Si | ✅ Si |
-| **POST** | Crear recursos | ❌ No | ❌ No |
-| **PUT** | Reemplazar completamente | ✅ Si | ❌ No |
-| **PATCH** | Modificar parcialmente | ❌ No | ❌ No |
-| **DELETE** | Eliminar recursos | ✅ Si | ❌ No |
-
-**Codigos de Estado:**
-
-| Codigo | Rango | Significado | Ejemplo |
-| :------ | :------------- | :---------------------- | :----------------------------------------------------- |
-| **200** | Exito | Operacion exitosa | `200 OK`, `201 Created`, `204 No Content` |
-| **300** | Redireccion | Mas acciones necesarias | `304 Not Modified` |
-| **400** | Error cliente | Error en la solicitud | `400 Bad Request`, `404 Not Found` |
-| **500** | Error servidor | Error en el servidor | `500 Internal Server Error`, `503 Service Unavailable` |
-
-### 28.1.2. Servicios Web RESTful
-
-REST (Representational State Transfer) es un estilo arquitectonico para disenar servicios web escalables.
-
-**Principios REST:**
-
-| Principio | Descripcion | Ejemplo Practico |
-| :----------------------- | :------------------------------- | :------------------------------------------ |
-| **Recursos** | Todo es un recurso identificable | `/api/funkos`, `/api/categorias/1` |
-| **URIs significativas** | Nombres sustantivos, no verbos | ✅ `/funkos`, ❌ `/getFunkos` |
-| **HTTP methods** | Usar metodos HTTP correctamente | GET para leer, POST para crear |
-| **Stateless** | Sin estado en el servidor | Token en cada peticion |
-| **Representaciones** | Multiples formatos | JSON, XML, etc. |
-
-### 28.1.3. ASP.NET Core
-
-ASP.NET Core es el framework de Microsoft para construir aplicaciones web modernas, cross-platform y cloud-ready.
-
-**Arquitectura del Pipeline:**
+## 32.1. Mapa Conceptual de la Unidad
 
 ```mermaid
-flowchart LR
-    subgraph Client["Cliente"]
-        A1[Browser]
-        A2[Mobile]
-        A3[API Client]
-    end
-    
-    subgraph Middlewares["Middlewares"]
-        M1[Exception Handler]
-        M2[CORS]
-        M3[Auth]
-        M4[Routing]
-    end
-    
-    subgraph Controller["Controllers"]
-        C1[FunkosController]
-        C2[AuthController]
-    end
-    
-    subgraph Services["Services"]
-        S1[IFunkoService]
-        S2[IAuthService]
-    end
-    
-    A1 -->|HTTP Request| M1
-    A2 -->|HTTP Request| M1
-    A3 -->|HTTP Request| M1
-    
-    M1 --> M2 --> M3 --> M4
-    M4 --> C1
-    M4 --> C2
-    
-    C1 --> S1
-    C2 --> S2
-    
-    style Middlewares fill:#1565C0
-    style Controller fill:#FF9800
-    style Services fill:#2E7D32
+graph TD
+    UD02[UD02: Desarrollo de Servicios Web en .NET] --> P1[Parte 1: Fundamentos]
+    UD02 --> P2[Parte 2: Persistencia y Seguridad]
+    UD02 --> P3[Parte 3: APIs Especializadas]
+    UD02 --> P4[Parte 4: Arquitectura y Operaciones]
+
+    P1 --> CON[Conceptos Servicios Web]
+    P1 --> REST[REST API]
+    P1 --> MIN[Minimal APIs]
+    P1 --> MVC[Controladores MVC]
+    P1 --> PIPE[Arquitectura y Pipeline]
+    P1 --> DI[Inyección de Dependencias]
+    P1 --> RES[Excepciones y Result]
+    P1 --> DTO[DTOs y Mapeadores]
+    P1 --> CONF[Configuración y Logging]
+    P1 --> TEST1[Pruebas y Despliegue]
+
+    CON --> CON1[Servicios: Acción Remota]
+    CON --> CON2[SOAP vs REST]
+    CON --> CON3[HTTP: Protocolo Base]
+    REST --> REST1[Recursos: URLs]
+    REST --> REST2[Verbos: GET,POST,PUT,DELETE]
+    REST --> REST3[Códigos: 200,201,404,500]
+    MIN --> MIN1[Endpoints Ligeros]
+    MIN --> MIN2[Filters y Tags]
+    MVC --> MVC1[Controller, Action, Route]
+    MVC --> MVC2[Model Binding]
+    MVC --> MVC3[Filters: Before/After]
+    PIPE --> PIPE1[Middleware Pipeline]
+    PIPE --> PIPE2[Request-Response]
+    PIPE --> PIPE3[Order Matters]
+    DI --> DI1[Transient, Scoped, Singleton]
+    DI --> DI2[Scrutor: Auto-registro]
+    DI --> DI3[Primary Constructors]
+    RES --> RES1[Result<T, TError>]
+    RES --> RES2[Bind, Map, Match]
+    RES --> RES3[CSharpFunctionalExtensions]
+    DTO --> DTO1[Request/Response DTOs]
+    DTO --> DTO2[AutoMapper]
+    DTO --> DTO3[FluentValidation]
+    CONF --> CONF1[appsettings.json]
+    CONF --> CONF2[IOptions<T>]
+    CONF --> CONF3[Environment Variables]
+    TEST1 --> TEST1a[NUnit + Moq]
+    TEST1 --> TEST1b[FluentAssertions]
+
+    P2 --> ARCH[Clean Architecture]
+    P2 --> EF[Entity Framework Core]
+    P2 --> MONGO[MongoDB]
+    P2 --> REDIS[Cache Redis]
+    P2 --> TRANS[Transacciones]
+    P2 --> AUTH[Autenticación JWT]
+    P2 --> AUTHZ[Autorización]
+
+    ARCH --> ARCH1[Onion: Dominio en Centro]
+    ARCH --> ARCH2[Inversión de Dependencias]
+    ARCH --> ARCH3[Capas: API→App→Domain→Infra]
+    EF --> EF1[DbContext y Migraciones]
+    EF --> EF2[Eager vs Lazy Loading]
+    EF --> EF3[Fluent API]
+    MONGO --> MONGO1[Aggregation Pipeline]
+    MONGO --> MONGO2[Documentos BSON]
+    REDIS --> REDIS1[Cache-Aside Pattern]
+    REDIS --> REDIS2[Expiración TTL]
+    TRANS --> TRANS1[BeginTransactionAsync]
+    TRANS --> TRANS2[Commit y Rollback]
+    AUTH --> AUTH1[JWT: Header,Payload,Firma]
+    AUTH --> AUTH2[Token Validation]
+    AUTHZ --> AUTHZ1[Roles y Claims]
+    AUTHZ --> AUTHZ2[Policies Personalizadas]
+
+    P3 --> WS[WebSockets y SignalR]
+    P3 --> GQL[GraphQL]
+    P3 --> FILE[File Storage]
+    P3 --> EMAIL[Email Services]
+    P3 --> CRON[Tareas Programadas]
+
+    WS --> WS1[Hub: Bidireccional]
+    WS --> WS2[Groups y Users]
+    WS --> WS3[Notificaciones Real-time]
+    GQL --> GQL1[HotChocolate]
+    GQL --> GQL2[Queries y Mutations]
+    GQL --> GQL3[DataLoaders: N+1]
+    FILE --> FILE1[IStorageService]
+    FILE --> FILE2[Local y Azure Blob]
+    EMAIL --> EMAIL1[MailKit]
+    EMAIL --> EMAIL2[HTML Templates]
+    CRON --> CRON1[BackgroundService]
+    CRON --> CRON2[CancellationToken]
+
+    P4 --> OPT[Optimización]
+    P4 --> SWAG[Swagger/OpenAPI]
+    P4 --> PROF[Perfiles]
+    P4 --> PROG[Organización Program.cs]
+    P4 --> SLOG[Serilog Avanzado]
+    P4 --> TESTP[Testing Profesional]
+    P4 --> DOCKER[Docker y Contenedores]
+    P4 --> CQRS[CQRS y Mediator]
+    P4 --> GW[API Gateway]
+
+    OPT --> OPT1[Response Compression]
+    OPT --> OPT2[Rate Limiting]
+    OPT --> OPT3[AsNoTracking]
+    SWAG --> SWAG1[OpenAPI Spec]
+    SWAG --> SWAG2[Security Definitions]
+    PROF --> PROF1[Development/Production]
+    PROF --> PROF2[User Secrets]
+    PROG --> PROG1[Extension Methods]
+    PROG --> PROG2[Config Classes]
+    SLOG --> SLOG1[Sinks: Console,File,Seq]
+    SLOG --> SLOG2[Enrichers y Filters]
+    TESTP --> TESTP1[NUnit + Moq]
+    TESTP --> TESTP2[TestContainers]
+    TESTP --> TESTP3[FluentAssertions]
+    DOCKER --> DOCKER1[Dockerfile Multi-etapa]
+    DOCKER --> DOCKER2[docker-compose.yml]
+    CQRS --> CQRS1[Command Handler]
+    CQRS --> CQRS2[Query Handler]
+    CQRS --> CQRS3[MediatR]
+    GW --> GW1[Enrutamiento]
+    GW --> GW2[Rate Limiting]
+    GW --> GW3[Carga y Seguridad]
+
+    style UD02 fill:#2196F3,color:#fff
+    style P1 fill:#7c3aed,color:#fff
+    style P2 fill:#4CAF50,color:#fff
+    style P3 fill:#FF9800,color:#fff
+    style P4 fill:#f44336,color:#fff
+    style CON fill:#FF9800,color:#fff
+    style REST fill:#FF9800,color:#fff
+    style MIN fill:#FF9800,color:#fff
+    style MVC fill:#FF9800,color:#fff
+    style PIPE fill:#FF9800,color:#fff
+    style DI fill:#FF9800,color:#fff
+    style RES fill:#FF9800,color:#fff
+    style DTO fill:#FF9800,color:#fff
+    style CONF fill:#FF9800,color:#fff
+    style TEST1 fill:#FF9800,color:#fff
+    style ARCH fill:#2196F3,color:#fff
+    style EF fill:#2196F3,color:#fff
+    style MONGO fill:#2196F3,color:#fff
+    style REDIS fill:#2196F3,color:#fff
+    style TRANS fill:#2196F3,color:#fff
+    style AUTH fill:#2196F3,color:#fff
+    style AUTHZ fill:#2196F3,color:#fff
+    style WS fill:#4CAF50,color:#fff
+    style GQL fill:#4CAF50,color:#fff
+    style FILE fill:#4CAF50,color:#fff
+    style EMAIL fill:#4CAF50,color:#fff
+    style CRON fill:#4CAF50,color:#fff
+    style OPT fill:#f44336,color:#fff
+    style SWAG fill:#f44336,color:#fff
+    style PROF fill:#f44336,color:#fff
+    style PROG fill:#f44336,color:#fff
+    style SLOG fill:#f44336,color:#fff
+    style TESTP fill:#f44336,color:#fff
+    style DOCKER fill:#f44336,color:#fff
+    style CQRS fill:#f44336,color:#fff
+    style GW fill:#f44336,color:#fff
 ```
 
-### 28.1.4. Inyeccion de Dependencias
+## 32.2. Conceptos Clave
 
-```csharp
-// Transient: Nuevo cada vez (ligero, stateless)
-builder.Services.AddTransient<ILoggerService, LoggerService>();
+### Parte 1: Fundamentos de Servicios Web en .NET
 
-// Scoped: Nuevo por request (DbContext, Repositories)
-builder.Services.AddScoped<IFunkoRepository, FunkoRepository>();
+#### Tema 01: Conceptos de Servicios Web
+- **Servicio web:** Aplicación que se expone vía HTTP para que otros sistemas la consuman. Acción remota sobre recursos
+- **SOAP vs REST:** SOAP = XML rígido, contratos WSDL. REST = JSON flexible, arquitectura ligera. REST domina hoy
+- **HTTP como base:** Todo servicio web se apoya en el protocolo HTTP: verbos, códigos de estado, headers
+- **Tipos de servicios:** REST (recursos), GraphQL (consultas), WebSocket (tiempo real), gRPC (alto rendimiento)
+- 📌 Netflix usa servicios web REST para su catálogo, GraphQL para pantallas móviles y gRPC para comunicación interna entre microservicios
 
-// Singleton: Uno solo (configuraciones, cache)
-builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(connectionString));
-```
+#### Tema 02: REST API
+- **REST:** Arquitectura basada en recursos (URLs) y verbos HTTP. Stateless. Cacheable
+- **Recursos:** Todo es un recurso identificable con una URL (`/api/funkos`, `/api/categorias/1`)
+- **URIs significativas:** Nombres sustantivos, no verbos. ✅ `/funkos`, ❌ `/getFunkos`
+- **Idempotencia:** GET, PUT, DELETE son idempotentes (repetir da el mismo resultado). POST no
+- **Códigos de estado:** 2xx (éxito: 200, 201, 204), 3xx (redirección), 4xx (error cliente: 400, 401, 404), 5xx (error servidor)
+- 📌 Instagram usa REST para el feed: GET `/api/posts`, POST `/api/posts`, DELETE `/api/posts/{id}`
 
----
+#### Tema 03: Minimal APIs
+- **Minimal APIs:** Endpoints ligeros sin controllers. Ideal para microservicios y APIs pequeñas
+- **Sintaxis:** `app.MapGet("/path", async () => { ... })` directo en Program.cs
+- **Filters:** `AddEndpointFilter<T>()` para lógica横切ante (validación, logging)
+- **Tags:** Agrupar endpoints en Swagger con `.WithTags("Nombre")`
+- **Ventaja:** Menos boilerplate, arranque rápido. **Desventaja:** Menos estructura para APIs grandes
+- 📌 Un microservicio de health check usa Minimal API: 3 líneas de código, sin controller
 
-## 28.2. Patrones de Diseno y Arquitectura
+#### Tema 04: Controladores MVC
+- **Controller:** Clase que agrupa endpoints relacionados. Hereda de `ControllerBase`
+- **[ApiController]:** Añade validación automática, respuestas 400, binding automático
+- **Routing:** `[Route("api/[controller]")]` a nivel de clase, `[HttpGet]`, `[HttpPost]` a nivel de método
+- **Model Binding:** Parámetros del método se rellenan automáticamente (body, query, route)
+- **Filters:** Before (antes de la acción) y After (después). Tipos: Authorization, Resource, Action, Exception
+- **ActionResult<T>:** Respuesta tipada con soporte para status codes (Ok, NotFound, BadRequest)
+- 📌 Un e-commerce usa controllers: `ProductosController` (CRUD), `PedidosController` (crear, listar), `AuthController` (login, registro)
 
-### 28.2.1. Patron Result (ROP)
+#### Tema 05: Arquitectura y Pipeline
+- **Pipeline de middleware:** Cada request pasa por una cadena de componentes. El orden importa
+- **Use vs Map vs Run:** `Use` pasa al siguiente, `Map` bifurca por path, `Run` terminal
+- **ExceptionHandler:** Captura errores globalmente. Siempre el primero en el pipeline
+- **CORS:** Controla qué dominios pueden acceder. Configurar antes de Authentication
+- **Order Matters:** `UseRouting` → `UseCors` → `UseAuthentication` → `UseAuthorization` → `UseEndpoints`
+- 📌 ASP.NET Core usa un pipeline de middleware como una cebolla: cada capa procesa antes de pasar al siguiente
 
-El Patron Result (Railway Oriented Programming) permite manejar errores sin excepciones usando `CSharpFunctionalExtensions`.
+#### Tema 06: Inyección de Dependencias
+- **DI:** No crees dependencias, recíbelas. El contenedor las crea y te las inyecta
+- **Ciclos de vida:** Transient (nueva cada vez), Scoped (una por petición), Singleton (una global)
+- **Scrutor:** Auto-registro de dependencias sin escribir cada `AddSingleton`/`AddScoped`
+- **Primary constructors (C# 14):** Inyectas por parámetro del constructor, no por campo privado
+- **Ventaja:** Código desacoplado, testeable, mantenible
+- 📌 ASP.NET Core usa DI por defecto. Cada controller recibe sus servicios por constructor
 
-**Conceptos Fundamentales:**
+#### Tema 07: Excepciones y Patrón Result
+- **Result<T, TError>:** Tipo funcional que encapsula éxito o error. Sin excepciones
+- **Railway Oriented Programming:** Dos vías: happy path (Success) y error path (Failure)
+- **Bind:** Encadena operaciones que retornan Result. Si una falla, salta al error
+- **Map:** Transforma el valor en éxito. Solo se ejecuta en Success
+- **Match:** Maneja ambos casos con dos lambdas: `result.Match(onSuccess, onFailure)`
+- **DomainErrors:** Errores personalizados y tipados (`DomainErrors.NotFound`, `DomainErrors.InvalidState`)
+- 📌 Un login usa Result: credenciales correctas → Success, usuario no existe → Failure, contraseña mala → Failure
 
-| Concepto | Descripcion | Ejemplo |
-| ----------- | --------------------------------------------------- | ------------------------------------ |
-| **Result** | Wrapper que encapsula exito o fallo | `Result<T, TError>` |
-| **Success** | Camino happy path con valor | `Result.Success(value)` |
-| **Failure** | Camino de error con mensaje | `Result.Failure(error)` |
-| **Bind** | Encadena operaciones que retornan Result | `result.Bind()` |
-| **Map** | Transforma el valor en exito | `result.Map(value => newValue)` |
-| **Match** | Maneja ambos casos | `result.Match(onSuccess, onFailure)` |
+#### Tema 08: DTOs, Mapeadores y Validaciones
+- **DTOs:** Data Transfer Objects. Objetos que transportan datos entre capas sin exponer entidades
+- **Request DTOs:** Lo que el cliente envía (`CreateFunkoDto`, `UpdateFunkoDto`)
+- **Response DTOs:** Lo que el servidor devuelve (`FunkoResponseDto`, `FunkoListDto`)
+- **AutoMapper:** Mapea propiedades automáticamente entre entidades y DTOs
+- **FluentValidation:** Validación declarativa con reglas legibles en cascada
+- **[ApiController] + `[Validate]`:** Validación automática. Si falla, devuelve 400 Bad Request
+- 📌 Un endpoint de crear funko: `CreateFunkoDto` (request) → AutoMapper → Entidad → AutoMapper → `FunkoResponseDto` (response)
 
-**Diagrama del Patron ROP:**
+#### Tema 09: Configuración y Logging
+- **appsettings.json:** Fichero de configuración. Valores por defecto + valores por entorno
+- **IOptions<T>:** Configuración tipada. Accedes a valores como propiedades
+- **Secciones:** ConnectionStrings, Jwt, Logging, Cors, AppState
+- **Serilog:** Logging estructurado. Sinks: Console, File, Seq
+- **Niveles:** Verbose, Debug, Information, Warning, Error, Fatal
+- **Logger<T>:** Logger inyectado por DI. Escríbelo en logs con `LogInformation`, `LogError`
+- 📌 Un banco registra cada transacción con Serilog para auditoría y depuración
+
+#### Tema 10: Pruebas y Despliegue
+- **NUnit:** Framework de tests. [TestFixture], [Test], [SetUp], [TestCase]
+- **Moq:** Mocking de interfaces. Simula dependencias para aislar lo que se testea
+- **FluentAssertions:** Aserciones legibles. `resultado.Should().Be(esperado)`
+- **Patrón AAA:** Arrange (preparar), Act (ejecutar), Assert (verificar)
+- **TestContainers:** Tests con Docker/Podman. BD real, Redis real, todo efímero
+- **Cobertura:** `dotnet test --collect:"XPlat Code Coverage"`. Objetivo: >80%
+- 📌 Un equipo usa TestContainers para testear la BD real sin contaminar datos de desarrollo
+
+### Parte 2: Persistencia y Seguridad
+
+#### Tema 11: Clean Architecture
+- **Onion Architecture:** El dominio está en el centro. Las demás capas dependen hacia adentro
+- **Capas:** External (API) → Application (Services) → Domain (Entities) → Infrastructure (DB)
+- **Inversión de dependencias:** Interfaces en Domain, implementaciones en Infrastructure
+- **Multi-database:** PostgreSQL (datos maestros), MongoDB (documentos), Redis (caché)
+- **Ventajas:** Testabilidad (core sin dependencias), mantenibilidad, flexibilidad
+- 📌 Netflix usa Clean Architecture para que cada microservicio tenga su dominio independiente
+
+#### Tema 12: Entity Framework Core
+- **ORM:** Object-Relational Mapping. Trabajar con BD como si fueran objetos C#
+- **DbContext:** Clase que representa la conexión a la BD. Contiene DbSets
+- **Migraciones:** Cambios en el modelo → cambios en la BD. `dotnet ef migrations add`
+- **Fluent API:** Configuración avanzada: `HasKey`, `HasMaxLength`, `HasQueryFilter`
+- **Carga de datos:** Eager (Include), Lazy (proxy), Explicit (Load)
+- **AsNoTracking:** Solo lectura. Mejora rendimiento al no rastrear cambios
+- **SQL Raw:** FromSqlRaw para consultas nativas, ExecuteSqlRaw para comandos
+- 📌 Un e-commerce usa EF Core con PostgreSQL para gestionar productos, pedidos y clientes
+
+#### Tema 13: MongoDB
+- **MongoDB:** BD documental. JSON flexible. Sin esquema fijo
+- **Documentos BSON:** JSON binario, tipado, con soporte para fechas y ObjectId
+- **Aggregation Pipeline:** Pipeline de transformación: $match → $group → $sort → $project
+- **Drivers:** `MongoDB.Driver` para .NET. Colecciones, filtros, ordenación
+- **Ventaja:** Flexibilidad de esquema. **Desventaja:** No hay joins como en SQL
+- 📌 Un catálogo de productos usa MongoDB para almacenar fichas con campos variables (tallas, colores, especificaciones)
+
+#### Tema 14: Cache Redis
+- **Redis:** BD en memoria. Caché clave-valor con expiración TTL
+- **Cache-Aside Pattern:** Primero cache, si no está → BD → guardar en cache
+- **IDistributedCache:** Interfaz de .NET para caché (Memory, Redis, SQL Server)
+- **Expiración TTL:** Los datos caducan tras un tiempo. Evita datos obsoletos
+- **Escritura:** SetAsync con TimeSpan para expiración automática
+- 📌 Toyota usa Redis para cachear catálogos de productos (consulta frecuente, datos que cambian poco)
+
+#### Tema 15: Transacciones e Identificadores
+- **Transacciones:** Operaciones que se ejecutan como unidad atómica. Todo o nada
+- **BeginTransactionAsync:** Inicia la transacción
+- **CommitAsync:** Confirma los cambios si todo va bien
+- **RollbackAsync:** Revierte los cambios si algo falla
+- **Identificadores:** GUID (global único), Identity (autoincremental), Snowflake (escalable)
+- 📌 Un banco usa transacciones para transferir dinero: si la resta falla, la suma se revierte
+
+#### Tema 16: Autenticación
+- **JWT:** Token firmado. Header (algoritmo), Payload (datos), Firma (secreto)
+- **Token Validation:** ValidateIssuer, ValidateAudience, ValidateLifetime, ValidateIssuerSigningKey
+- **AddAuthentication + AddJwtBearer:** Configurar esquema de autenticación JWT
+- **Bearer Token:** El cliente envía `Authorization: Bearer {token}` en cada petición
+- **Expiración:** Tokens de corta duración. Refresh tokens para renovar
+- 📌 Spotify usa JWT para autenticar cada petición de la app móvil al API
+
+#### Tema 17: Autorización
+- **Roles:** Agrupaciones de permisos. `[Authorize(Roles = "Admin")]`
+- **Claims:** Atributos del usuario (nombre, email, permisos específicos)
+- **Policies:** Reglas personalizadas. `policy.RequireRole("Admin")` o `policy.RequireAssertion(...)`
+- **[Authorize] vs [AllowAnonymous]:** Por defecto requiere auth. `[AllowAnonymous]` exime
+- **Política combinada:** Un usuario puede tener role Admin Y claim CanDelete
+- 📌 Un panel de administración: Admin ve todo, Editor edita posts, Viewer solo lee
+
+### Parte 3: APIs Especializadas
+
+#### Tema 18: WebSockets y SignalR
+- **WebSocket:** Protocolo de comunicación bidireccional en tiempo real
+- **SignalR:** Abstracción de Microsoft sobre WebSockets. Negociación automática
+- **Hub:** Clase que maneja conexiones. Métodos invocables desde cliente y servidor
+- **Groups:** Agrupar conexiones. Enviar mensajes a un grupo específico
+- **Métodos:** SendAsync (enviar), Clients.Group (broadcast a grupo), JoinGroup
+- 📌 Un chat en tiempo real usa SignalR: cada mensaje llega a todos los usuarios del grupo al instante
+
+#### Tema 19: GraphQL
+- **GraphQL:** Lenguaje de consultas para APIs. Un solo endpoint, flexibilidad total
+- **HotChocolate:** Librería de GraphQL para ASP.NET Core
+- **Queries (lectura):** El cliente pide exactamente lo que necesita
+- **Mutations (escritura):** Crear, actualizar, eliminar datos
+- **DataLoaders:** Resuelven el problema N+1. Carga batch de datos relacionados
+- **Projections, Filtering, Sorting:** Funcionalidades incluidas con atributos
+- 📌 Instagram usa GraphQL para que cada pantalla pida solo los datos que necesita, reduciendo tráfico
+
+#### Tema 20: File Storage
+- **IStorageService:** Interfaz para almacenar y eliminar ficheros
+- **LocalStorageService:** Almacena en disco local. `wwwroot/uploads/`
+- **AzureBlobStorageService:** Almacena en la nube. Escalable y persistente
+- **IFormFile:** Representa un fichero subido desde el cliente
+- **Nombre único:** `Guid.NewGuid()` para evitar colisiones de nombre
+- 📌 Un e-commerce almacena fotos de productos: local en desarrollo, Azure Blob en producción
+
+#### Tema 21: Email Services
+- **IEmailService:** Interfaz para enviar emails
+- **MailKit:** Librería para enviar emails via SMTP
+- **MimeMessage:** Construir el email: From, To, Subject, Body (HTML)
+- **HTML Templates:** Plantillas reutilizables para emails transaccionales
+- **Configuración:** SMTP server, puerto, credenciales en appsettings.json
+- 📌 Un e-commerce envía emails de confirmación de pedido con HTML y logo de la empresa
+
+#### Tema 22: Tareas Programadas
+- **BackgroundService:** Clase que ejecuta tareas en segundo plano
+- **ExecuteAsync:** Método principal. Ejecuta la lógica periódicamente
+- **CancellationToken:** Señal para detener la tarea de forma elegante
+- **AddHostedService:** Registrar el servicio en DI
+- **Ciclo:** while (!stoppingToken.IsCancellationRequested) { ... Task.Delay(...) }
+- 📌 Un sistema de monitoreo ejecuta un health check cada 5 minutos con BackgroundService
+
+### Parte 4: Arquitectura y Operaciones
+
+#### Tema 23: Optimización
+- **ResponseCompression:** Comprimir respuestas HTTP (gzip, brotli). Reduce tamaño de payload
+- **ResponseCaching:** Caché a nivel de respuesta HTTP. Evita recalcular lo mismo
+- **Rate Limiting:** Limitar peticiones por IP. Evita abusos y DDoS
+- **AsNoTracking:** Consultas de solo lectura sin rastreo de entidades. Más rápido
+- **Select proyectado:** Seleccionar solo las propiedades necesarias, no toda la entidad
+- 📌 Netflix optimiza cada petición: compresión, caché y rate limiting para millones de usuarios
+
+#### Tema 24: Documentación con Swagger/OpenAPI
+- **Swagger/OpenAPI:** Estándar para documentar APIs REST automáticamente
+- **AddSwaggerGen:** Configurar Swagger en Program.cs
+- **SwaggerDoc:** Definir versión, título, descripción de la API
+- **SecurityDefinition:** Añadir autenticación JWT a Swagger para probar endpoints protegidos
+- **Swagger UI:** Interfaz web para probar la API interactivamente
+- 📌 Cada API profesional tiene Swagger para que otros desarrolladores la consuman
+
+#### Tema 25: Perfiles y Configuración
+- **Perfiles de entorno:** Development, Staging, Production. Cada uno con su configuración
+- **appsettings.{Environment}.json:** Configuración específica por entorno
+- **User Secrets:** Secretos fuera del código. `dotnet user-secrets set`
+- **Variables de entorno:** En producción, los secretos van en variables de entorno, no en ficheros
+- **IConfiguration:** Acceder a cualquier valor de configuración de forma tipada
+- 📌 Un equipo usa Development en local, Staging para QA, Production para clientes
+
+#### Tema 26: Organización de Program.cs
+- **Extension Methods:** `builder.Services.AddRepositories()`, `AddServices()`, `AddAuthentication()`
+- **Config Classes:** Clases estáticas por concern: RepositoriesConfig, ServicesConfig, CacheConfig
+- **Separación:** Cada grupo de registros en su propia clase estática
+- **Legibilidad:** Program.cs se queda limpio: builder + app, sin bloques largos
+- **Escalabilidad:** Añadir nuevos servicios es añadir una línea en Program.cs
+- 📌 Un proyecto grande tiene 20+ líneas de registro. Con extension methods, Program.cs tiene 10 líneas
+
+#### Tema 27: Logging Avanzado con Serilog
+- **Serilog:** Logging estructurado. Alternativa al logging nativo de .NET
+- **Sinks:** Console (desarrollo), File (producción), Seq (análisis), ElasticSearch (búsqueda)
+- **Enrichers:** Añadir contexto: Environment, Thread, Exception, TenantId
+- **Filters:** Excluir ruido. Por ejemplo, excluir logs de Health Checks
+- **Rotación:** Archivos que rotan por día/tamaño. Evita llenar el disco
+- 📌 Un banco usa Serilog con Seq para buscar transacciones por usuario, fecha o tipo
+
+#### Tema 28: Testing Profesional
+- **NUnit:** Framework de tests. [TestFixture], [Test], [SetUp], [TestCase]
+- **Moq:** Mocking de interfaces. Simula dependencias para aislar lo que se testea
+- **FluentAssertions:** Aserciones fluidas y legibles. `resultado.Should().Be(esperado)`
+- **TestContainers:** Tests con contenedores Docker/Podman efímeros. BD real, Redis real
+- **Patrón AAA:** Arrange (preparar), Act (ejecutar), Assert (verificar)
+- **Cobertura:** `dotnet test --collect:"XPlat Code Coverage"`. Objetivo: >80%
+- 📌 Un equipo usa TestContainers para testear PostgreSQL real sin contaminar datos de desarrollo
+
+#### Tema 29: Docker y Contenedores
+- **Dockerfile:** Receta multi-etapa: build → test → runtime. Mismo formato para Docker y Podman
+- **docker-compose.yml:** Define servicios: app, BD, caché, etc. Compatible con Podman Compose
+- **.dockerignore:** Excluir bin/, obj/, .git/ del contexto de build
+- **Multi-etapa:** Build stage compila y testea, runtime stage solo tiene la app
+- **Non-root user:** Ejecutar como usuario no root por seguridad
+- **COPY individual:** NUNCA `COPY . .`. Copiar carpetas una a una
+- 📌 Netflix ejecuta +4000 contenedores diarios con Docker/Podman en la nube
+
+#### Tema 30: CQRS y Mediator
+- **CQRS:** Command Query Responsibility Segregation. Separar lecturas (Queries) de escrituras (Commands)
+- **Mediator:** Patrón que desacopla el emisor del receptor. Un mediador centraliza las peticiones
+- **MediatR:** Librería que implementa el patrón Mediator en .NET
+- **Command Handler:** Recibe un Command, ejecuta la lógica, retorna un resultado
+- **Query Handler:** Recibe una Query, lee datos, retorna una respuesta
+- **Ventaja:** Separación clara, testeable, escalable. **Desventaja:** Más complejidad inicial
+- 📌 Un e-commerce usa CQRS: Commands para crear pedidos, Queries para listar productos (caché)
+
+#### Tema 31: API Gateway
+- **API Gateway:** Punto de entrada único que enruta peticiones a múltiples microservicios
+- **Enrutamiento:** Redirigir `/api/products` al microservicio de productos
+- **Rate Limiting:** Limitar peticiones por cliente/IP a nivel de gateway
+- **Carga:** Balanceo de carga entre réplicas del mismo microservicio
+- **Seguridad:** Autenticación centralizada. Un solo JWT validado en el gateway
+- **Ocelot:** Librería popular de API Gateway para .NET
+- 📌 Netflix usa un API Gateway para que los clientes solo hablen con un punto, y el gateway distribuya internamente
+
+## 32.3. Herramientas y Perfiles
+
+### SDK y CLI
+- **`dotnet new webapi`**: Crea un proyecto de API REST con ASP.NET Core
+- **`dotnet new sln`**: Crea una solución (.slnx en .NET 10)
+- **`dotnet sln add`**: Añade un proyecto a la solución
+- **`dotnet build`**: Compila el proyecto
+- **`dotnet run`**: Compila y ejecuta
+- **`dotnet restore`**: Restaura paquetes NuGet
+- **`dotnet test`**: Ejecuta tests
+- **`dotnet ef migrations add`**: Crea una migración de EF Core
+- **`dotnet ef database update`**: Aplica migraciones a la BD
+- **`dotnet user-secrets set`**: Guarda secretos fuera del código
+
+### NuGet (paquetes habituales)
+- **Microsoft.EntityFrameworkCore.SqlServer** — EF Core con SQL Server
+- **MongoDB.Driver** — Cliente MongoDB
+- **StackExchange.Redis** — Cliente Redis
+- **Microsoft.AspNetCore.Authentication.JwtBearer** — Autenticación JWT
+- **HotChocolate.AspNetCore** — GraphQL
+- **Microsoft.AspNetCore.SignalR** — WebSockets en tiempo real
+- **MailKit** — Envío de emails via SMTP
+- **Serilog.AspNetCore** + sinks — Logging estructurado
+- **FluentValidation** — Validación declarativa
+- **AutoMapper** — Mapeo de objetos
+- **NUnit** + Moq + FluentAssertions — Testing
+- **CSharpFunctionalExtensions** — Patrón Result
+- **MediatR** — CQRS y Mediator
+- **Hangfire.AspNetCore** — Tareas programadas
+
+### IDE
+- **JetBrains Rider:** IDE profesional, recomendado para C#. Multiplataforma
+- **Visual Studio Code:** Editor ligero, multiplataforma, gratuito
+- **Visual Studio:** IDE completo de Microsoft (versión Community gratuita)
+
+## 32.4. Errores Comunes a Evitar
+
+| Error | Por qué está mal | Cómo evitarlo |
+|-------|------------------|---------------|
+| Usar `.Result` o `.Wait()` | Bloquea el hilo, puede causar deadlocks | Usar siempre `await` |
+| `async void` en servicios | No se puede await, errores silenciosos | Usar `async Task` |
+| `HttpClient` directo | Socket Exhaustion en producción | Usar `IHttpClientFactory` |
+| Contraseñas en texto plano | Cualquier hacker las lee | Usar BCrypt con salt |
+| `AllowAnyOrigin()` en CORS | Cualquier web puede acceder a tu API | Configurar orígenes específicos |
+| No usar `Include` en EF Core | Problema N+1 (muchas queries) | Usar Eager Loading con Include |
+| Guardar secretos en appsettings.json | Se sube a git por accidente | Usar User Secrets o variables de entorno |
+| `Parse` sin validar | Excepción si el dato no es válido | Usar `TryParse` |
+| No usar `CancellationToken` | Operaciones no se pueden cancelar | Pasar token en métodos asíncronos |
+| No rotar logs | El disco se llena | Configurar retención y rotación |
+| `COPY . .` en Dockerfile | Copia archivos innecesarios | Copiar carpetas individuales |
+| SQL con concatenación | SQL Injection | Usar consultas parametrizadas |
+| `int` para dinero | Pierde decimales | Usar `decimal` |
+| Confundir `=` y `==` | Asignación vs comparación | Usar `==` en condiciones |
+| No usar `using` con recursos | Memory leaks | Envolver en `using` statements |
+| No validar DTOs | Datos inconsistentes en BD | Usar FluentValidation con [ApiController] |
+| Exponer entidades directamente | Acoplamiento fuerte entre capas | Usar DTOs intermedios |
+| Olvidar `AsNoTracking` en queries de solo lectura | Rastreo innecesario, más lento | Añadir `.AsNoTracking()` |
+
+## 32.5. Checklist de Supervivencia
+
+Antes de dar por cerrado el tema, asegúrate de poder responder **SÍ** a estas preguntas:
+
+### Parte 1: Fundamentos
+- [ ] ¿Puedo diseñar una API REST con los verbos y códigos correctos?
+- [ ] ¿Sé crear endpoints con Minimal APIs y con Controladores MVC?
+- [ ] ¿Entiendo el pipeline de middleware y el orden de los componentes?
+- [ ] ¿Configuro DI con los ciclos de vida correctos (Transient, Scoped, Singleton)?
+- [ ] ¿Uso el Patrón Result para errores esperados en vez de excepciones?
+- [ ] ¿Creo DTOs y uso AutoMapper para mapear entre capas?
+- [ ] ¿Valido entradas con FluentValidation y `[ApiController]`?
+- [ ] ¿Configuro `IOptions<T>` y Serilog para configuración y logging?
+
+### Parte 2: Persistencia y Seguridad
+- [ ] ¿Organizo el proyecto con Clean Architecture (capas e invertidas)?
+- [ ] ¿Creo un DbContext con EF Core y hago migraciones?
+- [ ] ¿Uso Fluent API para relaciones y configuración avanzada?
+- [ ] ¿Implemento consultas con MongoDB y Aggregation Pipeline?
+- [ ] ¿Configuro Redis con Cache-Aside Pattern y expiración TTL?
+- [ ] ¿Manejo transacciones con BeginTransaction/Commit/Rollback?
+- [ ] ¿Implemento autenticación JWT con Token Validation?
+- [ ] ¿Configuro autorización con Roles, Claims y Policies?
+
+### Parte 3: APIs Especializadas
+- [ ] ¿Creo un Hub de SignalR para comunicación en tiempo real?
+- [ ] ¿Implemento GraphQL con HotChocolate (Queries, Mutations, DataLoaders)?
+- [ ] ¿Almaceno ficheros con IStorageService (local y cloud)?
+- [ ] ¿Envío emails con MailKit y plantillas HTML?
+- [ ] ¿Creo BackgroundServices para tareas programadas?
+
+### Parte 4: Arquitectura y Operaciones
+- [ ] ¿Optimizo con ResponseCompression, Rate Limiting y AsNoTracking?
+- [ ] ¿Documento la API con Swagger/OpenAPI y security definitions?
+- [ ] ¿Uso perfiles de entorno (Development, Production) y User Secrets?
+- [ ] ¿Organizo Program.cs con extension methods y Config classes?
+- [ ] ¿Configuro Serilog con sinks, enrichers y rotación de archivos?
+- [ ] ¿Escribo tests con NUnit, Moq, FluentAssertions y TestContainers?
+- [ ] ¿Creo Dockerfiles multi-etapa y docker-compose.yml?
+- [ ] ¿Entiendo CQRS/Mediator y cuándo usarlos?
+- [ ] ¿Sé qué es un API Gateway y para qué sirve?
+
+> 🔧 **Truco:** La mejor forma de aprender es practicando. No leas solo los apuntes: abre el IDE y prueba cada ejemplo. Modifícalos, rompelos, arreglalos. Eso es como se aprende.
+
+## 32.6. Glosario de Términos
+
+| Término | Definición |
+|---------|------------|
+| **REST** | Arquitectura basada en recursos (URLs) y verbos HTTP |
+| **Minimal API** | Endpoints ligeros sin controllers. Ideal para microservicios |
+| **Controller** | Clase que agrupa endpoints relacionados en ASP.NET Core |
+| **Middleware** | Componente que procesa requests en el pipeline de ASP.NET |
+| **DI** | Inyección de Dependencias. El contenedor crea e inyecta objetos |
+| **Transient** | Ciclo de vida: nueva instancia cada vez que se resuelve |
+| **Scoped** | Ciclo de vida: una instancia por petición HTTP |
+| **Singleton** | Ciclo de vida: una instancia global compartida |
+| **Scrutor** | Librería para auto-registro de dependencias por decoración |
+| **Result<T, TError>** | Tipo funcional que encapsula éxito o error. Railway Oriented Programming |
+| **Bind** | Encadena operaciones que retornan Result en el patrón ROP |
+| **Map** | Transforma el valor de éxito en un Result |
+| **Match** | Maneja ambos casos (Success y Failure) con lambdas |
+| **DTO** | Data Transfer Object. Objeto que transporta datos entre capas |
+| **AutoMapper** | Librería para mapear propiedades entre objetos automáticamente |
+| **FluentValidation** | Validación declarativa con reglas legibles en cascada |
+| **IOptions<T>** | Configuración tipada en .NET. Accedes a valores como propiedades |
+| **appsettings.json** | Fichero de configuración principal de ASP.NET Core |
+| **Clean Architecture** | Arquitectura con dominio en el centro e inversión de dependencias |
+| **Onion Architecture** | Arquitectura de capas concéntricas. Dominio en el centro |
+| **Entity Framework Core** | ORM de Microsoft para .NET. Trabajar con BD como objetos |
+| **DbContext** | Clase de EF Core que representa la conexión a la BD |
+| **Migración** | Cambio en el modelo de EF Core que se aplica a la BD |
+| **Fluent API** | Configuración de EF Core con código: HasKey, HasMaxLength |
+| **AsNoTracking** | Consultas de solo lectura sin rastreo de entidades |
+| **MongoDB** | BD documental. JSON flexible. Sin esquema fijo |
+| **Aggregation Pipeline** | Pipeline de transformación en MongoDB: $match, $group, $sort |
+| **Redis** | BD en memoria. Caché clave-valor con expiración TTL |
+| **Cache-Aside** | Patrón de caché: cache → si no está → BD → guardar en cache |
+| **Transacción** | Operación atómica: todo o nada (Commit o Rollback) |
+| **JWT** | JSON Web Token. Token firmado con header, payload y firma |
+| **Bearer Token** | Token enviado en header Authorization: Bearer {token} |
+| **Roles** | Agrupaciones de permisos para autorización |
+| **Claims** | Atributos del usuario (nombre, email, permisos) |
+| **Policies** | Reglas personalizadas de autorización combinando roles y claims |
+| **SignalR** | Librería de Microsoft para comunicación en tiempo real |
+| **Hub** | Clase que maneja conexiones WebSocket en SignalR |
+| **GraphQL** | Lenguaje de consultas para APIs. Un solo endpoint, flexibilidad total |
+| **HotChocolate** | Librería de GraphQL para ASP.NET Core |
+| **DataLoader** | Resuelve el problema N+1 en GraphQL con carga batch |
+| **MailKit** | Librería para enviar emails via SMTP |
+| **BackgroundService** | Clase para ejecutar tareas en segundo plano |
+| **CancellationToken** | Señal para cancelar operaciones asíncronas en progreso |
+| **ResponseCompression** | Compresión HTTP de respuestas (gzip, brotli) |
+| **Rate Limiting** | Limitar peticiones por IP para evitar abusos |
+| **Swagger/OpenAPI** | Estándar para documentar APIs REST automáticamente |
+| **User Secrets** | Secretos fuera del código. `dotnet user-secrets set` |
+| **Serilog** | Librería de logging estructurado con sinks (Console, File, Seq) |
+| **NUnit** | Framework de tests para .NET |
+| **Moq** | Librería para crear mocks de interfaces |
+| **FluentAssertions** | Aserciones fluidas y legibles para tests |
+| **TestContainers** | Tests con contenedores Docker/Podman efímeros |
+| **CQRS** | Command Query Responsibility Segregation. Separar lecturas de escrituras |
+| **Mediator** | Patrón que desacopla emisor y receptor con un mediador central |
+| **MediatR** | Librería que implementa el patrón Mediator en .NET |
+| **API Gateway** | Punto de entrada único que enruta peticiones a microservicios |
+| **Docker** | Plataforma de contenedores. Empaqueta la app con todo lo que necesita |
+| **Podman** | Alternativa a Docker, sin daemon, compatible con Dockerfile |
+
+## 32.7. Ejercicios de Repaso
+
+1. **REST API:** Diseña una API para gestionar una biblioteca. Indica: URLs, verbos HTTP, códigos de estado, y DTOs de cada endpoint.
+
+2. **Controladores vs Minimal APIs:** ¿Cuándo usarías un controller y cuándo una Minimal API? Justifica con un ejemplo real.
+
+3. **Pipeline de middleware:** ¿Qué orden seguirías para: ExceptionHandler, CORS, Authentication, Authorization, Routing? ¿Por qué?
+
+4. **Patrón Result:** Implementa un servicio de login que retorne `Result<UserDto, LoginError>` con errores tipados: `InvalidCredentials`, `UserNotFound`, `AccountLocked`.
+
+5. **Clean Architecture:** Diseña la estructura de carpetas de un proyecto con Clean Architecture para una API de e-commerce. Indica qué va en cada capa.
+
+6. **EF Core:** Crea un DbContext con dos entidades (Producto, Categoria) con relación One-to-Many. Incluye Fluent API, migración y una query con Include.
+
+7. **MongoDB:** Implementa un aggregation pipeline que agrupe productos por categoría y muestre el total de stock por cada una.
+
+8. **Redis:** Implementa el patrón Cache-Aside para un endpoint que lista productos. Incluye expiración TTL de 10 minutos.
+
+9. **JWT + Autorización:** Configura autenticación JWT y una política "CanManageProducts" que permita Admin y Editor. ¿Cómo la aplicas a un controller?
+
+10. **SignalR:** Crea un Hub que permita a los usuarios unirse a un grupo y recibir mensajes en tiempo real. Incluye el cliente JavaScript.
+
+11. **GraphQL:** Implementa una query `GetFunkos` con HotChocolate que incluya paginación, filtrado y sorting. ¿Qué problema resuelven los DataLoaders?
+
+12. **CQRS:** Diseña el patrón CQRS para un e-commerce: Commands (CrearPedido, CancelarPedido) y Queries (GetProductos, GetPedidoPorId). ¿Cuándo lo usarías y cuándo no?
+
+13. **Docker:** Escribe un Dockerfile multi-etapa para una API ASP.NET Core y un docker-compose.yml con PostgreSQL y Redis.
+
+14. **Testing:** Escribe tests para un FunkoService usando NUnit, Moq y FluentAssertions. Incluye test de éxito, test de fallo (Result.Failure), y verificación de llamadas con Moq.
+
+15. **Proyecto integrador:** Diseña la arquitectura completa de una API para gestionar una tienda online. Indica: patrones (Repository, CQRS), tecnologías (EF Core, MongoDB, Redis), seguridad (JWT, BCrypt), APIs especiales (SignalR para notificaciones, GraphQL para catálogo), despliegue (Docker), y testing (NUnit + TestContainers).
+
+## 32.8. ¿Qué viene después?
+
+En la **UD03: Desarrollo de Páginas Web Dinámicas en .NET** aprenderás a crear páginas web interactivas con ASP.NET Core. Integrarás todo lo visto en la UD02:
+
+| Tema UD02 | Se usa en UD03 para |
+|-----------|---------------------|
+| Controladores MVC (04) | Organizar la lógica de páginas |
+| Inyección de Dependencias (06) | Inyectar servicios en páginas |
+| Entity Framework Core (12) | Cargar datos para mostrar en vistas |
+| Configuración (09) | Configurar la aplicación web |
+| Segmentos de Ruta (05) | Navegación entre páginas |
+| Middleware Pipeline (05) | Autenticación y autorización web |
+| Razor Pages/Views | Renderizar HTML dinámico en servidor |
+| Tag Helpers | Formularios y enlaces con sintaxis C# |
+
+📌 **Ejemplo real:** En la UD03 crearás páginas web dinámicas que consumen la APIREST de la UD02. Usarás Razor Pages o MVC Views para renderizar datos de EF Core en el navegador, con formularios validados y autenticación de usuarios.
+
+## 32.9. Mapa de Conexiones entre Temas
 
 ```mermaid
-flowchart TB
-    subgraph ROP["RAILWAY ORIENTED PROGRAMMING"]
-        INP["INPUT<br/>(Happy Path)"]
-        R1["RAIL 1<br/>(SUCCESS)"]
-        OUT_H["OUTPUT<br/>(Happy)"]
-        R2["RAIL 2<br/>(FAILURE)"]
-        OUT_E["OUTPUT<br/>(Error)"]
-        
-        INP --> R1
-        R1 --> OUT_H
-        R1 -.->|"SWITCH (error)"| R2
-        R2 --> OUT_E
-    end
+graph LR
+    UD01[UD01: Introducción al Desarrollo en Servidor] --> UD02[UD02: Desarrollo de Servicios Web en .NET]
+    UD02 --> UD03[UD03: Desarrollo de Páginas Web Dinámicas en .NET]
+    UD03 --> UD04[UD04: Aplicaciones Web Híbridas y Componentes de Servidor en .NET]
+    UD04 --> UD05[UD05: Desarrollo de Servicios Web en JVM]
 
-    style INP fill:#27ae60,color:#fff
-    style R1 fill:#27ae60,color:#fff
-    style OUT_H fill:#27ae60,color:#fff
-    style R2 fill:#e74c3c,color:#fff
-    style OUT_E fill:#e74c3c,color:#fff
+    UD01 -.->|HTTP, REST, Arquitecturas| UD02
+    UD02 -.->|ASP.NET Core, EF Core, APIs REST| UD03
+    UD03 -.->|Razor, Blazor, MVC en .NET| UD04
+    UD04 -.->|Componentes, Híbridos, JavaScript| UD05
+
+    style UD01 fill:#4CAF50,color:#fff
+    style UD02 fill:#2196F3,color:#fff
+    style UD03 fill:#FF9800,color:#fff
+    style UD04 fill:#9C27B0,color:#fff
+    style UD05 fill:#f44336,color:#fff
 ```
-
-**Implementacion:**
-
-```csharp
-public class FunkoService : IFunkoService
-{
-    private readonly IFunkoRepository _repository;
-    private readonly IMapper _mapper;
-    
-    public async Task<Result<FunkoDto, DomainError>> GetByIdAsync(int id)
-    {
-        var funko = await _repository.GetByIdAsync(id);
-        if (funko == null)
-            return Result.Failure<FunkoDto, DomainError>(DomainErrors.NotFound);
-        
-        return Result.Success(_mapper.Map<FunkoDto>(funko));
-    }
-    
-    public async Task<Result<FunkoDto, DomainError>> CreateAsync(CreateFunkoDto dto)
-    {
-        return await Validate(dto)
-            .Bind(ValidateStockAsync)
-            .Bind(CreateFunkoAsync)
-            .Map(funko => _mapper.Map<FunkoDto>(funko));
-    }
-}
-
-// Errores personalizados
-public static class DomainErrors
-{
-    public static readonly DomainError NotFound = 
-        new("ENTITY_NOT_FOUND", "Entidad no encontrada");
-    public static readonly DomainError InvalidState = 
-        new("INVALID_STATE", "Estado invalido para la operación");
-}
-```
-
-### 28.2.2. Repository Pattern
-
-```csharp
-public interface IFunkoRepository
-{
-    Task<Result<Funko, DomainError>> GetByIdAsync(int id);
-    Task<Result<Funko, DomainError>> AddAsync(Funko funko);
-    Task<Result<Funko, DomainError>> UpdateAsync(Funko funko);
-    Task<UnitResult<DomainError>> DeleteAsync(int id);
-    Task<List<Funko>> GetAllAsync();
-    Task<List<Funko>> GetByCategoriaAsync(int categoriaId);
-}
-
-public class FunkoRepository : IFunkoRepository
-{
-    private readonly AppDbContext _context;
-    
-    public async Task<Result<Funko, DomainError>> GetByIdAsync(int id)
-    {
-        var funko = await _context.Funkos
-            .Include(f => f.Categoria)
-            .FirstOrDefaultAsync(f => f.Id == id && !f.IsDeleted);
-            
-        if (funko == null)
-            return Result.Failure<Funko, DomainError>(DomainErrors.NotFound);
-            
-        return Result.Success(funko);
-    }
-    // ... Implementacion de otros metodos
-}
-```
-
-### 28.2.3. Arquitectura Onion y Clean Architecture
-
-La arquitectura Onion (o arquitectura de capas) es un patron que situa el **dominio en el centro**, con las demas capas dependendiendo hacia adentro.
-
-**Principios Fundamentales:**
-
-| Principio | Implementacion |
-| ----------------------------------- | --------------------------------------------------------------------- |
-| **Core en el centro** | Modelos (Funko, Categoria, User) sin dependencias externas |
-| **Inversion de dependencias** | Interfaces en core, implementaciones en infraestructura |
-| **Separacion de responsabilidades** | Controllers → Services → Repositories → Data |
-| **Cross-cutting concerns** | AutoMapper, FluentValidation, Result Pattern como utilidades |
-| **Multi-Database** | PostgreSQL (datos maestros), MongoDB (documentos), Redis (cache) |
-
-**Diagrama de Arquitectura Onion:**
-
-```mermaid
-flowchart TB
-    subgraph "🌍 EXTERNAL LAYER"
-        E1["REST API<br/>Controllers"]
-        E2["GraphQL<br/>HotChocolate"]
-        E3["WebSocket<br/>SignalR"]
-        E4["SMTP<br/>MailKit"]
-        E5["File System<br/>Static Files"]
-    end
-
-    subgraph "🎯 APPLICATION LAYER"
-        A1["Controllers<br/>Auth, Categorias, Funkos, Pedidos"]
-        A2["Filters<br/>Auth, Validation, Exception"]
-        A3["Middleware<br/>Pipeline, CORS, Rate Limiting"]
-    end
-
-    subgraph "🔷 CORE LAYER"
-        C1["Application Services<br/>FunkoService, CategoriaService, AuthService"]
-        C2["Use Cases<br/>Business Operations"]
-        C3["Cross-Cutting<br/>AutoMapper, FluentValidation, Result~T,E>"]
-    end
-
-    subgraph "🔶 DOMAIN LAYER"
-        D1["Entities<br/>Funko, Categoria, User, Pedido"]
-        D2["Domain Logic<br/>Business Rules, Invariants"]
-        D3["Value Objects<br/>Money, Email"]
-        D4["Domain Events<br/>FunkoCreatedEvent"]
-    end
-
-    subgraph "🟡 ABSTRACTIONS LAYER"
-        I1["Repository Interfaces<br/>IFunkoRepository, ICategoriaRepository"]
-        I2["Service Interfaces<br/>IEmailService, IStorageService"]
-        I3["Unit of Work<br/>IUnitOfWork"]
-    end
-
-    subgraph "🔴 INFRASTRUCTURE LAYER"
-        IN1["Repository Implementations<br/>EF Core, MongoDB"]
-        IN2["Data Access<br/>DbContext, LINQ"]
-        IN3["External Services<br/>SMTP, HTTP Client"]
-        IN4["Security<br/>JWT, BCrypt"]
-        IN5["Caching<br/>Redis, Memory"]
-    end
-
-    subgraph "💾 DATA STORES"
-        DS1["🐘 PostgreSQL<br/>Users, Categories, Funkos"]
-        DS2["🍃 MongoDB<br/>Pedidos, Documents"]
-        DS3["🔴 Redis<br/>Cache, Sessions"]
-    end
-
-    E1 --> A1 --> A2 --> A3
-    E2 --> A1
-    E3 --> A1
-    E4 --> IN3
-    E5 --> IN3
-    
-    A1 --> C1 --> C2 --> C3
-    C1 --> D1 --> D2 --> D3 --> D4
-    D1 --> I1
-    D2 --> I2
-    
-    I1 --> IN1 --> IN2 --> DS1
-    IN1 --> DS2
-    IN2 --> DS3
-    IN3 --> DS3
-    IN4 --> DS3
-    IN5 --> DS3
-
-    style E1 fill:#9C27B0,color:#fff
-    style A1 fill:#1565C0,color:#fff
-    style C1 fill:#1565C0,color:#fff
-    style D1 fill:#2E7D32,color:#fff
-    style D2 fill:#2E7D32,color:#fff
-    style I1 fill:#00BCD4,color:#fff
-    style IN1 fill:#FF9800,color:#fff
-    style DS1 fill:#607D8B,color:#fff
-```
-
-**Flujo de Dependencias:**
-
-```mermaid
-flowchart LR
-    direction LR
-    E["External Layer"] --> A["Application Layer"]
-    A --> C["Core Layer"]
-    C --> I["Abstractions Layer"]
-    I --> IN["Infrastructure Layer"]
-    
-    style E fill:#9C27B0,color:#fff
-    style A fill:#1565C0,color:#fff
-    style C fill:#1565C0,color:#fff
-    style I fill:#00BCD4,color:#fff
-    style IN fill:#FF9800,color:#fff
-```
-
-**Estructura del Proyecto:**
-
-```
-src/
-├── API/                              # Capa de presentacion (Controllers, Middleware)
-│   ├── Controllers/
-│   │   ├── FunkosController.cs
-│   │   ├── AuthController.cs
-│   │   └── PedidosController.cs
-│   ├── Middleware/
-│   │   └── ExceptionHandler.cs
-│   └── Program.cs
-│
-├── Application/                      # Capa de aplicacion (Servicios, DTOs)
-│   ├── Services/
-│   │   ├── IFunkoService.cs
-│   │   └── FunkoService.cs
-│   ├── DTOs/
-│   │   ├── FunkoDto.cs
-│   │   └── CreateFunkoRequest.cs
-│   └── Validators/
-│       └── CreateFunkoValidator.cs
-│
-├── Domain/                           # Capa de dominio (Entidades, Interfaces)
-│   ├── Entities/
-│   │   ├── Funko.cs
-│   │   └── Categoria.cs
-│   ├── Interfaces/
-│   │   ├── IFunkoRepository.cs
-│   │   └── IUnitOfWork.cs
-│   ├── Errors/
-│   │   └── DomainErrors.cs
-│   └── Enums/
-│       └── UserRole.cs
-│
-└── Infrastructure/                   # Capa de infraestructura (DB, externos)
-    ├── Data/
-    │   ├── AppDbContext.cs
-    │   └── Repositories/
-    │       └── FunkoRepository.cs
-    ├── Cache/
-    │   └── RedisCacheService.cs
-    ├── Auth/
-    │   └── JwtService.cs
-    └── Services/
-        └── EmailService.cs
-```
-
-**Ventajas de la Arquitectura:**
-
-| Ventaja | Descripcion |
-| ------------------ | ------------------------------------------ |
-| **Testabilidad** | Core sin dependencias → facil mocking |
-| **Mantenibilidad** | Cambios en infraestructura no afectan core |
-| **Flexibilidad** | Multi-database strategy implementado |
-| **Escalabilidad** | Separacion clara de responsabilidades |
-| **Seguridad** | JWT, BCrypt, Claims bien encapsulados |
-
-### 28.2.4. Mapeadores y DTOs
-
-**AutoMapper:**
-
-```csharp
-// Profile de mapeo
-public class MappingProfile : Profile
-{
-    public MappingProfile()
-    {
-        CreateMap<Funko, FunkoResponseDto>()
-            .ForMember(dest => dest.CategoriaNombre, 
-                opt => opt.MapFrom(src => src.Categoria.Nombre));
-        
-        CreateMap<CreateFunkoDto, Funko>()
-            .ForMember(dest => dest.CategoriaId, 
-                opt => opt.MapFrom(src => src.CategoriaId));
-    }
-}
-```
-
-### 28.2.5. Validacion en Cascada
-
-**FluentValidation:**
-
-```csharp
-public class CreateFunkoDtoValidator : AbstractValidator<CreateFunkoDto>
-{
-    public CreateFunkoDtoValidator()
-    {
-        RuleFor(x => x.Nombre)
-            .NotEmpty().WithMessage("El nombre es obligatorio")
-            .Length(3, 100).WithMessage("El nombre debe tener entre 3 y 100 caracteres");
-        
-        RuleFor(x => x.Precio)
-            .GreaterThan(0).WithMessage("El precio debe ser mayor a 0");
-        
-        RuleFor(x => x.CategoriaId)
-            .GreaterThan(0).WithMessage("La categoria debe ser valida");
-    }
-}
-```
-
----
-
-## 28.3. Acceso a Datos
-
-### 28.3.1. Entity Framework Core
-
-```csharp
-public class AppDbContext : DbContext
-{
-    public DbSet<Funko> Funkos => Set<Funko>();
-    public DbSet<Categoria> Categorias => Set<Categoria>();
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Funko>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
-            entity.HasQueryFilter(f => !f.IsDeleted);
-        });
-    }
-}
-```
-
-### 28.3.2. MongoDB
-
-```csharp
-// Aggregation Pipeline
-public async Task<Dictionary<string, int>> GetStockPorCategoriaAsync()
-{
-    var pipeline = new BsonDocument[]
-    {
-        new BsonDocument("$match", new BsonDocument("IsDeleted", false)),
-        new BsonDocument("$group", new BsonDocument
-        {
-            { "_id", "$Categoria" },
-            { "Total", new BsonDocument("$sum", "$Stock") }
-        })
-    };
-    // ...
-}
-```
-
-### 28.3.3. Redis Caching
-
-```csharp
-// Cache-Aside Pattern
-public async Task<FunkoDto?> GetByIdAsync(int id)
-{
-    var cacheKey = $"funko:{id}";
-    var cached = await _cache.GetAsync<FunkoDto>(cacheKey);
-    
-    if (cached != null)
-        return cached;
-    
-    var funko = await _repository.GetByIdAsync(id);
-    if (funko != null)
-        await _cache.SetAsync(cacheKey, funko, TimeSpan.FromMinutes(10));
-    
-    return funko;
-}
-```
-
-### 28.3.4. Transacciones
-
-```csharp
-public async Task<Result<Pedido>> CreatePedidoAsync(CreatePedidoDto dto)
-{
-    using var transaction = await _context.Database.BeginTransactionAsync();
-    
-    try
-    {
-        var pedido = new Pedido(dto.UsuarioId);
-        _context.Pedidos.Add(pedido);
-        
-        foreach (var item in dto.Items)
-        {
-            var funko = await _context.Funkos.FindAsync(item.FunkoId);
-            if (funko == null || funko.Stock < item.Cantidad)
-            {
-                await transaction.RollbackAsync();
-                return Result.Failure<Pedido>("Stock insuficiente");
-            }
-            funko.Stock -= item.Cantidad;
-        }
-        
-        await _context.SaveChangesAsync();
-        await transaction.CommitAsync();
-        
-        return Result.Success(pedido);
-    }
-    catch (Exception ex)
-    {
-        await transaction.RollbackAsync();
-        return Result.Failure<Pedido>(ex.Message);
-    }
-}
-```
-
----
-
-## 28.4. Seguridad
-
-### 28.4.1. JWT Authentication
-
-```csharp
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-        };
-    });
-```
-
-### 28.4.2. Autorizacion Roles y Claims
-
-```csharp
-// Roles simples
-[Authorize(Roles = "Admin")]
-public class AdminController : ControllerBase { }
-
-// Politicas personalizadas
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("CanDelete", policy => 
-        policy.RequireAssertion(ctx => 
-            ctx.User.IsInRole("Admin") || 
-            ctx.User.HasClaim(c => c.Type == "CanDelete")));
-});
-```
-
-### 28.4.3. Logging
-
-```csharp
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .WriteTo.File("logs/app-.txt", rollingInterval: RollingInterval.Day)
-    .CreateLogger();
-
-builder.Host.UseSerilog();
-```
-
----
-
-## 28.5. APIs Especializadas
-
-### 28.5.1. GraphQL con HotChocolate
-
-```csharp
-builder.Services.AddGraphQLServer()
-    .AddQueryType<Query>()
-    .AddMutationType<Mutation>()
-    .AddType<FunkoType>()
-    .AddDataLoader<FunkoByIdDataLoader>()
-    .AddProjections()
-    .AddFiltering()
-    .AddSorting();
-
-public class Query
-{
-    [UsePaging(MaxPageSize = 50)]
-    [UseFiltering]
-    [UseSorting]
-    public IQueryable<Funko> GetFunkos([Service] IFunkoRepository repo) 
-        => repo.GetAll();
-}
-```
-
-### 28.5.2. File Storage
-
-```csharp
-public interface IStorageService
-{
-    Task<string> SaveFileAsync(IFormFile file, string folder);
-    Task<bool> DeleteFileAsync(string filePath);
-}
-
-public class LocalStorageService : IStorageService
-{
-    public async Task<string> SaveFileAsync(IFormFile file, string folder)
-    {
-        var uploadsFolder = Path.Combine(_environment.ContentRootPath, "wwwroot", "uploads", folder);
-        Directory.CreateDirectory(uploadsFolder);
-        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-        var filePath = Path.Combine(uploadsFolder, fileName);
-        
-        using var stream = new FileStream(filePath, FileMode.Create);
-        await file.CopyToAsync(stream);
-        
-        return $"/uploads/{folder}/{fileName}";
-    }
-}
-```
-
-### 28.5.3. WebSockets y SignalR
-
-**SignalR Hub:**
-
-```csharp
-public class NotificationsHub : Hub
-{
-    public async Task JoinGroup(string groupName)
-    {
-        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-        await Clients.Group(groupName).SendAsync("UserJoined", Context.ConnectionId);
-    }
-    
-    public async Task SendMessage(string groupName, string message)
-    {
-        await Clients.Group(groupName).SendAsync("ReceiveMessage", message);
-    }
-}
-```
-
-### 28.5.4. Email Services
-
-```csharp
-public class EmailService : IEmailService
-{
-    public async Task SendHtmlEmailAsync(string to, string subject, string htmlBody)
-    {
-        var message = new MimeMessage();
-        message.From.Add(new MailboxAddress("Tienda Funkos", _settings.Value.From));
-        message.To.Add(new MailboxAddress("", to));
-        message.Subject = subject;
-        message.Body = new HtmlBody(htmlBody);
-        
-        using var client = new MailKit.Net.Smtp.SmtpClient();
-        await client.ConnectAsync(_settings.Value.SmtpServer, _settings.Value.Port, SecureSocketOptions.StartTls);
-        await client.AuthenticateAsync(_settings.Value.Username, _settings.Value.Password);
-        await client.SendAsync(message);
-        await client.DisconnectAsync(true);
-    }
-}
-```
-
----
-
-## 28.6. Testing y DevOps
-
-### 28.6.1. Unit Testing con NUnit y Moq
-
-```csharp
-[TestFixture]
-public class FunkoServiceTests
-{
-    private Mock<IFunkoRepository> _mockRepo;
-    private FunkoService _service;
-    
-    [SetUp]
-    public void SetUp()
-    {
-        _mockRepo = new Mock<IFunkoRepository>();
-        _service = new FunkoService(_mockRepo.Object, _mapper);
-    }
-    
-    [Test]
-    public async Task GetByIdAsync_ExistingFunko_ReturnsSuccess()
-    {
-        // Arrange
-        var funko = new Funko("Iron Man", 29.99m, 10, 1);
-        _mockRepo.Setup(x => x.GetByIdAsync(1))
-            .ReturnsAsync(Result.Success(funko));
-        
-        // Act
-        var result = await _service.GetByIdAsync(1);
-        
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Nombre.Should().Be("Iron Man");
-    }
-    
-    [Test]
-    public async Task CreateAsync_ValidInput_ReturnsSuccess()
-    {
-        // Arrange
-        var dto = new CreateFunkoDto("Spider-Man", 34.99m, 5, 1);
-        var funko = new Funko("Spider-Man", 34.99m, 5, 1);
-        
-        _mockRepo.Setup(x => x.AddAsync(It.IsAny<Funko>()))
-            .ReturnsAsync(Result.Success(funko));
-        
-        // Act
-        var result = await _service.CreateAsync(dto);
-        
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-    }
-}
-```
-
-### 28.6.2. Docker y Containers
-
-**Dockerfile multi-stage:**
-
-```dockerfile
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
-COPY *.csproj ./
-RUN dotnet restore
-COPY . ./
-RUN dotnet publish -c Release -o /app/publish
-
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
-WORKDIR /app
-COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "FunkosApi.dll"]
-```
-
-### 28.6.3. Optimizacion
-
-```csharp
-builder.Services.AddResponseCompression();
-builder.Services.AddResponseCaching();
-builder.Services.AddRateLimiter(options => { /* configuración */ });
-
-// Query optimization
-public async Task<List<FunkoDto>> GetAllAsync()
-{
-    return await _context.Funkos
-        .AsNoTracking()
-        .Include(f => f.Categoria)
-        .Where(f => !f.IsDeleted)
-        .Select(f => new FunkoDto { Id = f.Id, Nombre = f.Nombre })
-        .ToListAsync();
-}
-```
-
----
-
-## 28.7. Configuracion y Organizacion
-
-### 28.7.1. Documentacion con Swagger/OpenAPI
-
-```csharp
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Funkos API",
-        Version = "v1",
-        Description = "API REST para gestion de Funkos"
-    });
-    
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        In = ParameterLocation.Header
-    });
-});
-```
-
-### 28.7.2. Perfiles y Configuracion
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=FunkosDb;Trusted_Connection=true"
-  },
-  "Jwt": {
-    "Key": "clave-secreta-muy-larga",
-    "Issuer": "https://localhost:5001",
-    "ExpirationInMinutes": 60
-  }
-}
-```
-
-### 28.7.3. Tareas Programadas
-
-```csharp
-public class CacheCleanupService : BackgroundService
-{
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            await CleanupCacheAsync();
-            await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
-        }
-    }
-}
-
-builder.Services.AddHostedService<CacheCleanupService>();
-```
-
-### 28.7.4. Organizacion de Program.cs
-
-```csharp
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwagger();
-builder.Services.AddDbContext(builder.Configuration);
-builder.Services.AddRepositories();
-builder.Services.AddServices();
-builder.Services.AddAuthentication(builder.Configuration);
-
-var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
-    app.UseSwaggerUI();
-
-app.UseExceptionHandler("/error");
-app.UseHttpsRedirection();
-app.UseCors("AllowAll");
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers();
-
-app.Run();
-```
-
----
-
-## 28.8. Mapa Mental del Ecosistema
-
-```mermaid
-flowchart TB
-    subgraph Client["Clientes"]
-        A1[Web Browser]
-        A2[Mobile App]
-        A3[GraphQL Client]
-    end
-    
-    subgraph ASP["ASP.NET Core"]
-        B1[Controllers]
-        B2[Middleware Pipeline]
-        B3[Dependency Injection]
-    end
-    
-    subgraph Security["Seguridad"]
-        C1[JWT Auth]
-        C2[Roles & Claims]
-        C3[CORS]
-    end
-    
-    subgraph Data["Datos"]
-        D1[EF Core]
-        D2[MongoDB]
-        D3[Redis Cache]
-    end
-    
-    subgraph APIs["APIs Especializadas"]
-        E1[GraphQL/HotChocolate]
-        E2[SignalR Real-time]
-        E3[File Storage]
-    end
-    
-    subgraph Quality["Calidad"]
-        F1[Unit Testing/NUnit]
-        F2[Moq]
-        F3[Serilog]
-    end
-    
-    subgraph DevOps["DevOps"]
-        G1[Docker]
-        G2[GitHub Actions]
-        G3[Hangfire Jobs]
-    end
-    
-    subgraph Patterns["Patrones"]
-        H1[Result Pattern]
-        H2[Repository]
-        H3[Onion Architecture]
-    end
-    
-    Client --> ASP
-    ASP --> Security
-    ASP --> Data
-    ASP --> APIs
-    Data --> Patterns
-    Patterns --> Quality
-    ASP --> Quality
-    Quality --> DevOps
-    
-    style ASP fill:#2E7D32
-    style Security fill:#B71C1C
-    style Data fill:#FF9800
-    style APIs fill:#9C27B0
-    style Quality fill:#1565C0
-    style DevOps fill:#607D8B
-    style Patterns fill:#00BCD4
-```
-
----
-
-## 28.9. Checklist de Conocimientos
-
-### 28.9.1. Fundamentos y Patrones
-
-- [ ] Comprender metodos HTTP y codigos de estado
-- [ ] Disenar endpoints RESTful
-- [ ] Implementar Inyeccion de Dependencias
-- [ ] Usar Patron Result (CSharpFunctionalExtensions)
-- [ ] Implementar Repository Pattern
-- [ ] Aplicar Arquitectura Onion/Clean Architecture
-- [ ] Configurar AutoMapper para DTOs
-- [ ] Validar con FluentValidation en cascada
-
-### 28.9.2. Acceso a Datos
-
-- [ ] Configurar Entity Framework Core (DbContext, Migrations)
-- [ ] Definir relaciones con Fluent API
-- [ ] Usar consultas LINQ optimizadas (Include, AsNoTracking)
-- [ ] Usar MongoDB con aggregation pipeline
-- [ ] Implementar Redis cache (Cache-Aside Pattern)
-- [ ] Manejar transacciones ACID
-
-### 28.9.3. Seguridad
-
-- [ ] Implementar autenticacion JWT
-- [ ] Configurar autorizacion con Roles
-- [ ] Crear politicas personalizadas (Policies)
-- [ ] Configurar CORS
-- [ ] Implementar Rate Limiting
-- [ ] Configurar logging con Serilog
-
-### 28.9.4. APIs Especializadas
-
-- [ ] Implementar GraphQL con HotChocolate (Queries, Mutations)
-- [ ] Usar DataLoaders para N+1 queries
-- [ ] Configurar File Storage (IStorageService)
-- [ ] Implementar SignalR Hubs y Groups
-- [ ] Enviar emails con MailKit
-
-### 28.9.5. Testing y DevOps
-
-- [ ] Escribir tests unitarios con NUnit
-- [ ] Usar Moq para mocking
-- [ ] Aplicar FluentAssertions
-- [ ] Crear Dockerfiles multi-stage
-- [ ] Configurar Docker Compose
-- [ ] Implementar BackgroundService
-- [ ] Documentar con Swagger/OpenAPI
-
----
-
-## 28.10. Recursos y Proximos Pasos
-
-**Paquetes NuGet del Modulo:**
-
-| Categoria | Paquete |
-| :----------------- | :---------------------------------------------- |
-| **ORM SQL** | `Microsoft.EntityFrameworkCore.SqlServer` |
-| **NoSQL** | `MongoDB.Driver` |
-| **Cache** | `StackExchange.Redis` |
-| **Auth** | `Microsoft.AspNetCore.Authentication.JwtBearer` |
-| **GraphQL** | `HotChocolate.AspNetCore` |
-| **SignalR** | `Microsoft.AspNetCore.SignalR` |
-| **Email** | `MailKit` |
-| **Logging** | `Serilog.AspNetCore` |
-| **Testing** | `NUnit`, `Moq`, `FluentAssertions` |
-| **Validation** | `FluentValidation.AspNetCore` |
-| **Mapping** | `AutoMapper` |
-| **Result Pattern** | `CSharpFunctionalExtensions` |
-| **Hangfire** | `Hangfire.AspNetCore` |
-
-**Proyectos Practicos Sugeridos:**
-
-1. **API Funkos Completa** - Todos los temas del modulo
-2. **E-commerce API** - Carrito, pedidos, inventario, GraphQL
-3. **Chat Real-time** - SignalR, Rooms, presence
-4. **Blog API** - Posts, comentarios, categorias, autenticacion JWT
-5. **Sistema de Inventario** - Multi-warehouse, stock, alertas con Hangfire
-
-🧠 **Analogia final**: Este modulo es como el toolkit completo de un mecanico. Tienes todas las herramientas (patrones), los repuestos (librerias), el manual (documentacion) y las instrucciones de seguridad (testing). Ahora puedes construir y mantener cualquier tipo de vehiculo API.
-
-**Felicidades por completar el modulo!** 🎉
