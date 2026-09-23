@@ -1,11 +1,8 @@
 - [2. Desarrollo de servicios web en .NET](#2-desarrollo-de-servicios-web-en-net)
   - [Contenidos](#contenidos)
-  - [Prácticas](#prácticas)
   - [Proyecto Integrador](#proyecto-integrador)
-  - [Proyectos específicos](#proyectos-específicos)
   - [Contenido en YouTube](#contenido-en-youtube)
   - [Resultados de Aprendizaje y Criterios de Evaluación](#resultados-de-aprendizaje-y-criterios-de-evaluación)
-  - [Buenas Prácticas](#buenas-prácticas)
   - [Autor](#autor)
     - [Contacto](#contacto)
   - [Licencia de uso](#licencia-de-uso)
@@ -63,35 +60,21 @@ UD02. Desarrollo de servicios web en .NET. 2DAW. Curso 2026-2027.
 31. [API Gateway y Microservicios](31-api-gateway.md)
 32. [Resumen](32-resumen.md)
 
-## Prácticas
-1.  [Prueba de C# y Terminal](practicas/01-test-csharp.md)
-2.  [Cuestionario de C#](practicas/02-cuestionario-charp.md)
-3.  [Repositorio Remoto](practicas/03-repositorio_remoto.md)
-4.  [Prueba de ASP.NET Core](practicas/04-test-aspcore.md)
-5.  [Cuestionario de ASP.NET Core](practicas/05-cuestionario_aspcore.md)
-
 ## Proyecto Integrador
 El proyecto realizado en clase podrás seguirlo desde el repositorio de GitHub:
 - [Proyecto Integrador](https://github.com/joseluisgs/TiendaDawApi-NetCore)
-
-## Proyectos específicos
-- [Proyecto EntityFramework](https://github.com/joseluisgs/PersonasBasicRestNet)
-- [Proyecto con MongoDB](https://github.com/joseluisgs/ProductosMongoRestNet)
-- [Proyecto con Storage](https://github.com/joseluisgs/ProductosStorageMongoRestNet)
-- [Proyecto con WebSockets](https://github.com/joseluisgs/ProductosWebsocketMongoRestNet)
-- [Proyecto con Seguridad](https://github.com/joseluisgs/ProductosJwtMongoRestNet)
-
-
+  
 ## Contenido en YouTube
-
 - [Resumen]()
-- [Servicios y Controladores Web con .NET Core]()
+- [REST API]()
 - [Entity Core Framework y SQL]()
-- [WebSockets con .NET/ASP Core]()
 - [NoSQL y Mongo con .NET/ASP Core]()
-- [Seguridad: Autenticación y Autorización con .NET/ASP Core]()
+- [WebSockets con .NET/ASP Core]()
 - [GraphQL con .NET/ASP Core]()
 - [Caché avanzada con Redis en .NET/ASP Core]()
+- [Seguridad: Autenticación y Autorización con .NET/ASP Core]()
+- [CQRS y Mediator con .NET/ASP Core]()
+- [API Gateway y Microservicios con .NET/ASP Core]()
 - [Lista de Reproducción](https://www.youtube.com/playlist?list=PLLiuVpAc3Gv4)
 
 ## Resultados de Aprendizaje y Criterios de Evaluación
@@ -135,14 +118,6 @@ El proyecto realizado en clase podrás seguirlo desde el repositorio de GitHub:
     - g) Se han analizado y utilizado librerías de código relacionadas con Big Data e inteligencia de negocios, para incorporar análisis e inteligencia de datos proveniente de repositorios.
     - h) Se han probado, depurado y documentado las aplicaciones generadas.
 
-
-
-## Buenas Prácticas
-
-- Sigue el orden de los temas: cada uno construye sobre el anterior
-- Practica con el proyecto integrador (Tienda) y los proyectos específicos enlazados
-- Comprueba cada tema con su sección de Buenas Prácticas y su Reto FunkoApp
-- Valida la documentación con `node validate-docs.mjs` antes de dar un tema por cerrado
 
 ## Autor
 
