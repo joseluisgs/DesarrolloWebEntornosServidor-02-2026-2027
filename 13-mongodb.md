@@ -1,5 +1,3 @@
-# 13. MongoDB
-
 - [13. MongoDB](#13-mongodb)
   - [13.1. Fundamentos NoSQL](#131-fundamentos-nosql)
     - [13.1.1. ¿Qué es MongoDB?](#1311-qué-es-mongodb)
@@ -7,8 +5,8 @@
     - [13.1.3. BSON vs JSON](#1313-bson-vs-json)
     - [13.1.4. Colecciones y documentos](#1314-colecciones-y-documentos)
   - [13.2. Diseño NoSQL: de SQL a MongoDB](#132-diseño-nosql-de-sql-a-mongodb)
-    - [13.2.1. Tablas → Colecciones, Filas → Documentos](#1321-tablas--colecciones-filas--documentos)
-    - [13.2.2. Claves foráneas → Referencias o Embebido](#1322-claves-foráneas--referencias-o-embebido)
+    - [13.2.1. Tablas a Colecciones, Filas a Documentos](#1321-tablas-a-colecciones-filas-a-documentos)
+    - [13.2.2. Claves foráneas: Referencias o Embebido](#1322-claves-foráneas-referencias-o-embebido)
     - [13.2.3. Cuándo embeber vs cuándo referenciar](#1323-cuándo-embeber-vs-cuándo-referenciar)
     - [13.2.4. El límite de 16 MB](#1324-el-límite-de-16-mb)
     - [13.2.5. Patrones de diseño habituales](#1325-patrones-de-diseño-habituales)
@@ -23,6 +21,8 @@
     - [13.3.8. Borrar documentos](#1338-borrar-documentos)
     - [13.3.9. Builders de filtros y actualizaciones](#1339-builders-de-filtros-y-actualizaciones)
     - [13.3.10. Índices](#13310-índices)
+  - [13.4. EF Core con MongoDB](#134-ef-core-con-mongodb)
+    - [13.4.1. Paquete NuGet](#1341-paquete-nuget)
     - [13.4.2. DbContext con UseMongoDB](#1342-dbcontext-con-usemongodb)
     - [13.4.3. Data Annotations en MongoDB](#1343-data-annotations-en-mongodb)
     - [13.4.4. Fluent API en MongoDB](#1344-fluent-api-en-mongodb)
@@ -48,7 +48,8 @@
   - [13.10. Reto](#1310-reto)
 
 
----
+
+# 13. MongoDB
 
 > 💡 **Punto de partida:** ¿Alguna vez has tenido que diseñar una base de datos con 15 tablas y 20 joins solo para guardar una factura? ¿O has sufrido con un ORM relacional que no encaja con tu modelo de datos? MongoDB te propone otra forma: guarda lo que piensas como un documento, sin tablas, sin joins, sin ceremony.
 
@@ -61,7 +62,7 @@
 - Comparar ambas aproximaciones (Driver vs EF Core)
 - Testear con TestContainers
 
-13.1. Fundamentos NoSQL
+## 13.1. Fundamentos NoSQL
 
 ### 13.1.1. ¿Qué es MongoDB?
 
@@ -152,9 +153,9 @@ Una **colección** es un conjunto de documentos (equivalente a una tabla). Las c
 
 > ⚠️ **Advertencia:** La flexibilidad es una navaja de dos cortes. Sin un esquema definido, puedes terminar con documentos inconsistentes que son difíciles de mantener. Siempre define un modelo claro en tu aplicación.
 
-13.2. Diseño NoSQL: de SQL a MongoDB
+## 13.2. Diseño NoSQL: de SQL a MongoDB
 
-### 13.2.1. Tablas → Colecciones, Filas → Documentos
+### 13.2.1. Tablas a Colecciones, Filas a Documentos
 
 El equivalente directo:
 
@@ -166,7 +167,7 @@ El equivalente directo:
 | `UPDATE productos SET precio = 90 WHERE id = 1` | `db.productos.updateOne({_id: 1}, {$set: {precio: 90}})` | Actualizar |
 | `DELETE FROM productos WHERE id = 1` | `db.productos.deleteOne({_id: 1})` | Borrar |
 
-### 13.2.2. Claves foráneas → Referencias o Embebido
+### 13.2.2. Claves foráneas: Referencias o Embebido
 
 En SQL, las relaciones se hacen con claves foráneas y JOINs. En MongoDB, hay **dos formas**:
 
@@ -278,7 +279,7 @@ Solución: **Subset Pattern** — guarda solo los últimos N elementos embebidos
 | **Schema Versioning** | Versiona el esquema para migraciones | v1: nombre, v2: nombre + email |
 | **Computed** | Pre-calcula datos que se leen mucho | Total de ventas pre-calculado |
 
-13.3. MongoDB con Driver Nativo
+## 13.3. MongoDB con Driver Nativo
 
 ### 13.3.1. Paquete NuGet
 
@@ -540,7 +541,7 @@ indices.CreateOne(new CreateIndexModel<Producto>(
         .Descending(p => p.Precio)));
 ```
 
-13.4. MongoDB con EF Core
+## 13.4. MongoDB con EF Core
 
 ### 13.4.1. Paquete NuGet
 
@@ -820,7 +821,7 @@ var existe = await db.Productos.AnyAsync(p => p.Nombre == "Teclado");
 
 > 📝 **Nota:** El proveedor MongoDB EF Core está en desarrollo activo. Algunas features pueden añadirse en el futuro. Consulta siempre la [documentación oficial](https://www.mongodb.com/es/docs/entity-framework/current/limitations/) para ver el estado actual.
 
-13.5. Driver Nativo vs EF Core: Comparativa
+## 13.5. Driver Nativo vs EF Core: Comparativa
 
 ```mermaid
 graph TD
@@ -873,7 +874,7 @@ graph TD
 
 📌 Ejemplo real: **TiendaAPI** usa el Driver Nativo para MongoDB porque necesita agregaciones y consultas complejas que EF Core no soporta. Pero para PostgreSQL usa EF Core porque las migraciones y el LINQ son muy útiles.
 
-13.6. Repositorio CRUD con MongoDB
+## 13.6. Repositorio CRUD con MongoDB
 
 ### 13.6.1. Modelo y configuración
 
@@ -1013,7 +1014,7 @@ public class FunkoEfCoreRepository(TiendaDbContext db) : IFunkoRepository
 }
 ```
 
-13.7. Testing con MongoDB
+## 13.7. Testing con MongoDB
 
 ### 13.7.1. Compatibilidad de versiones: EF Core + MongoDB
 
@@ -1286,7 +1287,7 @@ public class FunkoEfCoreTests : MongoTestBase
 }
 ```
 
-13.8. Semilla de datos (Seed)
+## 13.8. Semilla de datos (Seed)
 
 ### Con Driver Nativo
 
@@ -1326,7 +1327,7 @@ if (app.Environment.IsDevelopment())
 
 > 💡 **Consejo:** El seeder siempre debe comprobar si ya existes datos (`CountDocumentsAsync` o `AnyAsync`) antes de insertar. Así es seguro ejecutarlo múltiples veces sin duplicar datos.
 
-13.9. Buenas prácticas
+## 13.9. Buenas prácticas
 
 ```csharp
 // ❌ MALO: Crear un MongoClient por petición — agota el pool de conexiones
@@ -1364,7 +1365,7 @@ public ObjectId Id { get; set; } // Indexado automáticamente, búsqueda óptima
 9. **EF Core para CRUD simple** — Si vienes de EF Core relacional, es más fácil
 10. **TestContainers para tests** — Un MongoDB real en Docker, sin depender de instalación local
 
-13.10. Reto
+## 13.10. Reto
 
 Implementa un repositorio CRUD de **Funkos con Categorías embebidas** usando MongoDB.
 

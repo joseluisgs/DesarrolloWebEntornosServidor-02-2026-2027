@@ -51,7 +51,6 @@
   - [8.10. Reto](#810-reto)
 
 
----
 
 # 8. DTOs, Mapeadores, Validaciones y Consultas Avanzadas
 
@@ -623,10 +622,6 @@ sequenceDiagram
     Note over P: Si todo pasa
     P->>D: Create(CreateProductoDto)
     D->>C: 201 Created
-
-    style P fill:#2196F3,color:#fff
-    style V fill:#FF9800,color:#fff
-    style D fill:#4CAF50,color:#fff
 ```
 
 > ⚠️ **Advertencia:** Si no registras `AddValidatorsFromAssemblyContaining<Program>()`, FluentValidation **no se ejecuta** automáticamente. Los Data Annotations funcionan siempre (son parte del framework), pero FluentValidation necesita este registro explícito.

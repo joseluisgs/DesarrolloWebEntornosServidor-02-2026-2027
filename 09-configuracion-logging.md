@@ -17,7 +17,6 @@
   - [9.4. Reto](#94-reto)
 
 
----
 
 # 9. Configuración y Logging
 

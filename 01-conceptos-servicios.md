@@ -22,7 +22,7 @@
   - [1.7. Buenas prácticas](#17-buenas-prácticas)
   - [1.8. Reto: Piensa en tu API de Funkos](#18-reto-piensa-en-tu-api-de-funkos)
 
----
+
 
 # 1. Conceptos de Servicios Web y Configuración de Proyectos .NET
 

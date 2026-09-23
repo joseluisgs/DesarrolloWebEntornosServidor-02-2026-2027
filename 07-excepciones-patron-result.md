@@ -37,7 +37,8 @@
     - [7.8.4. Comparación](#784-comparación)
   - [7.9. Buenas prácticas](#79-buenas-prácticas)
   - [7.10. Reto](#710-reto)
----
+
+
 
 # 7. Excepciones y Patrón Result
 

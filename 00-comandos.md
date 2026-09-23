@@ -1,24 +1,23 @@
+- [00. Guía de Supervivencia: Comandos .NET CLI](#00-guía-de-supervivencia-comandos-net-cli)
+  - [1. Crear Proyectos y Soluciones](#1-crear-proyectos-y-soluciones)
+  - [2. Scaffolding: Generar Código Automáticamente](#2-scaffolding-generar-código-automáticamente)
+  - [3. Hot Reload: Desarrollo en Vivo](#3-hot-reload-desarrollo-en-vivo)
+  - [4. Compilar y Ejecutar](#4-compilar-y-ejecutar)
+  - [5. Paquetes NuGet](#5-paquetes-nuget)
+  - [6. .NET Tools: Herramientas Globales](#6-net-tools-herramientas-globales)
+  - [7. Entity Framework Core](#7-entity-framework-core)
+  - [8. Tests](#8-tests)
+  - [9. Formateo de Código](#9-formateo-de-código)
+  - [10. User Secrets (Secretos de Desarrollo)](#10-user-secrets-secretos-de-desarrollo)
+  - [11. Certificados de Desarrollo](#11-certificados-de-desarrollo)
+  - [12. Docker](#12-docker)
+  - [13. Git](#13-git)
+
+
+
 # 00. Guía de Supervivencia: Comandos .NET CLI
 
 > 💡 **Punto de partida:** Esta guía recopila todos los comandos de `dotnet` que necesitas para crear, compilar, ejecutar, scaffoldear, testear y desplegar APIs en .NET 10. Guárdala como referencia rápida.
-
-## Tabla de Contenidos
-
-- [1. Crear Proyectos y Soluciones](#1-crear-proyectos-y-soluciones)
-- [2. Scaffolding: Generar Código Automáticamente](#2-scaffolding-generar-código-automáticamente)
-- [3. Hot Reload: Desarrollo en Vivo](#3-hot-reload-desarrollo-en-vivo)
-- [4. Compilar y Ejecutar](#4-compilar-y-ejecutar)
-- [5. Paquetes NuGet](#5-paquetes-nuget)
-- [6. .NET Tools: Herramientas Globales](#6-net-tools-herramientas-globales)
-- [7. Entity Framework Core](#7-entity-framework-core)
-- [8. Tests](#8-tests)
-- [9. Formateo de Código](#9-formateo-de-código)
-- [10. User Secrets (Secretos de Desarrollo)](#10-user-secrets-secretos-de-desarrollo)
-- [11. Certificados de Desarrollo](#11-certificados-de-desarrollo)
-- [12. Docker](#12-docker)
-- [13. Git](#13-git)
-
----
 
 ## 1. Crear Proyectos y Soluciones
 
@@ -96,7 +95,7 @@ dotnet sln MiSolucion.slnx remove MiApi.Test/MiApi.Test.csproj
 dotnet sln migrate
 ```
 
----
+
 
 ## 2. Scaffolding: Generar Código Automáticamente
 
@@ -183,7 +182,7 @@ dotnet scaffold
 # Selecciona: Controllers, Minimal APIs, Identity, Blazor, etc.
 ```
 
----
+
 
 ## 3. Hot Reload: Desarrollo en Vivo
 
@@ -214,7 +213,7 @@ dotnet watch run --urls "http://localhost:5000"
 | `Ctrl+R` | Forzar reinicio sin cambiar archivos |
 | `Ctrl+C` | Detener todo |
 
----
+
 
 ## 4. Compilar y Ejecutar
 
@@ -253,7 +252,7 @@ dotnet restore
 dotnet run archivo.cs
 ```
 
----
+
 
 ## 5. Paquetes NuGet
 
@@ -326,7 +325,7 @@ dotnet add package Swashbuckle.AspNetCore
 dotnet add package Microsoft.VisualStudio.Web.CodeGeneration.Design
 ```
 
----
+
 
 ## 6. .NET Tools: Herramientas Globales
 
@@ -351,7 +350,7 @@ dotnet tool install --local dotnet-ef
 dotnet tool list
 ```
 
----
+
 
 ## 7. Entity Framework Core
 
@@ -392,7 +391,7 @@ dotnet ef migrations script InitialCreate AddProductoTable -o script.sql
 # En código: query.ToQueryString()
 ```
 
----
+
 
 ## 8. Tests
 
@@ -425,7 +424,7 @@ dotnet test -- NUnit.NumberOfTestWorkers=0
 dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
 ```
 
----
+
 
 ## 9. Formateo de Código
 
@@ -449,7 +448,7 @@ dotnet format MiApi/MiApi.csproj
 dotnet format style --diagnostics IDE0005 --severity info
 ```
 
----
+
 
 ## 10. User Secrets (Secretos de Desarrollo)
 
@@ -473,7 +472,7 @@ dotnet user-secrets clear
 
 > 📝 **Nota:** Los user secrets solo funcionan en desarrollo y NO se suben a git. Son ideales para connection strings, API keys y contraseñas durante el desarrollo local.
 
----
+
 
 ## 11. Certificados de Desarrollo
 
@@ -491,7 +490,7 @@ dotnet dev-certs https --clean
 dotnet dev-certs https -ep "%USERPROFILE%\.aspnet\https\certificado.pfx" -p "contraseña"
 ```
 
----
+
 
 ## 12. Docker
 
@@ -517,7 +516,7 @@ docker-compose up -d --build      # Reconstruir y levantar
 docker-compose -f docker-compose.api.yml up -d
 ```
 
----
+
 
 ## 13. Git
 
@@ -555,7 +554,7 @@ git checkout main
 git branch -d feature/nueva-funcionalidad
 ```
 
----
+
 
 > 📝 **Nota:** Este documento se actualizará a medida que se descubran nuevos comandos útiles durante el curso.
 

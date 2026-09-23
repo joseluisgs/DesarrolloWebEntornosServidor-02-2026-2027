@@ -19,7 +19,7 @@
   - [27.6. Buenas Practicas de Logging](#276-buenas-practicas-de-logging)
   - [27.7. Reto: Implementa Logging en FunkoApp](#277-reto-implementa-logging-en-funkoapp)
 
----
+
 
 # 27. Logging y Monitoreo
 
@@ -402,6 +402,6 @@ Tu API de Funkos necesita un sistema de logging para debugear errores en desarro
 | **Sinks** | Destinos de los logs (Console, File, Seq, etc.) |
 | **Enrichers** | Informacion contextual añadida automaticamente a los logs |
 
-**¿Qué viene despues?**
+**¿Qué viene después?**
 
 En el siguiente punto veremos **Testing de Servicios Web**: como escribir tests unitarios con NUnit, usar FluentAssertions para aserciones legibles, crear mocks con Moq y implementar tests de integracion con TestContainers.

@@ -13,7 +13,7 @@
   - [26.7. Buenas Practicas](#267-buenas-practicas)
   - [26.8. Reto: Refactoriza el Program.cs de FunkoApp](#268-reto-refactoriza-el-programcs-de-funkoapp)
 
----
+
 
 # 26. Organizacion de Program.cs
 
@@ -417,6 +417,6 @@ Tu API de Funkos tiene un Program.cs creciente con configuraciones de base de da
 | **Testabilidad** | Cada configuracion puede probarse de forma aislada |
 | **Legibilidad** | Program.cs se convierte en un indice claro |
 
-**¿Qué viene despues?**
+**¿Qué viene después?**
 
 En el siguiente punto veremos **Logging y Monitoreo**: como configurar Serilog para logging estructurado, implementar correlation IDs para trazabilidad y configurar health checks para monitorizar la salud de la aplicacion.

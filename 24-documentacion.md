@@ -19,7 +19,7 @@
   - [24.10. Buenas Practicas](#2410-buenas-practicas)
   - [24.11. Reto: Documenta la API de FunkoApp](#2411-reto-documenta-la-api-de-funkoapp)
 
----
+
 
 # 24. Documentacion con Swagger/OpenAPI
 

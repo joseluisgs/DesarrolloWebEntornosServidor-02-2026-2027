@@ -1,5 +1,3 @@
-# 31. API Gateway y Microservicios
-
 - [31. API Gateway y Microservicios](#31-api-gateway-y-microservicios)
   - [31.1. ¿Por qué Microservicios?](#311-por-qué-microservicios)
     - [31.1.1. Monolito vs Microservicios](#3111-monolito-vs-microservicios)
@@ -18,7 +16,7 @@
     - [31.4.2. Configuración en appsettings.json](#3142-configuración-en-appsettingsjson)
     - [31.4.3. Configuración en Program.cs](#3143-configuración-en-programcs)
     - [31.4.4. Tokens JWT con YARP](#3144-tokens-jwt-con-yarp)
-  - [31.5. Ejemplo práctico: Auth + Productos con YARP](#315-ejemplo-práctico-auth--productos-con-yarp)
+  - [31.5. Ejemplo práctico: Auth y Productos con YARP](#315-ejemplo-práctico-auth-y-productos-con-yarp)
     - [31.5.1. Arquitectura del ejemplo](#3151-arquitectura-del-ejemplo)
     - [31.5.2. Docker Compose](#3152-docker-compose)
     - [31.5.3. Configuración de rutas](#3153-configuración-de-rutas)
@@ -32,6 +30,10 @@
   - [31.8. Ventajas y Desventajas](#318-ventajas-y-desventajas)
   - [31.9. Buenas Prácticas](#319-buenas-prácticas)
   - [31.10. Reto](#3110-reto)
+
+
+
+# 31. API Gateway y Microservicios
 
 > **Punto de partida:** Netflix no tiene una sola aplicación gigante. Tiene cientos de servicios independientes: uno para recomendar contenido, otro para gestionar pagos, otro para enviar notificaciones. Cuando abres la app, todos esos servicios trabajan juntos como si fueran uno solo. ¿Cómo lo consiguen? Con **microservicios** y un **API Gateway** que coordina todo.
 

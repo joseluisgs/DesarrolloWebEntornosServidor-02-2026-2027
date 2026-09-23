@@ -18,7 +18,7 @@
   - [25.11. Buenas Practicas](#2511-buenas-practicas)
   - [25.12. Reto: Configura Entornos para FunkoApp](#2512-reto-configura-entornos-para-funkoapp)
 
----
+
 
 # 25. Configuracion de Entornos
 
@@ -507,6 +507,6 @@ Tu API de Funkos necesita funcionar correctamente tanto en desarrollo como en pr
 | **Validacion de configuracion** | Previene errores de inicio por configuracion incompleta |
 | **Prioridad de configuracion** | appsettings.json < appsettings.{Env}.json < variables de entorno < user secrets |
 
-**¿Qué viene despues?**
+**¿Qué viene después?**
 
 En el siguiente punto veremos **Organizacion de Program.cs**: como refactorizar un Program.cs monolitico usando extension methods y el patron Infrastructure para mantener el codigo limpio y mantenible.

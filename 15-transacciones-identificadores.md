@@ -1,5 +1,3 @@
-# 15. Transacciones, Concurrencia e Identificadores
-
 - [15. Transacciones, Concurrencia e Identificadores](#15-transacciones-concurrencia-e-identificadores)
   - [15.1. El Problema de la Concurrencia](#151-el-problema-de-la-concurrencia)
   - [15.2. Transacciones](#152-transacciones)
@@ -22,7 +20,7 @@
 
 
 
----
+# 15. Transacciones, Concurrencia e Identificadores
 
 > 💡 **Punto de partida:** Si dos personas intentan comprar el último billete de avión al mismo tiempo, ¿quién se lo lleva? La base de datos debe tener un mecanismo para decidirlo sin perder datos ni vender el mismo billete dos veces.
 
@@ -67,7 +65,7 @@ Vendemos 2 productos cuando solo teníamos 1 en stock. Esto se llama **race cond
 
 📌 Ejemplo real: **Amazon** gestiona millones de compras simultáneas. Cuando ves "último unidad en stock" y la compras, otro usuario en otro país puede estar haciendo lo mismo. Sin control de concurrencia, venderían el mismo producto dos veces.
 
-15.2. Transacciones
+## 15.2. Transacciones
 
 ### 15.2.1. Qué es una Transacción
 
@@ -138,7 +136,7 @@ catch
 
 > ⚠️ **Advertencia:** Siempre haz `RollbackAsync()` en el bloque `catch`, incluso si el error es esperado. Una transacción abandonada puede bloquear recursos en la BD.
 
-15.3. Control de Concurrencia
+## 15.3. Control de Concurrencia
 
 ### 15.3.1. Enfoque Optimista
 
@@ -343,7 +341,7 @@ flowchart TD
 
 > 📝 **Nota:** El enfoque **mixto** es el más recomendado para la mayoría de aplicaciones web. Combina la rapidez de la validación optimista con la seguridad del `UPDATE` atómico.
 
-15.4. Identificadores: Claves Primarias
+## 15.4. Identificadores: Claves Primarias
 
 ### 15.4.1. Autoincrementales (INT/BIGINT)
 
@@ -564,7 +562,7 @@ flowchart TD
 
 > 📝 **Nota:** En la práctica, el 90% de las aplicaciones usan BIGINT autoincremental o GUID. Los IDs estilo YouTube son útiles cuando necesitas IDs cortos y legibles en URLs (como YouTube, Bitly, o IDs de invite).
 
-15.5. Buenas Prácticas
+## 15.5. Buenas Prácticas
 
 ```csharp
 // ❌ MALO: Olvidar el rollback en catch — transacción abandonada bloquea recursos
@@ -627,7 +625,7 @@ var productos = await context.Productos
 
 > ⚠️ **Advertencia:** El enfoque pesimista puede causar **deadlocks** (bloqueos mutuos). Si dos transacciones bloquean filas diferentes y esperan una por la otra, ambas quedan bloqueadas indefinidamente. Usa timeouts para evitarlo.
 
-15.6. Reto
+## 15.6. Reto
 
 > Aplica todo lo visto a FunkoApp: distintos tipos de identificador y políticas de concurrencia.
 

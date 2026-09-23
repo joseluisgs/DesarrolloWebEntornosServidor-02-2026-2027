@@ -30,7 +30,7 @@
   - [23.9. Testing de Rendimiento](#239-testing-de-rendimiento)
   - [23.10. Reto: Optimiza tu FunkoApp](#2310-reto-optimiza-tu-funkoapp)
 
----
+
 
 # 23. Optimización de Servicios Web
 

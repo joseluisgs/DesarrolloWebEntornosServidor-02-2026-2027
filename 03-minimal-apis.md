@@ -20,7 +20,7 @@
   - [3.8. Reto: API de Funkos con CRUD en memoria](#38-reto-api-de-funkos-con-crud-en-memoria)
     - [3.8.1. Results.Created() y el header Location](#381-resultscreated-y-el-header-location)
 
----
+
 
 # 3. Minimal APIs
 

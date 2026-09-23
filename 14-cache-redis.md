@@ -1,5 +1,3 @@
-# 14. Caché y Redis
-
 - [14. Caché y Redis](#14-caché-y-redis)
   - [14.1. Fundamentos de Caché](#141-fundamentos-de-caché)
     - [14.1.1. Qué es un Caché](#1411-qué-es-un-caché)
@@ -53,7 +51,7 @@
 
 
 
-14.1. Fundamentos de Caché
+# 14. Caché y Redis
 
 > 💡 **Punto de partida:** Si tuvieses que buscar un libro en una biblioteca de 100.000 volúmenes cada vez que alguien te preguntase algo, ¿no guardarías los libros más consultados en una estantería junto a tu escritorio? Eso es exactamente lo que hace un caché.
 
@@ -62,6 +60,8 @@
 - Distinguir entre caché en memoria y caché distribuido (Redis)
 - Conocer algoritmos de caché (LRU, LFU, FIFO, TTL) y estrategias de acceso
 - Implementar caché en ASP.NET Core con ICacheService y Redis
+
+## 14.1. Fundamentos de Caché
 
 ### 14.1.1. Qué es un Caché
 
@@ -128,7 +128,7 @@ flowchart TB
 
 > 💡 **Analogía:** Un caché es como la estantería de tu despacho donde guardas los libros que más consultas. En vez de ir a la biblioteca (base de datos) cada vez que necesitas información, miras primero en tu estantería (caché). Si está, lo tienes en segundos; si no, vas a la biblioteca y traes una copia para la próxima vez.
 
-14.2. Tipos de Caché
+## 14.2. Tipos de Caché
 
 ### 14.2.1. Caché en Memoria (Local)
 
@@ -213,7 +213,7 @@ flowchart TD
 
 > 💡 **Consejo:** Para la mayoría de aplicaciones web, usa **MemoryCache en desarrollo** (más rápido para debug) y **Redis en producción** (compartido, persistente). Es el patrón que usaremos en los ejemplos.
 
-14.3. Algoritmos de Caché
+## 14.3. Algoritmos de Caché
 
 ### 14.3.1. LRU - Least Recently Used
 
@@ -291,7 +291,7 @@ var options = new MemoryCacheEntryOptions
 
 > 📝 **Nota:** En Redis, el algoritmo por defecto es **allkeys-lru** (LRU entre todas las claves). Se configura con `maxmemory-policy allkeys-lru` en redis.conf.
 
-14.4. Estrategias de Acceso a Caché
+## 14.4. Estrategias de Acceso a Caché
 
 ### 14.4.1. Cache-Aside (Lazy Loading)
 
@@ -393,7 +393,7 @@ flowchart TD
 
 > 💡 **Consejo:** Para la mayoría de aplicaciones web, **Cache-Aside** es la mejor elección. Es simple, efectivo y fácil de debuggear.
 
-14.5. Memcached
+## 14.5. Memcached
 
 ### 14.5.1. Qué es Memcached
 
@@ -416,7 +416,7 @@ flowchart TD
 
 > 📝 **Nota:** Memcached es como una estantería simple: solo guarda cajas (strings). Redis es como un almacén inteligente: tiene cajones, estantes, listas y hasta un tablero de anuncios. Para caché básica, ambos funcionan. Para algo más complejo, Redis gana.
 
-14.6. Redis: Fundamentos
+## 14.6. Redis: Fundamentos
 
 ### 14.6.1. Qué es Redis
 
@@ -508,7 +508,7 @@ volumes:
   redis-data:
 ```
 
-14.7. Caché en ASP.NET Core
+## 14.7. Caché en ASP.NET Core
 
 ### 14.7.1. Paquetes NuGet
 
@@ -765,6 +765,8 @@ await _cache.RemoveAsync("productos:all");              // Invalidar listado
 // La próxima lectura obtendrá el dato actualizado de la BD
 ```
 
+## 14.8. Qué y qué no cachear
+
 | Qué cachear | Qué NO cachear |
 |-------------|----------------|
 | Productos, categorías | Datos sensibles (passwords, tokens) |
@@ -773,7 +775,7 @@ await _cache.RemoveAsync("productos:all");              // Invalidar listado
 | Datos de sesión | Datos personales (GDPR) |
 | Consultas con JOINs costosos | Datos que cambian cada segundo |
 
-14.9. Invalidación de Caché
+## 14.9. Invalidación de Caché
 
 ### 14.9.1. Invalidación por TTL
 
@@ -849,7 +851,7 @@ flowchart TD
 
 > 💡 **Consejo:** No hay una respuesta universal. La mejor estrategia depende de tu patrón de acceso. Analiza si las lecturas del mismo elemento son frecuentes antes de decidir.
 
-14.10. CRUD con Caché: Diagrama Completo
+## 14.10. CRUD con Caché: Diagrama Completo
 
 ```mermaid
 flowchart TD
@@ -881,7 +883,7 @@ flowchart TD
     style D3 fill:#FF9800,color:#fff
 ```
 
-14.11. Decorator Pattern para Caché
+## 14.11. Decorator Pattern para Caché
 
 El patrón **Decorator** permite añadir caché a un servicio sin modificar su código original:
 
@@ -933,7 +935,7 @@ builder.Services.AddScoped<IProductoService, ProductoService>();
 builder.Services.Decorate<IProductoService, CachedProductoService>();
 ```
 
-14.12. Testing con Caché
+## 14.12. Testing con Caché
 
 ### 14.12.1. Unit Testing con Mocks
 
@@ -1071,6 +1073,8 @@ await _cache.SetAsync("productos:cat:gaming", lista);      // Listado filtrado
 await _cache.SetAsync("user:456:session", sesion);         // Sesión de usuario
 ```
 
+## 14.13. Buenas Prácticas
+
 | Práctica | Descripción |
 |----------|-------------|
 | **Usar abstracción** | Interfaz `ICacheService`, nunca usar `IMemoryCache` directamente |
@@ -1082,7 +1086,7 @@ await _cache.SetAsync("user:456:session", sesion);         // Sesión de usuario
 
 > ⚠️ **Advertencia:** Nunca almacenes datos sensibles (passwords, tokens JWT, datos de tarjetas de crédito) en caché. El caché no está diseñado para seguridad, solo para rendimiento.
 
-14.14. Reto
+## 14.14. Reto
 
 > Aplica caché a FunkoApp.
 

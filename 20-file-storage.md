@@ -37,7 +37,7 @@
   - [20.11. Buenas Prácticas](#2011-buenas-prácticas)
   - [20.12. Reto: Sube Imágenes de Funkos](#2012-reto-sube-imágenes-de-funkos)
 
----
+
 
 # 20. File Storage: Almacenamiento de Archivos
 

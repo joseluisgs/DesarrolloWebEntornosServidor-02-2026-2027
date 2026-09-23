@@ -24,7 +24,7 @@
   - [2.6. Buenas prácticas](#26-buenas-prácticas)
   - [2.7. Reto: Diseña la API de Funkos](#27-reto-diseña-la-api-de-funkos)
 
----
+
 
 # 2. APIs REST: Recursos, Métodos y Respuestas
 

@@ -1,10 +1,8 @@
-# 17. Autorización
-
 - [17. Autorización](#17-autorización)
   - [17.1. Introducción](#171-introducción)
     - [17.1.1. ¿Qué es la Autorización?](#1711-qué-es-la-autorización)
     - [17.1.2. Autenticación vs Autorización](#1712-autenticación-vs-autorización)
-    - [17.1.3. Flujo Completo: Autenticar → Autorizar → Acceder](#1713-flujo-completo-autenticar--autorizar--acceder)
+    - [17.1.3. Flujo Completo: Autenticar, Autorizar, Acceder](#1713-flujo-completo-autenticar-autorizar-acceder)
   - [17.2. Conceptos Fundamentales](#172-conceptos-fundamentales)
     - [17.2.1. Roles](#1721-roles)
     - [17.2.2. Claims](#1722-claims)
@@ -28,7 +26,8 @@
   - [17.10. Reto](#1710-reto)
 
 
----
+
+# 17. Autorización
 
 > 💡 **Punto de partida:** Has conseguido que Instagram sepa quién eres (autenticación). Pero... ¿puedes borrar la cuenta de otro usuario? ¿Puedes ver estadísticas de negocio? Eso lo decide la **autorización**: qué puedes hacer una vez autenticado.
 
@@ -91,7 +90,7 @@ flowchart LR
 
 📌 Ejemplo real: En **Spotify**, la autenticación es tu login con email/contraseña o Google. La autorización determina si puedes escuchar música sin anuncios (Premium), si puedes descargar canciones offline o si puedes crear playlists colaborativas.
 
-### 17.1.3. Flujo Completo: Autenticar → Autorizar → Acceder
+### 17.1.3. Flujo Completo: Autenticar, Autorizar, Acceder
 
 Cuando una petición llega a tu API, el middleware de ASP.NET Core procesa la seguridad en dos fases. Primero `UseAuthentication()` valida el token JWT y extrae los claims del usuario. Si el token es inválido, la petición se rechaza con 401. Si es válido, se crea un `ClaimsPrincipal` con toda la información del usuario. Después, `UseAuthorization()` evalúa si ese usuario tiene permisos para acceder al endpoint solicitado. Si no tiene permisos, devuelve 403. Si todo está correcto, ejecuta la acción del controller.
 

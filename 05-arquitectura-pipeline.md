@@ -22,7 +22,7 @@
   - [5.6. Buenas Prácticas](#56-buenas-prácticas)
   - [5.7. Reto: Traza una petición HTTP](#57-reto-traza-una-petición-http)
 
----
+
 
 # 5. Arquitectura y Pipeline HTTP
 

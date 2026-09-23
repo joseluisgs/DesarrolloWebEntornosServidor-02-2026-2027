@@ -26,7 +26,7 @@
   - [22.10. Comparación de opciones](#2210-comparación-de-opciones)
   - [22.11. Reto: Sistema de Tareas para FunkoApp](#2211-reto-sistema-de-tareas-para-funkoapp)
 
----
+
 
 # 22. Tareas Programadas en ASP.NET Core
 

@@ -44,7 +44,7 @@
   - [6.10. Buenas prácticas](#610-buenas-prácticas)
   - [6.11. Reto: API de Funkos con DI completa](#611-reto-api-de-funkos-con-di-completa)
 
----
+
 
 # 6. Inyección de Dependencias
 

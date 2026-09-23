@@ -17,7 +17,7 @@
   - [29.9. Buenas Practicas](#299-buenas-practicas)
   - [29.10. Reto: Despliega FunkoApp con Docker](#2910-reto-despliega-funkoapp-con-docker)
 
----
+
 
 # 29. Docker y Despliegue
 
@@ -560,6 +560,6 @@ FunkoApp/
 | **GitHub Actions** | Plataforma de CI/CD integrada en GitHub |
 | **Alpine Linux** | Imagenes mas ligeras para produccion |
 
-**¿Que viene despues?**
+**¿Qué viene después?**
 
 En la siguiente unidad veremos **Clean Architecture**: como organizar una aplicacion ASP.NET Core en capas (Domain, Application, Infrastructure, Presentation) siguiendo principios SOLID y patrones de diseño.

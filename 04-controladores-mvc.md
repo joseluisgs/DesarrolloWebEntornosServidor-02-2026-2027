@@ -20,7 +20,7 @@
   - [4.5. Probando con Bruno](#45-probando-con-bruno)
   - [4.7. Reto: API de Funkos con CRUD en memoria (MVC)](#47-reto-api-de-funkos-con-crud-en-memoria-mvc)
 
----
+
 
 # 4. Controladores y MVC APIs
 

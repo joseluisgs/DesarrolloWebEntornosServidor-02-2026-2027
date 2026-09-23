@@ -22,7 +22,7 @@
   - [21.11. Buenas Prácticas](#2111-buenas-prácticas)
   - [21.12. Reto: Email en FunkoApp](#2112-reto-email-en-funkoapp)
 
----
+
 
 # 21. Servicios de Email
 

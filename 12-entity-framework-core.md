@@ -1,5 +1,3 @@
-﻿# 12. Entity Framework Core
-
 - [12. Entity Framework Core](#12-entity-framework-core)
   - [12.1. Fundamentos](#121-fundamentos)
     - [12.1.1. ¿Qué es un ORM?](#1211-qué-es-un-orm)
@@ -71,7 +69,9 @@
   - [12.19. Buenas Prácticas](#1219-buenas-prácticas)
   - [12.20. Reto](#1220-reto)
 
----
+
+
+# 12. Entity Framework Core
 
 > 💡 **Punto de partida:** Cuando creas una tienda online, necesitas guardar productos, categorías y pedidos. ¿Los guardas en ficheros JSON? ¿En una base de datos SQL? Entity Framework Core es el ORM que hace que trabajar con bases de datos sea tan fácil como trabajar con objetos C#. Hablas en C# y él traduce a SQL por ti.
 

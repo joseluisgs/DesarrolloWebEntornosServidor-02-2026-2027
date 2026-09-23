@@ -18,7 +18,7 @@
   - [28.13. Buenas Practicas](#2813-buenas-practicas)
   - [28.14. Reto: Tests para FunkoApp](#2814-reto-tests-para-funkoapp)
 
----
+
 
 # 28. Testing de Servicios Web
 
@@ -643,6 +643,6 @@ Tu API de Funkos necesita tests automatizados para garantizar que cada cambio no
 | **Patron AAA** | Arrange-Act-Assert para estructurar tests |
 | **Cobertura** | Porcentaje de codigo ejecutado por tests |
 
-**¿Qué viene despues?**
+**¿Qué viene después?**
 
 En el siguiente punto veremos **Docker y Despliegue**: como crear Dockerfiles optimizados, usar Docker Compose para orquestar multiples contenedores, implementar multi-stage builds y configurar CI/CD con GitHub Actions.
