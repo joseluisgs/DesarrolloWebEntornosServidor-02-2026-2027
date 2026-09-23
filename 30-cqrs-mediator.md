@@ -30,9 +30,10 @@
     - [30.9.2. Commands con MediatR](#3092-commands-con-mediatr)
     - [30.9.3. Queries con MediatR](#3093-queries-con-mediatr)
     - [30.9.4. Pipeline Behaviors](#3094-pipeline-behaviors)
-  - [30.10. Testing de CQRS](#3010-testing-de-cqrs)
-  - [30.11. Buenas Prácticas](#3011-buenas-prácticas)
-  - [30.12. Reto](#3012-reto)
+  - [30.10. Sincronización con Domain Events y MediatR](#3010-sincronización-con-domain-events-y-mediatr)
+  - [30.11. Testing de CQRS](#3011-testing-de-cqrs)
+  - [30.12. Buenas Prácticas](#3012-buenas-prácticas)
+  - [30.13. Reto](#3013-reto)
 
 ---
 
@@ -1104,7 +1105,133 @@ public async Task Sync_ProductoCreado_SeSincronizaMongoDB()
 }
 ```
 
-## 30.10. Testing de CQRS
+## 30.10. Sincronización con Domain Events y MediatR
+
+En la sección 30.6 vimos que los Domain Events son una opción para sincronizar. Ahora veamos cómo implementarlos con MediatR, que ya usamos para CQRS.
+
+### 30.10.1. La idea clave: ya tienes los datos en memoria
+
+Cuando el handler de un Command crea/modifica un producto, **ya tiene el objeto en memoria**. No necesitas hacer `SELECT` otra vez. Solo mapeas el objeto al formato documento y lo escribes en MongoDB.
+
+> 📝 **Nota sobre tiempos:** El evento se publica **inmediatamente** después de la escritura. Pero la consistencia eventual sigue existiendo: el tiempo que tarda el SyncHandler en **procesar** el evento y **escribir** en MongoDB. Con Domain Events, esa ventana se reduce a **segundos** en vez de minutos.
+
+**Algoritmo:**
+```
+1. Admin crea producto → CreateProductoCommand
+2. Handler ejecuta: producto = repository.Add(dto.ToModel())
+3. Handler TIENE el objeto producto en memoria (ya lo creó)
+4. Handler publica evento: mediator.Publish(new ProductoCreadoEvent(producto))
+5. SyncHandler recibe el evento CON el objeto
+6. SyncHandler transforma a formato documento (sin JOINs)
+7. SyncHandler escribe en MongoDB (1 operación)
+```
+
+**Comparación con polling:**
+
+| | Polling (BackgroundService) | Domain Events |
+|--|----------------------------|---------------|
+| **¿Cuándo consulta SQL?** | Cada X tiempo | Solo cuando hay cambio |
+| **¿Cuántas consultas?** | Todas las tablas (JOINs) | Ya tiene los datos en memoria |
+| **¿Cuándo se ejecuta?** | Cada 60 segundos | Instantáneamente |
+| **Recursos** | Consume CPU SQL periódicamente | No consume nada extra |
+
+```mermaid
+sequenceDiagram
+    participant Admin as Admin
+    participant Handler as CreateHandler
+    participant SQL as PostgreSQL
+    participant MediatR as MediatR
+    participant Sync as SyncHandler
+    participant Mongo as MongoDB
+
+    Admin->>Handler: CreateProductoCommand
+    Handler->>SQL: INSERT INTO Productos
+    SQL-->>Handler: Producto creado (en memoria)
+    Handler->>MediatR: Publish(ProductoCreadoEvent)
+    MediatR->>Sync: Handle(evento)
+    Note over Sync: Ya tiene el objeto producto en memoria
+    Sync->>Sync: Mapear a formato documento
+    Sync->>Mongo: ReplaceOne (upsert)
+    Mongo-->>Sync: OK
+```
+
+### 30.10.2. Código de ejemplo
+
+**El Command Handler publica el evento:**
+
+```csharp
+public class CreateProductoHandler(
+    IProductoRepository repository,
+    IMediator mediator) : IRequestHandler<CreateProductoCommand, Result<ProductoDto, DomainError>>
+{
+    public async Task<Result<ProductoDto, DomainError>> Handle(
+        CreateProductoCommand request, CancellationToken cancellationToken)
+    {
+        // 1. Crear producto en PostgreSQL
+        var producto = new Producto
+        {
+            Nombre = request.Dto.Nombre,
+            Precio = request.Dto.Precio,
+            CategoriaId = request.Dto.CategoriaId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var creado = repository.Add(producto);
+
+        // 2. Publicar evento CON el objeto (ya está en memoria)
+        await mediator.Publish(new ProductoCreadoEvent(creado), cancellationToken);
+
+        return Result.Success<ProductoDto, DomainError>(creado.ToDto());
+    }
+}
+```
+
+**El SyncHandler escucha y sincroniza:**
+
+```csharp
+public class SyncProductoHandler(
+    MongoDbContext mongoContext) : INotificationHandler<ProductoCreadoEvent>
+{
+    public async Task Handle(ProductoCreadoEvent notification, CancellationToken cancellationToken)
+    {
+        // 1. Recibe el objeto directamente (sin SELECT)
+        var producto = notification.Producto;
+
+        // 2. Mapear a formato documento
+        var read = new ProductoRead
+        {
+            Id = producto.Id,
+            Nombre = producto.Nombre,
+            Precio = producto.Precio,
+            Categoria = new CategoriaRead
+            {
+                Id = producto.CategoriaId,
+                Nombre = producto.Categoria?.Nombre ?? ""
+            },
+            SyncAt = DateTime.UtcNow
+        };
+
+        // 3. Escribir en MongoDB (1 operación)
+        await mongoContext.Productos
+            .Where(p => p.Id == producto.Id)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        mongoContext.Productos.Add(read);
+        await mongoContext.SaveChangesAsync(cancellationToken);
+    }
+}
+```
+
+### 30.10.3. Ventajas de este enfoque
+
+- **0 consultas SQL adicionales**: El handler ya tiene el objeto en memoria
+- **Tiempo real**: Sincronización instantánea
+- **Simple**: Solo handler + evento, sin configurar intervalos
+- **Integrado**: Usa MediatR que ya tenemos para CQRS
+
+> 📝 **Nota:** Este enfoque requiere que el handler tenga acceso a los datos completos del objeto (con relaciones). Si el handler solo tiene el ID, necesitaría hacer un SELECT.
+
+## 30.11. Testing de CQRS
 
 ```csharp
 [Test]
@@ -1126,16 +1253,35 @@ public async Task Sync_ProductoCreado_SeSincronizaMongoDB()
 }
 ```
 
-## 30.11. Buenas Prácticas
+## 30.12. Buenas Prácticas
 
-- **Sincronización periódica**: No en tiempo real, usa intervals (5min, 15min)
+> ⚠️ **Advertencia — CQRS no es la solución para todo**
+
+CQRS añade complejidad (dos BDs, sincronización, consistencia eventual). Solo tiene sentido cuando las **ventajas superan la complejidad**.
+
+**¿Cuándo SÍ usar CQRS?**
+- Miles de lecturas por cada escritura
+- Consultas complejas con muchos JOINs que lentan la BD
+- Necesitas escalar las lecturas independientemente de las escrituras
+- Los DTOs "montan" datos de 3+ tablas relacionadas
+- La latencia de las consultas es un problema real
+
+**¿Cuándo NO usar CQRS?**
+- API simple con pocos usuarios (100-500)
+- Consultas simples sin muchos JOINs
+- Cache ya resuelve el problema de rendimiento
+- No tienes experiencia con sincronización de datos
+- La complejidad no compensa el beneficio
+
+📌 Ejemplo real: **Netflix** usa CQRS porque tiene millones de usuarios buscando contenido. **Una tienda online pequeña** con 100 productos no necesita CQRS: un solo PostgreSQL con cache es suficiente.
+
+- **Sincronización periódica**: Usa el enfoque que mejor se adapte a tu caso
 - **Upsert en MongoDB**: `ReplaceOne` con `IsUpsert = true` para crear o actualizar
 - **Timestamps de sync**: Guarda `SyncAt` para saber cuándo se sincronizó cada documento
 - **Manejo de errores**: Si falla la sync, reintenta pero no bloquee el sistema
 - **Logs detallados**: Registra cada sync para debugging
-- **Aceptar la inconsistencia**: Si 5min es aceptable, no compliques el sistema
 
-## 30.12. Reto
+## 30.13. Reto
 
 > Implementa CQRS para FunkoApp: PostgreSQL para escrituras, MongoDB para lecturas.
 
