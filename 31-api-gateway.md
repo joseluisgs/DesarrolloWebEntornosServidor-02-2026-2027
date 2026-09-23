@@ -646,23 +646,205 @@ Imagina que vas a escalar la **FunkoApp** que estás construyendo en esta unidad
 
 ---
 
+# 31. Resumen y Conclusiones
+
+> 💡 **Punto de partida:** Has completado la Unidad 02, que cubre el desarrollo de servicios web en .NET. Desde conceptos básicos (Minimal APIs, Controladores) hasta arquitectura avanzada (CQRS, Microservicios). Este resumen consolida todos los conceptos en una sola mirada.
+
+Hemos visto la teoría completa de Desarrollo de Servicios Web en .NET. Este punto consolida todos los conceptos en una sola mirada.
+
+**Objetivos de aprendizaje:**
+
+- Repasar los conceptos fundamentales de la unidad
+- Consolidar el vocabulario técnico
+- Tener una referencia rápida para el examen
+
+## 31.1. Mapa Conceptual de la Unidad
+
+```mermaid
+graph TD
+    UD02[UD02: Desarrollo de Servicios Web] --> PART1[Parte 1: Fundamentos]
+    UD02 --> PART2[Parte 2: Persistencia y Seguridad]
+    UD02 --> PART3[Parte 3: APIs Avanzadas]
+    UD02 --> PART4[Parte 4: Arquitectura]
+
+    PART1 --> REST[APIs REST]
+    PART1 --> MIN[Minimal APIs]
+    PART1 --> MVC[Controladores MVC]
+    PART1 --> PIPE[Pipeline y Middlewares]
+    PART1 --> DI[Inyección de Dependencias]
+
+    PART2 --> EF[Entity Framework Core]
+    PART2 --> MONGO[MongoDB]
+    PART2 --> CACHE[Redis y Caché]
+    PART2 --> JWT[Autenticación JWT]
+    PART2 --> AUTH[Autorización]
+
+    PART3 --> WS[WebSockets y SignalR]
+    PART3 --> GQL[GraphQL]
+    PART3 --> FILE[Almacenamiento]
+    PART3 --> EMAIL[Email Services]
+
+    PART4 --> CQRS[CQRS y MediatR]
+    PART4 --> GW[API Gateway]
+    PART4 --> DOCKER[Docker y Despliegue]
+    PART4 --> TEST[Testing]
+
+    REST --> EF
+    EF --> MONGO
+    MONGO --> CACHE
+    CACHE --> JWT
+    JWT --> AUTH
+    AUTH --> WS
+    WS --> GQL
+    GQL --> FILE
+    FILE --> EMAIL
+    EMAIL --> CQRS
+    CQRS --> GW
+
+    style UD02 fill:#2196F3,color:#fff
+    style PART1 fill:#4CAF50,color:#fff
+    style PART2 fill:#FF9800,color:#fff
+    style PART3 fill:#9C27B0,color:#fff
+    style PART4 fill:#f44336,color:#fff
+```
+
+## 31.2. Conceptos Clave
+
+### Fundamentos del Desarrollo Web
+
+- **Servicios Web:** Funcionalidad accesible vía HTTP
+- **REST:** Arquitectura basada en recursos, métodos HTTP y JSON
+- **HTTP:** Protocolo con métodos (GET, POST, PUT, DELETE) y códigos de estado
+- **Minimal APIs:** Endpoints simples sin controladores
+- **Controladores MVC:** Arquitectura estructurada con separación de responsabilidades
+- **Pipeline:** Cadena de middlewares que procesan las peticiones
+
+📌 Ejemplo real: **Netflix** usa REST para su API pública. Cada endpoint sigue las convenciones de recursos y métodos HTTP.
+
+### Persistencia y Seguridad
+
+- **Entity Framework Core:** ORM para PostgreSQL con migraciones y LINQ
+- **MongoDB:** BD NoSQL orientada a documentos para lecturas rápidas
+- **Redis:** Cache distribuido para datos que cambian poco
+- **JWT:** Tokens autocontenidos para autenticación stateless
+- **Identity:** Gestión de usuarios, roles y contraseñas
+
+📌 Ejemplo real: **Amazon** usa PostgreSQL para escrituras (transacciones seguras) y MongoDB para lecturas (catálogos rápidos).
+
+### APIs Avanzadas
+
+- **WebSockets y SignalR:** Comunicación en tiempo real bidireccional
+- **GraphQL:** Consultas flexibles donde el cliente elige los campos
+- **Almacenamiento:** Gestión de ficheros locales y en la nube
+- **Email:** Envío de notificaciones automáticas
+
+📌 Ejemplo real: **WhatsApp** usa WebSockets para mensajes en tiempo real. **GitHub** usa GraphQL para su API.
+
+### Arquitectura
+
+- **CQRS:** Separar Commands (escrituras) de Queries (lecturas)
+- **API Gateway:** Punto de entrada único para microservicios
+- **Docker:** Contenedores para despliegue consistente
+- **Testing:** NUnit, FluentAssertions, TestContainers
+
+📌 Ejemplo real: **LinkedIn** usa CQRS para separar escrituras de perfil (PostgreSQL) de lecturas de búsqueda (MongoDB).
+
+## 31.3. Herramientas y Perfiles
+
+### SDK y CLI
+- **`dotnet new`**: Crear proyectos y soluciones
+- **`dotnet build`**: Compilar proyectos
+- **`dotnet run`**: Ejecutar proyectos
+- **`dotnet test`**: Ejecutar tests
+- **`dotnet ef`**: Migraciones de Entity Framework
+
+### NuGet
+- **HotChocolate.AspNetCore** — GraphQL
+- **MediatR** — CQRS y patrón mediator
+- **Npgsql.EntityFrameworkCore.PostgreSQL** — PostgreSQL
+- **MongoDB.EntityFrameworkCore** — MongoDB
+- **StackExchange.Redis** — Cache Redis
+- **MailKit** — Envío de emails
+- **Microsoft.AspNetCore.Authentication.JwtBearer** — JWT
+- **Testcontainers** — Tests con Docker
+
+### IDE
+- **JetBrains Rider** — IDE principal
+- **Visual Studio Code** — Alternativo ligero
+
+## 31.4. Errores Comunes a Evitar
+
+| Error | Por qué está mal | Cómo evitarlo |
+|-------|------------------|---------------|
+| No usar `AsNoTracking()` | Ralentiza consultas de solo lectura | Usar `AsNoTracking()` en queries |
+| No paginar listados | Memoria excesiva | Usar `Skip/Take` o `[UsePaging]` |
+| No validar uploads | Seguridad comprometida | Validar extensión y tamaño |
+| No cachear | Consultas lentas | Implementar Redis o MemoryCache |
+| No testear | Regresiones no detectadas | Usar TestContainers |
+
+## 31.5. Checklist de Supervivencia
+
+Antes de dar por cerrado el tema, asegúrate de poder responder **SÍ** a estas preguntas:
+
+- [ ] ¿Puedes crear una API REST con Minimal APIs o Controladores?
+- [ ] ¿Sabes usar Entity Framework Core con PostgreSQL?
+- [ ] ¿Conoces la diferencia entre Eager y Lazy Loading?
+- [ ] ¿Implementas autenticación con JWT?
+- [ ] ¿Usas TestContainers para tests de integración?
+- [ ] ¿Configuras Docker para despliegue?
+- [ ] ¿Implementas caché con Redis?
+- [ ] ¿Usas SignalR para tiempo real?
+
+> 🔧 **Truco:** Para el examen, practica crear una API completa desde cero: proyecto, CRUD, auth, tests, Docker.
+
+## 31.6. Glosario de Términos
+
+| Término | Definición |
+|---------|------------|
+| **API** | Interfaz de programación para comunicar sistemas |
+| **REST** | Arquitectura basada en HTTP y recursos |
+| **CRUD** | Create, Read, Update, Delete |
+| **EF Core** | ORM de Microsoft para .NET |
+| **LINQ** | Language Integrated Query |
+| **JWT** | JSON Web Token para autenticación |
+| **SignalR** | Librería para tiempo real en ASP.NET Core |
+| **GraphQL** | Lenguaje de consulta flexible para APIs |
+| **CQRS** | Separar lecturas de escrituras |
+| **Docker** | Plataforma de contenedores |
+| **TestContainers** | Tests con contenedores Docker |
+
+## 31.7. Ejercicios de Repaso
+
+1. **Ejercicio 1:** Crea una API REST completa para una entidad con CRUD, auth JWT y tests
+2. **Ejercicio 2:** Implementa caché con Redis en una consulta frecuente
+3. **Ejercicio 3:** Añade un endpoint GraphQL para la misma entidad
+4. **Ejercicio 4:** Containeriza la aplicación con Docker Compose
+
+## 31.8. ¿Qué viene después?
+
+En la **DAW** seguirás aprendiendo tecnologías avanzadas como microservicios con Kubernetes, CI/CD con GitHub Actions, y arquitecturas más complejas.
+
+**¿Qué viene después?**
+
+En el siguiente punto encontrarás el **Resumen General** de toda la unidad.
+
+---
+
 **Resumen del punto:**
 
 | Concepto | Descripción |
 |----------|-------------|
-| **Monolito** | Aplicación única con toda la lógica en un solo bloque |
-| **Microservicios** | Arquitectura dividida en servicios independientes y desplegables |
-| **Comunicación sincrónica** | Llamada HTTP directa entre servicios (espera respuesta) |
-| **Comunicación asincrónica** | Uso de colas de mensajes (Kafka, RabbitMQ) |
-| **API Gateway** | Punto de entrada único que enruta, autentica y protege |
-| **YARP** | Reverse proxy de Microsoft, configurable con JSON o código |
-| **Nginx** | Reverse proxy de alto rendimiento, estándar de la industria |
-| **Rate Limiting** | Limitación de peticiones para prevenir abusos |
-| **Consistencia eventual** | Datos que pueden estar desincronizados temporalmente entre servicios |
-| **Docker Compose** | Orquestación de múltiples contenedores con redes internas |
-| **gRPC** | Protocolo binario de alto rendimiento para comunicación entre servicios |
-| **REST** | Protocolo HTTP con JSON, el más usado para APIs públicas |
-| **Repositorio remoto** | Consultar datos de otro servicio mediante su URL |
-| **Cache distribuido** | Redis para compartir datos entre servicios |
-
-> Este es el último tema de la unidad. Has aprendido a construir APIs completas con C#: desde conceptos básicos (Minimal APIs, Controladores), pasando por seguridad (JWT, Identity), persistencia (EF Core, MongoDB), caching (Redis), tiempo real (SignalR), GraphQL, CQRS, hasta la arquitectura de microservicios.
+| **Servicios Web** | Funcionalidad accesible vía HTTP |
+| **REST** | Arquitectura basada en recursos y métodos HTTP |
+| **Minimal APIs** | Endpoints simples sin controladores |
+| **Controladores MVC** | Arquitectura estructurada con separación |
+| **EF Core** | ORM para PostgreSQL con LINQ |
+| **MongoDB** | BD NoSQL para lecturas rápidas |
+| **Redis** | Cache distribuido |
+| **JWT** | Tokens para autenticación stateless |
+| **SignalR** | Tiempo real bidireccional |
+| **GraphQL** | Consultas flexibles |
+| **CQRS** | Separar Commands de Queries |
+| **API Gateway** | Punto de entrada único |
+| **Docker** | Contenedores para despliegue |
+| **Testing** | NUnit, FluentAssertions, TestContainers |
