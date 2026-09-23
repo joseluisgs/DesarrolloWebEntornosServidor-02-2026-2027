@@ -121,13 +121,15 @@ appsettings.Production.json      ← Valores para producción
     }
   },
   "ConnectionStrings": {
-    "DefaultConnection": "Host=postgres;Database=productos;Username=prod_user;Password=${DB_PASSWORD}"
+    "DefaultConnection": "Host=postgres;Database=productos;Username=prod_user"
   },
   "Cache": {
     "TTLMinutes": 60
   }
 }
 ```
+
+> ⚠️ **Advertencia:** .NET **no expande** `${DB_PASSWORD}` en JSON (esa sintaxis es propia de shells o de docker-compose, no de `appsettings.json`). El valor real de la contraseña **no va en el JSON**: se define en la variable de entorno `ConnectionStrings__DefaultConnection` (o en `user-secrets` / Azure Key Vault), que **sobreescribe la cadena completa**.
 
 ### 9.1.3. Variables de entorno
 
@@ -137,8 +139,8 @@ Para secrets (contraseñas, tokens) **nunca** se usan ficheros JSON. Se usan **v
 # Windows PowerShell
 $env:ConnectionStrings__DefaultConnection = "Host=produccion;Database=tienda"
 
-# Linux/Mac
-export ConnectionStrings__DefaultConnection = "Host=produccion;Database=tienda"
+# Linux/Mac (sin espacios alrededor del =; bash no lo permite)
+export ConnectionStrings__DefaultConnection="Host=produccion;Database=tienda"
 ```
 
 La convención de nombres usa `__` (doble guion bajo) para separar niveles:
@@ -237,10 +239,12 @@ public class ProductoService(
 |-------|-----|---------|
 | `Trace` | Información muy detallada (solo debugging) | "Entrando en método GetById, parámetro id=5" |
 | `Debug` | Información de debugging general | "Repositorio tiene 15 productos en memoria" |
-| `Information** | Flujo normal de la aplicación | "Producto creado con ID 42" |
+| `Information` | Flujo normal de la aplicación | "Producto creado con ID 42" |
 | `Warning` | Algo inesperado pero no es error | "Cache miss, consultando base de datos" |
-| `Error** | Error que la aplicación puede recuperarse | "Error al conectar con Redis, usando caché en memoria" |
-| `Fatal` | Error catastrófico, la aplicación se detiene | "Base de datos no disponible, deteniendo aplicación" |
+| `Error` | Error que la aplicación puede recuperarse | "Error al conectar con Redis, usando caché en memoria" |
+| `Critical` | Error catastrófico, la aplicación se detiene | "Base de datos no disponible, deteniendo aplicación" |
+
+> 📝 **Nota:** `ILogger` nombra el nivel más alto **`Critical`**; Serilog lo llama **`Fatal`** (mismo concepto, distinto nombre).
 
 ```mermaid
 flowchart LR
@@ -248,7 +252,7 @@ flowchart LR
     D --> I["Information"]
     I --> W["Warning"]
     W --> E["Error"]
-    E --> F["Fatal"]
+    E --> F["Critical"]
     style T fill:#607D8B,color:#fff
     style D fill:#2196F3,color:#fff
     style I fill:#4CAF50,color:#fff
@@ -433,7 +437,7 @@ Log.Logger = new LoggerConfiguration()
 | **IConfiguration** | Interfaz para leer configuración en código |
 | **Variables de entorno** | Para secrets (nunca en JSON) |
 | **ILogger\<T\>** | Sistema de logging del framework |
-| **Niveles de log** | Trace, Debug, Information, Warning, Error, Fatal |
+| **Niveles de log** | Trace, Debug, Information, Warning, Error, Critical (ILogger) / Fatal (Serilog) |
 | **Serilog** | Librería de logging estructurado |
 | **Sinks** | Destinos de logs (consola, fichero, Elasticsearch...) |
 | **Rolling** | Rotación automática de ficheros de log |

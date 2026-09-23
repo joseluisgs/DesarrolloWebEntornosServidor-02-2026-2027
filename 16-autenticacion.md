@@ -87,32 +87,32 @@ flowchart LR
     style B4 fill:#4CAF50,color:#fff
 ```
 
-| Aspecto | Stateful (Sesion) | Stateless (JWT) |
+| Aspecto | Stateful (Sesión) | Stateless (JWT) |
 |---------|-------------------|-----------------|
-| **Almacenamiento** | Sesion en servidor | Token en cliente |
-| **Escalabilidad** | Dificil (sticky sessions) | Facil (cualquier servidor) |
-| **Rendimiento** | Lookup de sesion en cada request | Verificacion de firma local |
+| **Almacenamiento** | Sesión en servidor | Token en cliente |
+| **Escalabilidad** | Difícil (sticky sessions) | Fácil (cualquier servidor) |
+| **Rendimiento** | Lookup de sesión en cada request | Verificación de firma local |
 | **Memoria del servidor** | Crece con usuarios | Constante |
 | **Mobile/API** | Complicado (cookies) | Natural (header Bearer) |
-| **Revocacion** | Inmediata (borrar sesion) | Dificil (esperar expiracion) |
+| **Revocación** | Inmediata (borrar sesión) | Difícil (esperar expiración) |
 
-> 💡 **Consejo:** Para APIs REST que sirven a clientes SPA, moviles o microservicios, **stateless con JWT** es casi siempre la mejor opcion. Las sesiones stateful son utiles en aplicaciones Razor Pages o Blazor Server donde el navegador maneja las cookies automaticamente.
+> 💡 **Consejo:** Para APIs REST que sirven a clientes SPA, móviles o microservicios, **stateless con JWT** es casi siempre la mejor opción. Las sesiones stateful son útiles en aplicaciones Razor Pages o Blazor Server donde el navegador maneja las cookies automáticamente.
 
 ### 16.1.3. Por qué JWT para APIs
 
-**JWT (JSON Web Token)** es el estandar de facto para autenticacion en APIs REST. Las razones:
+**JWT (JSON Web Token)** es el estándar de facto para autenticación en APIs REST. Las razones:
 
-1. **Autocontenido**: El token lleva toda la informacion (claims) dentro
-2. **Firado criptograficamente**: No se puede falsificar sin la clave secreta
+1. **Autocontenido**: El token lleva toda la información (claims) dentro
+2. **Firmado criptográficamente**: No se puede falsificar sin la clave secreta
 3. **Sin estado**: El servidor no necesita almacenar nada para validar
 4. **Interoperable**: Funciona entre diferentes lenguajes y plataformas
-5. **Estandar**: Basado en RFC 7519, soportado por todas las frameworks
+5. **Estándar**: Basado en RFC 7519, soportado por todas las frameworks
 
-📌 Ejemplo real: **Stripe** usa JWT para autenticar las llamadas a su API de pagos. Cada peticion de un cliente lleva un token Bearer que Stripe valida localmente sin consultar una base de datos.
+📌 Ejemplo real: **Stripe** usa JWT para autenticar las llamadas a su API de pagos. Cada petición de un cliente lleva un token Bearer que Stripe valida localmente sin consultar una base de datos.
 
-### 16.1.4. Flujo Completo de Autenticacion
+### 16.1.4. Flujo Completo de Autenticación
 
-El flujo de autenticacion se repite en cada peticion. La diferencia con sesiones es que el servidor NO almacena nada: el token es autocontenido y se valida unicamente con la clave secreta.
+El flujo de autenticación se repite en cada petición. La diferencia con sesiones es que el servidor NO almacena nada: el token es autocontenido y se valida únicamente con la clave secreta.
 
 ```mermaid
 flowchart TD
@@ -136,7 +136,7 @@ flowchart TD
     style L fill:#4CAF50,color:#fff
 ```
 
-> 📝 **Nota:** Este flujo es identico para el enfoque manual y para Identity. Lo que cambia es como se genera el token y como se gestiona el usuario, pero el ciclo de vida del token es el mismo.
+> 📝 **Nota:** Este flujo es idéntico para el enfoque manual y para Identity. Lo que cambia es cómo se genera el token y cómo se gestiona el usuario, pero el ciclo de vida del token es el mismo.
 
 #### Flujo positivo: Login exitoso
 
@@ -158,7 +158,7 @@ sequenceDiagram
     S-->>C: 200 OK [productos]
 ```
 
-#### Flujo negativo: Credenciales invalidas
+#### Flujo negativo: Credenciales inválidas
 
 ```mermaid
 sequenceDiagram
@@ -200,7 +200,7 @@ sequenceDiagram
 
 ### 16.2.1. Estructura del JWT
 
-Un JWT se compone de **tres partes** separadas por puntos: `HEADER.PAYLOAD.SIGNATURE`. Cada parte esta codificada en Base64Url, lo que la hace legible pero no cifrada.
+Un JWT se compone de **tres partes** separadas por puntos: `HEADER.PAYLOAD.SIGNATURE`. Cada parte está codificada en Base64Url, lo que la hace legible pero no cifrada.
 
 ```mermaid
 flowchart TD
@@ -239,7 +239,7 @@ flowchart TD
 }
 ```
 
-**Payload** — Contiene los claims (informacion del usuario). Aqui es donde metemos la informacion que necesitamos: ID, email, rol, expiracion, etc. Recuerda: el payload NO esta cifrado, solo codificado en Base64Url. Cualquiera puede leerlo.
+**Payload** — Contiene los claims (información del usuario). Aquí es donde metemos la información que necesitamos: ID, email, rol, expiración, etc. Recuerda: el payload NO está cifrado, solo codificado en Base64Url. Cualquiera puede leerlo.
 
 ```json
 {
@@ -252,7 +252,7 @@ flowchart TD
 }
 ```
 
-**Signature** — Firma criptografica que garantiza la integridad del token. Se calcula combinando el header, el payload y una clave secreta. Si alguien modifica el payload, la firma no coincidira.
+**Signature** — Firma criptográfica que garantiza la integridad del token. Se calcula combinando el header, el payload y una clave secreta. Si alguien modifica el payload, la firma no coincidirá.
 
 ```csharp
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
@@ -267,9 +267,9 @@ var token = new JwtSecurityToken(
 );
 ```
 
-> ⚠️ **Advertencia:** El payload de un JWT **NO esta cifrado**, solo codificado en Base64Url. Cualquiera puede leerlo. **Nunca** incluyas informacion sensible (contrasenas, numeros de tarjeta) en el payload. Solo incluye claims que no sean secretos.
+> ⚠️ **Advertencia:** El payload de un JWT **NO está cifrado**, solo codificado en Base64Url. Cualquiera puede leerlo. **Nunca** incluyas información sensible (contraseñas, números de tarjeta) en el payload. Solo incluye claims que no sean secretos.
 
-> 💡 **Analogia:** Un JWT es como un **carnet de identidad con fecha de caducidad**. El header es el formato del carnet (tipo de documento), el payload son tus datos (nombre, DNI, rol), y la firma es el holograma que impide falsificarlo. El carnet es válido mientras no esté caducado y el holograma sea auténtico. Si alguien intenta cambiar tu nombre en el carnet, el holograma se rompe y el portero lo detecta.
+> 💡 **Analogía:** Un JWT es como un **carnet de identidad con fecha de caducidad**. El header es el formato del carnet (tipo de documento), el payload son tus datos (nombre, DNI, rol), y la firma es el holograma que impide falsificarlo. El carnet es válido mientras no esté caducado y el holograma sea auténtico. Si alguien intenta cambiar tu nombre en el carnet, el holograma se rompe y el portero lo detecta.
 
 ```csharp
 // ❌ MALO: JWT sin validar issuer ni audience — aceptaria tokens de cualquier emisor
@@ -297,19 +297,19 @@ options.TokenValidationParameters = new TokenValidationParameters
 
 ### 16.2.2. Claims
 
-Los **claims** son pares clave-valor que transportan informacion sobre el usuario y el token. Es como el contenido de tu DNI: datos identificativos y metadatos.
+Los **claims** son pares clave-valor que transportan información sobre el usuario y el token. Es como el contenido de tu DNI: datos identificativos y metadatos.
 
-| Claim | Nombre | Descripcion |
+| Claim | Nombre | Descripción |
 |-------|--------|-------------|
 | `sub` | Subject | Identificador principal del usuario (ID) |
 | `iss` | Issuer | Quien emite el token |
-| `aud` | Audience | Para quien esta destinado el token |
-| `exp` | Expiration | Fecha de expiracion (Unix timestamp) |
-| `nbf` | Not Before | Fecha a partir de la cual es valido |
-| `iat` | Issued At | Fecha de emision del token |
-| `jti` | JWT ID | Identificador unico del token |
+| `aud` | Audience | Para quien está destinado el token |
+| `exp` | Expiration | Fecha de expiración (Unix timestamp) |
+| `nbf` | Not Before | Fecha a partir de la cual es válido |
+| `iat` | Issued At | Fecha de emisión del token |
+| `jti` | JWT ID | Identificador único del token |
 
-Claims personalizados que anadimos nosotros:
+Claims personalizados que añadimos nosotros:
 
 ```csharp
 var claims = new List<Claim>
@@ -326,11 +326,11 @@ var claims = new List<Claim>
 };
 ```
 
-> 📝 **Nota:** El claim `sub` es el estandar para el identificador del usuario. Usar `user.Id` como valor de `sub` permite al servidor identificar al usuario en cada peticion sin consultar la base de datos.
+> 📝 **Nota:** El claim `sub` es el estándar para el identificador del usuario. Usar `user.Id` como valor de `sub` permite al servidor identificar al usuario en cada petición sin consultar la base de datos.
 
-### 16.2.3. Validacion de Tokens
+### 16.2.3. Validación de Tokens
 
-Cuando un servidor recibe un JWT, debe validar multiples aspectos antes de aceptarlo. Esto es como un policia que comprueba que tu DNI no este caducado, que sea autentico y que corresponda a la persona que lo presenta.
+Cuando un servidor recibe un JWT, debe validar múltiples aspectos antes de aceptarlo. Esto es como un policía que comprueba que tu DNI no esté caducado, que sea auténtico y que corresponda a la persona que lo presenta.
 
 ```mermaid
 flowchart TD
@@ -357,7 +357,7 @@ flowchart TD
     style N fill:#4CAF50,color:#fff
 ```
 
-La validacion en ASP.NET Core se configura con `TokenValidationParameters`. Este objeto le dice al middleware que aspectos del token debe comprobar y con que valores esperados.
+La validación en ASP.NET Core se configura con `TokenValidationParameters`. Este objeto le dice al middleware qué aspectos del token debe comprobar y con qué valores esperados.
 
 ```csharp
 options.TokenValidationParameters = new TokenValidationParameters
@@ -374,27 +374,27 @@ options.TokenValidationParameters = new TokenValidationParameters
 };
 ```
 
-> 💡 **Consejo:** Establecer `ClockSkew = TimeSpan.Zero` elimina la tolerancia de 5 minutos por defecto. Si el token expira a las 12:00:00, se considera expirado exactamente a las 12:00:00. Sin esto, un token expirado seguiria siendo valido durante 5 minutos mas.
+> 💡 **Consejo:** Establecer `ClockSkew = TimeSpan.Zero` elimina la tolerancia de 5 minutos por defecto. Si el token expira a las 12:00:00, se considera expirado exactamente a las 12:00:00. Sin esto, un token expirado seguiría siendo válido durante 5 minutos más.
 
-## 16.3. BCrypt: Hash de Contrasenas
+## 16.3. BCrypt: Hash de Contraseñas
 
 ### 16.3.1. Por qué no MD5 ni SHA256
 
-Almacenar contrasenas en texto plano es un error gravisisimo. Pero **¿por qué no usar MD5 o SHA256?** La razon es simple: velocidad. MD5 y SHA256 son rapidos a proposito, lo que los hace ideales para verificar integridad de archivos pero terribles para contrasenas. Un atacante con una GPU puede probar miles de millones de combinaciones por segundo.
+Almacenar contraseñas en texto plano es un error gravísimo. Pero **¿por qué no usar MD5 o SHA256?** La razón es simple: velocidad. MD5 y SHA256 son rápidos a propósito, lo que los hace ideales para verificar integridad de archivos pero terribles para contraseñas. Un atacante con una GPU puede probar miles de millones de combinaciones por segundo.
 
 | Algoritmo | Velocidad | Problema |
 |-----------|-----------|----------|
 | **MD5** | ~50.000 millones/segundo | Se puede probar un diccionario entero en segundos |
-| **SHA256** | ~10.000 millones/segundo | Igual de rapido, igual de vulnerable |
-| **BCrypt** | ~17.000/segundo | Disenado para ser **lento** intencionadamente |
+| **SHA256** | ~10.000 millones/segundo | Igual de rápido, igual de vulnerable |
+| **BCrypt** | ~17.000/segundo | Diseñado para ser **lento** intencionadamente |
 
 📌 Ejemplo real: Un servidor con una GPU moderna puede calcular **50.000 millones de hashes MD5 por segundo**. Con BCrypt, solo puede calcular **17.000 por segundo**. La diferencia es abismal.
 
-> 📝 **Nota:** MD5 y SHA256 son excelentes para verificar integridad de archivos, pero **nunca** para contrasenas. La velocidad es una virtud para integridad, pero un defecto para passwords.
+> 📝 **Nota:** MD5 y SHA256 son excelentes para verificar integridad de archivos, pero **nunca** para contraseñas. La velocidad es una virtud para integridad, pero un defecto para passwords.
 
 ### 16.3.2. BCrypt en C#
 
-El paquete `BCrypt.Net-Next` proporciona las dos operaciones fundamentales: hashear una contrasena y verificar si una contrasena coincide con un hash.
+El paquete `BCrypt.Net-Next` proporciona las dos operaciones fundamentales: hashear una contraseña y verificar si una contraseña coincide con un hash.
 
 ```csharp
 using BCrypt.Net;
@@ -410,7 +410,7 @@ bool isValid = BCrypt.Net.BCrypt.Verify(password, hash);
 // true si coincide, false si no
 ```
 
-> 💡 **Analogia:** BCrypt es como una **maquina de picar carne que siempre produce resultados diferentes**. Cada vez que introduces la misma pie de carne (contraseña), la máquina añade sal (salt) antes de picarla, así que el resultado final (hash) es siempre distinto. Para verificar si una contraseña es correcta, pasas la nueva pie por la misma máquina con el mismo salt y comparas el resultado. Un atacante no puede simplemente "deshacer" el picado para recuperar la carne original.
+> 💡 **Analogía:** BCrypt es como una **máquina de picar carne que siempre produce resultados diferentes**. Cada vez que introduces la misma pie de carne (contraseña), la máquina añade sal (salt) antes de picarla, así que el resultado final (hash) es siempre distinto. Para verificar si una contraseña es correcta, pasas la nueva pie por la misma máquina con el mismo salt y comparas el resultado. Un atacante no puede simplemente "deshacer" el picado para recuperar la carne original.
 
 ```csharp
 // ❌ MALO: Almacenar contraseña en texto plano — si hackean la BD, todos los usuarios quedan comprometidos
@@ -420,7 +420,7 @@ public class Usuario
     public string Password { get; set; } = string.Empty;  // ¡NUNCA hacer esto!
 }
 
-// ✅ BUENO: Almacenar hash con BCrypt —即使 hackean la BD, las contraseñas son irrecuperables
+// ✅ BUENO: Almacenar hash con BCrypt —aunque hackeen la BD, las contraseñas son irrecuperables
 public class Usuario
 {
     public string Email { get; set; } = string.Empty;
@@ -466,17 +466,17 @@ flowchart LR
     style L6 fill:#f44336,color:#fff
 ```
 
-> 💡 **Analogia:** BCrypt es como un molino de cafe. Cuando registras una contrasena, la pasas por el molino 11 veces (work factor 11) para obtener el polvo (hash). Verificar es pasar el cafe por el mismo molino y comparar. Un atacante tendria que moler cada contrasena 11 veces para intentar adivinarla.
+> 💡 **Analogía:** BCrypt es como un molino de café. Cuando registras una contraseña, la pasas por el molino 11 veces (work factor 11) para obtener el polvo (hash). Verificar es pasar el café por el mismo molino y comparar. Un atacante tendría que moler cada contraseña 11 veces para intentar adivinarla.
 
 ### 16.3.3. Work Factor
 
-El **work factor** determina cuantas iteraciones se realizan. Cada incremento **duplica** el tiempo de calculo. Es como subir la dificultad de un juego: cada nivel es el doble de dificil que el anterior.
+El **work factor** determina cuántas iteraciones se realizan. Cada incremento **duplica** el tiempo de cálculo. Es como subir la dificultad de un juego: cada nivel es el doble de difícil que el anterior.
 
 | Work Factor | Iteraciones | Tiempo aprox. | Uso recomendado |
 |-------------|-------------|---------------|-----------------|
 | 8 | 256 | ~10ms | Desarrollo/pruebas |
 | 10 | 1.024 | ~40ms | Testing |
-| **11** | **2.048** | **~100ms** | **Produccion (recomendado)** |
+| **11** | **2.048** | **~100ms** | **Producción (recomendado)** |
 | 12 | 4.096 | ~200ms | Alta seguridad |
 
 ```csharp
@@ -484,27 +484,27 @@ El **work factor** determina cuantas iteraciones se realizan. Cada incremento **
 string hash = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 11);
 ```
 
-> 💡 **Consejo:** Un work factor de **11** es el punto optimo: lo suficientemente lento para impedir fuerza bruta (~100ms), pero lo suficientemente rapido para no afectar la experiencia de usuario en login.
+> 💡 **Consejo:** Un work factor de **11** es el punto óptimo: lo suficientemente lento para impedir fuerza bruta (~100ms), pero lo suficientemente rápido para no afectar la experiencia de usuario en login.
 
 ### 16.3.4. Comparativa de Algoritmos
 
-| Algoritmo | Velocidad hash | Resistencia rainbow tables | Salt automatico | Recomendado |
+| Algoritmo | Velocidad hash | Resistencia rainbow tables | Salt automático | Recomendado |
 |-----------|----------------|---------------------------|-----------------|-------------|
-| **MD5** | Muy rapido | Baja | No | Nunca |
-| **SHA256** | Rapido | Media | No | Nunca para passwords |
-| **PBKDF2** | Lento (configurable) | Buena | Si | Aceptable |
-| **BCrypt** | Lento (work factor) | Excelente | Si | Recomendado |
-| **Argon2** | Muy lento | Excelente | Si | El mejor (ganador PHC) |
+| **MD5** | Muy rápido | Baja | No | Nunca |
+| **SHA256** | Rápido | Media | No | Nunca para passwords |
+| **PBKDF2** | Lento (configurable) | Buena | Sí | Aceptable |
+| **BCrypt** | Lento (work factor) | Excelente | Sí | Recomendado |
+| **Argon2** | Muy lento | Excelente | Sí | El mejor (ganador PHC) |
 
-> 📝 **Nota:** BCrypt genera un salt unico automaticamente en cada hash. No necesitas almacenar el salt por separado: esta incrustado en el propio hash. Esto protege contra ataques de rainbow tables, donde un atacante usa tablas precalculadas de hashes comunes.
+> 📝 **Nota:** BCrypt genera un salt único automáticamente en cada hash. No necesitas almacenar el salt por separado: está incrustado en el propio hash. Esto protege contra ataques de rainbow tables, donde un atacante usa tablas precalculadas de hashes comunes.
 
 ## 16.4. Enfoque Manual (Estilo Tienda)
 
-Este enfoque implementa autenticacion JWT completa **sin usar ASP.NET Core Identity**. Es mas ligero, mas flexible y ideal para APIs REST donde quieres control total sobre el modelo de usuario y la generacion de tokens.
+Este enfoque implementa autenticación JWT completa **sin usar ASP.NET Core Identity**. Es más ligero, más flexible y ideal para APIs REST donde quieres control total sobre el modelo de usuario y la generación de tokens.
 
 ### 16.4.1. Modelo de Usuario
 
-El modelo de usuario es la base de todo el sistema de autenticacion. Almacena el hash de la contrasena (nunca la contrasena en texto plano), el rol y metadatos de sesion. El campo `PasswordHash` contiene el resultado de BCrypt, que incluye el algoritmo, el work factor, el salt y el hash.
+El modelo de usuario es la base de todo el sistema de autenticación. Almacena el hash de la contraseña (nunca la contraseña en texto plano), el rol y metadatos de sesión. El campo `PasswordHash` contiene el resultado de BCrypt, que incluye el algoritmo, el work factor, el salt y el hash.
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
@@ -551,11 +551,11 @@ public static class UserRoles
 }
 ```
 
-> ⚠️ **Advertencia:** **Nunca** almacenes la contrasena en texto plano. Si tu base de datos se filtra, todos los usuarios quedan comprometidos. BCrypt transforma la contrasena en un hash unidireccional: no se puede revertir para obtener la original.
+> ⚠️ **Advertencia:** **Nunca** almacenes la contraseña en texto plano. Si tu base de datos se filtra, todos los usuarios quedan comprometidos. BCrypt transforma la contraseña en un hash unidireccional: no se puede revertir para obtener la original.
 
 ### 16.4.2. JwtService
 
-El `JwtService` es responsable de generar tokens JWT, generar refresh tokens y validar tokens existentes. Es como una maquina de firmar documentos: solo quien tiene la clave secreta puede crear tokens validos.
+El `JwtService` es responsable de generar tokens JWT, generar refresh tokens y validar tokens existentes. Es como una máquina de firmar documentos: solo quien tiene la clave secreta puede crear tokens válidos.
 
 ```csharp
 using System.IdentityModel.Tokens.Jwt;
@@ -577,6 +577,11 @@ public class JwtService(IConfiguration configuration)
     private readonly string _audience = configuration["Jwt:Audience"] ?? "FunkoApiClients";
     private readonly int _accessTokenExpiryMinutes = configuration.GetValue<int>("Jwt:ExpirationMinutes", 15);
     private readonly int _refreshTokenExpiryDays = configuration.GetValue<int>("Jwt:RefreshTokenExpiryDays", 7);
+
+    /// <summary>
+    /// Segundos de validez del access token (para ExpiresIn de AuthResponse).
+    /// </summary>
+    public int AccessTokenExpirySeconds => _accessTokenExpiryMinutes * 60;
 
     /// <summary>
     /// Genera un JWT access token para el usuario dado.
@@ -657,7 +662,7 @@ public class JwtService(IConfiguration configuration)
 
 ### 16.4.3. AuthService
 
-El `AuthService` orquesta el proceso de login y registro. En el registro, hashea la contrasena con BCrypt antes de guardarla. En el login, verifica la contrasena contra el hash almacenado usando `BCrypt.Verify`. Tambien genera los tokens JWT y refresh tokens para la respuesta.
+El `AuthService` orquesta el proceso de login y registro. En el registro, hashea la contraseña con BCrypt antes de guardarla. En el login, verifica la contraseña contra el hash almacenado usando `BCrypt.Verify`. También genera los tokens JWT y refresh tokens para la respuesta.
 
 ```csharp
 using BCrypt.Net;
@@ -722,7 +727,7 @@ public class AuthService(
             jwtService.GenerateToken(user),
             jwtService.GenerateRefreshToken(),
             "Bearer",
-            15 * 60,
+            jwtService.AccessTokenExpirySeconds,
             user.Id,
             user.Username,
             user.Role);
@@ -754,7 +759,7 @@ public class AuthService(
             jwtService.GenerateToken(user),
             jwtService.GenerateRefreshToken(),
             "Bearer",
-            15 * 60,
+            jwtService.AccessTokenExpirySeconds,
             user.Id,
             user.Username,
             user.Role);
@@ -762,9 +767,11 @@ public class AuthService(
 }
 ```
 
-### 16.4.4. Configuracion en DI
+> 📝 **Nota:** Los campos se leen con `configuration.GetValue<int>(...)` en el *field initializer* del primary constructor. Funciona, pero en proyectos reales es preferible **`IOptions<JwtOptions>`**: opciones tipadas, validables y testeables sin depender de cadenas de configuración (`"Jwt:ExpirationMinutes"`) repartidas por el código.
 
-La clase `AuthenticationConfig` centraliza toda la configuracion de autenticacion y autorizacion usando el patron de extension methods. Esto mantiene el `Program.cs` limpio y permite reutilizar la configuracion en tests.
+### 16.4.4. Configuración en DI
+
+La clase `AuthenticationConfig` centraliza toda la configuración de autenticación y autorización usando el patrón de extension methods. Esto mantiene el `Program.cs` limpio y permite reutilizar la configuración en tests.
 
 ```csharp
 using System.Text;
@@ -795,6 +802,11 @@ public static class AuthenticationConfig
         })
         .AddJwtBearer(options =>
         {
+            // Sin mapeo inbound: los claims conservan sus tipos originales
+            // ("sub", "email", "role"), necesarios para User.FindFirst("sub")
+            // y para que RequireRole lea RoleClaimType = "role".
+            options.MapInboundClaims = false;
+
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -805,7 +817,9 @@ public static class AuthenticationConfig
                 IssuerSigningKey = new SymmetricSecurityKey(
                     Encoding.UTF8.GetBytes(secretKey)),
                 ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
+                ClockSkew = TimeSpan.Zero,
+                // El claim "role" del JWT se usa como rol para RequireRole/IsInRole
+                RoleClaimType = "role"
             };
 
             options.Events = new JwtBearerEvents
@@ -831,7 +845,7 @@ public static class AuthenticationConfig
 
         services.AddAuthorizationBuilder()
             .AddPolicy("AdminOnly", policy =>
-                policy.RequireRole(UserRoles.ADMIN))
+                policy.RequireRole(UserRoles.ADMIN))  // lee RoleClaimType = "role"
             .AddPolicy("UserOrAdmin", policy =>
                 policy.RequireRole(UserRoles.USER, UserRoles.ADMIN));
 
@@ -843,11 +857,13 @@ public static class AuthenticationConfig
 }
 ```
 
-> 💡 **Consejo:** El patron de extension methods para configurar servicios es muy comun en proyectos ASP.NET Core. Cada concern de DI tiene su propia clase: `RepositoriesConfig`, `ServicesConfig`, `AuthenticationConfig`. Esto mantiene el `Program.cs` limpio y facilita los tests.
+> 📝 **Nota:** `MapInboundClaims = false` evita que ASP.NET convierta `"sub"` en `ClaimTypes.NameIdentifier`, `"email"` en `ClaimTypes.Email`, etc. Así, en el controller puedes usar `User.FindFirst("sub")`, `FindFirst("email")` y `FindFirst("role")` tal como se emitieron en el token. `RoleClaimType = "role"` indica a `RequireRole(...)` e `IsInRole(...)` que el rol vive en el claim `"role"` (si no, `RequireRole` no encontraría el rol y denegaría siempre).
+
+> 💡 **Consejo:** El patrón de extension methods para configurar servicios es muy común en proyectos ASP.NET Core. Cada concern de DI tiene su propia clase: `RepositoriesConfig`, `ServicesConfig`, `AuthenticationConfig`. Esto mantiene el `Program.cs` limpio y facilita los tests.
 
 ### 16.4.5. AuthController
 
-El controller de autenticacion expone los endpoints de login, signup y perfil de usuario. Usa el atributo `[Authorize]` para proteger el endpoint `me` y los atributos `[ProducesResponseType]` para documentar las respuestas posibles en Swagger.
+El controller de autenticación expone los endpoints de login, signup y perfil de usuario. Usa el atributo `[Authorize]` para proteger el endpoint `me` y los atributos `[ProducesResponseType]` para documentar las respuestas posibles en Swagger.
 
 ```csharp
 using Microsoft.AspNetCore.Authorization;
@@ -919,6 +935,8 @@ public class AuthController(AuthService authService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public IActionResult GetCurrentUser()
     {
+        // Con MapInboundClaims = false (AuthenticationConfig), los claims
+        // "sub"/"username"/"email"/"role" están disponibles tal cual se emitieron
         return Ok(new
         {
             Id = User.FindFirst("sub")?.Value,
@@ -932,7 +950,7 @@ public class AuthController(AuthService authService) : ControllerBase
 
 ### 16.4.6. Program.cs
 
-El `Program.cs` registra la autenticacion JWT y configura los middleware en el orden correcto. El orden de `UseAuthentication()` y `UseAuthorization()` es critico: si los inviertes, la autorizacion no funcionara porque no habra identidad que verificar.
+El `Program.cs` registra la autenticación JWT y configura los middleware en el orden correcto. El orden de `UseAuthentication()` y `UseAuthorization()` es crítico: si los inviertes, la autorización no funcionará porque no habrá identidad que verificar.
 
 ```csharp
 using FunkoApi.Infrastructure;
@@ -960,7 +978,7 @@ app.MapControllers();
 app.Run();
 ```
 
-> ⚠️ **Advertencia:** El orden de `UseAuthentication()` y `UseAuthorization()` es **critico**. Si los inviertes, la autorizacion no funcionara porque no habra identidad que verificar. **Siempre** autenticacion primero, autorizacion segundo.
+> ⚠️ **Advertencia:** El orden de `UseAuthentication()` y `UseAuthorization()` es **crítico**. Si los inviertes, la autorización no funcionará porque no habrá identidad que verificar. **Siempre** autenticación primero, autorización segundo.
 
 El siguiente diagrama muestra el pipeline de middleware y el orden correcto. Cada request pasa por cada middleware en secuencia. Si `UseAuthentication` no valida el token, `UseAuthorization` no tiene identidad que verificar y deniega todo.
 
@@ -977,23 +995,23 @@ flowchart LR
     style A4 fill:#2196F3,color:#fff
 ```
 
-## 16.5. OAuth2 y Autenticacion con Proveedores Externos
+## 16.5. OAuth2 y Autenticación con Proveedores Externos
 
 ### 16.5.1. ¿Qué es OAuth2?
 
-**OAuth2** es un estandar de autorizacion que permite a una aplicacion acceder a recursos de un tercero en nombre del usuario, sin exponer sus credenciales. En vez de que el usuario te de su contrasena de Google, el usuario autoriza a tu app a acceder a ciertos datos de Google.
+**OAuth2** es un estándar de autorización que permite a una aplicación acceder a recursos de un tercero en nombre del usuario, sin exponer sus credenciales. En vez de que el usuario te dé su contraseña de Google, el usuario autoriza a tu app a acceder a ciertos datos de Google.
 
-📌 Ejemplo real: Cuando haces "Iniciar sesion con Google" en cualquier web, no introduces tu contrasena de Google en esa web. Google te redirige a su pagina, tú autorizas, y Google devuelve un token a la web con los permisos que has concedido. Eso es OAuth2.
+📌 Ejemplo real: Cuando haces "Iniciar sesión con Google" en cualquier web, no introduces tu contraseña de Google en esa web. Google te redirige a su página, tú autorizas, y Google devuelve un token a la web con los permisos que has concedido. Eso es OAuth2.
 
 Los tres actores principales son:
 
 - **Resource Owner**: El usuario (tú)
-- **Client**: Tu aplicacion (la que quiere acceder)
+- **Client**: Tu aplicación (la que quiere acceder)
 - **Authorization Server**: El proveedor (Google, GitHub, Microsoft)
 
-### 16.5.2. Configuracion con Google
+### 16.5.2. Configuración con Google
 
-Para configurar login con Google, necesitas crear un proyecto en Google Cloud Console, obtener el Client ID y Client Secret, y registrarlos en tu aplicacion.
+Para configurar login con Google, necesitas crear un proyecto en Google Cloud Console, obtener el Client ID y Client Secret, y registrarlos en tu aplicación.
 
 ```csharp
 // En Program.cs
@@ -1019,11 +1037,11 @@ En `appsettings.json` debes configurar las credenciales:
 }
 ```
 
-> 📝 **Nota:** El `CallbackPath` es la ruta donde Google redirigira despues de que el usuario autorice. ASP.NET Core maneja automaticamente el intercambio de codigo por token y la creacion del ClaimsPrincipal.
+> 📝 **Nota:** El `CallbackPath` es la ruta donde Google redirigirá después de que el usuario autorice. ASP.NET Core maneja automáticamente el intercambio de código por token y la creación del ClaimsPrincipal.
 
-### 16.5.3. Configuracion con GitHub
+### 16.5.3. Configuración con GitHub
 
-GitHub usa el mismo mecanismo de OAuth2. Primero creas una OAuth App en GitHub Settings, obtienes el Client ID y Client Secret, y lo registras en tu aplicacion.
+GitHub usa el mismo mecanismo de OAuth2. Primero creas una OAuth App en GitHub Settings, obtienes el Client ID y Client Secret, y lo registras en tu aplicación.
 
 ```csharp
 // En Program.cs
@@ -1038,11 +1056,11 @@ builder.Services.AddAuthentication()
     });
 ```
 
-> 💡 **Consejo:** Para configurar GitHub, ve a Settings > Developer settings > OAuth Apps > New OAuth App. El campo "Authorization callback URL" debe coincidir con la ruta de callback de tu aplicacion (normalmente `https://tu-dominio/signin-github`).
+> 💡 **Consejo:** Para configurar GitHub, ve a Settings > Developer settings > OAuth Apps > New OAuth App. El campo "Authorization callback URL" debe coincidir con la ruta de callback de tu aplicación (normalmente `https://tu-dominio/signin-github`).
 
 ### 16.5.4. Flow Completo OAuth2
 
-El flujo completo de OAuth2 sigue cuatro pasos: redirigir al proveedor, el usuario autoriza, el proveedor devuelve un codigo, y tu aplicacion intercambia ese codigo por un token de acceso.
+El flujo completo de OAuth2 sigue cuatro pasos: redirigir al proveedor, el usuario autoriza, el proveedor devuelve un código, y tu aplicación intercambia ese código por un token de acceso.
 
 ```mermaid
 flowchart TD
@@ -1067,13 +1085,13 @@ flowchart TD
     style I fill:#4CAF50,color:#fff
 ```
 
-📌 Ejemplo real: **Spotify** usa este flujo exacto. Cuando haces "Conectar con Spotify" en una app de terceros, Spotify te redirige a su pagina de autorizacion, tú eliges que datos compartir (nombre, playlists, etc.), y la app recibe un token con esos permisos.
+📌 Ejemplo real: **Spotify** usa este flujo exacto. Cuando haces "Conectar con Spotify" en una app de terceros, Spotify te redirige a su página de autorización, tú eliges qué datos compartir (nombre, playlists, etc.), y la app recibe un token con esos permisos.
 
 ## 16.6. Enfoque Identity
 
 ### 16.6.1. ¿Qué es ASP.NET Core Identity?
 
-**ASP.NET Core Identity** es un framework completo de gestion de usuarios que incluye todo lo necesario para autenticacion y autorizacion: tablas de base de datos, hash de contrasenas, gestion de roles, confirmacion de email, doble factor de autenticacion (2FA), bloqueo por intentos fallidos y login con proveedores externos.
+**ASP.NET Core Identity** es un framework completo de gestión de usuarios que incluye todo lo necesario para autenticación y autorización: tablas de base de datos, hash de contraseñas, gestión de roles, confirmación de email, doble factor de autenticación (2FA), bloqueo por intentos fallidos y login con proveedores externos.
 
 La diferencia principal con el enfoque manual es que Identity te da todo "hecho de serie" pero a cambio pierdes control sobre los detalles. Es como usar un ERP vs construir tu propio sistema: el ERP te ahorra tiempo pero te limita.
 
@@ -1101,7 +1119,7 @@ flowchart TD
     style I4 fill:#FF9800,color:#fff
 ```
 
-### 16.6.2. Instalacion y Configuracion
+### 16.6.2. Instalación y Configuración
 
 Para usar Identity, necesitas instalar los paquetes NuGet correspondientes y configurar el DbContext que herede de `IdentityDbContext`.
 
@@ -1110,7 +1128,9 @@ dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore
 dotnet add package Microsoft.EntityFrameworkCore.Sqlite
 ```
 
-El modelo de usuario personalizado hereda de `IdentityUser<long>` y anade campos propios de la aplicacion. El `DbContext` debe heredar de `IdentityDbContext` para que Identity pueda gestionar sus tablas automaticamente.
+> 📝 **Nota:** El ejemplo usa el proveedor **SQLite** para que el fragmento sea autocontenido y fácil de ejecutar. En el stack del ciclo (y en el proyecto Tienda de referencia) la base de datos es **PostgreSQL**: cambia el paquete por `Npgsql.EntityFrameworkCore.PostgreSQL` y sustituye `UseSqlite(...)` por `UseNpgsql(...)`. La configuración de Identity es idéntica; solo cambia el proveedor.
+
+El modelo de usuario personalizado hereda de `IdentityUser<long>` y añade campos propios de la aplicación. El `DbContext` debe heredar de `IdentityDbContext` para que Identity pueda gestionar sus tablas automáticamente.
 
 ```csharp
 using Microsoft.AspNetCore.Identity;
@@ -1167,7 +1187,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 }
 ```
 
-La configuracion de Identity en `Program.cs` establece las politicas de contrasena, bloqueo y unicidad de email. Estos parametros se aplican automaticamente a todas las operaciones de `UserManager`.
+La configuración de Identity en `Program.cs` establece las políticas de contraseña, bloqueo y unicidad de email. Estos parámetros se aplican automáticamente a todas las operaciones de `UserManager`.
 
 ```csharp
 using Microsoft.AspNetCore.Identity;
@@ -1191,13 +1211,13 @@ builder.Services.AddIdentity<User, Role>(options =>
 .AddDefaultTokenProviders();
 ```
 
-> 📝 **Nota:** Identity crea automaticamente 7 tablas en la base de datos: `AspNetUsers`, `AspNetRoles`, `AspNetUserClaims`, `AspNetUserRoles`, `AspNetUserLogins`, `AspNetUserTokens` y `AspNetRoleClaims`. Con `ToTable()` puedes cambiarles el nombre.
+> 📝 **Nota:** Identity crea automáticamente 7 tablas en la base de datos: `AspNetUsers`, `AspNetRoles`, `AspNetUserClaims`, `AspNetUserRoles`, `AspNetUserLogins`, `AspNetUserTokens` y `AspNetRoleClaims`. Con `ToTable()` puedes cambiarles el nombre.
 
 > ⚠️ **Advertencia: Un solo DbContext para Identity y datos de negocio**
 >
-> Error comun: usar **dos DbContexts separados** (uno para Identity, otro para productos, etc.) apuntando a la **misma base de datos**. Esto falla porque `EnsureCreatedAsync()` solo crea tablas cuando la BD no existe. Si un DbContext crea la BD primero, el otro encuentra la BD ya existente y **no crea sus tablas**.
+> Error común: usar **dos DbContexts separados** (uno para Identity, otro para productos, etc.) apuntando a la **misma base de datos**. Esto falla porque `EnsureCreatedAsync()` solo crea tablas cuando la BD no existe. Si un DbContext crea la BD primero, el otro encuentra la BD ya existente y **no crea sus tablas**.
 >
-> **Solucion:** Usar un **unico DbContext** que herede de `IdentityDbContext` e incluya todas las entidades de la aplicacion:
+> **Solución:** Usar un **único DbContext** que herede de `IdentityDbContext` e incluya todas las entidades de la aplicación:
 >
 > ```csharp
 > // ❌ MALO: Dos contexts para la misma BD
@@ -1212,16 +1232,19 @@ builder.Services.AddIdentity<User, Role>(options =>
 > }
 > ```
 >
-> Si necesitas **dos bases de datos separadas** (una para Identity, otra para negocio), ahi si tiene sentido usar dos DbContexts con **connection strings diferentes**.
+> Si necesitas **dos bases de datos separadas** (una para Identity, otra para negocio), ahí sí tiene sentido usar dos DbContexts con **connection strings diferentes**.
 
 ### 16.6.3. UserManager y SignInManager
 
-`UserManager<T>` y `SignInManager<T>` son los servicios centrales de Identity. `UserManager` gestiona CRUD de usuarios (crear, buscar, actualizar, eliminar, gestionar roles). `SignInManager` gestiona las operaciones de login (verificar contrasena, bloqueo, login externo).
+`UserManager<T>` y `SignInManager<T>` son los servicios centrales de Identity. `UserManager` gestiona CRUD de usuarios (crear, buscar, actualizar, eliminar, gestionar roles). `SignInManager` gestiona las operaciones de login (verificar contraseña, bloqueo, login externo).
 
 ```csharp
+using System.Security.Claims;
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace FunkoApi.Controllers;
 
@@ -1232,7 +1255,8 @@ namespace FunkoApi.Controllers;
 [Route("api/auth")]
 public class AuthIdentityController(
     UserManager<User> userManager,
-    SignInManager<User> signInManager) : ControllerBase
+    SignInManager<User> signInManager,
+    IConfiguration configuration) : ControllerBase
 {
     /// <summary>
     /// Registra un usuario nuevo con Identity.
@@ -1297,12 +1321,27 @@ public class AuthIdentityController(
             });
         }
 
-        // Generar JWT (usando JwtSecurityTokenHandler directamente)
+        // Generar JWT (esqueleto mínimo con JwtSecurityTokenHandler;
+        // la versión completa con claims, JTI e IOptions está en 16.4.2)
         var roles = await userManager.GetRolesAsync(user);
         var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
-        // ... generacion del token ...
+        var key = Encoding.UTF8.GetBytes(configuration["Jwt:Secret"]
+            ?? throw new InvalidOperationException("JWT Secret no configurado"));
 
-        return Ok(new { Token = "jwt-token-aqui", UserId = user.Id });
+        var token = tokenHandler.CreateToken(new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+                new Claim(ClaimTypes.Role, roles.FirstOrDefault() ?? UserRoles.USER)
+            }),
+            Expires = DateTime.UtcNow.AddMinutes(15),
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
+        });
+
+        return Ok(new { Token = tokenHandler.WriteToken(token), UserId = user.Id });
     }
 
     /// <summary>
@@ -1332,13 +1371,13 @@ public class AuthIdentityController(
 }
 ```
 
-> 💡 **Consejo:** `CheckPasswordSignInAsync` con `lockoutOnFailure: true` bloquea automaticamente al usuario despues de 5 intentos fallidos durante 15 minutos. Esto protege contra ataques de fuerza bruta sin que tu tengas que implementar nada.
+> 💡 **Consejo:** `CheckPasswordSignInAsync` con `lockoutOnFailure: true` bloquea automáticamente al usuario después de 5 intentos fallidos durante 15 minutos. Esto protege contra ataques de fuerza bruta sin que tú tengas que implementar nada.
 
 ### 16.6.4. Identity con JWT
 
-Identity genera contrasenas hasheadas con PBKDF2 por defecto (no BCrypt). Para generar JWT desde Identity, puedes usar `UserManager` para obtener el usuario y los roles, y luego generar el token con `JwtSecurityTokenHandler` o integrarlo con el `JwtService` del enfoque manual.
+Identity genera contraseñas hasheadas con PBKDF2 por defecto (no BCrypt). Para generar JWT desde Identity, puedes usar `UserManager` para obtener el usuario y los roles, y luego generar el token con `JwtSecurityTokenHandler` o integrarlo con el `JwtService` del enfoque manual.
 
-La ventaja de combinar Identity con JWT es que obtienes la gestion de usuarios de Identity (2FA, lockout, external logins) con la escalabilidad de JWT para APIs REST.
+La ventaja de combinar Identity con JWT es que obtienes la gestión de usuarios de Identity (2FA, lockout, external logins) con la escalabilidad de JWT para APIs REST.
 
 #### Flujo positivo: Login con Identity
 
@@ -1385,9 +1424,9 @@ sequenceDiagram
 
 ### 16.6.5. Identity con OAuth2 (Login Externo)
 
-Identity integra de forma nativa el login con proveedores externos como Google, GitHub o Microsoft. Esto significa que puedes ofrecer a tus usuarios la opcion de iniciar sesion con su cuenta de Google sin tener que gestionar contrasenas. Identity se encarga automaticamente de crear el usuario la primera vez y de asociar el proveedor externo.
+Identity integra de forma nativa el login con proveedores externos como Google, GitHub o Microsoft. Esto significa que puedes ofrecer a tus usuarios la opción de iniciar sesión con su cuenta de Google sin tener que gestionar contraseñas. Identity se encarga automáticamente de crear el usuario la primera vez y de asociar el proveedor externo.
 
-Para configurar Google con Identity, necesitas registrar tu app en la consola de Google Cloud y obtener el ClientId y ClientSecret. Luego, en Program.cs, registras el esquema de autenticacion con `.AddGoogle()` y configuras el Identity para que acepte login externo.
+Para configurar Google con Identity, necesitas registrar tu app en la consola de Google Cloud y obtener el ClientId y ClientSecret. Luego, en Program.cs, registras el esquema de autenticación con `.AddGoogle()` y configuras el Identity para que acepte login externo.
 
 ```csharp
 // Program.cs - Identity + Google
@@ -1410,7 +1449,7 @@ builder.Services.AddAuthorizationBuilder()
         .Build());
 ```
 
-En el `AuthController`, el endpoint de login externo redirige al usuario a Google. Cuando el usuario autoriza, Google redirige de vuelta a tu app con un codigo. Identity intercambia ese codigo por un token y crea o busca el usuario automaticamente.
+En el `AuthController`, el endpoint de login externo redirige al usuario a Google. Cuando el usuario autoriza, Google redirige de vuelta a tu app con un código. Identity intercambia ese código por un token y crea o busca el usuario automáticamente.
 
 ```csharp
 [HttpGet("external-login")]
@@ -1455,9 +1494,9 @@ public async Task<IActionResult> ExternalLoginCallback(
 }
 ```
 
-> 📝 **Nota:** Cuando un usuario se registra con Google por primera vez, Identity crea el usuario en tu BD y asocia el proveedor externo. En el segundo login, simplemente lo reconoce. El usuario nunca necesita crear una contrasena local.
+> 📝 **Nota:** Cuando un usuario se registra con Google por primera vez, Identity crea el usuario en tu BD y asocia el proveedor externo. En el segundo login, simplemente lo reconoce. El usuario nunca necesita crear una contraseña local.
 
-## 16.7. Comparacion de Enfoques
+## 16.7. Comparación de Enfoques
 
 ```mermaid
 flowchart TD
@@ -1469,7 +1508,7 @@ flowchart TD
     E -->|Si Razor o Blazor| C
     E -->|No solo API REST| F[Manual con BCrypt]
     C --> G[ASP.NET Core Identity]
-    F --> H[JwService con AuthService]
+    F --> H[JwtService con AuthService]
     G --> I[7 tablas y features completas]
     H --> J[1 tabla y control total]
 
@@ -1484,42 +1523,42 @@ flowchart TD
 | Aspecto | Manual (JWT + BCrypt) | Identity |
 |---------|----------------------|----------|
 | **Tablas BD** | 1 tabla (users) | 7+ tablas (AspNetUsers, AspNetRoles, etc.) |
-| **Hash de contrasenas** | BCrypt (mas lento = mas seguro) | PBKDF2 (estandar .NET) |
-| **External Logins** | Requiere implementacion manual | Integrado (Google, Facebook, etc.) |
-| **2FA** | Requiere implementacion manual | Integrado |
-| **Confirmacion email** | Requiere implementacion manual | Integrado |
-| **Lockout por intentos** | Requiere implementacion manual | Integrado |
+| **Hash de contraseñas** | BCrypt (más lento = más seguro) | PBKDF2 (estándar .NET) |
+| **External Logins** | Requiere implementación manual | Integrado (Google, Facebook, etc.) |
+| **2FA** | Requiere implementación manual | Integrado |
+| **Confirmación email** | Requiere implementación manual | Integrado |
+| **Lockout por intentos** | Requiere implementación manual | Integrado |
 | **Flexibilidad** | Total control | Limitado por el framework |
-| **Codigo** | ~200 lineas | ~50 lineas (scaffolding) |
+| **Código** | ~200 líneas | ~50 líneas (scaffolding) |
 | **Curva aprendizaje** | Baja | Media-Alta |
-| **Mantenimiento** | Lo mantienes tu | Microsoft mantiene |
+| **Mantenimiento** | Lo mantienes tú | Microsoft mantiene |
 
-| Escenario | Recomendacion | Razon |
+| Escenario | Recomendación | Razón |
 |-----------|---------------|-------|
 | **API REST simple** | Manual | Ligero, control total, 1 tabla |
 | **SPA + API Backend** | Manual | JWT es natural para SPAs |
 | **Razor Pages** | Identity | Cookies + UI login integrada |
-| **Blazor Server** | Identity | Integracion completa con .NET |
+| **Blazor Server** | Identity | Integración completa con .NET |
 | **Google/Facebook Login** | Identity | External logins incluidos |
-| **2FA obligatorio** | Identity | Integrado sin codigo extra |
-| **Microservicios** | Manual | Minima sobrecarga por servicio |
-| **Auditoria de seguridad** | Identity | Logs y lockout integrados |
+| **2FA obligatorio** | Identity | Integrado sin código extra |
+| **Microservicios** | Manual | Mínima sobrecarga por servicio |
+| **Auditoría de seguridad** | Identity | Logs y lockout integrados |
 
-> 📝 **Nota:** Ambos enfoques usan el **mismo middleware** de autenticacion/autorizacion de ASP.NET Core. Los atributos `[Authorize]`, `[Authorize(Roles="Admin")]` y la inyeccion de `HttpContext.User` funcionan exactamente igual. Solo cambia como se gestiona el usuario y se genera el token.
+> 📝 **Nota:** Ambos enfoques usan el **mismo middleware** de autenticación/autorización de ASP.NET Core. Los atributos `[Authorize]`, `[Authorize(Roles="Admin")]` y la inyección de `HttpContext.User` funcionan exactamente igual. Solo cambia cómo se gestiona el usuario y se genera el token.
 
-## 16.8. Buenas Practicas
+## 16.8. Buenas Prácticas
 
-| Practica | Descripcion |
+| Práctica | Descripción |
 |----------|-------------|
-| **HTTPS siempre** | Nunca enviar tokens por HTTP en produccion |
+| **HTTPS siempre** | Nunca enviar tokens por HTTP en producción |
 | **Secret >= 32 caracteres** | La clave JWT debe ser larga y aleatoria |
 | **Expiration corto (15-30 min)** | Access tokens con vida breve para minimizar riesgo |
-| **ClockSkew = 0** | Expiracion exacta sin tolerancia de 5 minutos |
-| **BCrypt workFactor: 11** | Punto optimo: ~100ms por hash |
+| **ClockSkew = 0** | Expiración exacta sin tolerancia de 5 minutos |
+| **BCrypt workFactor: 11** | Punto óptimo: ~100ms por hash |
 | **No localStorage para JWT** | Usar httpOnly cookies o memoria del navegador |
 | **Rate limiting en login** | Limitar intentos para evitar fuerza bruta |
 | **Refresh tokens** | Renovar access tokens sin re-login |
-| **No logear passwords** | Nunca incluir contrasenas en logs |
+| **No logear passwords** | Nunca incluir contraseñas en logs |
 | **Seed de usuarios** | Crear usuario admin y de prueba en desarrollo |
 
 ```csharp
@@ -1546,9 +1585,9 @@ localStorage.setItem("token", jwtToken);  // ¡Cualquier script puede leerlo!
 // Opción 2: Variable en memoria del SPA (se pierde al cerrar la pestaña, pero es seguro)
 ```
 
-> ⚠️ **Advertencia:** **Nunca** almacenes JWT en `localStorage` del navegador. Si un atacante logra inyectar JavaScript (XSS), puede robar el token. Usa **httpOnly cookies** o almacen en memoria del SPA. El `localStorage` es accesible desde cualquier script en la pagina.
+> ⚠️ **Advertencia:** **Nunca** almacenes JWT en `localStorage` del navegador. Si un atacante logra inyectar JavaScript (XSS), puede robar el token. Usa **httpOnly cookies** o almacén en memoria del SPA. El `localStorage` es accesible desde cualquier script en la página.
 
-> 💡 **Consejo:** Para el seed de usuarios en desarrollo, crea un servicio `SeedService` que se ejecute al iniciar la aplicacion:
+> 💡 **Consejo:** Para el seed de usuarios en desarrollo, crea un servicio `SeedService` que se ejecute al iniciar la aplicación:
 
 ```csharp
 public static class SeedService
@@ -1584,44 +1623,46 @@ public static class SeedService
 
 ## 16.9. Reto
 
-> Implementa autenticacion completa en FunkoApp con ambos enfoques.
+> Implementa autenticación completa en FunkoApp con ambos enfoques.
 
-**Anade a tu API:**
+**Añade a tu API:**
 
 1. Modelo `User` con `PasswordHash` (BCrypt) — tabla `users` en tu BD
 2. **Enfoque Manual:** `JwtService` + `AuthService` + `AuthController` con endpoints `POST /auth/login`, `POST /auth/signup`, `GET /auth/me`
-3. **Enfoque Identity:** `IdentityDbContext` + `UserManager<User>` + `SignInManager<User>` + configuracion de roles
+3. **Enfoque Identity:** `IdentityDbContext` + `UserManager<User>` + `SignInManager<User>` + configuración de roles
 4. Endpoints: `POST /auth/login`, `POST /auth/signup`, `GET /auth/me`
-5. Configuracion JWT en `appsettings.json` (`Jwt:Secret`, `Jwt:Issuer`, `Jwt:Audience`, `Jwt:ExpirationMinutes`)
+5. Configuración JWT en `appsettings.json` (`Jwt:Secret`, `Jwt:Issuer`, `Jwt:Audience`, `Jwt:ExpirationMinutes`)
 6. Seed de usuarios: admin (`admin@funko.com` / `admin123`) y user (`user@funko.com` / `user123`)
 7. Tests: login exitoso, login con credenciales incorrectas, token expirado, acceso sin token
 
 **Puntos extra:**
 
 - Refresh tokens: endpoint `POST /auth/refresh` que renueva el access token
-- Rate limiting en login (maximo 5 intentos por minuto por IP)
-- Validacion de fortaleza de contrasena (minimo 8 caracteres, mayuscula, minuscula, numero)
+- Rate limiting en login (máximo 5 intentos por minuto por IP)
+- Validación de fortaleza de contraseña (mínimo 8 caracteres, mayúscula, minúscula, número)
+
+---
 
 **Resumen del punto:**
 
-| Concepto | Descripcion |
+| Concepto | Descripción |
 |----------|-------------|
-| **Autenticacion** | Verificar la identidad del usuario (quien eres) |
-| **Stateless** | Cada request contiene toda la informacion de autenticacion |
-| **JWT** | Token autocontenido con claims firmados criptograficamente |
+| **Autenticación** | Verificar la identidad del usuario (quién eres) |
+| **Stateless** | Cada request contiene toda la información de autenticación |
+| **JWT** | Token autocontenido con claims firmados criptográficamente |
 | **Header** | Algoritmo de firma (HS256) y tipo (JWT) |
 | **Payload** | Claims: sub, exp, iat, role, custom claims |
 | **Signature** | Firma HMAC-SHA256 con clave secreta |
-| **BCrypt** | Hash lento y seguro para contrasenas |
-| **Work Factor** | Nivel de dificultad BCrypt (11 recomendado para produccion) |
+| **BCrypt** | Hash lento y seguro para contraseñas |
+| **Work Factor** | Nivel de dificultad BCrypt (11 recomendado para producción) |
 | **Enfoque Manual** | JwtService + AuthService, 1 tabla, control total |
 | **Enfoque Identity** | ASP.NET Core Identity, 7+ tablas, features completas |
 | **Access Token** | Token corto (15-30 min) para acceso a APIs |
 | **Refresh Token** | Token largo para renovar access tokens |
-| **TokenValidationParameters** | Configuracion de validacion en JwtBearer |
-| **ClockSkew** | Tolerancia de tiempo en validacion (0 = expiracion exacta) |
-| **OAuth2** | Estandar para login con proveedores externos (Google, GitHub) |
+| **TokenValidationParameters** | Configuración de validación en JwtBearer |
+| **ClockSkew** | Tolerancia de tiempo en validación (0 = expiración exacta) |
+| **OAuth2** | Estándar para login con proveedores externos (Google, GitHub) |
 
 **¿Qué viene después?**
 
-En el siguiente punto veremos **Autorizacion**: una vez que sabemos QUIEN es el usuario (autenticacion), veremos QUE puede hacer. Roles, Claims, Politicas de autorizacion y como proteger endpoints con `[Authorize]`.
+En el siguiente punto veremos **Autorización**: una vez que sabemos QUIÉN es el usuario (autenticación), veremos QUÉ puede hacer. Roles, Claims, Políticas de autorización y cómo proteger endpoints con `[Authorize]`.

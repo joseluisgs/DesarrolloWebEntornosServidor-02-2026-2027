@@ -11,14 +11,29 @@
     - [4.3.2. Rutas con parámetros](#432-rutas-con-parámetros)
     - [4.3.3. Parámetros de consulta](#433-parámetros-de-consulta)
     - [4.3.4. Binding de parámetros: FromBody, FromQuery, FromRoute](#434-binding-de-parámetros-frombody-fromquery-fromroute)
+      - [4.3.4.1. \[FromBody\] — El body de la petición](#4341-frombody--el-body-de-la-petición)
+      - [4.3.4.2. \[FromQuery\] — Los query parameters](#4342-fromquery--los-query-parameters)
+      - [4.3.4.3. \[FromRoute\] — Los parámetros de URL](#4343-fromroute--los-parámetros-de-url)
+      - [4.3.4.4. \[FromForm\] — Formularios HTML](#4344-fromform--formularios-html)
   - [4.4. Métodos de respuesta](#44-métodos-de-respuesta)
     - [4.4.1. IActionResult](#441-iactionresult)
     - [4.4.2. ActionResult\<T\>](#442-actionresultt)
     - [4.4.3. ¿Cuándo usar cada método?](#443-cuándo-usar-cada-método)
     - [4.4.4. CreatedAtAction() y el header Location](#444-createdataction-y-el-header-location)
+      - [4.4.4.1. ¿Qué es un header?](#4441-qué-es-un-header)
+      - [4.4.4.2. ¿Por qué se usa nameof(GetById)?](#4442-por-qué-se-usa-nameofgetbyid)
     - [4.4.5. Buenas prácticas](#445-buenas-prácticas)
   - [4.5. Probando con Bruno](#45-probando-con-bruno)
-  - [4.7. Reto: API de Funkos con CRUD en memoria (MVC)](#47-reto-api-de-funkos-con-crud-en-memoria-mvc)
+    - [4.5.1. Pruebas GET](#451-pruebas-get)
+    - [4.5.2. Pruebas POST](#452-pruebas-post)
+    - [4.5.3. Pruebas PUT](#453-pruebas-put)
+    - [4.5.4. Pruebas DELETE](#454-pruebas-delete)
+    - [4.5.5. Pruebas de error](#455-pruebas-de-error)
+  - [4.6. Reto: API de Funkos con CRUD en memoria (MVC)](#46-reto-api-de-funkos-con-crud-en-memoria-mvc)
+    - [4.6.1. Contexto](#461-contexto)
+    - [4.6.2. Modelo de datos](#462-modelo-de-datos)
+    - [4.6.3. Almacenamiento](#463-almacenamiento)
+    - [4.6.4. Retos](#464-retos)
 
 
 
@@ -129,17 +144,18 @@ public class ProductosController : ControllerBase { }
 
 | Nombre del controlador | Ruta resultante |
 |------------------------|-----------------|
-| `ProductosController` | `/api/productos` |
-| `PedidosController` | `/api/pedidos` |
-| `UsuariosController` | `/api/usuarios` |
+| `ProductosController` | `/api/Productos` |
+| `PedidosController` | `/api/Pedidos` |
+| `UsuariosController` | `/api/Usuarios` |
+
+> 📝 **Nota:** El routing de ASP.NET Core **no distingue mayúsculas**: `/api/Productos` y `/api/productos` son la misma ruta. Para mantener consistencia, en las URLs de ejemplo del curso usamos minúsculas.
 
 ### 4.2.3. Inyección de dependencias
 
-Los controladores reciben servicios a través del **constructor**:
+Los controladores reciben servicios a través del **constructor**. En C# 14 se usa el **primary constructor**:
 
 ```csharp
-[ApiController]
-[Route("api/[controller]")]
+// ❌ MALO (obsoleto en C# 14): constructor tradicional de DI
 public class ProductosController : ControllerBase
 {
     private readonly IProductoService _service;
@@ -153,6 +169,18 @@ public class ProductosController : ControllerBase
     public ActionResult<List<Producto>> GetAll()
     {
         return Ok(_service.GetAll());
+    }
+}
+
+// ✅ BUENO: primary constructor — el parámetro se usa directamente como campo
+[ApiController]
+[Route("api/[controller]")]
+public class ProductosController(IProductoService service) : ControllerBase
+{
+    [HttpGet]
+    public ActionResult<List<Producto>> GetAll()
+    {
+        return Ok(service.GetAll());
     }
 }
 ```
@@ -197,8 +225,8 @@ public ActionResult<Producto> GetById(int id)
 
 | Sintaxis | Significado |
 |----------|-------------|
-| `{id}` | Parámetro entero |
-| `{id:int}` | Restricción de tipo |
+| `{id}` | Parámetro de ruta **sin restricción** de tipo |
+| `{id:int}` | Parámetro con **restricción de tipo** (solo enteros) |
 | `{nombre?}` | Parámetro opcional |
 
 > ⚠️ **Advertencia:** Las restricciones de tipo (`:int`, `:guid`, `:string`) son opcionales pero recomendadas. Evitan rutas ambiguas.
@@ -244,7 +272,7 @@ flowchart LR
 | **[FromRoute]** | Parámetros de la URL | `/api/productos/{id}` |
 | **[FromForm]** | Formulario HTML | `multipart/form-data` |
 
-#### [FromBody] — El body de la petición
+#### 4.3.4.1. [FromBody] — El body de la petición
 
 `[FromBody]` le dice a ASP.NET Core que **deserialice el JSON del body** en un objeto C#. Es lo que usas cuando el cliente envía datos para crear o actualizar:
 
@@ -254,7 +282,8 @@ public ActionResult<Producto> Create([FromBody] ProductoDto dto)
 {
     // dto viene del JSON: {"nombre": "Laptop", "precio": 999}
     var producto = new Producto { Nombre = dto.Nombre, Precio = dto.Precio };
-    return CreatedAtAction(nameof(GetById), new { id = 1 }, producto);
+    // ... guardar y asignar el id autogenerado ...
+    return CreatedAtAction(nameof(GetById), new { id = producto.Id }, producto);
 }
 ```
 
@@ -262,7 +291,7 @@ public ActionResult<Producto> Create([FromBody] ProductoDto dto)
 
 > 💡 **Consejo:** Con `[ApiController]`, si el content-type es `application/json`, ASP.NET Core aplica `[FromBody]` **automáticamente**. No necesitas escribirlo siempre, pero es buena práctica hacerlo explícito para claridad.
 
-#### [FromQuery] — Los query parameters
+#### 4.3.4.2. [FromQuery] — Los query parameters
 
 ```csharp
 [HttpGet]
@@ -274,7 +303,7 @@ public ActionResult<List<Producto>> GetAll(
 }
 ```
 
-#### [FromRoute] — Los parámetros de URL
+#### 4.3.4.3. [FromRoute] — Los parámetros de URL
 
 ```csharp
 [HttpGet("{id:int}")]
@@ -286,7 +315,7 @@ public ActionResult<Producto> GetById([FromRoute] int id)
 
 > ⚠️ **Advertencia:** Si el nombre del parámetro coincide con el de la ruta, `[FromRoute]` se aplica automáticamente. Solo necesitas escribirlo explícitamente si hay ambigüedad.
 
-#### [FromForm] — Formularios HTML
+#### 4.3.4.4. [FromForm] — Formularios HTML
 
 ```csharp
 [HttpPost("upload")]
@@ -300,14 +329,15 @@ public IActionResult Upload([FromForm] IFormFile archivo, [FromQuery] string? ca
 
 ### 4.4.1. IActionResult
 
-`IActionResult` es la interfaz para respuestas **sin tipo**. Úsala cuando solo devuelves un código de estado:
+`IActionResult` es la interfaz para respuestas **sin tipo de respuesta asociada**: puedes devolver `Ok(objeto)`, `NotFound()`, `NoContent()`... sin que la firma indique el tipo del cuerpo. Cuando necesites tipado y que OpenAPI documente la respuesta, usa `ActionResult<T>` (ver 4.4.2):
 
 ```csharp
 [HttpPost]
 public IActionResult Create(ProductoDto dto)
 {
-    var producto = new Producto { Id = 1, Nombre = dto.Nombre };
-    return CreatedAtAction(nameof(GetById), new { id = 1 }, producto);
+    var producto = new Producto { Nombre = dto.Nombre };
+    // ... guardar y asignar el id autogenerado ...
+    return CreatedAtAction(nameof(GetById), new { id = producto.Id }, producto);
 }
 
 [HttpDelete("{id}")]
@@ -388,7 +418,7 @@ Content-Type: application/json
 { "id": 1, "nombre": "Guitarra", ... }
 ```
 
-#### ¿Qué es un header?
+#### 4.4.4.1. ¿Qué es un header?
 
 Los **headers** son pares de clave-valor que acompañan a la respuesta HTTP. Aportan información sobre la respuesta:
 
@@ -401,11 +431,11 @@ Los **headers** son pares de clave-valor que acompañan a la respuesta HTTP. Apo
 
 > 💡 **Consejo:** El header `Location` es fundamental. Sin él, el cliente no sabe dónde está el recurso que acaba de crear. Siempre inclúyelo en respuestas 201.
 
-#### ¿Por qué se usa nameof(GetById)?
+#### 4.4.4.2. ¿Por qué se usa nameof(GetById)?
 
 `nameof(GetById)` convierte el nombre del método en un string: `"GetById"`. Esto evita strings hardcodeados. Si renombras el método, el compilador detecta el error.
 
-> ⚠️ **Advertencia:** Si usas `Created($"api/productos/{id}", ...)` en lugar de `CreatedAtAction`, pierdes la generación automática de URLs. `CreatedAtAction` es la forma correcta en controladores.
+> ⚠️ **Advertencia:** `CreatedAtAction` es **preferible cuando existe un GET identificable** al que apuntar: genera la URL automáticamente con `nameof`. `Created("api/productos/{id}", ...)` (o `Created(uri, value)`) sigue siendo válido, por ejemplo para rutas externas o cuando no hay endpoint GET correspondiente.
 
 ### 4.4.5. Buenas prácticas
 
@@ -421,7 +451,7 @@ Los **headers** son pares de clave-valor que acompañan a la respuesta HTTP. Apo
 
 > 💡 **Consejo:** Si las pruebas de Bruno funcionan igual, tu API está bien diseñada. El cliente no nota la diferencia entre Minimal APIs y Controladores.
 
-### Pruebas GET
+### 4.5.1. Pruebas GET
 
 **Listar todos los productos:**
 
@@ -437,7 +467,7 @@ GET {{baseUrl}}/api/productos/1
 Accept: application/json
 ```
 
-### Pruebas POST
+### 4.5.2. Pruebas POST
 
 **Crear un producto:**
 
@@ -454,7 +484,7 @@ Content-Type: application/json
 
 Respuesta esperada: `201 Created` con el producto creado y header `Location`.
 
-### Pruebas PUT
+### 4.5.3. Pruebas PUT
 
 **Actualizar un producto:**
 
@@ -469,7 +499,7 @@ Content-Type: application/json
 }
 ```
 
-### Pruebas DELETE
+### 4.5.4. Pruebas DELETE
 
 **Eliminar un producto:**
 
@@ -479,7 +509,7 @@ DELETE {{baseUrl}}/api/productos/1
 
 Respuesta esperada: `204 No Content`.
 
-### Pruebas de error
+### 4.5.5. Pruebas de error
 
 **Producto no encontrado:**
 
@@ -500,19 +530,19 @@ Content-Type: application/json
 }
 ```
 
-Respuesta esperada: `400 Bad Request`.
+Respuesta esperada: `400 Bad Request` **solo si el DTO tiene validación** (por ejemplo, `[Required]` en `ProductoDto` — ver [Punto 8: DTOs, Mapeadores y Validaciones](08-dtos-mapeadores-validaciones.md)). Con `[ApiController]`, el fallo de validación automática devuelve 400. **Sin validación en el DTO, el endpoint devuelve `201 Created`** aunque el nombre venga vacío.
 
 > ⚠️ **Advertencia:** Si usas HTTPS, Bruno puede pedirte que aceptes el certificado autofirmado. Aceptalo en el primer request.
 
-## 4.7. Reto: API de Funkos con CRUD en memoria (MVC)
+## 4.6. Reto: API de Funkos con CRUD en memoria (MVC)
 
 > Ahora repite el reto del punto anterior pero usando controladores MVC.
 
-### Contexto
+### 4.6.1. Contexto
 
 Vas a crear una API REST con **controladores** que permita crear, leer, actualizar y eliminar Funkos. Los datos se guardarán en una **Lista\<Funko\>** en memoria.
 
-### Modelo de datos
+### 4.6.2. Modelo de datos
 
 | Propiedad | Tipo | Obligatorio |
 |-----------|------|:-----------:|
@@ -523,7 +553,7 @@ Vas a crear una API REST con **controladores** que permita crear, leer, actualiz
 | `imagen` | string | No |
 | `creadoEn` | DateTime | Sí (autogenerado) |
 
-### Almacenamiento
+### 4.6.3. Almacenamiento
 
 Los Funkos se guardan en una lista en memoria dentro del controlador:
 
@@ -532,7 +562,7 @@ private static List<Funko> _funkos = new();
 private static long _nextId = 1;
 ```
 
-### Retos
+### 4.6.4. Retos
 
 **Reto 1: Diseña el controlador**
 

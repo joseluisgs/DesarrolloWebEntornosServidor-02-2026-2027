@@ -11,7 +11,7 @@
     - [7.2.3. Ejemplo: servicio con excepciones (mal)](#723-ejemplo-servicio-con-excepciones-mal)
   - [7.3. Excepciones en ASP.NET Core](#73-excepciones-en-aspnet-core)
     - [7.3.1. Middleware UseExceptionHandler](#731-middleware-useexceptionhandler)
-    - [7.3.2. ProblemDetails (RFC 7807)](#732-problemdetails-rfc-7807)
+    - [7.3.2. ProblemDetails (RFC 9457)](#732-problemdetails-rfc-9457)
     - [7.3.3. Flujo completo](#733-flujo-completo)
   - [7.4. El Patrón Result](#74-el-patrón-result)
     - [7.4.1. Railway Oriented Programming](#741-railway-oriented-programming)
@@ -61,7 +61,7 @@ En este punto aprenderás a manejar errores de negocio de forma explícita, sin 
 
 El **dominio** es el problema que resuelve tu aplicación. Si haces una API de productos, tu dominio es "gestionar productos": crearlos, buscarlos, actualizarlos, eliminarlos. No es el código, no es la base de datos — es el **problema real** del negocio.
 
-> 💡 **Analogía:** El dominio es como un restaurante. No es la cocina (el código), ni los meseros (los controladores), ni la caja registradora (la BD). El dominio es **servir comida**: que el cliente pida, que el chef cocine, que llegue el plato correcto... y que si no hay quelín, se lo digas, no que salte una excepción.
+> 💡 **Analogía:** El dominio es como un restaurante. No es la cocina (el código), ni los meseros (los controladores), ni la caja registradora (la BD). El dominio es **servir comida**: que el cliente pida, que el chef cocine, que llegue el plato correcto... y que si un plato se ha agotado, se lo avises al cliente con claridad, en lugar de que salte una excepción.
 
 📌 **Ejemplo real:** Netflix no solo gestiona "reproducir contenido". Su dominio incluye: recomendaciones, suscripciones, pagos fallidos, contenido no disponible en tu región, límites de dispositivos... Todos son casos del dominio, no excepciones.
 
@@ -158,7 +158,7 @@ Las **excepciones** están diseñadas para situaciones **excepcionales e inesper
 
 Las excepciones tienen overhead significativo:
 
-- **Crean stack trace** → costly operation
+- **Crean stack trace** → operación costosa
 - **Buscan catch blocks** → el flujo de control es implícito
 - **Presión en GC** → el recolector de basura trabaja más
 - **Fácil olvidar catch** → el error llega al cliente en formato inesperado
@@ -215,7 +215,7 @@ try
     var producto = service.GetById(id);
     return Ok(producto);
 }
-catch (ValidationException ex) { return BadRequest(ex.Message); }
+catch (ValidationException ex) { return UnprocessableEntity(ex.Message); }  // Validación de datos → 422 (ver tema 02)
 catch (NotFoundException ex) { return NotFound(ex.Message); }
 catch (ConflictException ex) { return Conflict(ex.Message); }
 ```
@@ -240,15 +240,16 @@ ASP.NET Core tiene un middleware que captura excepciones no controladas y las co
 var app = builder.Build();
 
 // Captura excepciones no controladas y las convierte en ProblemDetails
-app.UseExceptionHandler("/error");
+// Sin ruta: patrón .NET 8+ con IExceptionHandler registrado en DI
+app.UseExceptionHandler();
 
 app.MapControllers();
 app.Run();
 ```
 
-### 7.3.2. ProblemDetails (RFC 7807)
+### 7.3.2. ProblemDetails (RFC 9457)
 
-El estándar **RFC 7807** define un formato JSON consistente para errores. ASP.NET Core lo usa por defecto:
+El estándar **RFC 9457** (sucesor del RFC 7807) define un formato JSON consistente para errores: el tipo **ProblemDetails**. ASP.NET Core lo usa por defecto:
 
 ```json
 {
@@ -315,7 +316,7 @@ flowchart LR
 
 | Aspecto | Excepciones | Result Pattern |
 |---------|-------------|----------------|
-| **Rendimiento** | Bajo (~100x más lento) | Alto (sin overhead) |
+| **Rendimiento** | Coste muy superior (stack trace + captura) | Elevado (sin overhead) |
 | **Flujo de control** | Implícito (try-catch) | Explícito (Match) |
 | **Legibilidad** | Media (¿qué puede fallar?) | Alta (todo visible en la firma) |
 | **Completitud** | Fácil olvidar catch | Match fuerza manejar todos |
@@ -481,7 +482,7 @@ public sealed record ConflictError(string Message) : DomainError(Message);
 Result<Producto, DomainError> resultado = service.GetById(id);
 
 // Si es NotFoundError, devolver 404
-// Si es ValidationError, devolver 400
+// Si es ValidationError, devolver 422 (validación de datos; 400 solo para JSON malformado)
 // Si es ConflictError, devolver 409
 ```
 
@@ -510,7 +511,8 @@ public sealed record NotFoundError(string Message) : DomainError(Message)
         new($"{resourceType} con ID {id} no encontrado");
 }
 
-// 400 Bad Request - Validación
+// 422 Unprocessable Entity - Validación de datos
+// (400 solo para peticiones malformadas, p. ej. JSON con sintaxis rota — ver tema 02, 2.4.4)
 public sealed record ValidationError(string Message, Dictionary<string, string[]>? Errors = null)
     : DomainError(Message)
 {
@@ -538,7 +540,7 @@ public sealed record UnauthorizedError(string Message) : DomainError(Message)
 // 403 Forbidden
 public sealed record ForbiddenError(string Message) : DomainError(Message);
 
-// 422 Unprocessable Entity
+// 422 Unprocessable Entity - Regla de negocio
 public sealed record BusinessRuleError(string Message) : DomainError(Message);
 
 // 500 Internal Server Error
@@ -620,7 +622,7 @@ public IActionResult Create([FromBody] ProductoDto dto)
         onSuccess: producto => CreatedAtAction(nameof(GetById), new { id = producto.Id }, producto),
         onFailure: error => error switch
         {
-            ValidationError ve => BadRequest(new { message = ve.Message, errors = ve.Errors }),
+            ValidationError ve => UnprocessableEntity(new { message = ve.Message, errors = ve.Errors }),
             ConflictError => Conflict(new { message = error.Message }),
             _ => StatusCode(500, new { message = error.Message })
         });
@@ -661,16 +663,16 @@ public class ProductosController(IProductoService service) : ControllerBase
     public IActionResult Delete(long id)
     {
         var resultado = service.Delete(id);
-        return resultado.IsSuccess
-            ? NoContent()
-            : GetHttpResult(resultado.Error);
+        return resultado.Match(
+            _ => NoContent(),
+            error => GetHttpResult(error));
     }
 
     // ✅ Un solo sitio para el mapeo de errores
     private IActionResult GetHttpResult(DomainError error) => error switch
     {
         NotFoundError => NotFound(new { message = error.Message }),
-        ValidationError ve => BadRequest(new { message = ve.Message, errors = ve.Errors }),
+        ValidationError ve => UnprocessableEntity(new { message = ve.Message, errors = ve.Errors }),
         ConflictError => Conflict(new { message = error.Message }),
         UnauthorizedError => Unauthorized(new { message = error.Message }),
         ForbiddenError => StatusCode(403, new { message = error.Message }),
@@ -693,7 +695,7 @@ public static class DomainErrorExtensions
     public static IActionResult ToHttpResult(this DomainError error) => error switch
     {
         NotFoundError => new NotFoundObjectResult(new { message = error.Message }),
-        ValidationError ve => new BadRequestObjectResult(new { message = ve.Message, errors = ve.Errors }),
+        ValidationError ve => new UnprocessableEntityObjectResult(new { message = ve.Message, errors = ve.Errors }),
         ConflictError => new ConflictObjectResult(new { message = error.Message }),
         UnauthorizedError => new UnauthorizedObjectResult(new { message = error.Message }),
         ForbiddenError => new ObjectResult(new { message = error.Message }) { StatusCode = 403 },
@@ -744,7 +746,7 @@ public IActionResult Create([FromBody] ProductoDto dto)
 | **Complejidad** | Baja | Baja | Media |
 | **Recomendado para** | Pocos endpoints | Proyectos medianos | Proyectos grandes |
 
-> 💡 **Consejo:** Empezar con la **Opción B**. Es la más equilibrada: un solo switch por controlador, flexible por endpoint, sin dependencias extra. Cuando el proyecto crezca, migrar a Opción C.
+> 💡 **Consejo:** Empieza con la **Opción B**. Es la más equilibrada: un solo switch por controlador, flexible por endpoint, sin dependencias extra. Cuando el proyecto crezca, migra a Opción C.
 
 ## 7.9. Buenas prácticas
 
@@ -754,7 +756,7 @@ public IActionResult Create([FromBody] ProductoDto dto)
 - **Un error por dominio:** Crea clases estáticas como `ProductoError`, `AuthError` con métodos factory
 - **Excepciones para lo excepcional:** BD caída, bug, fichero no encontrado → sí excepciones
 - **No olvides UnitResult:** Para operaciones sin retorno (Delete, Update) usa `UnitResult<DomainError>`
-- **Match siempre:** No uses `IsSuccess`/`IsFailure` directamente — usa `Match` para forzar el manejo de ambos casos
+- **Match siempre que sea posible:** Prioriza `Match` sobre `IsSuccess`/`IsFailure` — fuerza el manejo de ambos casos; `IsSuccess` solo compensa en flujos muy simples (por ejemplo, un `NoContent` directo)
 
 > 💡 **Consejo:** Aunque uses Result Pattern, **siempre** debes tener un middleware de excepciones global como safety net. Si se te escapa un bug, una excepción de BD, o un error inesperado, el middleware lo captura y devuelve una respuesta 500 coherente en lugar de un HTML crudo. Es como el airbag de tu coche: confías en que no lo necesitarás, pero ahí está por si acaso.
 
@@ -773,9 +775,9 @@ public IActionResult Create([FromBody] ProductoDto dto)
 
 | Operación | Caso correcto | Casos incorrectos |
 |-----------|---------------|-------------------|
-| Crear producto | 201 Created | 400 (nombre vacío), 400 (precio ≤ 0), 409 (nombre duplicado) |
+| Crear producto | 201 Created | 422 (nombre vacío), 422 (precio ≤ 0), 409 (nombre duplicado) |
 | Buscar por ID | 200 OK | 404 (no existe) |
-| Actualizar | 200 OK | 404 (no existe), 400 (precio ≤ 0) |
+| Actualizar | 200 OK | 404 (no existe), 422 (precio ≤ 0) |
 | Eliminar | 204 No Content | 404 (no existe) |
 | Listar | 200 OK | Nunca falla (devuelve lista vacía) |
 

@@ -250,7 +250,7 @@ graph TD
 #### Tema 03: Minimal APIs
 - **Minimal APIs:** Endpoints ligeros sin controllers. Ideal para microservicios y APIs pequeñas
 - **Sintaxis:** `app.MapGet("/path", async () => { ... })` directo en Program.cs
-- **Filters:** `AddEndpointFilter<T>()` para lógica横切ante (validación, logging)
+- **Filters:** `AddEndpointFilter<T>()` para lógica transversal (validación, logging)
 - **Tags:** Agrupar endpoints en Swagger con `.WithTags("Nombre")`
 - **Ventaja:** Menos boilerplate, arranque rápido. **Desventaja:** Menos estructura para APIs grandes
 - 📌 Un microservicio de health check usa Minimal API: 3 líneas de código, sin controller

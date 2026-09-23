@@ -17,20 +17,21 @@
     - [27.5.1. Health Checks basicos](#2751-health-checks-basicos)
     - [27.5.2. Custom Health Check](#2752-custom-health-check)
   - [27.6. Buenas Practicas de Logging](#276-buenas-practicas-de-logging)
+    - [27.6.1. Cierre seguro del Logger](#2761-cierre-seguro-del-logger)
   - [27.7. Reto: Implementa Logging en FunkoApp](#277-reto-implementa-logging-en-funkoapp)
 
 
 
 # 27. Logging y Monitoreo
 
-> **Punto de partida:** Cuando tu aplicacion falla en produccion y no tienes logs, es como intentar arreglar un coche a ciegas. Los logs son el cuadro de mando que te dice que esta pasando en tiempo real. Un buen sistema de logging te permite debugear errores, auditar seguridad y optimizar rendimiento.
+> 💡 **Punto de partida:** Cuando tu aplicación falla en producción y no tienes logs, es como intentar arreglar un coche a ciegas. Los logs son el cuadro de mando que te dice qué está pasando en tiempo real. Un buen sistema de logging te permite debugear errores, auditar seguridad y optimizar rendimiento.
 
 En este punto aprenderás a configurar Serilog para logging estructurado, implementar correlation IDs para trazabilidad y configurar health checks para monitorizar la salud de la aplicacion.
 
 **Objetivos de aprendizaje:**
 - Comprender la diferencia entre logging de texto plano y estructurado
 - Configurar Serilog con multiples sinks
-- ImplementarILogger con inyeccion de dependencias
+- Implementar `ILogger` con inyeccion de dependencias
 - Usar correlation IDs para trazabilidad de requests
 - Configurar health checks para monitorizar la aplicacion
 
@@ -72,6 +73,7 @@ dotnet add package Serilog.AspNetCore
 dotnet add package Serilog.Sinks.Console
 dotnet add package Serilog.Sinks.File
 dotnet add package Serilog.Exceptions
+dotnet add package Serilog.Enrichers.Environment
 ```
 
 ```csharp
@@ -88,7 +90,7 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.WithExceptionDetails()
     .Enrich.WithProperty("Application", "FunkoApp")
     .WriteTo.Console(
-        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Scopes:j}{NewLine}{Exception}")
     .WriteTo.File(
         path: "logs/funkoapp-.log",
         rollingInterval: RollingInterval.Day,
@@ -123,7 +125,7 @@ app.Run();
       {
         "Name": "Console",
         "Args": {
-          "outputTemplate": "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"
+          "outputTemplate": "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Scopes:j}{NewLine}{Exception}"
         }
       },
       {
@@ -178,6 +180,12 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.WithEnvironmentName()
     .Enrich.WithMachineName()
     .CreateLogger();
+```
+
+> ⚠️ **Advertencia:** `WithEnvironmentName()` y `WithMachineName()` provienen de **Serilog.Enrichers.Environment** (paquete no incluido en Serilog.AspNetCore). Si no lo instalas, el código no compila:
+
+```bash
+dotnet add package Serilog.Enrichers.Environment
 ```
 
 ## 27.3. Uso de Logging en Servicios
@@ -305,6 +313,11 @@ Los health checks permiten a orquestadores como Kubernetes o Azure monitorizar l
 
 ### 27.5.1. Health Checks basicos
 
+```bash
+dotnet add package AspNetCore.HealthChecks.NpgSql
+dotnet add package AspNetCore.HealthChecks.Redis
+```
+
 ```csharp
 builder.Services.AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy())
@@ -371,6 +384,30 @@ builder.Services.AddHealthChecks()
 
 > ⚠️ **Advertencia:** Los logs en produccion deben tener nivel Warning o superior. Los logs Debug e Information en produccion generan demasiado volumen y pueden impactar el rendimiento.
 
+### 27.6.1. Cierre seguro del Logger
+
+Si la aplicación muere por una excepción no controlada, el logger global (estático) puede perder los últimos mensajes. Registra el error fatal y **cierra el logger** para garantizar el flush:
+
+```csharp
+try
+{
+    app.Run();
+}
+catch (Exception ex)
+{
+    // Último recurso: la aplicación termina inesperadamente
+    Log.Fatal(ex, "Host terminated unexpectedly");
+    throw;
+}
+finally
+{
+    // Asegura que queden mensajes pendientes (ficheros, red...)
+    Log.CloseAndFlush();
+}
+```
+
+> 💡 **Consejo:** `Log.CloseAndFlush()` es imprescindible con sinks como File o Seq: sin él, los eventos en cola pueden perderse si el proceso muere bruscamente. `Log.Fatal` captura el error que habría quedado sin registrar al romper el host.
+
 ## 27.7. Reto: Implementa Logging en FunkoApp
 
 > Antes de irte, implementa un sistema completo de logging y monitoreo para tu API de Funkos.
@@ -388,6 +425,8 @@ Tu API de Funkos necesita un sistema de logging para debugear errores en desarro
 5. Configura niveles de log diferentes por entorno
 
 > 💡 **Consejo:** Usa `logger.LogInformation` para eventos normales, `logger.LogWarning` para situaciones anomolas y `logger.LogError` para errores. Nunca uses `logger.LogDebug` en produccion.
+
+---
 
 **Resumen del punto:**
 

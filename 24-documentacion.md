@@ -1,29 +1,30 @@
-- [24. Documentacion con Swagger/OpenAPI](#24-documentacion-con-swaggeropenapi)
+- [24. Documentación con Swagger/OpenAPI](#24-documentación-con-swaggeropenapi)
   - [24.1. CORS (Cross-Origin Resource Sharing)](#241-cors-cross-origin-resource-sharing)
-    - [24.1.1. Que es CORS](#2411-que-es-cors)
-    - [24.1.2. Configuracion de CORS en ASP.NET Core](#2412-configuracion-de-cors-en-aspnet-core)
+    - [24.1.1. Qué es CORS](#2411-qué-es-cors)
+    - [24.1.2. Configuración de CORS en ASP.NET Core](#2412-configuración-de-cors-en-aspnet-core)
   - [24.2. Swagger y OpenAPI](#242-swagger-y-openapi)
-    - [24.2.1. Que es OpenAPI](#2421-que-es-openapi)
-    - [24.2.2. Que es Swagger](#2422-que-es-swagger)
-    - [24.2.3. Configuracion basica](#2423-configuracion-basica)
-    - [24.2.4. Configuracion avanzada](#2424-configuracion-avanzada)
+    - [24.2.1. Qué es OpenAPI](#2421-qué-es-openapi)
+    - [24.2.2. Qué es Swagger](#2422-qué-es-swagger)
+    - [24.2.3. Configuración básica](#2423-configuración-básica)
+    - [24.2.4. Configuración avanzada](#2424-configuración-avanzada)
   - [24.3. Documentar Endpoints](#243-documentar-endpoints)
-    - [24.3.1. Atributos de documentacion](#2431-atributos-de-documentacion)
+    - [24.3.1. Atributos de documentación](#2431-atributos-de-documentación)
     - [24.3.2. Ejemplo completo de endpoint documentado](#2432-ejemplo-completo-de-endpoint-documentado)
+    - [24.3.3. Respuesta 201 Created en POST](#2433-respuesta-201-created-en-post)
   - [24.4. Documentar Modelos y DTOs](#244-documentar-modelos-y-dtos)
-  - [24.5. Documentar Autenticacion JWT](#245-documentar-autenticacion-jwt)
+  - [24.5. Documentar Autenticación JWT](#245-documentar-autenticación-jwt)
   - [24.6. Documentar Respuestas de Error](#246-documentar-respuestas-de-error)
   - [24.7. Versionado de API](#247-versionado-de-api)
   - [24.8. Ejemplos de Solicitudes](#248-ejemplos-de-solicitudes)
   - [24.9. Filtros Personalizados](#249-filtros-personalizados)
-  - [24.10. Buenas Practicas](#2410-buenas-practicas)
+  - [24.10. Buenas Prácticas](#2410-buenas-prácticas)
   - [24.11. Reto: Documenta la API de FunkoApp](#2411-reto-documenta-la-api-de-funkoapp)
 
 
 
-# 24. Documentacion con Swagger/OpenAPI
+# 24. Documentación con Swagger/OpenAPI
 
-> **Punto de partida:** Cuando usas la API de Stripe para cobrar en tu tienda online, necesitas saber qué endpoints existen, qué datos envías y qué respuestas recibes. Stripe提供了文档 interactiva donde puedes probar cada endpoint en vivo. Eso es lo que Swagger/OpenAPI hace por tu API: documentación automática, interactiva y siempre actualizada.
+> 💡 **Punto de partida:** Cuando usas la API de Stripe para cobrar en tu tienda online, necesitas saber qué endpoints existen, qué datos envías y qué respuestas recibes. Stripe proporciona documentación interactiva donde puedes probar cada endpoint en vivo. Eso es lo que Swagger/OpenAPI hace por tu API: documentación automática, interactiva y siempre actualizada.
 
 En este punto aprenderás a configurar CORS, integrar Swagger/OpenAPI en ASP.NET Core, documentar endpoints, modelos, autenticación y errores, versionar tu API y usar filtros personalizados.
 
@@ -37,7 +38,7 @@ En este punto aprenderás a configurar CORS, integrar Swagger/OpenAPI en ASP.NET
 
 ## 24.1. CORS (Cross-Origin Resource Sharing)
 
-### 24.1.1. Que es CORS
+### 24.1.1. Qué es CORS
 
 **CORS** es un mecanismo de seguridad de los navegadores que controla las solicitudes HTTP entre diferentes dominios. Sin CORS, los navegadores bloquean solicitudes a dominios diferentes por defecto.
 
@@ -60,7 +61,7 @@ flowchart LR
 
 > 📝 **Nota:** CORS solo afecta a solicitudes desde navegadores. Aplicaciones servidor a servidor no están afectadas por CORS.
 
-### 24.1.2. Configuracion de CORS en ASP.NET Core
+### 24.1.2. Configuración de CORS en ASP.NET Core
 
 **Politica permisiva (solo desarrollo):**
 
@@ -106,7 +107,7 @@ app.MapControllers();
 
 ## 24.2. Swagger y OpenAPI
 
-### 24.2.1. Que es OpenAPI
+### 24.2.1. Qué es OpenAPI
 
 **OpenAPI** es una especificación estándar para describir APIs REST en formato JSON/YAML. Define la estructura de tu API de forma que pueda ser consumida por herramientas automatizadas.
 
@@ -118,7 +119,7 @@ app.MapControllers();
 | **Generacion automatica de SDKs** | Clientes en multiples lenguajes |
 | **Pruebas interactivas** | Testing desde la propia documentacion |
 
-### 24.2.2. Que es Swagger
+### 24.2.2. Qué es Swagger
 
 **Swagger** es un conjunto de herramientas que implementa la especificacion OpenAPI:
 
@@ -128,7 +129,7 @@ app.MapControllers();
 | **Swagger Editor** | Editor en linea para crear especificaciones OpenAPI |
 | **Swagger Codegen** | Genera codigo cliente y servidor desde la especificacion |
 
-### 24.2.3. Configuracion basica
+### 24.2.3. Configuración básica
 
 ```bash
 dotnet add package Swashbuckle.AspNetCore
@@ -159,7 +160,21 @@ app.Run();
 
 Acceder a Swagger UI: `https://localhost:5001/swagger/index.html`
 
-### 24.2.4. Configuracion avanzada
+> 💡 **Truco:** Si la URL de Swagger no coincide (porque `Properties/launchSettings.json` cambia el puerto), ejecuta con `dotnet run --no-launch-profile` para usar las URLs por defecto (`https://localhost:5001`) y saber exactamente dónde está la UI.
+
+**Swashbuckle vs `Microsoft.AspNetCore.OpenApi` (embebido en .NET 9/10):**
+
+| | **Swashbuckle.AspNetCore** | **Microsoft.AspNetCore.OpenApi** |
+|---|---|---|
+| **Origen** | Comunidad (Swagger Tools) | Oficial de Microsoft (incluido en .NET 9/10) |
+| **Registro** | `AddSwaggerGen()` + `UseSwagger()` / `UseSwaggerUI()` | `AddOpenApi()` + `MapOpenApi()` |
+| **UI interactiva** | Sí, incluida (Swagger UI) | No incluida (solo sirve el documento `/openapi/v1.json`) |
+| **Ventaja** | UI lista para probar, filtros y ejemplos | Cero dependencias extra, integración nativa |
+| **Cuándo usarlo** | Necesitas probar endpoints desde el navegador | Solo necesitas el documento OpenAPI |
+
+> 📝 **Nota:** En .NET 9/10 las plantillas nuevas usan `Microsoft.AspNetCore.OpenApi` (`AddOpenApi()` / `MapOpenApi()`). Si quieres la UI interactiva tipo Swagger, combínalo con Swashbuckle o con un visor de OpenAPI de terceros. En este tema usamos Swashbuckle porque además nos da los atributos de documentación.
+
+### 24.2.4. Configuración avanzada
 
 ```csharp
 using Microsoft.OpenApi.Models;
@@ -178,16 +193,19 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 
-    // Incluir comentarios XML
+    // Incluir comentarios XML (solo si existe: si no, IncludeXmlComments lanza FileNotFoundException)
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    options.IncludeXmlComments(xmlPath);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
 
     options.EnableAnnotations();
 });
 ```
 
-Habilitar comentarios XML en `.csproj`:
+Habilitar comentarios XML en `.csproj` (si no, no se genera el `.xml` y el `if (File.Exists)` anterior lo salta):
 
 ```xml
 <PropertyGroup>
@@ -198,7 +216,7 @@ Habilitar comentarios XML en `.csproj`:
 
 ## 24.3. Documentar Endpoints
 
-### 24.3.1. Atributos de documentacion
+### 24.3.1. Atributos de documentación
 
 ```csharp
 [ApiController]
@@ -270,6 +288,39 @@ public async Task<ActionResult<FunkoResponseDto>> Update(
 
 📌 **Ejemplo real:** Netflix documenta cada endpoint de su API interna con atributos similares. Cuando un desarrollador necesita consumir un servicio, abre Swagger y ve exactamente qué datos enviar y qué respuestas esperar.
 
+### 24.3.3. Respuesta 201 Created en POST
+
+Cuando un `POST` **crea** un recurso, la respuesta correcta es **201 Created** con header `Location`, no un `200 OK`. Swagger lo documenta con `SwaggerResponse(201, ...)`:
+
+```csharp
+/// <summary>
+/// Crea un funko nuevo
+/// </summary>
+/// <param name="dto">Datos del funko a crear</param>
+/// <returns>Funko recién creado</returns>
+[HttpPost]
+[SwaggerOperation(
+    Summary = "Crear funko",
+    Description = "Crea un nuevo funko y devuelve su ubicación (Location)",
+    OperationId = "CreateFunko"
+)]
+[SwaggerResponse(201, "Funko creado correctamente", typeof(FunkoResponseDto))]
+[SwaggerResponse(400, "Datos inválidos", typeof(ValidationProblemDetails))]
+public async Task<ActionResult<FunkoResponseDto>> Create(
+    [FromBody, SwaggerRequestBody("Datos del nuevo funko", Required = true)] CreateFunkoDto dto)
+{
+    var funko = await _service.CreateAsync(dto);
+
+    // 201 + Location apuntando al recurso recién creado (GET /api/funkos/{id})
+    return CreatedAtAction(
+        nameof(GetById),
+        new { id = funko.Id },
+        funko);
+}
+```
+
+> 📝 **Nota (201 vs 200):** **201 Created** = el `POST` creó un recurso nuevo (aquí, con `CreatedAtAction` que añade el header `Location`). **200 OK** = operación correcta sin recurso nuevo (por ejemplo, `PUT` que actualiza, o un login). Documentar bien los códigos en Swagger evita clientes que esperen `200` y rompan con `201`.
+
 ## 24.4. Documentar Modelos y DTOs
 
 ```csharp
@@ -320,7 +371,7 @@ public record CreateFunkoDto
 
 > 💡 **Consejo:** Usa el tag `<example>` para mostrar valores de ejemplo en Swagger. Esto ayuda mucho a los desarrolladores que consumen tu API.
 
-## 24.5. Documentar Autenticacion JWT
+## 24.5. Documentar Autenticación JWT
 
 ```csharp
 builder.Services.AddSwaggerGen(options =>
@@ -363,49 +414,58 @@ Pasos para usar autenticación en Swagger UI:
 
 ## 24.6. Documentar Respuestas de Error
 
+Prioriza **`ProblemDetails`** (estándar **RFC 9457**, que sustituye al antiguo RFC 7807): es el formato de error por defecto de ASP.NET Core, así que Swagger ya lo conoce y los clientes pueden tratarlo de forma genérica.
+
 ```csharp
-/// <summary>
-/// Modelo de error estandar
-/// </summary>
-public class ApiError
-{
-    /// <example>404</example>
-    public int Status { get; set; }
-
-    /// <example>Recurso no encontrado</example>
-    public string Title { get; set; } = string.Empty;
-
-    /// <example>El funko con ID 999 no existe</example>
-    public string Detail { get; set; } = string.Empty;
-
-    /// <example>2024-01-20T10:30:00Z</example>
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-}
+// Program.cs — habilita ProblemDetails globalmente (UseExceptionHandler, 404, etc.)
+builder.Services.AddProblemDetails();
 ```
 
 ```csharp
 [HttpGet("{id}")]
 [SwaggerOperation(Summary = "Obtener funko por ID")]
 [SwaggerResponse(200, "Funko encontrado", typeof(FunkoResponseDto))]
-[SwaggerResponse(404, "Funko no encontrado", typeof(ApiError))]
-[SwaggerResponse(500, "Error interno del servidor", typeof(ApiError))]
+[SwaggerResponse(404, "Funko no encontrado", typeof(ProblemDetails))]
+[SwaggerResponse(500, "Error interno del servidor", typeof(ProblemDetails))]
 public async Task<ActionResult<FunkoResponseDto>> GetById(int id)
 {
     var funko = await _service.GetByIdAsync(id);
     if (funko is null)
     {
-        return NotFound(new ApiError
+        // RFC 9457: type + title + status + detail + instance
+        return NotFound(new ProblemDetails
         {
-            Status = 404,
+            Type = "https://tools.ietf.org/html/rfc9457#section-3",
             Title = "Funko no encontrado",
-            Detail = $"No existe un funko con ID {id}"
+            Status = StatusCodes.Status404NotFound,
+            Detail = $"No existe un funko con ID {id}",
+            Instance = $"/api/funkos/{id}"
         });
     }
     return Ok(funko);
 }
 ```
 
+Para errores de validación, usa `ValidationProblemDetails` (incluye el diccionario `errors`):
+
+```csharp
+return BadRequest(new ValidationProblemDetails(ModelState)
+{
+    Title = "Datos inválidos",
+    Status = StatusCodes.Status400BadRequest
+});
+```
+
+> 💡 **Consejo:** Un modelo personalizado tipo `ApiError` es una **alternativa válida**, pero si lo usas, alinéalo con `ProblemDetails` (mismos campos `title`, `status`, `detail`) o añádele como extensión. Inventar un formato propio obliga a cada cliente a escribir su parser de errores.
+
 ## 24.7. Versionado de API
+
+Paquetes actuales (los antiguos `Microsoft.AspNetCore.Mvc.Versioning*` están obsoletos):
+
+```bash
+dotnet add package Asp.Versioning.Http
+dotnet add package Asp.Versioning.Mvc.ApiExplorer
+```
 
 ```csharp
 builder.Services.AddApiVersioning(options =>
@@ -449,6 +509,21 @@ public class FunkosV2Controller : ControllerBase
 📌 **Ejemplo real:** La API de GitHub usa versionado en la URL (`/api/v3/`). Cuando lanzan cambios breaking, crean una nueva versión sin romper las aplicaciones existentes.
 
 ## 24.8. Ejemplos de Solicitudes
+
+`SwaggerRequestExample` e `IExamplesProvider<T>` **no existen en Swashbuckle base**: vienen del paquete **`Swashbuckle.AspNetCore.Filters`**:
+
+```bash
+dotnet add package Swashbuckle.AspNetCore.Filters
+```
+
+```csharp
+// Registrar los ejemplos (junto al resto de AddSwaggerGen)
+builder.Services.AddSwaggerGen(options =>
+{
+    options.ExampleFilters();
+});
+builder.Services.AddSwaggerExamplesFromAssemblyOf<CreateFunkoExample>();
+```
 
 ```csharp
 [HttpPost]
@@ -511,7 +586,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 ```
 
-## 24.10. Buenas Practicas
+## 24.10. Buenas Prácticas
 
 | Practica | Descripcion |
 |----------|-------------|
@@ -553,10 +628,12 @@ Vas a documentar una API REST para gestionar una **coleccion de Funkos** con Swa
 2. Documenta todos los endpoints con `[SwaggerOperation]`
 3. Documenta el `CreateFunkoDto` con atributos de validacion y ejemplos
 4. Configura el esquema de seguridad JWT en Swagger
-5. Documenta las respuestas de error con `ApiError`
+5. Documenta las respuestas de error con `ProblemDetails` (RFC 9457)
 6. Configura CORS con politica restrictiva
 
 > 💡 **Consejo:** Usa comentarios XML en todos los modelos y endpoints. Los comentarios XML se convierten automaticamente en la documentacion de Swagger.
+
+---
 
 **Resumen del punto:**
 

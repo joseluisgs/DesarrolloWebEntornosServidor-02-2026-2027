@@ -232,8 +232,8 @@ reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"Cov
 | Cobertura | Significado |
 |-----------|-------------|
 | 0-40% | Baja — Mucha lógica sin testear |
-| 40-70% | Media — Cubre lo básico |
-| 70-80% | Buena — Cubre la mayoría de casos |
+| 41-70% | Media — Cubre lo básico |
+| 71-79% | Buena — Cubre la mayoría de casos |
 | 80%+ | Muy buena — Cubre casos normales y edge cases |
 
 > 💡 **Consejo:** No busques 100% de cobertura. Prioriza testear la **lógica de negocio**, no los getters/setters. Un 80% bien enfocado es mejor que un 100% de tests inútiles.
@@ -266,7 +266,7 @@ WORKDIR /app
 COPY --from=build /app .
 
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "ProductosTest.dll"]
+ENTRYPOINT ["dotnet", "ProductosApi.dll"]
 ```
 
 ### 10.4.2. Multi-stage build
@@ -300,7 +300,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
   redis:
@@ -309,6 +310,11 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   redis-data:
@@ -382,7 +388,7 @@ flowchart TD
 | **No tests dependientes** | Un test no debe depender del resultado de otro |
 | **Mockear dependencias externas** | BD, APIs externas, ficheros → siempre con mock |
 | **Verify siempre** | Comprobar que se llamó a los métodos correctos del mock |
-| **Dockerfile multi-stage** | Imagenes pequeñas y seguras |
+| **Dockerfile multi-stage** | Imágenes pequeñas y seguras |
 | **No subir secrets al Dockerfile** | Usar variables de entorno o docker-compose |
 
 ## 10.7. Reto
@@ -404,6 +410,7 @@ flowchart TD
 - Configura cobertura de código con `dotnet test --collect:"XPlat Code Coverage"`
 - Añade un servicio `redis` en `docker-compose.yml` (solo definición, sin usar)
 
+---
 
 **Resumen del punto:**
 

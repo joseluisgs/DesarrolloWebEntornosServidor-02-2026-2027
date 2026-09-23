@@ -40,7 +40,7 @@ En este punto aprenderás qué son los servicios web, cómo funciona HTTP y cóm
 
 ## 1.1. ¿Qué es un servicio web?
 
-Un **servicio web** es una funcionalidad que se ofrece a través de una API y que puede ser consumida por otros componentes de software: aplicaciones móviles, frontends web, outros servidores...
+Un **servicio web** es una funcionalidad que se ofrece a través de una API y que puede ser consumida por otros componentes de software: aplicaciones móviles, frontends web, otros servidores...
 
 > 💡 **Analogía — El restaurante:** Un servicio web es como un restaurante. El cliente (tu aplicación) hace un pedido (solicitud HTTP), la cocina (servidor) prepara la comida (procesa la solicitud), y el mesero trae la respuesta. Todo sigue un protocolo establecido.
 
@@ -139,8 +139,8 @@ Una petición HTTP tiene cuatro componentes:
 **2. URL** — El recurso solicitado:
 ```
 https://api.tienda.com/api/funkos/1
-\_____/ \____________/ \________/ \__/
-  host      dominio       ruta    recurso
+\_____ \________________/ \________/ \__/
+ esquema      host/dominio      ruta    recurso
 ```
 
 **3. Headers** — Información adicional:
@@ -195,10 +195,10 @@ Content-Type: application/json
 | `GET` | Obtener un recurso | Sí | Ver un Funko |
 | `POST` | Crear un recurso | No | Crear un Funko |
 | `PUT` | Actualizar completo | Sí | Modificar un Funko |
-| `PATCH` | Actualizar parcial | No | Cambiar solo el precio |
+| `PATCH` | Actualizar parcial | No* | Cambiar solo el precio |
 | `DELETE` | Eliminar | Sí | Borrar un Funko |
 
-> 💡 **Consejo:** **Idempotente** = hacer la misma petición varias veces produce el mismo resultado. GET, PUT y DELETE son idempotentes; POST y PATCH no.
+> 💡 **Consejo:** **Idempotente** = hacer la misma petición varias veces produce el mismo resultado. GET, PUT y DELETE son idempotentes; POST no lo es. PATCH **puede** ser idempotente si el body es siempre el mismo, pero la especificación HTTP no lo garantiza: por seguridad, trátalo como no idempotente.
 
 ### 1.2.4. Códigos de estado
 
@@ -223,8 +223,8 @@ Una **solución** (.slnx) es un contenedor que agrupa proyectos relacionados. Un
 ### 1.3.2. Crear la estructura desde cero
 
 ```bash
-# Crear una solución vacía
-dotnet new slnx -n MiApi
+# Crear una solución (en .NET 10, `dotnet new sln` crea un .slnx)
+dotnet new sln -n MiApi
 
 # Crear el proyecto de API
 dotnet new webapi -n MiApi -o ./MiApi
@@ -233,9 +233,11 @@ dotnet new webapi -n MiApi -o ./MiApi
 dotnet new nunit -n MiApi.Tests -o ./MiApi.Tests
 
 # Añadir proyectos a la solución
-dotnet slnx add MiApi/MiApi.csproj
-dotnet slnx add MiApi.Tests/MiApi.Tests.csproj
+dotnet sln add MiApi/MiApi.csproj
+dotnet sln add MiApi.Tests/MiApi.Tests.csproj
 ```
+
+> 📝 **Nota:** `MiApi.Tests` es solo un ejemplo de nombre. La convención de estructura del curso es `NombreSolucion.Test` (singular) para el proyecto de tests — p. ej. `MiApi.Test`. No hay una única forma "oficial" de .NET: elige un formato y manténlo **consistente** en toda la solución.
 
 ### 1.3.3. Estructura de carpetas resultante
 
@@ -261,10 +263,11 @@ MiApi.slnx
 
 ```
 TiendaApi.slnx
-├── TiendaApi.Api/          ← Endpoints (controllers, configuración)
-├── TiendaApi.Core/         ← Lógica (models, services, repositories)
+├── TiendaApi.Api/          ← Proyecto principal (endpoints, models, services, configuración)
 └── TiendaApi.Tests/        ← Tests (unit + integration)
 ```
+
+> 📝 **Nota:** Esta es la estructura real del proyecto Tienda. Ocasionalmente verás mencionar una variante con `TiendaApi.Core` (una librería aparte para models, services y repositories): es una opción válida para aplicar Clean Architecture estricta, pero **no es la estructura del proyecto real** de este curso.
 
 **Las librerías que usaremos:**
 
@@ -272,10 +275,10 @@ TiendaApi.slnx
 |----------|---------------------|
 | Entity Framework Core | Acceder a bases de datos |
 | FluentValidation | Validar datos de entrada |
-| AutoMapper | Convertir entre modelos y DTOs |
+| AutoMapper | Convertir entre modelos y DTOs — recomendado cuando hay muchos modelos/DTOs (10+); en proyectos pequeños, funciones de extensión (ver tema 08) |
 | NUnit + Moq | Tests unitarios |
 | Serilog | Logs estructurados |
-| Swashbuckle | Documentación Swagger |
+| Microsoft.AspNetCore.OpenApi / Swashbuckle | Documentación Swagger (desde .NET 9, la plantilla usa Microsoft.AspNetCore.OpenApi; Swashbuckle sigue siendo una alternativa válida) |
 | CSharpFunctionalExtensions | Manejo de errores funcional |
 
 > 💡 **Consejo:** No te preocupes por instalar ni configurar nada ahora. Solo necesitas saber qué existe. Los veremos uno a uno cuando los necesitemos.
@@ -305,7 +308,7 @@ NuGet es el gestor de paquetes de .NET. Cuando necesitas una funcionalidad que n
 
 Son librerías que otros desarrolladores han creado y compartido. En lugar de escribir todo desde cero, instalas un paquete con un comando.
 
-📌 **Ejemplo real:** Entity Framework Core para acceder a bases de datos, Newtonsoft.Json para trabajar con JSON, xunit para hacer tests... todos son paquetes NuGet.
+📌 **Ejemplo real:** Entity Framework Core para acceder a bases de datos, Newtonsoft.Json para trabajar con JSON, NUnit + FluentAssertions + Moq para hacer tests... todos son paquetes NuGet.
 
 ### 1.4.2. Comandos útiles
 
@@ -422,10 +425,12 @@ flowchart LR
 
 > 💡 **Consejo:** Usa `dotnet watch run` siempre que estés desarrollando. Ahorra mucho tiempo.
 
+> ⚠️ **Advertencia:** Si cambias los puertos en `Properties/launchSettings.json`, `dotnet watch run` puede seguir apuntando al perfil anterior. En ese caso, ejecuta `dotnet watch run --no-launch-profile` para que use la configuración sin el perfil de lanzamiento.
+
 ## 1.7. Buenas prácticas
 
 - **No memorices:** Comprende por qué se usa cada concepto, no los memorices
-- **Empieza por lo simple:** Un proyecto con `dotnet new web` antes de complicate con arquitecturas
+- **Empieza por lo simple:** Un proyecto con `dotnet new web` antes de complicarte con arquitecturas
 - **Configuración por entornos:** Usa `appsettings.json` y nunca valores hardcodeados en código
 - **Hot Reload:** Usa `dotnet watch run` mientras desarrollas para ver cambios instantáneos
 - **Un servicio = Una responsabilidad:** Cada clase de servicio debe hacer solo una cosa bien

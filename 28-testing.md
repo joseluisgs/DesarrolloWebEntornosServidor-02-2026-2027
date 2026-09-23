@@ -9,9 +9,15 @@
   - [28.4. Estructura del Proyecto de Tests](#284-estructura-del-proyecto-de-tests)
   - [28.5. Patron AAA (Arrange-Act-Assert)](#285-patron-aaa-arrange-act-assert)
   - [28.6. NUnit Basics](#286-nunit-basics)
+    - [28.6.1. Atributos Principales](#2861-atributos-principales)
+    - [28.6.2. Ejemplo Completo](#2862-ejemplo-completo)
+    - [28.6.3. Organización con Inner Classes](#2863-organización-con-inner-classes)
   - [28.7. FluentAssertions](#287-fluentassertions)
   - [28.8. Moq - Creando Mocks](#288-moq---creando-mocks)
-  - [28.9. TestContainers](#289-testcontainers)
+    - [28.8.1. Configurar Comportamiento con Setup](#2881-configurar-comportamiento-con-setup)
+    - [28.8.2. Tipos de Setup](#2882-tipos-de-setup)
+    - [28.8.3. Verify - Verificar Interacciones](#2883-verify---verificar-interacciones)
+  - [28.9. Testcontainers](#289-testcontainers)
   - [28.10. Tests de Controladores con WebApplicationFactory](#2810-tests-de-controladores-con-webapplicationfactory)
   - [28.11. Tests en Paralelo vs Secuenciales](#2811-tests-en-paralelo-vs-secuenciales)
   - [28.12. Comandos Utiles](#2812-comandos-utiles)
@@ -22,14 +28,14 @@
 
 # 28. Testing de Servicios Web
 
-> **Punto de partida:** Como sabes que tu codigo funciona correctamente? Y como verificas que los cambios no rompen funcionalidades existentes? Los tests automatizados son la respuesta: ejecutan tu codigo de forma controlada y detectan errores antes de que lleguen a produccion.
+> 💡 **Punto de partida:** ¿Cómo sabes que tu código funciona correctamente? ¿Y cómo verificas que los cambios no rompen funcionalidades existentes? Los tests automatizados son la respuesta: ejecutan tu código de forma controlada y detectan errores antes de que lleguen a producción.
 
-En este punto aprenderás a escribir tests unitarios con NUnit, usar FluentAssertions para aserciones legibles, crear mocks con Moq y implementar tests de integracion con TestContainers y WebApplicationFactory.
+En este punto aprenderás a escribir tests unitarios con NUnit, usar FluentAssertions para aserciones legibles, crear mocks con Moq e implementar tests de integracion con Testcontainers y WebApplicationFactory.
 
 **Objetivos de aprendizaje:**
 - Comprender los fundamentos del testing y la piramide de tests
 - Escribir test unitarios con NUnit, FluentAssertions y Moq
-- Implementar tests de integracion con TestContainers y WebApplicationFactory
+- Implementar tests de integracion con Testcontainers y WebApplicationFactory
 - Configurar paralelismo y medir cobertura de codigo
 
 ## 28.1. Conceptos Fundamentales
@@ -92,7 +98,7 @@ En este proyecto usamos **NUnit** por su sintaxis clara y atributos descriptivos
 | **NUnit** | Framework de testing |
 | **FluentAssertions** | Assertions mas legibles |
 | **Moq** | Crear mocks de interfaces |
-| **TestContainers** | Contenedores Docker para tests de integracion |
+| **Testcontainers** | Contenedores Docker para tests de integracion |
 | **coverlet** | Medir cobertura de codigo |
 
 ## 28.4. Estructura del Proyecto de Tests
@@ -115,6 +121,35 @@ FunkoApp.Tests/
 └── FunkoApp.Tests.csproj
 ```
 
+**Fichero `.csproj` del proyecto de tests** (versiones del módulo):
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>14</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="6.0.4" />
+        <PackageReference Include="FluentAssertions" Version="6.12.2" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
+        <PackageReference Include="Moq" Version="4.20.72" />
+        <PackageReference Include="NUnit" Version="4.3.2" />
+        <PackageReference Include="NUnit.Analyzers" Version="4.7.0" />
+        <PackageReference Include="NUnit3TestAdapter" Version="5.0.0" />
+        <PackageReference Include="Testcontainers.PostgreSql" Version="3.10.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\FunkoApp\FunkoApp.csproj" />
+    </ItemGroup>
+</Project>
+```
+
 ## 28.5. Patron AAA (Arrange-Act-Assert)
 
 Todo test debe seguir el patron **Arrange-Act-Assert**:
@@ -128,7 +163,7 @@ using NUnit.Framework;
 public class FunkoServiceTests
 {
     [Test]
-    public void GetById_FunkoExistente_ReturnSuccess()
+    public async Task GetById_FunkoExistente_ReturnSuccess()
     {
         // =====================================
         // ARRANGE: Preparar el escenario
@@ -150,21 +185,20 @@ public class FunkoServiceTests
         // =====================================
         // ACT: Ejecutar la accion a testear
         // =====================================
-        var resultado = service.GetByIdAsync(funkoId);
+        var resultado = await service.GetByIdAsync(funkoId);
 
         // =====================================
         // ASSERT: Verificar el resultado
         // =====================================
-        resultado.Should().NotBeNull();
-        resultado.Result.IsSuccess.Should().BeTrue();
-        resultado.Result.Value.Nombre.Should().Be("Iron Man");
+        resultado.IsSuccess.Should().BeTrue();
+        resultado.Value.Nombre.Should().Be("Iron Man");
     }
 }
 ```
 
 ## 28.6. NUnit Basics
 
-### Atributos Principales
+### 28.6.1. Atributos Principales
 
 | Atributo | Proposito | Ejemplo |
 |----------|-----------|---------|
@@ -175,7 +209,7 @@ public class FunkoServiceTests
 | `[OneTimeSetUp]` | Una vez antes de todos | `OneTimeSetUp() {}` |
 | `[Category]` | Categorizar tests | `[Category("Slow")]` |
 
-### Ejemplo Completo
+### 28.6.2. Ejemplo Completo
 
 ```csharp
 [TestFixture]
@@ -198,28 +232,74 @@ public class FunkoServiceTests
     }
 
     [Test]
-    public void GetById_FunkoExistente_ReturnSuccess()
+    public async Task GetById_FunkoExistente_ReturnSuccess()
     {
         var funko = new Funko { Id = 1, Nombre = "Iron Man" };
         _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(funko);
 
-        var result = _service.GetByIdAsync(1);
+        var result = await _service.GetByIdAsync(1);
 
-        result.Result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [TestCase(1L)]
     [TestCase(2L)]
     [TestCase(100L)]
-    public void GetById_DiferentesIds_ReturnCorrecto(long funkoId)
+    public async Task GetById_DiferentesIds_ReturnCorrecto(long funkoId)
     {
         var funko = new Funko { Id = funkoId, Nombre = "Funko" };
         _repositoryMock.Setup(r => r.GetByIdAsync(funkoId)).ReturnsAsync(funko);
 
-        var result = _service.GetByIdAsync(funkoId);
+        var result = await _service.GetByIdAsync(funkoId);
 
-        result.Result.IsSuccess.Should().BeTrue();
-        result.Result.Value.Id.Should().Be(funkoId);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Id.Should().Be(funkoId);
+    }
+}
+```
+
+### 28.6.3. Organización con Inner Classes
+
+Separa los casos válidos e inválidos con **inner classes** para que la suite sea más legible:
+
+```csharp
+[TestFixture]
+public class FunkoTests
+{
+    [TestFixture]
+    public class CasosValidos
+    {
+        [Test]
+        public void Precio_Cero_OtrasPropiedadesCorrectas()
+        {
+            // Arrange
+            var funko = new Funko { Id = 1, Nombre = "Iron Man", Precio = 29.99m };
+
+            // Act
+            var resultado = funko.Nombre;
+
+            // Assert
+            resultado.Should().Be("Iron Man");
+        }
+    }
+
+    [TestFixture]
+    public class CasosInvalidos
+    {
+        [Test]
+        public void Precio_Negativo_ThrowsArgumentException()
+        {
+            // Arrange
+            var accion = () =>
+            {
+                var funko = new Funko { Nombre = "Iron Man", Precio = -1 };
+                _ = funko.Validar();
+            };
+
+            // Assert
+            accion.Should().Throw<ArgumentException>()
+                .WithMessage("*precio debe ser mayor que 0*");
+        }
     }
 }
 ```
@@ -272,7 +352,7 @@ public class FluentAssertionsExamples
 
 **Moq** permite crear objetos falsos (mocks) para aislar el codigo bajo test.
 
-### Configurar Comportamiento con Setup
+### 28.8.1. Configurar Comportamiento con Setup
 
 ```csharp
 [TestFixture]
@@ -348,7 +428,7 @@ public class FunkoServiceMockTests
 }
 ```
 
-### Tipos de Setup
+### 28.8.2. Tipos de Setup
 
 ```csharp
 // Setup con valor fijo
@@ -372,7 +452,7 @@ _repositoryMock
     .ReturnsAsync(2);
 ```
 
-### Verify - Verificar Interacciones
+### 28.8.3. Verify - Verificar Interacciones
 
 ```csharp
 // Verificar que se llamo una vez
@@ -388,13 +468,13 @@ _repositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<long>()), Times.AtLeastOnce(
 _repositoryMock.VerifyAll();
 ```
 
-## 28.9. TestContainers
+## 28.9. Testcontainers
 
-**TestContainers** permite crear contenedores Docker durante los tests de integracion, proporcionando bases de datos reales en entornos aislados.
+**Testcontainers** permite crear contenedores Docker durante los tests de integracion, proporcionando bases de datos reales en entornos aislados.
 
 ```csharp
 using NUnit.Framework;
-using TestContainers.PostgreSql;
+using Testcontainers.PostgreSql;
 
 [TestFixture]
 [Parallelizable(ParallelScope.None)]
@@ -403,6 +483,7 @@ public class IntegrationTestBase : IAsyncLifetime
     protected PostgreSqlContainer _container = null!;
     protected FunkoDbContext _context = null!;
 
+    // IAsyncLifetime: se ejecuta UNA SOLA VEZ por fixture (antes de todos los tests)
     public async Task InitializeAsync()
     {
         _container = new PostgreSqlBuilder()
@@ -435,10 +516,15 @@ public class FunkoRepositoryTests : IntegrationTestBase
 {
     private FunkoRepository _repository = null!;
 
+    // [SetUp] normal (NO override): InitializeAsync NO es virtual,
+    // pertenece a IAsyncLifetime y ya se ejecuta una vez por fixture en la base.
     [SetUp]
-    public override async Task InitializeAsync()
+    public void SetUp()
     {
-        await base.InitializeAsync();
+        // Limpieza real: cada test empieza con la BD limpia
+        _context.Database.ExecuteSqlRaw(
+            "TRUNCATE TABLE Funkos RESTART IDENTITY CASCADE");
+
         _repository = new FunkoRepository(_context);
     }
 
@@ -463,11 +549,25 @@ public class FunkoRepositoryTests : IntegrationTestBase
 }
 ```
 
-> ⚠️ **Advertencia:** Cada test debe empezar con la BD limpia. Usa `TRUNCATE TABLE ... RESTART IDENTITY` en SQL o `DeleteMany` en MongoDB para limpiar datos entre tests.
+> ⚠️ **Advertencia:** Cada test debe empezar con la BD limpia. Haz la limpieza real en el `[SetUp]` de cada fixture (como en el ejemplo: `TRUNCATE TABLE ... RESTART IDENTITY CASCADE` con `ExecuteSqlRaw`, o `DeleteMany` en MongoDB). El `InitializeAsync` de `IAsyncLifetime` solo levanta el contenedor una vez: no sirve para limpiar entre tests.
 
 ## 28.10. Tests de Controladores con WebApplicationFactory
 
 `WebApplicationFactory` crea un servidor en memoria para probar endpoints HTTP sin necesidad de un servidor real.
+
+**Paquetes NuGet necesarios:**
+
+```bash
+dotnet add package Microsoft.AspNetCore.Mvc.Testing
+dotnet add package Microsoft.EntityFrameworkCore.InMemory
+```
+
+> ⚠️ **Advertencia — Top Level Statements:** Si tu `Program.cs` usa Top Level Statements (el estilo por defecto en .NET 10), `WebApplicationFactory<Program>` necesita que `Program` sea visible desde el proyecto de tests. Añade al final de `Program.cs`:
+
+```csharp
+// En Program.cs de la API (Top Level Statements)
+public partial class Program;
+```
 
 ```csharp
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -560,7 +660,7 @@ NUnit puede ejecutar tests en paralelo para acelerar el tiempo de ejecucion.
 [Parallelizable(ParallelScope.All)]
 public class FunkoServiceTests { }
 
-// Este test se ejecuta en secuencia (porque usa TestContainers)
+// Este test se ejecuta en secuencia (porque usa Testcontainers)
 [Parallelizable(ParallelScope.None)]
 public class FunkoIntegrationTests { }
 ```
@@ -569,7 +669,7 @@ public class FunkoIntegrationTests { }
 |-----------|---------------|-------|
 | Tests unitarios con mocks | **Paralelo** | Rapidos, sin estado compartido |
 | Tests que comparten base de datos | **Secuencial** | Evitar conflictos |
-| Tests con TestContainers | **Limitado** | Cada contenedor es pesado |
+| **Tests con Testcontainers** | **Limitado** | Cada contenedor es pesado |
 
 ## 28.12. Comandos Utiles
 
@@ -628,6 +728,8 @@ Tu API de Funkos necesita tests automatizados para garantizar que cada cambio no
 
 > 💡 **Consejo:** Usa el patron AAA en cada test. Comenta las secciones Arrange, Act y Assert para que el codigo sea legible.
 
+---
+
 **Resumen del punto:**
 
 | Concepto | Descripcion |
@@ -638,7 +740,7 @@ Tu API de Funkos necesita tests automatizados para garantizar que cada cambio no
 | **NUnit** | Framework de testing con atributos descriptivos |
 | **FluentAssertions** | Assertions legibles y expresivos |
 | **Moq** | Creacion de objetos mocks para dependencias |
-| **TestContainers** | Contenedores Docker para tests de integracion |
+| **Testcontainers** | Contenedores Docker para tests de integracion |
 | **WebApplicationFactory** | Servidor en memoria para tests de API |
 | **Patron AAA** | Arrange-Act-Assert para estructurar tests |
 | **Cobertura** | Porcentaje de codigo ejecutado por tests |

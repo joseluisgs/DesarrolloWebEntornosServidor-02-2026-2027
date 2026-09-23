@@ -14,15 +14,21 @@
     - [2.3.6. Idempotencia](#236-idempotencia)
   - [2.4. Códigos de respuesta](#24-códigos-de-respuesta)
     - [2.4.1. 2xx: Éxito](#241-2xx-éxito)
-    - [2.4.2. 4xx: Error del cliente](#242-4xx-error-del-cliente)
-    - [2.4.3. 5xx: Error del servidor](#243-5xx-error-del-servidor)
-    - [2.4.4. ¿Cuándo usar cada código?](#244-cuándo-usar-cada-código)
+    - [2.4.2. 200 vs 201 vs 204](#242-200-vs-201-vs-204)
+    - [2.4.3. 4xx: Error del cliente](#243-4xx-error-del-cliente)
+    - [2.4.4. 400 vs 422](#244-400-vs-422)
+    - [2.4.5. 401 vs 403](#245-401-vs-403)
+    - [2.4.6. 5xx: Error del servidor](#246-5xx-error-del-servidor)
+    - [2.4.7. ¿Cuándo usar cada código?](#247-cuándo-usar-cada-código)
   - [2.5. Request y Response](#25-request-y-response)
     - [2.5.1. Estructura de un request](#251-estructura-de-un-request)
     - [2.5.2. Estructura de un response](#252-estructura-de-un-response)
     - [2.5.3. Headers comunes](#253-headers-comunes)
   - [2.6. Buenas prácticas](#26-buenas-prácticas)
   - [2.7. Reto: Diseña la API de Funkos](#27-reto-diseña-la-api-de-funkos)
+    - [2.7.1. Contexto](#271-contexto)
+    - [2.7.2. Modelo de datos](#272-modelo-de-datos)
+    - [2.7.3. Ejercicio: Completa la tabla](#273-ejercicio-completa-la-tabla)
 
 
 
@@ -128,8 +134,8 @@ Los parámetros pueden ir en distintos sitios de la URL:
 
 ```
 https://api.tienda.com/api/productos?categoria=musica&page=1&pageSize=10
-\_____/ \____________/ \________/ \___________________________________/
-  host      dominio       ruta              query string (filtros)
+\_____ \________________/ \________/ \___________________________________/
+ esquema     host/dominio       ruta              query string (filtros)
 ```
 
 > ⚠️ **Advertencia:** Los query string son para **filtrar y buscar**, no para identificar recursos. Usa `/api/productos/1` para obtener un producto, no `/api/productos?id=1`.
@@ -292,7 +298,7 @@ Los códigos de estado HTTP comunican al cliente qué ha pasado con su petición
 | **201** | Created | Creaste un nuevo recurso (con POST) |
 | **204** | No Content | La petición fue exitosa pero **no devuelves datos** (con DELETE) |
 
-#### 200 vs 201 vs 204
+### 2.4.2. 200 vs 201 vs 204
 
 | Operación | Código | ¿Qué devuelve? | ¿Por qué? |
 |-----------|:------:|----------------|-----------|
@@ -306,36 +312,36 @@ Los códigos de estado HTTP comunican al cliente qué ha pasado con su petición
 
 > 💡 **Consejo:** **201 Created** siempre debe incluir el header `Location` con la URL del recurso creado. Si no lo incluyes, el cliente no sabe dónde está el nuevo recurso.
 
-### 2.4.2. 4xx: Error del cliente
+### 2.4.3. 4xx: Error del cliente
 
 | Código | Nombre | Cuándo usarlo |
 |--------|--------|---------------|
-| **400** | Bad Request | La petición está mal formada (JSON inválido, campos obligatorios vacíos) |
+| **400** | Bad Request | La petición está mal formada (JSON con errores de sintaxis) |
 | **401** | Unauthorized | No estás autenticado (no envías token) |
 | **403** | Forbidden | Estás autenticado pero no tienes permisos |
 | **404** | Not Found | El recurso no existe |
 | **409** | Conflict | Conflicto (ej: intentar crear un producto que ya existe) |
-| **422** | Unprocessable Entity | Los datos son válidos syntácticamente pero tienen errores de negocio |
+| **422** | Unprocessable Entity | Los datos son válidos sintácticamente pero tienen errores de negocio |
 
-#### 400 vs 422
+### 2.4.4. 400 vs 422
 
 | Código | Significado | Ejemplo |
 |--------|-------------|---------|
 | **400** | El cliente envió algo **malformado** | JSON con errores de sintaxis, campo "edad" con texto en vez de número |
 | **422** | El formato es correcto pero los datos **no tienen sentido de negocio** | Precio negativo, email sin @, nombre vacío |
 
-> ⚠️ **Advertencia:** No uses 400 para todo. Si el JSON es correcto pero el precio es negativo, es un **422**, no un 400. El 400 es para errores de formato, el 422 para errores de validación.
+> ⚠️ **Advertencia:** No uses 400 para todo. Si el JSON es correcto pero el precio es negativo, es un **422**, no un 400. El 400 es para errores de formato, el 422 para errores de validación. El **409** es para duplicados (nombre ya existente).
 
-📌 **Ejemplo real:** En Amazon, si envías un formulario sin rellenar el nombre → 400. Si pones un precio de -5€ → 422.
+📌 **Ejemplo real:** En Amazon, si envías un JSON con la sintaxis rota → 400. Si envías un formulario sin rellenar el nombre → 422. Si pones un precio de -5€ → 422.
 
-#### 401 vs 403
+### 2.4.5. 401 vs 403
 
 | Código | Significado | Ejemplo |
 |--------|-------------|---------|
 | **401** | No sabes quién eres (sin token) | Intentar acceder a `/api/admin` sin iniciar sesión |
 | **403** | Sabes quién eres pero no puedes (sin permisos) | Un usuario normal intentando acceder a `/api/admin` |
 
-### 2.4.3. 5xx: Error del servidor
+### 2.4.6. 5xx: Error del servidor
 
 | Código | Nombre | Cuándo usarlo |
 |--------|--------|---------------|
@@ -343,35 +349,38 @@ Los códigos de estado HTTP comunican al cliente qué ha pasado con su petición
 | **502** | Bad Gateway | El servidor de proxy recibió una respuesta inválida |
 | **503** | Service Unavailable | El servicio está temporalmente no disponible (mantenimiento) |
 
-> 💡 **Consejo:** Los errores 5xx **nunca** deberían llegar al cliente en producción. Usa logs y monitoring para detectarlos antes.
+> 💡 **Consejo:** Los errores 5xx son inevitables en cualquier sistema: deben llegar al cliente como **ProblemDetails** claros y quedar monitorizados con logs y alertas. Lo que sí evitas es un **500 inesperado con HTML crudo**: por eso siempre montas un middleware de excepciones.
 
-### 2.4.4. ¿Cuándo usar cada código?
+### 2.4.7. ¿Cuándo usar cada código?
 
 ```mermaid
 flowchart TD
     A["Petición recibida"] --> B{"¿JSON válido?"}
     B -->|No| C["400 Bad Request"]
-    B -->|Sí| D{"¿Recurso existe?"}
-    D -->|No| E{"¿Es POST?"}
-    E -->|Sí| F["201 Created"]
-    E -->|No| G["404 Not Found"]
-    D -->|Sí| H{"¿Autorizado?"}
-    H -->|No| I{"¿Autenticado?"}
-    I -->|No| J["401 Unauthorized"]
-    I -->|Sí| K["403 Forbidden"]
-    H -->|Sí| L{"¿Datos válidos?"}
-    L -->|No| M["422 Unprocessable"]
-    L -->|Sí| N{"¿Es DELETE?"}
-    N -->|Sí| O["204 No Content"]
-    N -->|No| P["200 OK"]
+    B -->|Sí| D{"¿Autenticado?"}
+    D -->|No| E["401 Unauthorized"]
+    D -->|Sí| F{"¿Autorizado?"}
+    F -->|No| G["403 Forbidden"]
+    F -->|Sí| H{"¿Datos válidos?"}
+    H -->|No| I["422 Unprocessable"]
+    H -->|Sí| J{"¿Es POST?"}
+    J -->|Sí| K{"¿Ya existe?"}
+    K -->|Sí| L["409 Conflict"]
+    K -->|No| M["201 Created"]
+    J -->|No| N{"¿Existe el recurso?"}
+    N -->|No| O["404 Not Found"]
+    N -->|Sí| P{"¿Es DELETE?"}
+    P -->|Sí| Q["204 No Content"]
+    P -->|No| R["200 OK"]
     style C fill:#FF9800,color:#fff
-    style F fill:#4CAF50,color:#fff
+    style E fill:#f44336,color:#fff
     style G fill:#f44336,color:#fff
-    style J fill:#f44336,color:#fff
-    style K fill:#f44336,color:#fff
-    style M fill:#FF9800,color:#fff
-    style O fill:#4CAF50,color:#fff
-    style P fill:#4CAF50,color:#fff
+    style I fill:#FF9800,color:#fff
+    style L fill:#f44336,color:#fff
+    style M fill:#4CAF50,color:#fff
+    style O fill:#f44336,color:#fff
+    style Q fill:#4CAF50,color:#fff
+    style R fill:#4CAF50,color:#fff
 ```
 
 ## 2.5. Request y Response
@@ -443,11 +452,11 @@ Location: /api/productos/1
 
 > Antes de irte, diseña los endpoints de tu API. No escribas código: piensa en el diseño.
 
-### Contexto
+### 2.7.1. Contexto
 
 Vas a construir una API REST para gestionar una **colección de Funkos**. La API permitirá ver, crear, modificar y eliminar Funkos.
 
-### Modelo de datos
+### 2.7.2. Modelo de datos
 
 Un Funko tiene estas propiedades:
 
@@ -460,7 +469,7 @@ Un Funko tiene estas propiedades:
 | `imagen` | string | No |
 | `creadoEn` | DateTime | Sí (autogenerado) |
 
-### Ejercicio: Completa la tabla
+### 2.7.3. Ejercicio: Completa la tabla
 
 **Para cada operación, rellena:** endpoint, método, datos que envías, código de respuesta, qué devuelve y si necesita autorización.
 

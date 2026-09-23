@@ -8,7 +8,8 @@
     - [6.2.2. Scoped](#622-scoped)
     - [6.2.3. Singleton](#623-singleton)
     - [6.2.4. Tabla comparativa](#624-tabla-comparativa)
-    - [6.2.5. Errores comunes](#625-errores-comunes)
+    - [6.2.5. Flujo de una petición con DI](#625-flujo-de-una-petición-con-di)
+    - [6.2.6. Errores comunes](#626-errores-comunes)
   - [6.3. Constructores primarios (C# 14)](#63-constructores-primarios-c-14)
     - [6.3.1. Constructor tradicional vs primario](#631-constructor-tradicional-vs-primario)
     - [6.3.2. Constructores primarios en controladores](#632-constructores-primarios-en-controladores)
@@ -28,9 +29,6 @@
     - [6.6.5. ¿Cuándo usar cada enfoque?](#665-cuándo-usar-cada-enfoque)
     - [6.6.6. Ejemplo completo con ambos enfoques](#666-ejemplo-completo-con-ambos-enfoques)
     - [6.6.7. DI condicional: elegir implementación según configuración](#667-di-condicional-elegir-implementación-según-configuración)
-    - [6.6.1. Instalación](#661-instalación)
-    - [6.6.2. Assembly scanning](#662-assembly-scanning)
-    - [6.6.3. Convention-based registration](#663-convention-based-registration)
   - [6.7. DI en Minimal APIs](#67-di-en-minimal-apis)
     - [6.7.1. Inyectar servicios directamente](#671-inyectar-servicios-directamente)
     - [6.7.2. Ejemplo completo](#672-ejemplo-completo)
@@ -74,13 +72,14 @@ Imagina un servicio de productos que necesita un repositorio, un logger y un ser
 public class ProductoService
 {
     private readonly ProductoRepository _repository;
-    private readonly Logger<ProductoService> _logger;
+    // FakeLogger: tipo ficticio solo para el ejemplo — no lo copies
+    private readonly FakeLogger<ProductoService> _logger;
     private readonly EmailService _email;
 
     public ProductoService()
     {
         _repository = new ProductoRepository("connection string");
-        _logger = new Logger<ProductoService>();
+        _logger = new FakeLogger<ProductoService>();
         _email = new EmailService("smtp.gmail.com");
     }
 }
@@ -148,7 +147,9 @@ Crea una **nueva instancia una vez por petición HTTP**. Todos los servicios Sco
 ```csharp
 builder.Services.AddScoped<IProductoService, ProductoService>();
 builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
-builder.Services.AddScoped<TiendaDbContext>();
+// AddDbContext configura DbContextOptions y registra el DbContext como Scoped
+builder.Services.AddDbContext<TiendaDbContext>(options =>
+    options.UseNpgsql(connectionString));
 ```
 
 ### 6.2.3. Singleton
@@ -157,7 +158,8 @@ Crea una **única instancia** que se reutiliza durante toda la vida de la aplica
 
 ```csharp
 builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
-builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+// ⚠️ Redundante: IConfiguration ya lo registra el framework automáticamente
+// builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 ```
 
 ### 6.2.4. Tabla comparativa
@@ -188,7 +190,7 @@ flowchart TB
     style G2 fill:#4CAF50,color:#fff
 ```
 
-### 6.2.6. Flujo de una petición con DI
+### 6.2.5. Flujo de una petición con DI
 
 ```mermaid
 flowchart LR
@@ -207,7 +209,7 @@ flowchart LR
     style DB fill:#9C27B0,color:#fff
 ```
 
-### 6.2.5. Errores comunes
+### 6.2.6. Errores comunes
 
 **Error 1: DbContext como Singleton**
 
@@ -217,8 +219,9 @@ DbContext **no es thread-safe**. Si lo registras como Singleton, múltiples peti
 // ❌ INCORRECTO
 builder.Services.AddSingleton<TiendaDbContext>();
 
-// ✅ CORRECTO
-builder.Services.AddScoped<TiendaDbContext>();
+// ✅ CORRECTO — AddDbContext configura DbContextOptions y lo registra como Scoped
+builder.Services.AddDbContext<TiendaDbContext>(options =>
+    options.UseNpgsql(connectionString));
 ```
 
 **Error 2: Capturar Scope en Singleton**
@@ -271,8 +274,8 @@ public class ProductoService(
     IProductoRepository repository,
     ILogger<ProductoService> logger) : IProductoService
 {
-    // Los parámetros son automáticamente campos readonly
-    // No necesitas declararlos ni asignarlos
+    // Los parámetros se capturan y quedan disponibles en toda la clase
+    // (no son campos readonly: solo se convierten en campo si se usan)
 }
 ```
 
@@ -344,6 +347,8 @@ public class ProductoService(
 
     public async Task<Producto> CreateAsync(CreateProductoDto dto)
     {
+        // ❌ MALO: un error de negocio NO se lanza como excepción (devolvería 500, no 400).
+        // Usa el patrón Result en su lugar — ver tema 07 (Excepciones y Result).
         if (dto.Precio <= 0)
             throw new ValidationException("El precio debe ser mayor que cero");
 
@@ -362,7 +367,7 @@ public class ProductoService(
 }
 ```
 
-> 💡 **Consejo:** Si no usas interfaces, no puedes hacer testing unitario con mocks. Siempre I + nombre (IProductoService, IProductoRepository).
+> 💡 **Consejo:** Si no usas interfaces, no podrás mockear fácilmente en los tests unitarios. Siempre I + nombre (IProductoService, IProductoRepository).
 
 ## 6.5. Registro de servicios en Program.cs
 
@@ -457,7 +462,7 @@ flowchart TD
     Scan --> Scan1["Escanea ensamblado"]
     Scan1 --> Match1["Clases que terminan en Repository"]
     Scan1 --> Match2["Clases que terminan en Service"]
-    Match1 --> Reg1["Registra como Singleton"]
+    Match1 --> Reg1["Registra como Scoped"]
     Match2 --> Reg2["Registra como Scoped"]
 
     style Program fill:#4CAF50,color:#fff
@@ -502,10 +507,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Scan(scan => scan
     .FromAssemblyOf<Program>()
-    // Todas las clases que terminan en "Repository" → Singleton
+    // Todas las clases que terminan en "Repository" → Scoped
+    // (usan DbContext, que NO es thread-safe: nunca van a Singleton)
     .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Repository")))
         .AsImplementedInterfaces()
-        .WithSingletonLifetime()
+        .WithScopedLifetime()
     // Todas las clases que terminan en "Service" → Scoped
     .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Service")))
         .AsImplementedInterfaces()
@@ -515,6 +521,8 @@ builder.Services.Scan(scan => scan
 
 **Ventaja:** Simple, solo necesitas nombrar bien las clases.
 **Riesgo:** Si renombras una clase, pierde el registro silenciosamente.
+
+> ⚠️ **Advertencia:** Nunca registres un repository (o cualquier servicio que use `DbContext`) como **Singleton**: el `DbContext` no es thread-safe y compartirlo entre peticiones provoca errores de concurrencia. Los repositories van siempre en **Scoped**.
 
 📌 Ejemplo real: **TiendaAPI** usa este enfoque. Sus clases se llaman `ProductoService`, `UserService`, `CategoriaService`, etc. Scrutor las detecta por el sufijo "Service".
 
@@ -529,8 +537,11 @@ public interface IScopedService { }
 public interface ISingletonService { }
 
 // La clase implementa su interfaz de negocio + marcador de ciclo de vida
-public class ProductoRepository : IProductoRepository, ISingletonService { }
+// Los repositories van con IScopedService (usan DbContext, no son thread-safe)
+public class ProductoRepository : IProductoRepository, IScopedService { }
 public class ProductoService : IProductoService, IScopedService { }
+// ISingletonService se reserva para caché y configuración
+public class CacheService : ICacheService, ISingletonService { }
 ```
 
 ```csharp
@@ -576,7 +587,7 @@ builder.Services.Scan(scan => scan
     .FromAssemblyOf<Program>()
     .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Repository")))
         .AsImplementedInterfaces()
-        .WithSingletonLifetime()
+        .WithScopedLifetime()
     .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Service")))
         .AsImplementedInterfaces()
         .WithScopedLifetime()
@@ -606,7 +617,7 @@ builder.Services.Scan(scan => scan
     .FromAssemblyOf<Program>()
     .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Repository")))
         .AsImplementedInterfaces()
-        .WithSingletonLifetime()
+        .WithScopedLifetime()
     .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Service")))
         .AsImplementedInterfaces()
         .WithScopedLifetime()

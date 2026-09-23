@@ -14,6 +14,7 @@
     - [23.3.3. Cache-Aside Pattern](#2333-cache-aside-pattern)
     - [23.3.4. Response Caching](#2334-response-caching)
     - [23.3.5. Invalidación de caché](#2335-invalidación-de-caché)
+    - [23.3.6. ETag y peticiones condicionales](#2336-etag-y-peticiones-condicionales)
   - [23.4. Optimización de API](#234-optimización-de-api)
     - [23.4.1. Compresión de respuestas](#2341-compresión-de-respuestas)
     - [23.4.2. Mínimo de peticiones HTTP](#2342-mínimo-de-peticiones-http)
@@ -412,6 +413,63 @@ public class ProductoService(
 
 > 💡 **Consejo:** Para invalidación en cascada, cuando actualices un producto, invalida tanto el caché del individual como el de la lista. Así la próxima petición carga datos frescos.
 
+### 23.3.6. ETag y peticiones condicionales
+
+Las peticiones condicionales permiten al cliente indicar qué versión de un recurso ya tiene. Si el contenido no ha cambiado, el servidor responde **304 Not Modified** sin cuerpo, ahorrando ancho de banda. El mecanismo usa un identificador de versión: el **ETag**.
+
+Flujo:
+
+1. El servidor devuelve la respuesta con el header `ETag: "v1-abc123"`.
+2. El cliente guarda el ETag y, en la siguiente petición, envía `If-None-Match: "v1-abc123"`.
+3. Si el ETag sigue siendo el mismo → **304 Not Modified** (sin cuerpo). Si cambió → **200** con el contenido nuevo.
+
+📌 **Ejemplo real:** Cuando Instagram o Twitter revalidan tu feed, usan peticiones condicionales: si no hay posts nuevos, el servidor solo responde 304 y el cliente muestra lo que ya tenía cacheado.
+
+**Middleware manual (ilustrativo):**
+
+```csharp
+app.MapGet("/api/productos/{id}", async (long id, HttpContext ctx) =>
+{
+    var producto = await service.GetByIdAsync(id);
+
+    // ETag derivado del contenido (versión + hash)
+    var etag = $"\"{producto.Version}-{producto.GetHashCode():x}\"";
+
+    ctx.Response.Headers.ETag = etag;
+
+    // ¿El cliente ya tiene esta versión?
+    if (ctx.Request.Headers.IfNoneMatch == etag)
+    {
+        return Results.StatusCode(StatusCodes.Status304NotModified);
+    }
+
+    return Results.Ok(producto);
+});
+```
+
+**Alternativa en .NET 10 con `[OutputCache]`:**
+
+```csharp
+builder.Services.AddOutputCache(options =>
+{
+    options.AddPolicy("productos", policy =>
+        policy.Expire(TimeSpan.FromMinutes(5))
+              .Tag("productos"));
+});
+
+var app = builder.Build();
+app.UseOutputCache();
+
+// El atributo genera automáticamente ETag y gestiona If-None-Match → 304
+app.MapGet("/api/productos/{id}", async (long id, IProductoService service) =>
+        Results.Ok(await service.GetByIdAsync(id)))
+    .CacheOutput("productos");
+```
+
+> 💡 **Consejo:** Para recursos públicos que casi no cambian (catálogo, estáticos), combina `Cache-Control` con ETags: el navegador reutiliza sin evenir a la red si el ETag coincide.
+
+> ⚠️ **Advertencia:** No derives el ETag solo de un `Guid.NewGuid()` aleatorio: cambiaría en cada respuesta y el cliente nunca recibiría 304. Debe reflejar la versión real del recurso.
+
 ## 23.4. Optimización de API
 
 La optimización de la capa HTTP reduce el tamaño de las respuestas y el número de peticiones necesarias.
@@ -557,14 +615,20 @@ async (IProductoService service) => { });
 
 El algoritmo Token Bucket es una implementación popular de rate limiting. Cada cliente tiene un "cubo" de tokens que se rellena periódicamente. Cada petición consume un token.
 
+> 📝 **Nota:** La implementación de abajo es deliberadamente **simple**: rellena el cubo de golpe hasta `maxTokens` cada `refillInterval`. Eso se parece más a una **ventana fija** que a un token bucket "de verdad" (que añadiría tokens de forma continua, p. ej. 1 token cada 100 ms). Sirve para entender la idea, no como código de producción.
+
+En producción, para código testeable, preferible usar **`TimeProvider`** (introducido en .NET 8) en lugar de `DateTime.UtcNow`: permite inyectar un reloj falso en los tests y evita tests dependientes del tiempo real.
+
 ```csharp
 public class TokenBucketRateLimiter(
     int maxTokens,
-    TimeSpan refillInterval)
+    TimeSpan refillInterval,
+    TimeProvider? timeProvider = null)  // ✅ TimeProvider en lugar de DateTime directo
 {
+    private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
     private readonly SemaphoreSlim _semaphore = new(maxTokens, maxTokens);
     private int _currentTokens = maxTokens;
-    private DateTime _nextRefill = DateTime.UtcNow.Add(refillInterval);
+    private DateTime _nextRefill = _timeProvider.GetUtcNow().UtcDateTime.Add(refillInterval);
 
     public async Task<bool> TryAcquireAsync()
     {
@@ -587,15 +651,19 @@ public class TokenBucketRateLimiter(
 
     private void RefillIfNeeded()
     {
-        var now = DateTime.UtcNow;
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
         if (now >= _nextRefill)
         {
+            // ❌ Relleno de golpe (ventana fija): un token bucket real añadiría
+            // tokens de forma continua según el tiempo transcurrido
             _currentTokens = maxTokens;
             _nextRefill = now.Add(refillInterval);
         }
     }
 }
 ```
+
+> 💡 **Truco:** Para tests del rate limiter, inyecta un `FakeTimeProvider` (paquete `Microsoft.Extensions.TimeProvider.Testing`) y avanza el reloj manualmente: tests deterministas, sin `Thread.Sleep`.
 
 ## 23.6. Monitoring y Profiling
 
@@ -606,6 +674,10 @@ No puedes optimizar lo que no mides. El monitoring te permite detectar problemas
 ### 23.6.1. Health Checks
 
 Los health checks verifican que los componentes de tu aplicación funcionan correctamente. Son esenciales para orquestadores como Kubernetes.
+
+```bash
+dotnet add package AspNetCore.HealthChecks.Redis
+```
 
 ```csharp
 builder.Services.AddHealthChecks()
@@ -652,6 +724,13 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 
 Las métricas personalizadas te permiten rastrear el comportamiento específico de tu aplicación.
 
+```bash
+dotnet add package OpenTelemetry.Extensions.Hosting
+dotnet add package OpenTelemetry.Instrumentation.AspNetCore
+dotnet add package OpenTelemetry.Instrumentation.Http
+dotnet add package OpenTelemetry.Instrumentation.Runtime
+```
+
 ```csharp
 // Configurar métricas con Prometheus
 builder.Services.AddOpenTelemetry()
@@ -680,6 +759,10 @@ public async Task<IActionResult> GetProductos()
 
 MiniProfiler muestra en tiempo real las consultas SQL, el tiempo de ejecución y los problemas de rendimiento.
 
+```bash
+dotnet add package MiniProfiler.AspNetCore.Mvc
+```
+
 ```csharp
 builder.Services.AddMiniProfiler(options =>
 {
@@ -700,21 +783,21 @@ app.UseMiniProfiler();
 
 **Polly** es la librería estándar de .NET para manejar fallos transitorios y mejorar la resiliencia de llamadas a servicios externos. Proporciona patrones como Retry, Circuit Breaker, Timeout y Bulkhead que evitan que un servicio caído cascada a toda la aplicación.
 
-> 📝 **Nota:** En microservicios, una llamada a un servicio que tarda 5 segundos puede bloquear un hilo del servidor. Polly gestiona estos fallos de forma automatica, reintentando, cortando circuitos o limitando tiempo de espera.
+> 📝 **Nota:** En microservicios, una llamada a un servicio que tarda 5 segundos puede bloquear un hilo del servidor. Polly gestiona estos fallos de forma automática, reintentando, cortando circuitos o limitando tiempo de espera.
 
 📌 Ejemplo real: **Netflix** usa Polly para gestionar las llamadas a sus miles de microservicios. Si un servicio de recomendaciones tarda demasiado, Polly corta el circuito y devuelve datos cacheados en su lugar, evitando que la app se cuelgue.
 
 ### Patrones principales de Polly
 
-| Patron | Que hace | Cuando usarlo |
+| Patrón | Qué hace | Cuándo usarlo |
 |--------|----------|---------------|
-| **Retry** | Reintenta una operacion fallida N veces con backoff | Fallos transitorios (red, timeout) |
-| **Circuit Breaker** | Corta llamadas a un servicio caido durante X tiempo | Servicio externo no disponible |
-| **Timeout** | Limita el tiempo de espera de una operacion | Llamadas que pueden colgarse |
+| **Retry** | Reintenta una operación fallida N veces con backoff | Fallos transitorios (red, timeout) |
+| **Circuit Breaker** | Corta llamadas a un servicio caído durante X tiempo | Servicio externo no disponible |
+| **Timeout** | Limita el tiempo de espera de una operación | Llamadas que pueden colgarse |
 | **Bulkhead Isolation** | Aisla recursos por servicio | Evitar que un servicio agote todos los hilos |
-| **Fallback** | Devuelve un valor por defecto cuando falla | Datos no criticos (cache, defaults) |
+| **Fallback** | Devuelve un valor por defecto cuando falla | Datos no críticos (cache, defaults) |
 
-### Instalacion
+### Instalación
 
 ```bash
 dotnet add package Microsoft.Extensions.Http.Polly
@@ -723,7 +806,7 @@ dotnet add package Polly
 
 ### Retry Policy
 
-Reintenta una operacion cuando falla por un fallo transitorio (timeout de red, servicio temporalmente no disponible):
+Reintenta una operación cuando falla por un fallo transitorio (timeout de red, servicio temporalmente no disponible):
 
 ```csharp
 using Polly;
@@ -751,7 +834,7 @@ var resultado = await retryPolicy.ExecuteAsync(async () =>
 
 ### Circuit Breaker
 
-Corta las llamadas a un servicio cuando detecta fallos repetidos, evitando sobrecargar un servicio caido:
+Corta las llamadas a un servicio cuando detecta fallos repetidos, evitando sobrecargar un servicio caído:
 
 ```csharp
 var circuitBreaker = Policy
@@ -776,7 +859,7 @@ var resultado = await circuitBreaker.ExecuteAsync(async () =>
 
 ### Timeout
 
-Limita el tiempo maximo de espera de una operacion:
+Limita el tiempo máximo de espera de una operación:
 
 ```csharp
 var timeoutPolicy = Policy
@@ -794,7 +877,7 @@ var resultado = await timeoutPolicy.ExecuteAsync(async () =>
 });
 ```
 
-### Combinar politicas
+### Combinar políticas
 
 ```csharp
 // Combinar: Retry + Circuit Breaker + Timeout
@@ -813,14 +896,14 @@ builder.Services.AddHttpClient("Externo")
 
 ### Resumen de patrones
 
-| Patron | Configuracion | Ejemplo de uso |
+| Patrón | Configuración | Ejemplo de uso |
 |--------|---------------|----------------|
 | **Retry** | 3 reintentos, backoff 2^n | Llamada a API externa |
 | **Circuit Breaker** | 3 fallos, 30s pausa | Servicio de pagos |
-| **Timeout** | 5 segundos max | Cualquier llamada de red |
+| **Timeout** | 5 segundos máx | Cualquier llamada de red |
 | **Fallback** | Valor por defecto | Datos de cache |
 
-> 💡 **Consejo:** Empieza con Retry + Timeout. Si tu API depende de servicios criticos (pagos, notificaciones), añade Circuit Breaker.
+> 💡 **Consejo:** Empieza con Retry + Timeout. Si tu API depende de servicios críticos (pagos, notificaciones), añade Circuit Breaker.
 
 ## 23.8. Buenas Prácticas
 
@@ -837,7 +920,7 @@ Aplica estas prácticas para mantener tu API optimizada:
 - **Parallel execution:** Usa `Task.WhenAll` para ejecutar operaciones independientes en paralelo
 - **Transacciones cortas:** Mantén las transacciones de base de datos lo más breves posible
 
-## 23.8. Testing de Rendimiento
+## 23.9. Testing de Rendimiento
 
 Optimizar sin testear es como correr sin medir tiempos. Necesitas verificar que tus optimizaciones realmente mejoran el rendimiento.
 
@@ -856,7 +939,10 @@ public class ProductoPerformanceTests
         _context = new AppDbContext(options);
     }
 
+    // ⚠️ ILUSTRATIVO: la comparación de tiempos con Stopwatch es flaky
+    // (el primer suele ser más lento por warm-up). Para benchmarks reales usa BenchmarkDotNet.
     [Test]
+    [Explicit("Comparación de tiempos con Stopwatch: ilustrativa, puede fallar por ruido del sistema")]
     public async Task GetProductos_AsNoTracking_RetornaMasRapido()
     {
         // Arrange
@@ -874,7 +960,7 @@ public class ProductoPerformanceTests
             .ToListAsync();
         var tiempoSinTracking = sw.ElapsedMilliseconds;
 
-        // Assert
+        // Assert (ilustrativo: en un entorno ruidoso puede fallar)
         sinTracking.Should().HaveCount(1000);
         tiempoSinTracking.Should().BeLessThan(tiempoConTracking);
     }
@@ -917,7 +1003,7 @@ public class ProductoPerformanceTests
 
 > 💡 **Consejo:** Usa `BenchmarkDotNet` para benchmarks precisos. Los tests de rendimiento con `Stopwatch` son útiles para comparaciones rápidas, pero BenchmarkDotNet genera estadísticas completas.
 
-## 23.9. Reto: Optimiza tu FunkoApp
+## 23.10. Reto: Optimiza tu FunkoApp
 
 > Antes de irte, aplica las optimizaciones a tu FunkoApp. No todo a la vez: prioriza según el impacto.
 
@@ -974,6 +1060,8 @@ Un Funko tiene estas propiedades:
 | Rate limiting funcional | 1 |
 | Health checks | 1 |
 
+---
+
 **Resumen del punto:**
 
 | Área | Técnica | Impacto |
@@ -993,4 +1081,4 @@ Un Funko tiene estas propiedades:
 
 **¿Qué viene después?**
 
-En el siguiente punto veremos **Seguridad en APIs**: autenticación JWT, autorización, CORS y protección contra ataques comunes. Las optimizaciones que hemos visto serán la base sobre la que construiremos una API no solo rápida, sino también segura.
+En el siguiente punto veremos **Documentación**: cómo describir tu API con OpenAPI/Swagger, generar documentación automática y mantenerla al día. Las optimizaciones que hemos visto serán la base sobre la que construiremos una API no solo rápida, sino también bien documentada.

@@ -26,7 +26,7 @@
 
 # 21. Servicios de Email
 
-> **Punto de partida:** Cuando compras en Amazon, recibes un email de confirmación al instante. Cuando alguien comenta tu foto en Instagram, te llega una notificación. El envío de emails es una parte fundamental de cualquier aplicación moderna. ¿Cómo se implementa un sistema de emails robusto, escalable y fácil de probar?
+> 💡 **Punto de partida:** Cuando compras en Amazon, recibes un email de confirmación al instante. Cuando alguien comenta tu foto en Instagram, te llega una notificación. El envío de emails es una parte fundamental de cualquier aplicación moderna. ¿Cómo se implementa un sistema de emails robusto, escalable y fácil de probar?
 
 En este punto aprenderás a diseñar e implementar un servicio de envío de emails en .NET: desde los conceptos básicos de SMTP hasta un sistema completo con plantillas, colas asíncronas e integración con tus servicios de negocio.
 
@@ -46,7 +46,7 @@ En este punto aprenderás a diseñar e implementar un servicio de envío de emai
 
 El envío de emails es fundamental para la comunicación con usuarios. Las notificaciones por email incluyen confirmaciones de pedidos, restablecimiento de contraseñas, notificaciones de envío, recibos fiscales y alertas de seguridad.
 
-Un sistema bien diseñado debe ser **confiable** (no perder emails), **eficiente** (no bloquear la aplicación), **probable** (facilitar tests sin SMTP real) y **maintainable** (plantillas fáciles de cambiar).
+Un sistema bien diseñado debe ser **confiable** (no perder emails), **eficiente** (no bloquear la aplicación), **testeable** (facilitar tests sin SMTP real) y **mantenible** (plantillas fáciles de cambiar).
 
 ```mermaid
 flowchart LR
@@ -80,7 +80,7 @@ flowchart LR
     style C1 fill:#FF9800,color:#fff
 ```
 
-> **Analogía:** El sistema de emails es como el servicio de correo de una empresa. Los empleados (aplicación) entregan las cartas (emails) al departamento de correo (EmailService). El departamento las procesa en batch (BackgroundService) y las entrega al correo (SMTP) para que lleguen a los destinatarios finales.
+> 💡 **Analogía:** El sistema de emails es como el servicio de correo de una empresa. Los empleados (aplicación) entregan las cartas (emails) al departamento de correo (EmailService). El departamento las procesa en batch (BackgroundService) y las entrega al correo (SMTP) para que lleguen a los destinatarios finales.
 
 📌 **Ejemplo real:** Amazon envía emails de confirmación de pedido de forma asíncrona. Cuando haces clic en "Comprar", el pedido se guarda en la BD y se encola un email. El usuario ve la confirmación al instante, y el email llega unos segundos después. No espera al email para mostrar la respuesta.
 
@@ -128,6 +128,7 @@ La clave de un buen sistema de emails es **desacoplar** la abstracción de la im
 public interface IEmailService
 {
     Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default);
+    Task SendHtmlEmailAsync(string to, string subject, string htmlBody, CancellationToken cancellationToken = default);
     Task SendBatchAsync(IEnumerable<EmailMessage> messages, CancellationToken cancellationToken = default);
     Task<EmailTemplate?> GetTemplateAsync(string templateName, CancellationToken cancellationToken = default);
 }
@@ -163,6 +164,8 @@ public class EmailTemplate
 
 📌 **Ejemplo real:** Spotify usa este patrón cuando envía emails de "Tu resumen anual está listo". El servicio de negocio llama a `IEmailService.SendAsync()` sin preocuparse de si el email se envía por SMTP, SendGrid o se guarda en una cola.
 
+> 📝 **Nota:** El método `SendHtmlEmailAsync` es un atajo de alto nivel (`to` + `subject` + `html`) que forma parte de la interfaz desde el principio. Lo usarán, por ejemplo, los **trabajos programados del tema 22** (`22-tareas-programadas.md`) para enviar newsletters sin construir un `EmailMessage` a mano — así la interfaz de este tema y la del siguiente son coherentes.
+
 ## 21.4. Implementación con MailKit
 
 ### 21.4.1. MailKitEmailService
@@ -174,16 +177,17 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 using MimeKit.Text;
+using Microsoft.Extensions.Options;
 
 public class MailKitEmailService(
-    IConfiguration configuration,
+    IOptions<SmtpSettings> options,
     ILogger<MailKitEmailService> logger,
     ITemplateService templateService) : IEmailService
 {
+    private readonly SmtpSettings _settings = options.Value;
+
     public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
     {
-        var smtpConfig = GetSmtpConfiguration();
-
         var mimeMessage = new MimeMessage
         {
             Subject = message.Subject,
@@ -193,7 +197,7 @@ public class MailKitEmailService(
             }
         };
 
-        mimeMessage.From.Add(new MailboxAddress(smtpConfig.DisplayName, smtpConfig.From));
+        mimeMessage.From.Add(new MailboxAddress(_settings.DisplayName, _settings.From));
         mimeMessage.To.Add(new MailboxAddress("", message.To));
 
         foreach (var attachment in message.Attachments)
@@ -214,14 +218,14 @@ public class MailKitEmailService(
             using var smtpClient = new SmtpClient();
 
             await smtpClient.ConnectAsync(
-                smtpConfig.Host,
-                smtpConfig.Port,
-                GetSecureSocket(smtpConfig.Security),
+                _settings.Host,
+                _settings.Port,
+                GetSecureSocket(_settings.Security),
                 cancellationToken);
 
-            if (!string.IsNullOrEmpty(smtpConfig.Username))
+            if (!string.IsNullOrEmpty(_settings.Username))
             {
-                await smtpClient.AuthenticateAsync(smtpConfig.Username, smtpConfig.Password, cancellationToken);
+                await smtpClient.AuthenticateAsync(_settings.Username, _settings.Password, cancellationToken);
             }
 
             await smtpClient.SendAsync(mimeMessage, cancellationToken);
@@ -236,6 +240,15 @@ public class MailKitEmailService(
         }
     }
 
+    public Task SendHtmlEmailAsync(string to, string subject, string htmlBody, CancellationToken cancellationToken = default)
+        => SendAsync(new EmailMessage
+        {
+            To = to,
+            Subject = subject,
+            Body = htmlBody,
+            IsHtml = true
+        }, cancellationToken);
+
     // ... SendBatchAsync, GetTemplateAsync, helpers
 }
 ```
@@ -244,24 +257,34 @@ public class MailKitEmailService(
 
 ### 21.4.2. Configuración SMTP
 
+Igual que en el tema 20 (`StorageSettings`), usamos **`IOptions<SmtpSettings>`** en lugar de leer `IConfiguration` a mano con `int.Parse` (eso revienta con `FormatException` si falta la clave o el valor no es numérico):
+
 ```csharp
-private SmtpConfiguration GetSmtpConfiguration()
+namespace TiendaApi.Apis.Configuration;
+
+/// <summary>
+/// Configuración SMTP tipada (sección "Email" de appsettings.json)
+/// </summary>
+public class SmtpSettings
 {
-    return new SmtpConfiguration
-    {
-        Host = configuration["Email:Smtp:Host"] ?? "localhost",
-        Port = int.Parse(configuration["Email:Smtp:Port"] ?? "25"),
-        Username = configuration["Email:Smtp:Username"],
-        Password = configuration["Email:Smtp:Password"],
-        From = configuration["Email:From"] ?? "noreply@tienda.com",
-        DisplayName = configuration["Email:DisplayName"] ?? "TiendaDAW",
-        Security = configuration["Email:Smtp:Security"] ?? "Auto"
-    };
+    public string Host { get; set; } = "localhost";
+    public int Port { get; set; } = 25;
+    public string? Username { get; set; }
+    public string? Password { get; set; }
+    public string From { get; set; } = "noreply@tienda.com";
+    public string DisplayName { get; set; } = "TiendaDAW";
+    public string Security { get; set; } = "Auto";
 }
+```
+
+```csharp
+// Program.cs — sección "Email" plana, case exacta con SmtpSettings (sin int.Parse manual)
+builder.Services.Configure<SmtpSettings>(
+    builder.Configuration.GetSection("Email"));
 
 private static SecureSocketOptions GetSecureSocket(string security)
 {
-    return security?.ToLowerInvariant() switch
+    return security.ToLowerInvariant() switch
     {
         "ssl" => SecureSocketOptions.SslOnConnect,
         "tls" => SecureSocketOptions.StartTls,
@@ -293,10 +316,17 @@ foreach (var attachment in message.Attachments)
 Durante el desarrollo y los tests, **no queremos enviar emails reales**. `MemoryEmailService` almacena los emails en memoria para poder verificarlos sin configurar SMTP.
 
 ```csharp
+using System.Collections.Concurrent;
+
 public class MemoryEmailService : IEmailService
 {
     private readonly ILogger<MemoryEmailService> _logger;
-    public static readonly List<EmailMessage> SentEmails = new();
+
+    // ConcurrentBag: el BackgroundService puede leer mientras los tests escriben
+    private static readonly ConcurrentBag<EmailMessage> _sentEmails = new();
+
+    /// <summary>Copia inmutable de los emails enviados (thread-safe para asserts)</summary>
+    public static IReadOnlyList<EmailMessage> SentEmails => _sentEmails.ToList();
 
     public MemoryEmailService(ILogger<MemoryEmailService> logger)
     {
@@ -306,13 +336,23 @@ public class MemoryEmailService : IEmailService
     public Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("[MOCK EMAIL] Para: {To}, Asunto: {Subject}", message.To, message.Subject);
-        SentEmails.Add(message);
+        _sentEmails.Add(message);
         return Task.CompletedTask;
     }
 
+    public Task SendHtmlEmailAsync(string to, string subject, string htmlBody, CancellationToken cancellationToken = default)
+        => SendAsync(new EmailMessage
+        {
+            To = to,
+            Subject = subject,
+            Body = htmlBody,
+            IsHtml = true
+        }, cancellationToken);
+
     public Task SendBatchAsync(IEnumerable<EmailMessage> messages, CancellationToken cancellationToken = default)
     {
-        SentEmails.AddRange(messages);
+        foreach (var message in messages)
+            _sentEmails.Add(message);
         return Task.CompletedTask;
     }
 
@@ -327,14 +367,21 @@ public class MemoryEmailService : IEmailService
         return Task.FromResult<EmailTemplate?>(template);
     }
 
-    public static void Clear() => SentEmails.Clear();
+    public static void Clear()
+    {
+        while (!_sentEmails.IsEmpty)
+            _sentEmails.TryTake(out _);
+    }
 
     public static EmailMessage? GetLastEmail(string to)
     {
-        return SentEmails.LastOrDefault(e => e.To.Equals(to, StringComparison.OrdinalIgnoreCase));
+        return SentEmails.LastOrDefault(
+            e => e.To.Equals(to, StringComparison.OrdinalIgnoreCase));
     }
 }
 ```
+
+> ⚠️ **Advertencia:** Una `static List<EmailMessage>` **no es thread-safe**: el `BackgroundService` añade desde otro hilo mientras los tests leen → excepciones de "collar de enumeración modificada" o datos corruptos. `ConcurrentBag` (o un `lock`) resuelve el problema.
 
 📌 **Ejemplo real:** En el proyecto Tienda, usamos `MemoryEmailService` en el entorno de desarrollo para que los tests puedan verificar que se envían los emails correctos sin necesidad de un servidor SMTP real.
 
@@ -423,6 +470,14 @@ Templates/
         └── body.html
 ```
 
+Añade al `.csproj` el contenido de plantillas (misma familia que el XML de Swagger o los datos que necesites en producción): sin esto, los `.html`/`.txt` **no se copian al directorio de salida** y `LoadTemplates` no encontrará nada al ejecutar la API publicada:
+
+```xml
+<ItemGroup>
+  <Content Include="Templates\**" CopyToOutputDirectory="PreserveNewest" />
+</ItemGroup>
+```
+
 **Ejemplo de plantilla (body.html):**
 
 ```html
@@ -471,7 +526,7 @@ public class EmailQueueService
 ```csharp
 public class EmailBackgroundWorker(
     EmailQueueService queue,
-    IEmailService emailService,
+    IServiceScopeFactory serviceScopeFactory,
     ILogger<EmailBackgroundWorker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -485,6 +540,12 @@ public class EmailBackgroundWorker(
                 var email = await queue.DequeueAsync(stoppingToken);
                 if (email != null)
                 {
+                    // IEmailService es Scoped y el worker es Singleton:
+                    // creamos un scope por cada envío (patrón correcto)
+                    using var scope = serviceScopeFactory.CreateScope();
+                    var emailService = scope.ServiceProvider
+                        .GetRequiredService<IEmailService>();
+
                     await emailService.SendAsync(email, stoppingToken);
                     logger.LogInformation("Email procesado: {To}", email.To);
                 }
@@ -501,9 +562,31 @@ public class EmailBackgroundWorker(
 }
 ```
 
+❌ **MALO:** Inyectar `IEmailService` (Scoped) en el constructor de un `BackgroundService` (Singleton). El worker se crea **una sola vez al arrancar**, así que captura un servicio Scoped de la primera petición (o del scope raíz) y lo reutiliza para siempre: *captive dependency*. Dependencias como un `DbContext` o el `IServiceScopeFactory` de esa petición quedarían vivas indefinidamente.
+
+✅ **BUENO:** Inyectar `IServiceScopeFactory` y crear un scope **por cada email** dentro de `ExecuteAsync`. Así cada envío resuelve su `IEmailService` Scoped fresco y lo descarta con `using`. Este es exactamente el patrón que verás hecho bien en el tema **22. Tareas programadas**.
+
+> 📝 **Nota:** Registra el worker como hosted service (`AddHostedService<EmailBackgroundWorker>()`): el contenedor lo crea como Singleton, por eso el scope manual es obligatorio.
+
 📌 **Ejemplo real:** Cuando haces "Publicar" en Instagram, la app encola un email de notificación a tus seguidores. El `BackgroundService` lo procesa mientras tú sigues navegando. No notas retraso.
 
-> 💡 **Consejo:** Registra el `EmailBackgroundWorker` en `Program.cs` con `builder.Services.AddHostedService<EmailBackgroundWorker>()`.
+> 💡 **Consejo:** Registro completo en `Program.cs`:
+
+```csharp
+// Cola compartida por toda la app → Singleton
+builder.Services.AddSingleton<EmailQueueService>();
+
+// IEmailService es Scoped (un scope por petición / por cada envío del worker)
+builder.Services.AddScoped<IEmailService, MailKitEmailService>(); // o MemoryEmailService en desarrollo
+builder.Services.AddScoped<ITemplateService, TemplateService>();
+
+// Configuración tipada (patrón IOptions del tema 20) — sección "Email" plana
+builder.Services.Configure<SmtpSettings>(
+    builder.Configuration.GetSection("Email"));
+
+// BackgroundService → Singleton alojado por el host
+builder.Services.AddHostedService<EmailBackgroundWorker>();
+```
 
 ## 21.8. Integración con Productos
 
@@ -579,15 +662,13 @@ public class ProductosService(
 ```json
 {
   "Email": {
+    "Host": "smtp.gmail.com",
+    "Port": 587,
+    "Username": "tu-cuenta@gmail.com",
+    "Password": "tu-password-de-aplicacion",
     "From": "noreply@tienda.com",
     "DisplayName": "TiendaDAW",
-    "Smtp": {
-      "Host": "smtp.gmail.com",
-      "Port": 587,
-      "Username": "tu-cuenta@gmail.com",
-      "Password": "tu-password-de-aplicacion",
-      "Security": "TLS"
-    }
+    "Security": "TLS"
   }
 }
 ```
@@ -597,18 +678,18 @@ Para desarrollo local con Mailhog (servidor SMTP ficticio):
 ```json
 {
   "Email": {
-    "Smtp": {
-      "Host": "localhost",
-      "Port": 1025,
-      "Security": "None"
-    }
+    "Host": "localhost",
+    "Port": 1025,
+    "Security": "None"
   }
 }
 ```
 
-> ⚠️ **Advertencia:** **Nunca** guardes contraseñas reales en `appsettings.json`. Usa Variables de Entorno o Azure Key Vault. En desarrollo, puedes usar el Secret Manager de .NET: `dotnet user-secrets set "Email:Smtp:Password" "tu-password"`.
+> ⚠️ **Advertencia:** **Nunca** guardes contraseñas reales en `appsettings.json`. Usa Variables de Entorno o Azure Key Vault. En desarrollo, puedes usar el Secret Manager de .NET: `dotnet user-secrets set "Email:Password" "tu-password"`.
 
 📌 **Ejemplo real:** En Gmail, para usar SMTP necesitas generar una "Contraseña de aplicación" en la configuración de seguridad. Nunca usas tu contraseña normal.
+
+> 📝 **Nota:** Esta sección `"Email"` se enlaza con `SmtpSettings` mediante `IOptions<SmtpSettings>` (ver 21.4.2). El JSON es **plano** (sin anidar `Smtp`) para que los nombres de las claves caseen exactamente con las propiedades de la clase.
 
 ## 21.10. Testing
 
@@ -814,20 +895,20 @@ Un Funko tiene estas propiedades:
 
 **Parte 1: Interfaz y modelo**
 
-1. Crea la interfaz `IEmailService` con los métodos `SendAsync`, `SendBatchAsync` y `GetTemplateAsync`
+1. Crea la interfaz `IEmailService` con los métodos `SendAsync`, `SendHtmlEmailAsync`, `SendBatchAsync` y `GetTemplateAsync`
 2. Crea las clases `EmailMessage`, `EmailAttachment` y `EmailTemplate`
 
 **Parte 2: Implementación**
 
 3. Implementa `MemoryEmailService` que almacene emails en memoria
 4. Implementa `EmailQueueService` con `ConcurrentQueue` y `SemaphoreSlim`
-5. Implementa `EmailBackgroundWorker` que procese la cola
+5. Implementa `EmailBackgroundWorker` que procese la cola (**usa `IServiceScopeFactory`, nunca inyectes `IEmailService` directamente**)
 
 **Parte 3: Integración**
 
 6. Modifica tu `ProductosService` para que al crear un Funko encole un email de notificación
 7. Modifica tu `ProductosService` para que al eliminar un Funko encole un email de notificación
-8. Registra los servicios en `Program.cs` con inyección de dependencias
+8. Registra los servicios en `Program.cs` con inyección de dependencias (`EmailQueueService` como Singleton, `IEmailService` como Scoped, `AddHostedService<EmailBackgroundWorker>()`)
 
 **Parte 4: Testing**
 
@@ -850,14 +931,15 @@ Un Funko tiene estas propiedades:
 | **SMTP** | Protocolo para enviar emails entre servidores |
 | **MailKit** | Biblioteca .NET moderna para envío de emails |
 | **IEmailService** | Interfaz abstracta para desacoplar la implementación |
-| **MailKitEmailService** | Implementación real con servidor SMTP |
-| **MemoryEmailService** | Implementación para desarrollo y testing |
-| **TemplateService** | Sistema de plantillas HTML externas |
+| **MailKitEmailService** | Implementación real con servidor SMTP (`IOptions<SmtpSettings>`) |
+| **MemoryEmailService** | Implementación para desarrollo y testing (`ConcurrentBag` thread-safe) |
+| **TemplateService** | Sistema de plantillas HTML externas (copiarlas al output con `.csproj`) |
 | **EmailQueueService** | Cola en memoria para procesamiento asíncrono |
 | **BackgroundService** | Procesamiento de emails en segundo plano |
+| **IServiceScopeFactory** | Evita capturar un `IEmailService` Scoped en el Singleton del worker |
 | **EmailMessage** | Modelo de datos para un email |
 | **EmailTemplate** | Modelo de datos para una plantilla |
 
 **¿Qué viene después?**
 
-En el siguiente punto aprenderemos a implementar **seguridad y autenticación**: JWT, OAuth2, identity y cómo proteger tus endpoints. El servicio de emails que hemos visto aquí será útil para enviar emails de verificación y restablecimiento de contraseña.
+En el siguiente punto veremos **22. Tareas programadas**: `BackgroundService` e `IHostedService` para trabajos periódicos, limpieza automática y jobs en segundo plano. El `EmailBackgroundWorker` de este tema es precisamente un `BackgroundService` — en el 22 verás cómo estructurar esos mismos trabajos de forma completa y correcta.

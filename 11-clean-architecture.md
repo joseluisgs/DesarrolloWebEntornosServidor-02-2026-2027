@@ -126,7 +126,7 @@ flowchart TB
 
     P1 --> A1
     A1 --> D1
-    D1 --> I1
+    I1 -.implements.-> D1
 
     style PRESENTACIÓN fill:#9C27B0,color:#fff
     style APLICACIÓN fill:#2196F3,color:#fff
@@ -136,7 +136,7 @@ flowchart TB
 
 ### 11.2.4. Flujo de dependencias
 
-Las dependencias fluyen **hacia abajo**: Presentación → Aplicación → Dominio → Infraestructura.
+Las dependencias fluyen **hacia los contratos del dominio**: Presentación → Aplicación → contratos de Dominio. La Infraestructura **depende del Dominio** (nunca al revés): implementa las interfaces que el dominio define. Esto es la **Inversión de Dependencias**.
 
 ```csharp
 // Presentación: el controller depende del servicio
@@ -261,8 +261,8 @@ flowchart TB
     WEB --> CTRL
     CTRL --> UC1
     UC1 --> ENT1
-    ENT1 --> GW
-    GW --> DB
+    GW --> ENT1
+    DB --> GW
 
     style ENTITIES fill:#4CAF50,color:#fff
     style USECASES fill:#2196F3,color:#fff
@@ -459,7 +459,7 @@ public class ProductosController(IMediator mediator) : ControllerBase
 
 ### 11.5.5. Nuestra arquitectura: Config Classes
 
-En el curso y en **TiendaAPI** usamos una variante práctica de Clean Architecture adaptada a educación. No separamos en proyectos distintos (Domain, Application, Infrastructure), sino que **organizamos por carpetas dentro de un solo proyecto** con **Config classes** en `Infrastructures/` para el registro de DI.
+En el curso y en **TiendaAPI** usamos una variante práctica de Clean Architecture adaptada a educación. No separamos en proyectos distintos (Domain, Application, Infrastructure), sino que **organizamos por carpetas dentro de un solo proyecto** con **Config classes** en `Infrastructure/` para el registro de DI.
 
 ```mermaid
 flowchart TB
@@ -473,7 +473,7 @@ flowchart TB
         VAL["Validators/"]
         MAP["Mappers/"]
         ERR["Errors/"]
-        INF["Infrastructures/"]
+        INF["Infrastructure/"]
     end
 
     CTRL --> SVC
@@ -503,7 +503,7 @@ TiendaApi.Api/
 ├── Mappers/                      # Model <-> DTO
 ├── Errors/                       # DomainError y tipos
 ├── Middleware/                   # ExceptionHandler, etc.
-├── Infrastructures/              # Config classes (DI)
+├── Infrastructure/              # Config classes (DI)
 │   ├── RepositoriesConfig.cs
 │   ├── ServicesConfig.cs
 │   ├── DatabaseConfig.cs
@@ -515,7 +515,7 @@ TiendaApi.Api/
 **Las Config classes** son clases estáticas con métodos de extensión que registran servicios en el contenedor DI:
 
 ```csharp
-// Infrastructures/RepositoriesConfig.cs
+// Infrastructure/RepositoriesConfig.cs
 public static class RepositoriesConfig
 {
     public static IServiceCollection AddRepositories(this IServiceCollection services, IConfiguration config)
@@ -534,7 +534,7 @@ public static class RepositoriesConfig
     }
 }
 
-// Infrastructures/ServicesConfig.cs
+// Infrastructure/ServicesConfig.cs
 public static class ServicesConfig
 {
     public static IServiceCollection AddServices(this IServiceCollection services)
@@ -631,7 +631,7 @@ MiApi/
 
 1. **Domain:** Entidades `Libro`, `Autor`, `Usuario`, `Prestamo` + interfaces `ILibroRepository`, `IPrestamoRepository`
 2. **Application:** Use cases `CrearPrestamoUseCase`, `DevolverPrestamoUseCase` + DTOs
-3. **Infrastructure:** Repositorios con EF Core +DbContext
+3. **Infrastructure:** Repositorios con EF Core + DbContext
 4. **Api:** Controllers con Clean Architecture
 
 **Reglas de negocio:**
@@ -647,6 +647,7 @@ MiApi/
 - Añade validación con FluentValidation en los DTOs
 - Diagrama Mermaid de la arquitectura
 
+---
 
 **Resumen del punto:**
 
@@ -664,4 +665,4 @@ MiApi/
 
 **¿Qué viene después?**
 
-En el siguiente punto veremos **Testing avanzado**: tests de integración, Testcontainers y pipelines automáticos de CI/CD.
+En el siguiente punto veremos **Entity Framework Core**: migraciones, el repositorio CRUD con DbContext y testing con Testcontainers.

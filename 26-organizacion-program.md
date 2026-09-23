@@ -1,5 +1,6 @@
 - [26. Organizacion de Program.cs](#26-organizacion-de-programcs)
   - [26.1. El Problema del Program.cs Monolitico](#261-el-problema-del-programcs-monolitico)
+    - [26.1.1. Ejemplo de Program.cs Monolitico](#2611-ejemplo-de-programcs-monolitico)
   - [26.2. Patron de Extension Methods para Configuracion](#262-patron-de-extension-methods-para-configuracion)
     - [26.2.1. Concepto fundamental](#2621-concepto-fundamental)
     - [26.2.2. Beneficios del patron](#2622-beneficios-del-patron)
@@ -17,7 +18,7 @@
 
 # 26. Organizacion de Program.cs
 
-> **Punto de partida:** Cuando tu cocina tiene todos los ingredientes, utensilios y recetas en una sola habitacion desordenada, cocinar es caotico. Pero si organizas: ingredientes en un area, utensilios en otra, recetas en un libro, todo fluye. Un Program.cs monolitico es como esa cocina desordenada: cuesta encontrar lo que necesitas y es facil romper algo.
+> 💡 **Punto de partida:** Cuando tu cocina tiene todos los ingredientes, utensilios y recetas en una sola habitación desordenada, cocinar es caótico. Pero si organizas: ingredientes en un área, utensilios en otra, recetas en un libro, todo fluye. Un Program.cs monolítico es como esa cocina desordenada: cuesta encontrar lo que necesitas y es fácil romper algo.
 
 En este punto aprenderás a refactorizar un Program.cs monolitico usando extension methods y el patron Infrastructure para mantener el codigo limpio y mantenible.
 
@@ -36,7 +37,7 @@ Cuando una aplicacion ASP.NET Core crece, el archivo `Program.cs` puede volverse
 - **Dificultad de testing**: Imposible probar una configuracion de forma aislada
 - **Falta de cohesion**: Configuraciones de naturaleza completamente diferente mezcladas
 
-### Ejemplo de Program.cs Monolitico
+### 26.1.1. Ejemplo de Program.cs Monolitico
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -95,7 +96,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]))
         };
     });
 
@@ -121,16 +122,14 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    context.Database.EnsureCreated();
-}
+using var scope = app.Services.CreateScope();
+var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+context.Database.EnsureCreated();
 
 app.Run();
 ```
 
-📌 **Ejemplo real:** Cuando un proyecto como Spotify Backend crece, tener todo en un solo archivo hace que 5 desarrolladores trabjando en el mismo archivo se pisen constantemente. La organizacion modular evita esto.
+📌 **Ejemplo real:** Cuando un proyecto como Spotify Backend crece, tener todo en un solo archivo hace que 5 desarrolladores trabajando en el mismo archivo se pisen constantemente. La organizacion modular evita esto.
 
 ## 26.2. Patron de Extension Methods para Configuracion
 
@@ -263,13 +262,17 @@ namespace FunkoApp.Infrastructures;
 
 public static class AuthenticationConfig
 {
-    public static IServiceCollection AddAuthentication(
+    /// <summary>
+    /// Registra la autenticación JWT (nombre propio para no colisionar
+    /// con el AddAuthentication() nativo de ASP.NET Core).
+    /// </summary>
+    public static IServiceCollection AddJwtAuthentication(
         this IServiceCollection services,
         IConfiguration configuration)
     {
         var jwtSettings = configuration.GetSection("Jwt");
-        var secretKey = jwtSettings["Key"]
-            ?? throw new InvalidOperationException("JWT Key no configurada");
+        var secretKey = jwtSettings["Secret"]
+            ?? throw new InvalidOperationException("JWT Secret no configurada");
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
         services.AddAuthentication(options =>
@@ -321,7 +324,7 @@ services.AddApiVersioning();
 services.AddSwagger();
 services.AddCorsPolicy();
 services.AddDatabases(configuration);
-services.AddAuthentication(configuration);
+services.AddJwtAuthentication(configuration);
 services.AddRepositories();
 services.AddServices();
 
@@ -329,7 +332,11 @@ services.AddServices();
 var app = builder.Build();
 
 // === PIPELINE DE MIDDLEWARES ===
-app.UseSwaggerUI(app.Environment.IsDevelopment());
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 app.UseGlobalExceptionHandler();
 app.UseHttpsRedirection();
 app.UseCorsPolicy();
@@ -356,7 +363,7 @@ app.Run();
 | Archivos de configuracion | 1 | 10+ |
 | Tiempo para encontrar configuracion | ~2 minutos | ~5 segundos |
 | Reutilizacion entre proyectos | Dificil | Facil |
-| Testing de configuracion | Prcticamente imposible | Aislado y sencillo |
+| Testing de configuracion | Prácticamente imposible | Aislado y sencillo |
 
 ## 26.6. Otras Formas de Estructurar el Startup
 
@@ -404,6 +411,8 @@ Tu API de Funkos tiene un Program.cs creciente con configuraciones de base de da
 5. Añade documentacion XML a cada extension method
 
 > 💡 **Consejo:** El objetivo es que Program.cs sea un indice legible, no un archivo de configuracion. Cada linea debe representar un modulo funcional claro.
+
+---
 
 **Resumen del punto:**
 

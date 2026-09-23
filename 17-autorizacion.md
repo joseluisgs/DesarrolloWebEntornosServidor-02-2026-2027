@@ -242,7 +242,7 @@ flowchart TD
 
 > 📝 **Nota:** Los roles son binarios: un usuario **tiene** o **no tiene** un rol. No hay valores intermedios. Si necesitas condiciones más complejas, usa Claims o Policies.
 
-> 💡 **Analogia:** La autorización es como un **portero de discoteca que verifica tu pulsera**. Primero te revisa el DNI (autenticación: ¿quién eres?). Luego mira tu pulsera de color (autorización: ¿qué zona puedes usar?). Si tienes la pulsera VIP, accedes a la zona premium. Si tienes la pulsera normal, solo zona general. Si no tienes pulsera, ni entrada al vestíbulo.
+> 💡 **Analogía:** La autorización es como un **portero de discoteca que verifica tu pulsera**. Primero te revisa el DNI (autenticación: ¿quién eres?). Luego mira tu pulsera de color (autorización: ¿qué zona puedes usar?). Si tienes la pulsera VIP, accedes a la zona premium. Si tienes la pulsera normal, solo zona general. Si no tienes pulsera, ni entrada al vestíbulo.
 
 ```csharp
 // ❌ MALO: Permitir todo sin autorización — cualquier usuario anónimo puede acceder
@@ -327,6 +327,7 @@ Una vez que el usuario está autenticado, puedes leer sus claims desde el `HttpC
 
 ```csharp
 // Leer claims del usuario autenticado
+// "sub" llega sin mapear gracias a MapInboundClaims = false (ver 17.3.1)
 var userId = User.FindFirst("sub")?.Value;
 var email = User.FindFirst("email")?.Value;
 var department = User.FindFirst("department")?.Value;
@@ -449,6 +450,21 @@ var claims = new List<Claim>
 };
 ```
 
+Para que `RequireRole("ADMIN")` encuentre ese claim `"role"` y `User.FindFirst("sub")` no devuelva `null`, la configuración JWT del tema anterior (ver 16.4.4) debe desactivar el mapeo de claims inbound e indicar qué claim contiene el rol:
+
+```csharp
+// En AuthenticationConfig.AddJwtBearer (ver Punto 16)
+options.MapInboundClaims = false;   // "sub", "email", "role" llegan sin mapear
+
+options.TokenValidationParameters = new TokenValidationParameters
+{
+    // ... ValidateIssuer, IssuerSigningKey, etc. ...
+    RoleClaimType = "role"          // RequireRole / IsInRole leen el claim "role"
+};
+```
+
+> 📝 **Nota:** Con `MapInboundClaims = false`, los claims conservan sus tipos originales del JWT, así que `User.FindFirst("sub")`, `FindFirst("email")` y `FindFirst("role")` funcionan directamente. Si no, ASP.NET los convierte a `ClaimTypes.NameIdentifier`, `ClaimTypes.Email`, etc. y `FindFirst("sub")` devolvería `null`.
+
 Con las políticas configuradas y el rol en el JWT, ya puedes proteger endpoints en tu controller. El atributo `[Authorize]` acepta un parámetro `Roles` donde puedes especificar uno o varios roles separados por comas:
 
 ```csharp
@@ -507,8 +523,10 @@ public class ProductosController(IProductoService productoService) : ControllerB
         await productoService.DeleteAsync(id);
         return NoContent();
     }
+}
+```
 
-El diagrama siguiente muestra como el middleware de autorizacion evalua cada request. Primero `UseAuthentication` crea el `ClaimsPrincipal` a partir del JWT. Luego `UseAuthorization` evalua si el usuario tiene los permisos necesarios (roles, claims o policies).
+El diagrama siguiente muestra cómo el middleware de autorización evalúa cada request. Primero `UseAuthentication` crea el `ClaimsPrincipal` a partir del JWT. Luego `UseAuthorization` evalúa si el usuario tiene los permisos necesarios (roles, claims o policies).
 
 ```mermaid
 flowchart TD
@@ -526,7 +544,11 @@ flowchart TD
     style OK fill:#4CAF50,color:#fff
 ```
 
-#### Verificación programática de roles en código
+**Verificación programática de roles en código:**
+
+Además de los atributos, dentro del mismo controller puedes comprobar el rol con `User.IsInRole()` y la propiedad del recurso con `User.FindFirst()`:
+
+```csharp
     [HttpGet("{id:long}/detail")]
     [Authorize]
     public async Task<IActionResult> GetById(long id)
@@ -534,6 +556,7 @@ flowchart TD
         var producto = await productoService.GetByIdAsync(id);
 
         // Solo el propietario o un admin puede ver detalles completos
+        // ("sub" llega sin mapear gracias a MapInboundClaims = false — ver 17.3.1)
         if (!User.IsInRole("ADMIN") &&
             producto.OwnerId != User.FindFirst("sub")?.Value)
         {
@@ -542,7 +565,6 @@ flowchart TD
 
         return Ok(producto);
     }
-}
 ```
 
 > 📝 **Nota:** Cuando especificas varios roles con `Roles = "ADMIN,USER"`, el usuario necesita tener **al menos uno** de esos roles para acceder. No necesita tener todos, solo uno.
@@ -918,14 +940,15 @@ El handler es donde se ejecuta la lógica de verificación. Hereda de `Authoriza
 
 ```csharp
 using Microsoft.AspNetCore.Authorization;
-using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace FunkoApi.Authorization;
 
 /// <summary>
 /// Handler que verifica si el usuario pertenece al departamento requerido.
 /// </summary>
-public class RequireDepartmentHandler : AuthorizationHandler<RequireDepartmentRequirement>
+public class RequireDepartmentHandler(ILogger<RequireDepartmentHandler> logger)
+    : AuthorizationHandler<RequireDepartmentRequirement>
 {
     /// <inheritdoc />
     protected override Task HandleRequirementAsync(
@@ -936,20 +959,20 @@ public class RequireDepartmentHandler : AuthorizationHandler<RequireDepartmentRe
 
         if (department is null)
         {
-            Log.Warning("Usuario sin claim department");
+            logger.LogWarning("Usuario sin claim department");
             return Task.CompletedTask;
         }
 
         if (department.Equals(requirement.Department, StringComparison.OrdinalIgnoreCase))
         {
-            Log.Information(
+            logger.LogInformation(
                 "Departamento verificado: {UserDept} == {RequiredDept}",
                 department, requirement.Department);
             context.Succeed(requirement);
         }
         else
         {
-            Log.Warning(
+            logger.LogWarning(
                 "Departamento no coincide: {UserDept} != {RequiredDept}",
                 department, requirement.Department);
         }
@@ -958,6 +981,8 @@ public class RequireDepartmentHandler : AuthorizationHandler<RequireDepartmentRe
     }
 }
 ```
+
+> 📝 **Nota:** Usamos `ILogger<T>` inyectado (consistente con **UD02/09 — Configuración y Logging**), no el `Log.Warning` estático de Serilog. Con `builder.Host.UseSerilog()` los mensajes llegan igualmente a los sinks de Serilog, pero además puedes mockear el logger en tests y el handler sigue funcionando si cambias de proveedor de logging.
 
 **Handler para verificar propietario de recurso:**
 
@@ -1015,15 +1040,20 @@ public class ResourceOwnerHandler(
 }
 ```
 
+> 📝 **Nota:** Leer el id desde `RouteValues["id"]` asume una ruta estilo MVC con un segmento `{id}`. Es **frágil fuera de MVC**: si el identificador viene en la query string, en el body o la ruta usa otro nombre (`{productoId}`), el handler no lo encontrará y denegará el acceso en silencio. En minimal APIs, workers o cualquier endpoint sin `RouteValues`, evalúa la política pasando el recurso directamente (`AuthorizeAsync(user, producto, "RequireProductOwner")`) en lugar de leerlo de la ruta.
+
 **Registrar handlers y políticas:**
 
-El último paso es registrar los handlers en el contenedor de dependencias y crear las políticas que los referencian. Los handlers se registran como `IAuthorizationHandler`, y las políticas se vinculan a los requirements con `AddRequirements()`:
+El último paso es registrar los handlers en el contenedor de dependencias y crear las políticas que los referencian. `ResourceOwnerHandler` necesita `IHttpContextAccessor` y un repositorio Scoped, así que en el `Program.cs` registras el accessor y los handlers como `IAuthorizationHandler` (el de recursos como `Scoped`, nunca `Singleton`):
 
 ```csharp
-services.AddSingleton<IAuthorizationHandler, RequireDepartmentHandler>();
-services.AddSingleton<IAuthorizationHandler, ResourceOwnerHandler>();
+// Program.cs — IHttpContextAccessor es obligatorio para ResourceOwnerHandler
+builder.Services.AddHttpContextAccessor();
 
-services.AddAuthorizationBuilder()
+builder.Services.AddSingleton<IAuthorizationHandler, RequireDepartmentHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ResourceOwnerHandler>();
+
+builder.Services.AddAuthorizationBuilder()
     .AddPolicy("RequireDepartmentIT", policy =>
         policy.AddRequirements(new RequireDepartmentRequirement("IT")))
     .AddPolicy("RequireProductOwner", policy =>
@@ -1050,12 +1080,13 @@ public class RequireDepartmentHandler : AuthorizationHandler<RequireDepartmentRe
     }
 }
 
-// Registro idéntico
+// Mismo registro que en el enfoque manual
+// (ResourceOwnerHandler como Scoped por sus dependencias)
 services.AddSingleton<IAuthorizationHandler, RequireDepartmentHandler>();
-services.AddSingleton<IAuthorizationHandler, ResourceOwnerHandler>();
+services.AddScoped<IAuthorizationHandler, ResourceOwnerHandler>();
 ```
 
-> 💡 **Consejo:** Los handlers son la pieza más flexible del sistema de autorización. Pueden acceder a la base de datos, servicios externos o cualquier lógica de negocio para tomar la decisión. Usa `AddSingleton` si el handler no tiene estado dependiente de la request, o `AddScoped` si necesita servicios Scoped.
+> 💡 **Consejo:** Los handlers son la pieza más flexible del sistema de autorización. Pueden acceder a la base de datos, servicios externos o cualquier lógica de negocio para tomar la decisión. **Registra los handlers como `AddScoped` cuando tengan dependencias** (repositorios, `IHttpContextAccessor`, EF Core): cada request resuelve sus propios servicios y evitas el error clásico de capturar un servicio Scoped dentro de un `Singleton`. Usa `AddSingleton` solo si el handler no tiene dependencias ni estado por request.
 
 ## 17.7. Autorización Basada en Recursos
 
@@ -1135,9 +1166,10 @@ using Microsoft.AspNetCore.Authorization;
 namespace FunkoApi.Services;
 
 /// <summary>
-/// Servicio wrapper para IAuthorizationService con métodos de conveniencia.
+/// Servicio wrapper (AuthzService) para IAuthorizationService con métodos de conveniencia.
+/// Se renombra para no colisionar con Microsoft.AspNetCore.Authorization.IAuthorizationService.
 /// </summary>
-public class AuthorizationService(
+public class AuthzService(
     Microsoft.AspNetCore.Authorization.IAuthorizationService authorizationService,
     IHttpContextAccessor httpContextAccessor)
 {
@@ -1330,6 +1362,8 @@ await dbContext.SaveChangesAsync();
 - Claims personalizados (`department`, `level`)
 - Handler de autorización basado en recursos con `IAuthorizationService`
 - Rate limiting por rol (más requests para ADMIN, menos para USER)
+
+---
 
 **Resumen del punto:**
 

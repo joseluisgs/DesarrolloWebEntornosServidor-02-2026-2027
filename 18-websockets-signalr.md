@@ -1,39 +1,39 @@
 - [18. WebSockets y SignalR](#18-websockets-y-signalr)
-  - [18.1. Introduccion](#181-introduccion)
-    - [18.1.1. Que es la Comunicacion en Tiempo Real](#1811-que-es-la-comunicacion-en-tiempo-real)
+  - [18.1. Introducción](#181-introducción)
+    - [18.1.1. Qué es la Comunicación en Tiempo Real](#1811-qué-es-la-comunicación-en-tiempo-real)
     - [18.1.2. HTTP vs WebSocket](#1812-http-vs-websocket)
     - [18.1.3. Casos de Uso](#1813-casos-de-uso)
     - [18.1.4. El Handshake WebSocket](#1814-el-handshake-websocket)
   - [18.2. WebSocket vs SignalR](#182-websocket-vs-signalr)
-    - [18.2.1. Que es SignalR](#1821-que-es-signalr)
+    - [18.2.1. Qué es SignalR](#1821-qué-es-signalr)
     - [18.2.2. Cuándo Usar Cada Uno](#1822-cuándo-usar-cada-uno)
   - [18.3. WebSocket Nativo en ASP.NET Core](#183-websocket-nativo-en-aspnet-core)
-    - [18.3.1. Configuracion](#1831-configuracion)
+    - [18.3.1. Configuración](#1831-configuración)
     - [18.3.2. WebSocketConnectionManager](#1832-websocketconnectionmanager)
     - [18.3.3. WebSocketHandler](#1833-websockethandler)
-    - [18.3.4. Endpoint de Conexion](#1834-endpoint-de-conexion)
+    - [18.3.4. Endpoint de Conexión](#1834-endpoint-de-conexión)
   - [18.4. SignalR en ASP.NET Core](#184-signalr-en-aspnet-core)
-    - [18.4.1. Configuracion](#1841-configuracion)
-    - [18.4.2. Hub Basico](#1842-hub-basico)
+    - [18.4.1. Configuración](#1841-configuración)
+    - [18.4.2. Hub Básico](#1842-hub-básico)
     - [18.4.3. Ciclo de Vida: OnConnectedAsync / OnDisconnectedAsync](#1843-ciclo-de-vida-onconnectedasync--ondisconnectedasync)
   - [18.5. SignalR con Identity y JWT](#185-signalr-con-identity-y-jwt)
-    - [18.5.1. Proteccion de Hubs](#1851-proteccion-de-hubs)
+    - [18.5.1. Protección de Hubs](#1851-protección-de-hubs)
     - [18.5.2. Claims en el Hub](#1852-claims-en-el-hub)
-    - [18.5.3. Configuracion JWT en SignalR](#1853-configuracion-jwt-en-signalr)
+    - [18.5.3. Configuración JWT en SignalR](#1853-configuración-jwt-en-signalr)
   - [18.6. Sistema de Grupos](#186-sistema-de-grupos)
     - [18.6.1. Grupos por Usuario](#1861-grupos-por-usuario)
     - [18.6.2. Grupos por Rol](#1862-grupos-por-rol)
     - [18.6.3. Grupos Personalizados](#1863-grupos-personalizados)
   - [18.7. IHubContext: Notificaciones desde Servicios](#187-ihubcontext-notificaciones-desde-servicios)
-    - [18.7.1. Patron de Inyeccion](#1871-patron-de-inyeccion)
-    - [18.7.2. Notificaciones Privadas vs Publicas](#1872-notificaciones-privadas-vs-publicas)
+    - [18.7.1. Patrón de Inyección](#1871-patrón-de-inyección)
+    - [18.7.2. Notificaciones Privadas vs Públicas](#1872-notificaciones-privadas-vs-públicas)
   - [18.8. Cliente JavaScript](#188-cliente-javascript)
-    - [18.8.1. Cliente SignalR Basico](#1881-cliente-signalr-basico)
-    - [18.8.2. Autenticacion con JWT](#1882-autenticacion-con-jwt)
-    - [18.8.3. Reconexion Automatica](#1883-reconexion-automatica)
+    - [18.8.1. Cliente SignalR Básico](#1881-cliente-signalr-básico)
+    - [18.8.2. Autenticación con JWT](#1882-autenticación-con-jwt)
+    - [18.8.3. Reconexión Automática](#1883-reconexión-automática)
   - [18.9. Escalabilidad con Redis](#189-escalabilidad-con-redis)
   - [18.10. Seguridad](#1810-seguridad)
-  - [18.11. Buenas Practicas](#1811-buenas-practicas)
+  - [18.11. Buenas Prácticas](#1811-buenas-prácticas)
   - [18.12. Testing](#1812-testing)
   - [18.13. Reto](#1813-reto)
 
@@ -41,7 +41,7 @@
 
 # 18. WebSockets y SignalR
 
-> **Punto de partida:** Cuando publicas un producto en una tienda online, los administradores deberian ver el cambio al instante sin recargar la pagina. En el modelo HTTP tradicional, el cliente debe preguntar periodicamente al servidor si hay novedades (polling). La **comunicacion en tiempo real** elimina ese problema: el servidor emite datos a los clientes conectados tan pronto como ocurre un evento.
+> 💡 **Punto de partida:** Cuando publicas un producto en una tienda online, los administradores deberían ver el cambio al instante sin recargar la página. En el modelo HTTP tradicional, el cliente debe preguntar periódicamente al servidor si hay novedades (polling). La **comunicación en tiempo real** elimina ese problema: el servidor emite datos a los clientes conectados tan pronto como ocurre un evento.
 
 **Objetivos de aprendizaje:**
 - Comprender la diferencia entre HTTP tradicional y comunicación en tiempo real
@@ -49,9 +49,9 @@
 - Desarrollar hubs con SignalR para comunicación bidireccional simplificada
 - Integrar SignalR con JWT e Identity para seguridad
 
-## 18.1. Introduccion
+## 18.1. Introducción
 
-### 18.1.1. Que es la Comunicacion en Tiempo Real
+### 18.1.1. Qué es la Comunicación en Tiempo Real
 
 La **comunicacion en tiempo real** permite que el servidor envie datos a los clientes sin que estos lo soliciten. Elimina el patron request-response donde el cliente siempre inicia la comunicacion. Es fundamental para chat en vivo, dashboards de metricas, notificaciones push y aplicaciones colaborativas como Google Docs.
 
@@ -102,7 +102,7 @@ flowchart LR
     style B2 fill:#4CAF50,color:#fff
 ```
 
-> **Analogia:** HTTP es como llamar a un amigo cada vez que quieres saber algo. WebSocket es como tener una llamada telefonica abierta permanente: cualquiera de los dos puede hablar cuando quiera.
+> 💡 **Analogía:** HTTP es como llamar a un amigo cada vez que quieres saber algo. WebSocket es como tener una llamada telefonica abierta permanente: cualquiera de los dos puede hablar cuando quiera.
 
 ### 18.1.3. Casos de Uso
 
@@ -117,7 +117,7 @@ flowchart LR
 
 📌 Ejemplo real: **Slack** usa WebSocket para mantener abierta la conexion entre el navegador y sus servidores. Cuando alguien escribe un mensaje en un canal, todos los usuarios conectados lo ven al instante sin recargar la pagina. Sin WebSocket, Slack tendria que hacer polling cada 2 segundos, lo cual seria ineficiente y lento.
 
-> **Nota:** Para la mayoria de casos de uso en aplicaciones web empresariales, **SignalR es la mejor eleccion**. WebSocket nativo solo es necesario en escenarios de rendimiento extremo (gaming, streaming de video en tiempo real).
+> 📝 **Nota:** Para la mayoria de casos de uso en aplicaciones web empresariales, **SignalR es la mejor eleccion**. WebSocket nativo solo es necesario en escenarios de rendimiento extremo (gaming, streaming de video en tiempo real).
 
 ### 18.1.4. El Handshake WebSocket
 
@@ -165,7 +165,7 @@ Una vez completado el handshake, la conexion queda abierta y ambos lados pueden 
 
 ## 18.2. WebSocket vs SignalR
 
-### 18.2.1. Que es SignalR
+### 18.2.1. Qué es SignalR
 
 **SignalR** es una abstraccion de Microsoft sobre WebSocket que simplifica enormemente el desarrollo de comunicacion en tiempo real. En lugar de gestionar conexiones, serializacion y reconexion manualmente, SignalR te da todo hecho.
 
@@ -186,7 +186,7 @@ Una vez completado el handshake, la conexion queda abierta y ambos lados pueden 
 | **Lineas de codigo** | ~200-300 | ~80-100 |
 | **Escalabilidad** | Redis Pub/Sub manual | Redis Backplane |
 
-> **Analogia:** WebSocket nativo es como construir un coche desde cero: tienes control total sobre cada pieza pero necesitas saber mucho. SignalR es como comprar un coche ya hecho: funciona perfecto para la mayoria de usos y solo necesitas conducir.
+> 💡 **Analogía:** WebSocket nativo es como construir un coche desde cero: tienes control total sobre cada pieza pero necesitas saber mucho. SignalR es como comprar un coche ya hecho: funciona perfecto para la mayoria de usos y solo necesitas conducir.
 
 ### 18.2.2. Cuándo Usar Cada Uno
 
@@ -198,13 +198,13 @@ Una vez completado el handshake, la conexion queda abierta y ambos lados pueden 
 | Streaming de video en tiempo real | **WebSocket nativo** | Overhead minimo |
 | API con actualizaciones ocasionales | **REST** (ni WebSocket ni SignalR) | No justifica conexion persistente |
 
-> **Consejo:** Si no sabes cual elegir, usa **SignalR**. Solo considera WebSocket nativo si tienes requisitos de rendimiento extremo o necesitas control total sobre el protocolo.
+> 💡 **Consejo:** Si no sabes cual elegir, usa **SignalR**. Solo considera WebSocket nativo si tienes requisitos de rendimiento extremo o necesitas control total sobre el protocolo.
 
 ## 18.3. WebSocket Nativo en ASP.NET Core
 
-> **Nota:** Esta seccion es informativa. En la practica, usa SignalR (seccion 18.4). La incluimos para que entiendas que hay detras de la abstraccion.
+> 📝 **Nota:** Esta seccion es informativa. En la practica, usa SignalR (seccion 18.4). La incluimos para que entiendas que hay detras de la abstraccion.
 
-### 18.3.1. Configuracion
+### 18.3.1. Configuración
 
 Para habilitar WebSockets en `Program.cs`:
 
@@ -219,8 +219,18 @@ app.UseWebSockets(new WebSocketOptions
     AllowedOrigins = { "http://localhost:5173" }   // CORS
 });
 
-app.Map("/ws", async (HttpContext context, WebSocket webSocket) =>
+app.Map("/ws", async (HttpContext context) =>
 {
+    // No existe binding de WebSocket en minimal APIs:
+    // se acepta la conexión desde el HttpContext (ver 18.3.4)
+    if (!context.WebSockets.IsWebSocketRequest)
+    {
+        context.Response.StatusCode = 400;
+        return;
+    }
+
+    using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+
     var buffer = new byte[1024 * 4];
     var receiveResult = await webSocket.ReceiveAsync(
         new ArraySegment<byte>(buffer), CancellationToken.None);
@@ -352,7 +362,7 @@ public class WebSocketHandler
 }
 ```
 
-### 18.3.4. Endpoint de Conexion
+### 18.3.4. Endpoint de Conexión
 
 ```csharp
 app.Map("/ws", async (HttpContext context) =>
@@ -370,11 +380,11 @@ app.Map("/ws", async (HttpContext context) =>
 });
 ```
 
-> **Advertencia:** WebSocket nativo no tiene grupos, reconexion automatica ni integracion con Identity. Tienes que implementar todo manualmente. Para aplicaciones reales, usa SignalR.
+> ⚠️ **Advertencia:** WebSocket nativo no tiene grupos, reconexion automatica ni integracion con Identity. Tienes que implementar todo manualmente. Para aplicaciones reales, usa SignalR.
 
 ## 18.4. SignalR en ASP.NET Core
 
-### 18.4.1. Configuracion
+### 18.4.1. Configuración
 
 **Paso 1: Instalar el paquete NuGet** (viene con el SDK de ASP.NET Core):
 
@@ -401,7 +411,7 @@ app.MapHub<ProductosHub>("/hubs/productos");
 app.Run();
 ```
 
-### 18.4.2. Hub Basico
+### 18.4.2. Hub Básico
 
 Un **Hub** es la clase central de SignalR. Representa una conexion entre el cliente y el servidor. Los clientes llaman metodos del Hub, y el Hub puede enviar mensajes a clientes.
 
@@ -492,11 +502,11 @@ public class ProductosHub : Hub
 }
 ```
 
-> **Ejemplo real:** Cuando un usuario se conecta a **Slack**, automaticamente se une a los canales de su workspace. En SignalR, `OnConnectedAsync` hace exactamente eso: al conectarte, te asigna a los grupos que te corresponden.
+> 📌 **Ejemplo real:** Cuando un usuario se conecta a **Slack**, automaticamente se une a los canales de su workspace. En SignalR, `OnConnectedAsync` hace exactamente eso: al conectarte, te asigna a los grupos que te corresponden.
 
 ## 18.5. SignalR con Identity y JWT
 
-### 18.5.1. Proteccion de Hubs
+### 18.5.1. Protección de Hubs
 
 Para que solo usuarios autenticados puedan conectarse al Hub, usa el atributo `[Authorize]`:
 
@@ -555,9 +565,43 @@ public class ProductosHub : Hub
 }
 ```
 
-### 18.5.3. Configuracion JWT en SignalR
+### 18.5.3. Configuración JWT en SignalR
 
-SignalR necesita pasar el token JWT al conectar. En `Program.cs`:
+SignalR necesita pasar el token JWT al conectar. En una petición HTTP normal el token viaja en la cabecera `Authorization`, pero la conexión del Hub (negotiate + WebSocket/SSE) no siempre permite enviarla: por eso SignalR admite también el token por query string (`access_token`).
+
+**Paso 1: Leer `access_token` de la query string (solo para los Hubs):**
+
+```csharp
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        // El resto de TokenValidationParameters (Issuer, Audience, Key)
+        // se configura igual que en la sección de autenticación JWT (16-autenticacion)
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+
+                // Solo extraer el token de la query si la petición es de un Hub
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
+    });
+```
+
+**Paso 2: Mapear el Hub con autorización:**
 
 ```csharp
 builder.Services.AddSignalR().AddHubOptions<ProductosHub>(options =>
@@ -565,9 +609,33 @@ builder.Services.AddSignalR().AddHubOptions<ProductosHub>(options =>
     options.EnableDetailedErrors = true;  // Solo en desarrollo
 });
 
+// SignalR publica bajo esta ruta: POST /hubs/productos/negotiate
+// (negociación del transporte) + el propio WebSocket/SSE/long polling
 app.MapHub<ProductosHub>("/hubs/productos")
     .RequireAuthorization();  // Requiere auth para todo el Hub
 ```
+
+> 📝 **Nota:** El evento `OnMessageReceived` es imprescindible porque la primera llamada del cliente es `POST /hubs/productos/negotiate` y, si el Hub va por WebSocket, el token llega en la query string. Sin este evento, ese endpoint respondería 401 aunque el cliente use `accessTokenFactory`.
+
+**Paso 3: CORS (si el cliente está en otro origen, p. ej. Vite en `localhost:5173`):**
+
+```csharp
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Clientes", policy =>
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials());  // ¡Imprescindible para SignalR!
+});
+
+var app = builder.Build();
+
+app.UseCors("Clientes");
+app.MapHub<ProductosHub>("/hubs/productos");
+```
+
+> ⚠️ **Advertencia:** SignalR necesita `AllowCredentials()`. Sin él, el navegador bloquea la conexión del Hub aunque la política CORS parezca correcta.
 
 En el cliente JavaScript, el token se pasa via `accessTokenFactory` (lo veremos en la seccion 18.8).
 
@@ -660,7 +728,7 @@ await Groups.AddToGroupAsync(Context.ConnectionId, "zona-madrid");
 
 ## 18.7. IHubContext: Notificaciones desde Servicios
 
-### 18.7.1. Patron de Inyeccion
+### 18.7.1. Patrón de Inyección
 
 El Hub solo se ejecuta cuando un cliente llama a un metodo. Pero los servicios de negocio necesitan enviar notificaciones sin que haya una llamada del cliente. Para eso se usa `IHubContext<T>`:
 
@@ -693,9 +761,9 @@ public class PedidoService(
 }
 ```
 
-> **Ejemplo real:** En **Amazon**, cuando un vendedor actualiza el stock de un producto, los clientes que tienen ese producto en su carrito reciben una notificacion instantanea. Eso es `IHubContext` en accion: el servicio de inventario notifica a traves del Hub sin que el cliente haya pedido nada.
+> 📌 **Ejemplo real:** En **Amazon**, cuando un vendedor actualiza el stock de un producto, los clientes que tienen ese producto en su carrito reciben una notificacion instantanea. Eso es `IHubContext` en accion: el servicio de inventario notifica a traves del Hub sin que el cliente haya pedido nada.
 
-### 18.7.2. Notificaciones Privadas vs Publicas
+### 18.7.2. Notificaciones Privadas vs Públicas
 
 ```csharp
 // Privada: solo un usuario
@@ -721,7 +789,7 @@ await hubContext.Clients
 
 ## 18.8. Cliente JavaScript
 
-### 18.8.1. Cliente SignalR Basico
+### 18.8.1. Cliente SignalR Básico
 
 SignalR proporciona una libreria de JavaScript para conectarse al Hub:
 
@@ -751,7 +819,7 @@ async function enviarMensaje(mensaje) {
 </script>
 ```
 
-### 18.8.2. Autenticacion con JWT
+### 18.8.2. Autenticación con JWT
 
 Para pasar un token JWT al conectar:
 
@@ -780,7 +848,7 @@ connection.start()
 </script>
 ```
 
-### 18.8.3. Reconexion Automatica
+### 18.8.3. Reconexión Automática
 
 SignalR reconecta automaticamente si la conexion se pierde. Configura los intervalos de reintento:
 
@@ -809,7 +877,7 @@ connection.start();
 </script>
 ```
 
-> **Consejo:** Siempre implementa `withAutomaticReconnect` en produccion. Las conexiones WebSocket se caen por timeouts de red, cambios de WiFi o actualizaciones del navegador. La reconexion automatica evita que el usuario tenga que recargar la pagina.
+> 💡 **Consejo:** Siempre implementa `withAutomaticReconnect` en produccion. Las conexiones WebSocket se caen por timeouts de red, cambios de WiFi o actualizaciones del navegador. La reconexion automatica evita que el usuario tenga que recargar la pagina.
 
 ## 18.9. Escalabilidad con Redis
 
@@ -831,8 +899,11 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      # Solo accesible desde el propio host: nunca expongas 6379 en todas las interfaces
+      - "127.0.0.1:6379:6379"
 ```
+
+> ⚠️ **Advertencia:** No publiques el puerto `6379:6379` sin más: Redis quedará expuesto en todas las interfaces de red (en un servidor, en toda la red local). Restringelo a `127.0.0.1` o, mejor aún, **no declares `ports` en absoluto** si solo lo usan otros contenedores de la misma red Docker (entonces basta con `redis:6379` como hostname).
 
 ```mermaid
 flowchart TB
@@ -890,12 +961,28 @@ public class ProductosHub : Hub
 
         await Clients.All.SendAsync("ReceiveMessage", userId, mensaje);
     }
+
+    /// <summary>
+    /// Obligatorio: sin limpiar, el ConcurrentDictionary crece sin control
+    /// (una entrada por usuario que se conecte alguna vez).
+    /// </summary>
+    public override Task OnDisconnectedAsync(Exception? exception)
+    {
+        if (Context.User?.FindFirstValue(ClaimTypes.NameIdentifier) is string userId)
+        {
+            _messageCounts.TryRemove(userId, out _);
+        }
+
+        return base.OnDisconnectedAsync(exception);
+    }
 }
 ```
 
-> **Advertencia:** Nunca confies en que el cliente envia datos validos. Siempre valida en el Hub, igual que lo harias en un Controller. Un usuario malicioso puede enviar cualquier cosa al Hub usando herramientas como la consola del navegador.
+> 📝 **Nota:** Otra alternativa es dar caducidad a cada entrada (guardar `DateTime` junto al contador y descartar las antiguas). Lo importante es que **el diccionario no crezca indefinidamente**: `OnDisconnectedAsync` es el lugar natural para limpiar.
 
-## 18.11. Buenas Practicas
+> ⚠️ **Advertencia:** Nunca confies en que el cliente envia datos validos. Siempre valida en el Hub, igual que lo harias en un Controller. Un usuario malicioso puede enviar cualquier cosa al Hub usando herramientas como la consola del navegador.
+
+## 18.11. Buenas Prácticas
 
 ```mermaid
 flowchart TB
@@ -942,7 +1029,7 @@ flowchart TB
 | **Validar datos** | Nunca confiar en lo que el cliente envia |
 | **Logging** | Registrar conexiones, desconexiones y errores |
 
-> **Buena practica:** Separa la logica de negocio del Hub. El Hub solo debe gestionar conexiones y delegar la logica a servicios inyectados via `IHubContext`. Asi el Hub es facil de testear y la logica es reutilizable.
+> ✅ **Buena práctica:** Separa la logica de negocio del Hub. El Hub solo debe gestionar conexiones y delegar la logica a servicios inyectados via `IHubContext`. Asi el Hub es facil de testear y la logica es reutilizable.
 
 ```csharp
 // ❌ MALO: Logica de negocio en el Hub
@@ -957,25 +1044,28 @@ public class ProductosHub : Hub
     }
 }
 
-// ✅ BUENO: Hub delega a servicio
-public class ProductosHub(IProductoService service, IHubContext<ProductosHub> hubContext) : Hub
+// ✅ BUENO: Hub delega a servicio (sin IHubContext dentro del propio Hub)
+public class ProductosHub(IProductoService service) : Hub
 {
     public async Task CrearProducto(string nombre, decimal precio)
     {
         var producto = await service.CrearAsync(nombre, precio);  // ✅ Logica en servicio
-        await hubContext.Clients.All.SendAsync("ProductoCreado", producto);
+        await Clients.All.SendAsync("ProductoCreado", producto);
     }
 }
 ```
 
+> 📝 **Nota:** Fíjate en que el `✅ BUENO` **no** inyecta `IHubContext<ProductosHub>` dentro del propio Hub: dentro del Hub ya tienes `Clients`, `Groups` y `Context`, así que inyectarlo sería redundante. `IHubContext` es para **servicios externos** al Hub (por ejemplo `PedidoService`, ver sección 18.7), que no tienen acceso a esas propiedades.
+
 ## 18.12. Testing
 
-Para testear Hubs de SignalR, se usa `Mock` de `IHubCallerClients`, `IGroupManager` y `HubCallerContext`:
+Para testear Hubs de SignalR, se usa `Mock` de `IHubCallerClients`, `IGroupManager` y `HubCallerContext`.
+
+> 📝 **Nota:** El Hub bajo test es el `ProductosHub` de las secciones 18.4.2-18.4.3: **sin constructor con parámetros** (`Hub` solo tiene el constructor por defecto), `OnConnectedAsync` añade el grupo `user-{id}` y `SendMessage(usuario, mensaje)` envía a `Clients.All`.
 
 ```csharp
 using FluentAssertions;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using System.Security.Claims;
@@ -988,7 +1078,7 @@ public class ProductosHubTests
 {
     private Mock<IHubCallerClients> _clientsMock = null!;
     private Mock<IGroupManager> _groupsMock = null!;
-    private Mock<ILogger<ProductosHub>> _loggerMock = null!;
+    private Mock<HubCallerContext> _contextMock = null!;
     private ProductosHub _hub = null!;
 
     [SetUp]
@@ -996,7 +1086,7 @@ public class ProductosHubTests
     {
         _clientsMock = new Mock<IHubCallerClients>();
         _groupsMock = new Mock<IGroupManager>();
-        _loggerMock = new Mock<ILogger<ProductosHub>>();
+        _contextMock = new Mock<HubCallerContext>();
 
         var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
@@ -1005,11 +1095,12 @@ public class ProductosHubTests
             new Claim(ClaimTypes.Role, "USER")
         }, "Test"));
 
-        _hub = new ProductosHub(_loggerMock.Object)
+        _contextMock.Setup(c => c.User).Returns(user);
+        _contextMock.Setup(c => c.ConnectionId).Returns("test-connection-id");
+
+        _hub = new ProductosHub
         {
-            Context = new DefaultHubCallerContext(
-                new DefaultHttpContext { User = user },
-                "test-connection-id"),
+            Context = _contextMock.Object,
             Clients = _clientsMock.Object,
             Groups = _groupsMock.Object
         };
@@ -1041,10 +1132,12 @@ public class ProductosHubTests
         _clientsMock.Setup(c => c.All).Returns(mockAll.Object);
 
         // Act
-        await _hub.SendMessage("Hola a todos");
+        await _hub.SendMessage("Profesor", "Hola a todos");
 
         // Assert
-        mockAll.Verify(c => c.SendAsync(
+        // SendAsync es un metodo de extension: hay que verificar
+        // el metodo real de la interfaz, SendCoreAsync
+        mockAll.Verify(c => c.SendCoreAsync(
             "ReceiveMessage",
             It.IsAny<object[]>(),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -1071,6 +1164,8 @@ public class ProductosHubTests
 - Rate limiting en el Hub (max 100 mensajes por conexion)
 - Grupo por coleccion de funkos (suscripcion a colecciones)
 - Redis Backplane para escalabilidad
+
+---
 
 **Resumen del punto:**
 

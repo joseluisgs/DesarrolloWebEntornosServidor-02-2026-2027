@@ -11,11 +11,11 @@
     - [8.2.4. Comparación: extensiones vs AutoMapper](#824-comparación-extensiones-vs-automapper)
   - [8.3. Validaciones](#83-validaciones)
     - [8.3.1. Data Annotations: formato básico](#831-data-annotations-formato-básico)
-      - [Ejemplo completo con múltiples atributos](#ejemplo-completo-con-múltiples-atributos)
+      - [8.3.1.1. Ejemplo completo con múltiples atributos](#8311-ejemplo-completo-con-múltiples-atributos)
     - [8.3.2. Crear tu propia etiqueta de validación](#832-crear-tu-propia-etiqueta-de-validación)
-      - [Otro ejemplo: validación de contraseña fuerte](#otro-ejemplo-validación-de-contraseña-fuerte)
+      - [8.3.2.1. Otro ejemplo: validación de contraseña fuerte](#8321-otro-ejemplo-validación-de-contraseña-fuerte)
     - [8.3.3. FluentValidation: reglas de negocio](#833-fluentvalidation-reglas-de-negocio)
-      - [Reglas avanzadas de FluentValidation](#reglas-avanzadas-de-fluentvalidation)
+      - [8.3.3.1. Reglas avanzadas de FluentValidation](#8331-reglas-avanzadas-de-fluentvalidation)
     - [8.3.4. Cuándo usar cada una](#834-cuándo-usar-cada-una)
     - [8.3.5. Integración con ASP.NET Core](#835-integración-con-aspnet-core)
     - [8.3.6. ¿Qué pasa cuando la validación falla? (Middleware)](#836-qué-pasa-cuando-la-validación-falla-middleware)
@@ -59,6 +59,7 @@
 En este punto aprenderás a transferir datos entre capas con DTOs, a mapear modelos, a validar entradas y a diseñar endpoints flexibles con query parameters y HATEOAS.
 
 **Objetivos de aprendizaje:**
+
 - Crear DTOs para Request y Response
 - Mapear con funciones de extensión (recomendado) y AutoMapper
 - Validar con Data Annotations y FluentValidation
@@ -225,12 +226,12 @@ public static class ProductoMapper
 
 ```csharp
 // En el servicio
-var dto = producto.ToDto();
-var modelo = dto.ToModel();
+var dto = producto.ToDto();       // Producto → ProductoDto (salida al cliente)
+var nuevo = createDto.ToModel();  // CreateProductoDto → Producto (entrada del cliente)
 ```
 
 **Ventajas:**
-- Sin dependencias de terceras
+- Sin dependencias de terceros
 - Rendimiento óptimo (sin reflection)
 - Fácil de debuggear
 - Tipado fuerte en tiempo de compilación
@@ -285,7 +286,7 @@ En ASP.NET Core tenemos **dos niveles de validación** que se ejecutan **antes**
 1. **Data Annotations** — formato básico (campos obligatorios, rangos, longitudes)
 2. **FluentValidation** — reglas de negocio complejas (condicionales, validación cruzada, lógica)
 
-Además, cuando la validación falla, el **middleware de excepciones** que configuramos en el punto 07 se encarga de convertir los errores en respuestas `ProblemDetails` estandarizadas.
+Además, cuando la validación falla, el propio pipeline de MVC (el `ModelStateInvalidFilter`) devuelve un `400 Bad Request` con `ProblemDetails` **antes** de que se ejecute el action. El **middleware de excepciones** que configuramos en el punto 07 solo interviene cuando se lanza una excepción no controlada: la convierte en `ProblemDetails`, pero eso ya sería un `500`, no un `400` de validación.
 
 ```mermaid
 flowchart TB
@@ -326,7 +327,7 @@ flowchart TB
     style SVC_ERR fill:#f44336,color:#fff
 ```
 
-📌 Ejemplo real: **Netflix** cuando creas una cuenta valida que el email tenga formato correcto (Data Annotations), que la contraseña tenga al menos 8 caracteres con una mayúscula y un número (FluentValidation), y que el email no esté ya registrado en la base de datos (validación en servicio). Los tres niveles working together.
+📌 Ejemplo real: **Netflix** cuando creas una cuenta valida que el email tenga formato correcto (Data Annotations), que la contraseña tenga al menos 8 caracteres con una mayúscula y un número (FluentValidation), y que el email no esté ya registrado en la base de datos (validación en servicio). Los tres niveles trabajando en conjunto.
 
 ### 8.3.1. Data Annotations: formato básico
 
@@ -366,9 +367,11 @@ public record CreateProductoDto
 | `[CreditCard]` | Formato de tarjeta de crédito válido | `[CreditCard]` |
 | `[DataType(DataType.Date)]` | Tipo de dato (fecha, email, etc.) | `[DataType(DataType.Date)]` |
 
+> 📝 **Nota:** `[DataType]` **no valida nada**: solo le indica al cliente cómo mostrar el campo (fecha, email, etc.). La validación real la hacen atributos como `[Required]`, `[EmailAddress]` o `[Range]`.
+
 📌 Ejemplo real: **Twitter/X** valida que un tweet no supere los 280 caracteres. Eso es un `[MaxLength(280)]`. Un campo de email lleva `[EmailAddress]`. Un campo de edad tiene `[Range(0, 150)]`. Un formulario de registro usa `[Required]` en todos los campos obligatorios y `[Compare("Password")]` para confirmar la contraseña. Data Annotations en estado puro.
 
-#### Ejemplo completo con múltiples atributos
+#### 8.3.1.1. Ejemplo completo con múltiples atributos
 
 ```csharp
 public record RegistroUsuarioDto
@@ -410,7 +413,7 @@ public record RegistroUsuarioDto
 
 A veces los atributos de Microsoft no son suficientes. Por ejemplo, ¿qué pasa si necesitas validar que un nombre de usuario no sea "admin", "root" o "sistema"? No hay un atributo para eso. La solución: **crear tu propio atributo de validación**.
 
-Para crear un atributo personalizado, heredas de `ValidationAttribute` y sobreescribes el método `IsValid`:
+Para crear un atributo personalizado, heredas de `ValidationAttribute` y sobrescribes el método `IsValid`:
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
@@ -468,7 +471,7 @@ public record CreateProductoDto
 
 📌 Ejemplo real: **Slack** valida que el nombre de un workspace no contenga palabras ofensivas ni nombres de marcas registradas. Eso se hace con un atributo personalizado que compara contra una lista negra, exactamente como nuestro `NoAdmin`.
 
-#### Otro ejemplo: validación de contraseña fuerte
+#### 8.3.2.1. Otro ejemplo: validación de contraseña fuerte
 
 ```csharp
 public class StrongPasswordAttribute : ValidationAttribute
@@ -541,7 +544,7 @@ public class CreateProductoValidator : AbstractValidator<CreateProductoDto>
 
 📌 Ejemplo real: **Wallapop** valida que al publicar un anuncio: el título no esté vacío, el precio sea positivo, la categoría exista en la lista de categorías permitidas, y la ubicación sea una ciudad válida de España. Eso no puedes hacerlo solo con Data Annotations — necesitas FluentValidation.
 
-#### Reglas avanzadas de FluentValidation
+#### 8.3.3.1. Reglas avanzadas de FluentValidation
 
 ```csharp
 public class RegistroValidator : AbstractValidator<RegistroUsuarioDto>
@@ -589,19 +592,52 @@ public class RegistroValidator : AbstractValidator<RegistroUsuarioDto>
 
 ### 8.3.5. Integración con ASP.NET Core
 
-ASP.NET Core valida automáticamente los Data Annotations. Para FluentValidation, necesitas registrarlo en `Program.cs`:
+La validación en ASP.NET Core se compone de **tres piezas distintas** que no debes confundir:
+
+| # | Pieza | Qué hace | ¿Viene de serie? |
+|---|-------|----------|:----------------:|
+| **1** | **Data Annotations + `[ApiController]`** | Valida los atributos del DTO y devuelve `400 Bad Request` sin que escribas código | ✅ |
+| **2** | **`AddValidatorsFromAssemblyContaining<T>()`** | **Solo registra** tus `IValidator<T>` en el contenedor de DI. **No ejecuta ninguna validación** | ❌ |
+| **3** | **Ejecución** | Alguien debe invocar al validador: un action filter (`AddFluentValidationAutoValidation()`) o una llamada explícita a `IValidator<T>` | ❌ |
 
 ```csharp
-// Program.cs
+// Program.cs — pieza 2: registrar los validators en DI
+// (esto NO ejecuta la validación por sí solo)
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+// Pieza 3 (opción A): ejecución automática vía action filter.
+// Requiere el paquete FluentValidation.AspNetCore y llamarse DESPUÉS de AddControllers().
+// Solo funciona en MVC/controllers; el paquete ya no se mantiene (proyectos legacy).
+builder.Services.AddFluentValidationAutoValidation();
 ```
 
-Esto busca automáticamente todos los `AbstractValidator<T>` en el ensamblado y los registra. Cuando un endpoint recibe un DTO con `[FromBody]`, el pipeline de validación:
+> 📝 **Nota:** `AddValidatorsFromAssemblyContaining` usa reflection para encontrar todos tus `AbstractValidator<T>` y registrarlos como `IValidator<T>` en DI. Si te olvidas de la pieza 3, esos validadores quedan registrados pero **nunca se ejecutan**.
 
-1. Ejecuta los **Data Annotations** del DTO
-2. Si hay un `AbstractValidator<T>` registrado, ejecuta **FluentValidation**
-3. Si ambos pasan, el controlador recibe el DTO
-4. Si alguno falla, se devuelve `400 Bad Request` automáticamente
+**Pieza 3, opción B: invocar el validador explícitamente** (enfoque manual recomendado en la documentación oficial; funciona igual en controllers y Minimal APIs):
+
+```csharp
+// Minimal API — llamar a IValidator<T> a mano
+app.MapPost("/api/productos", async (
+    CreateProductoDto dto,
+    IValidator<CreateProductoDto> validator,
+    IProductoService service) =>
+{
+    // Pieza 3: ejecutar el validador registrado en DI
+    var resultado = await validator.ValidateAsync(dto);
+    if (!resultado.IsValid)
+        return Results.ValidationProblem(resultado.ToDictionary());
+
+    var producto = await service.Create(dto);
+    return Results.Created($"/api/productos/{producto.Id}", producto);
+});
+```
+
+Con las tres piezas conectadas, cuando un endpoint recibe un DTO con `[FromBody]`:
+
+1. Se ejecutan los **Data Annotations** del DTO (pieza 1; con `[ApiController]`, un fallo devuelve `400` automáticamente)
+2. Si la pieza 3 está configurada, se ejecuta el `AbstractValidator<T>` registrado en DI (piezas 2 + 3)
+3. Si ambos pasan, el action recibe el DTO validado
+4. Si alguno falla, se devuelve `400 Bad Request` automáticamente **sin llegar al action**
 
 ```mermaid
 sequenceDiagram
@@ -611,10 +647,10 @@ sequenceDiagram
     participant D as Controller
 
     C->>P: POST /api/productos<br/>{ nombre: '', precio: -5 }
-    Note over P: 1. Ejecutar Data Annotations
+    Note over P: Pieza 1: Data Annotations + [ApiController]
     P->>P: [Required] Nombre → FALLA
     P->>C: 400 Bad Request<br/>{ errors: { Nombre: [...] } }
-    Note over P: Si DA pasa, ejecutar FluentValidation
+    Note over P: Piezas 2+3: action filter o llamada explícita a IValidator
     P->>V: Validate(CreateProductoDto)
     V->>V: RuleFor(Precio).GreaterThan(0) → FALLA
     V->>P: ValidationResult.IsValid = false
@@ -624,7 +660,7 @@ sequenceDiagram
     D->>C: 201 Created
 ```
 
-> ⚠️ **Advertencia:** Si no registras `AddValidatorsFromAssemblyContaining<Program>()`, FluentValidation **no se ejecuta** automáticamente. Los Data Annotations funcionan siempre (son parte del framework), pero FluentValidation necesita este registro explícito.
+> ⚠️ **Advertencia:** `AddValidatorsFromAssemblyContaining<Program>()` **solo registra** los validadores en DI: por sí solo **no ejecuta la validación**. Sin la pieza 3 (action filter con `AddFluentValidationAutoValidation()` o una llamada explícita a `IValidator<T>`), tus reglas FluentValidation **nunca se ejecutarán**. Los Data Annotations sí funcionan siempre: los valida el propio framework con `[ApiController]`.
 
 ### 8.3.6. ¿Qué pasa cuando la validación falla? (Middleware)
 
@@ -649,9 +685,9 @@ public IActionResult Create([FromBody] CreateProductoDto dto)
 {
     // Aquí el DTO ya está validado — si llegamos aquí, todo está bien
     var result = service.Create(dto);
-    return result.IsSuccess
-        ? CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value.ToDto())
-        : result.Error.ToHttpResult();
+    return result.Match(
+        producto => CreatedAtAction(nameof(GetById), new { id = producto.Id }, producto.ToDto()),
+        error => error.ToHttpResult());
 }
 ```
 
@@ -673,11 +709,11 @@ public IActionResult Create([FromBody] CreateProductoDto dto)
 
 📌 Ejemplo real: **Stripe** (pasarela de pagos) devuelve errores de validación muy estructurados: un código de error, un mensaje descriptivo y un campo que indica qué parámetro falló. Es el mismo patrón que aplicamos aquí con `ProblemDetails`.
 
-> 💡 **Consejo:** En el punto 07 configuramos un `GlobalExceptionHandler` que captura las excepciones no controladas y las convierte en `ProblemDetails`. Ese middleware funciona como "red de seguridad" — si la validación falla de alguna forma inesperada, el middleware se encarga de que el cliente reciba una respuesta coherente en lugar de un 500 genérico.
+> 💡 **Consejo:** En el punto 07 configuramos el middleware `UseExceptionHandler` (con un `IExceptionHandler` registrado en DI) que captura las excepciones no controladas y las convierte en `ProblemDetails`. Ese middleware funciona como "red de seguridad" — si la validación falla de alguna forma inesperada, el middleware se encarga de que el cliente reciba una respuesta coherente en lugar de un 500 genérico.
 
 📌 Ejemplo real: **Mercado Libre** tiene un middleware similar que captura errores de validación, errores de base de datos y excepciones no controladas, y los convierte en respuestas consistentes con código, mensaje y campo afectado. Sin ese middleware, cada endpoint tendría que manejar sus propios errores, lo cual es propenso a olvidos y inconsistencias.
 
-### 8.3.7. Resumen: Validación en ASP.NET Core
+### 8.3.7. Validación en ASP.NET Core
 
 ```mermaid
 flowchart TD
@@ -739,7 +775,7 @@ public IActionResult GetAll(
     [FromQuery] decimal? precioMin,
     [FromQuery] decimal? precioMax)
 {
-    var productos = service.GetAll();
+    IEnumerable<Producto> productos = service.GetAll();
 
     if (!string.IsNullOrEmpty(nombre))
         productos = productos.Where(p => p.Nombre.Contains(nombre));
@@ -764,7 +800,7 @@ public IActionResult GetAll(
     [FromQuery] string sortBy = "Nombre",
     [FromQuery] bool desc = false)
 {
-    var productos = service.GetAll();
+    IEnumerable<Producto> productos = service.GetAll();
 
     productos = sortBy.ToLower() switch
     {
@@ -991,7 +1027,7 @@ flowchart TD
 
 ### 8.7.2. Enlaces de paginación en headers
 
-El estándar **RFC 5988** define cómo incluir enlaces en headers HTTP:
+El estándar **RFC 8288** define cómo incluir enlaces en headers HTTP:
 
 ```http
 HTTP/1.1 200 OK
@@ -1030,14 +1066,13 @@ public static class PaginationLinksHelper
     {
         var links = new List<string>();
 
-        if (page > 1)
-            links.Add($"<{baseUrl}?page=1&pageSize={pageSize}>; rel=\"first\"");
+        // first y last SIEMPRE se incluyen (son los extremos de la paginación)
+        links.Add($"<{baseUrl}?page=1&pageSize={pageSize}>; rel=\"first\"");
         if (page > 1)
             links.Add($"<{baseUrl}?page={page - 1}&pageSize={pageSize}>; rel=\"prev\"");
         if (page < totalPages)
             links.Add($"<{baseUrl}?page={page + 1}&pageSize={pageSize}>; rel=\"next\"");
-        if (page < totalPages)
-            links.Add($"<{baseUrl}?page={totalPages}&pageSize={pageSize}>; rel=\"last\"");
+        links.Add($"<{baseUrl}?page={totalPages}&pageSize={pageSize}>; rel=\"last\"");
 
         return string.Join(", ", links);
     }

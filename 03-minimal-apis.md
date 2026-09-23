@@ -10,21 +10,37 @@
     - [3.3.2. Rutas con parámetros](#332-rutas-con-parámetros)
     - [3.3.3. Parámetros de consulta](#333-parámetros-de-consulta)
   - [3.4. Métodos de respuesta](#34-métodos-de-respuesta)
-    - [3.4.1. Results: respuestas simples](#341-results-respuestas-simples)
-    - [3.4.2. Results\<T\>: respuestas con datos](#342-resultst-respuestas-con-datos)
+    - [3.4.1. Respuestas directas con IResult](#341-respuestas-directas-con-iresult)
+    - [3.4.2. TypedResults: respuestas tipadas](#342-typedresults-respuestas-tipadas)
     - [3.4.3. ¿Cuándo usar cada método?](#343-cuándo-usar-cada-método)
   - [3.5. Gestión de la clave primaria](#35-gestión-de-la-clave-primaria)
   - [3.6. Organización de rutas](#36-organización-de-rutas)
-    - [3.6.1. Probando con Bruno](#361-probando-con-bruno)
+    - [3.6.1. El problema](#361-el-problema)
+    - [3.6.2. La solución: archivos de rutas con extensiones](#362-la-solución-archivos-de-rutas-con-extensiones)
+    - [3.6.3. MapGroup: agrupar rutas](#363-mapgroup-agrupar-rutas)
+    - [3.6.4. Probando con Bruno](#364-probando-con-bruno)
+    - [3.6.5. Instalación](#365-instalación)
+    - [3.6.6. Configuración](#366-configuración)
+    - [3.6.7. Pruebas GET](#367-pruebas-get)
+    - [3.6.8. Pruebas POST](#368-pruebas-post)
+    - [3.6.9. Pruebas PUT](#369-pruebas-put)
+    - [3.6.10. Pruebas DELETE](#3610-pruebas-delete)
+    - [3.6.11. Pruebas de error](#3611-pruebas-de-error)
   - [3.7. Buenas prácticas](#37-buenas-prácticas)
   - [3.8. Reto: API de Funkos con CRUD en memoria](#38-reto-api-de-funkos-con-crud-en-memoria)
-    - [3.8.1. Results.Created() y el header Location](#381-resultscreated-y-el-header-location)
+    - [3.8.1. Contexto](#381-contexto)
+    - [3.8.2. Modelo de datos](#382-modelo-de-datos)
+    - [3.8.3. Almacenamiento](#383-almacenamiento)
+    - [3.8.4. Retos](#384-retos)
+    - [3.8.5. Results.Created() y el header Location](#385-resultscreated-y-el-header-location)
+    - [3.8.6. ¿Qué es un header?](#386-qué-es-un-header)
+    - [3.8.7. ¿Por qué se construye la URL a mano?](#387-por-qué-se-construye-la-url-a-mano)
 
 
 
 # 3. Minimal APIs
 
-> 💡 **Punto de partida:** Cuando Instagram lanzó su API interna, necesitaban un sistema rápido para exponer cientos de endpoints simples: obtener perfil, subir foto, dar like... Usaron un enfoque minimalista: cada endpoint es una función, sin controladores, sin ceremonia. Eso es una Minimal API.
+> 💡 **Punto de partida:** Imagina que necesitas exponer cientos de endpoints simples: obtener perfil, subir foto, dar like... Así lo harías con ASP.NET Core Minimal APIs: cada endpoint es una función, sin controladores, sin ceremonia. Eso es una Minimal API.
 
 En este punto aprenderás a crear endpoints con Minimal APIs en ASP.NET Core: rutas, métodos HTTP, parámetros y tipos de respuesta.
 
@@ -40,7 +56,7 @@ En este punto aprenderás a crear endpoints con Minimal APIs en ASP.NET Core: ru
 
 Una **Minimal API** es una forma simplificada de crear endpoints en ASP.NET Core. En lugar de crear clases Controlador con atributos, cada endpoint se define como una **función lambda** directamente en `Program.cs`.
 
-> 💡 **Analogía:** Un controlador es como un restaurante con menú, camareroy carta estructurada. Una Minimal API es como un food truck: directo, sin ceremonia, haces tu pedido y te lo dan.
+> 💡 **Analogía:** Un controlador es como un restaurante con menú, camarero y carta estructurada. Una Minimal API es como un food truck: directo, sin ceremonia, haces tu pedido y te lo dan.
 
 ```mermaid
 flowchart LR
@@ -52,7 +68,7 @@ flowchart LR
     style C fill:#FF9800,color:#fff
 ```
 
-📌 **Ejemplo real:** La API de Twitter/X usa Minimal APIs para endpoints simples como obtener un tweet o dar like. No necesitan la ceremonia de un controlador para algo tan directo.
+📌 **Ejemplo real:** Así lo harías con ASP.NET Core: si Twitter/X quisiera un endpoint simple como "obtener un tweet" o "dar like", con Minimal API sería una sola lambda en `Program.cs`, sin la ceremonia de un controlador.
 
 ### 3.1.1. Minimal API vs Controller-based
 
@@ -166,9 +182,9 @@ app.MapGet("/api/productos", (string? nombre, int? pagina) =>
 
 ## 3.4. Métodos de respuesta
 
-### 3.4.1. Results: respuestas simples
+### 3.4.1. Respuestas directas con IResult
 
-Cuando solo necesitas devolver un código de estado sin datos:
+Todas las respuestas de una Minimal API se construyen con `IResult` (la interfaz que implementa `Results`): códigos de estado y cuerpos directos:
 
 ```csharp
 app.MapPost("/api/productos", () => Results.Created("/api/productos/1", new { id = 1 }));
@@ -185,23 +201,36 @@ app.MapGet("/api/productos/{id}", (int id) =>
 | `Results.Created()` | 201 | Recurso creado |
 | `Results.NoContent()` | 204 | Éxito sin datos |
 | `Results.NotFound()` | 404 | Recurso no encontrado |
-| `Results.BadRequest()` | 400 | Petición inválida |
+| `Results.BadRequest()` | 400 | Petición mal formada |
+| `Results.UnprocessableEntity()` | 422 | Datos validados incorrectamente |
 
-### 3.4.2. Results\<T\>: respuestas con datos
+### 3.4.2. TypedResults: respuestas tipadas
 
-Cuando devuelves datos, usa `Results<T>` para tipar la respuesta:
+`Results.Ok(...)` devuelve `IResult`, que **no está tipado**: por eso Swagger/OpenAPI solo ve "object". Si quieres que la documentación sepa qué devuelve cada ruta, usa `TypedResults` o declara el tipo genérico `Results<...>` en la firma del delegado:
 
 ```csharp
+// Sin tipar: Swagger solo ve "object"
 app.MapGet("/api/productos/{id}", (int id) =>
 {
-    var producto = new { id, nombre = "Guitarra", precio = 299.99 };
-    return Results.Ok(producto);
+    var producto = Buscar(id);
+    return producto is not null
+        ? Results.Ok(producto)
+        : Results.NotFound();
+});
+
+// Tipado: OpenAPI documenta 200 (Producto) y 404
+app.MapGet("/api/productos/{id}", Results<Ok<Producto>, NotFound> (int id) =>
+{
+    var producto = Buscar(id);
+    return producto is not null
+        ? TypedResults.Ok(producto)
+        : TypedResults.NotFound();
 });
 ```
 
-El tipo `T` es el tipo de dato que devuelves. ASP.NET Core lo serializa automáticamente a JSON.
+`Ok<Producto>` y `NotFound` son los tipos concretos que implementan `IResult`: el compilador y OpenAPI saben exactamente qué puede devolver el endpoint.
 
-> 💡 **Consejo:** Usa `Results.Ok(objeto)` en lugar de solo `Return objeto`. Así controlas explícitamente el código de respuesta.
+> 💡 **Consejo:** En Minimal APIs pequeñas, `Results.Ok(objeto)` es suficiente. Cuando necesites documentación OpenAPI precisa, tipa la respuesta con `TypedResults` o `Results<...>`.
 
 ### 3.4.3. ¿Cuándo usar cada método?
 
@@ -213,7 +242,7 @@ flowchart TD
     C -->|No| E{"¿El recurso existe?"}
     E -->|No| F["Results.NotFound()"]
     E -->|Sí| G{"¿Los datos son válidos?"}
-    G -->|No| H["Results.BadRequest()"]
+    G -->|No| H["Results.UnprocessableEntity()"]
     G -->|Sí| I["Results.Ok()"]
     style B fill:#4CAF50,color:#fff
     style D fill:#4CAF50,color:#fff
@@ -226,7 +255,7 @@ flowchart TD
 
 Cuando creas un recurso, el **id** debe ser **autogenerado** por el servidor. Nunca lo envía el cliente.
 
-> 💡 **Analogía:** Es como-numerar las entradas de un concierto. El cliente compra la entrada, pero el sistema asigna el número. Tú no eliges tu número de entrada.
+> 💡 **Analogía:** Es como numerar las entradas de un concierto. El cliente compra la entrada, pero el sistema asigna el número. Tú no eliges tu número de entrada.
 
 ### Generar id con un contador
 
@@ -273,7 +302,7 @@ Cuando tu API tiene muchos endpoints, `Program.cs` se llena de `app.MapGet(...)`
 
 > 💡 **Analogía:** Es como organizar un libro. No metes todos los capítulos en la portada. Los separas en capítulos y páginas. Lo mismo con las rutas: las separas en archivos según su función.
 
-### El problema
+### 3.6.1. El problema
 
 ```csharp
 // ❌ Program.cs lleno de rutas
@@ -288,7 +317,7 @@ app.MapPost("/api/usuarios", ...);
 // ... 20 líneas más
 ```
 
-### La solución: archivos de rutas con extensiones
+### 3.6.2. La solución: archivos de rutas con extensiones
 
 Crea un archivo `Routes/ProductosRoutes.cs`:
 
@@ -322,7 +351,7 @@ app.MapUsuariosRoutes();    // Todas las rutas de usuarios
 app.Run();
 ```
 
-### MapGroup: agrupar rutas
+### 3.6.3. MapGroup: agrupar rutas
 
 `MapGroup` crea un **subgrupo** de rutas con un prefijo común:
 
@@ -335,19 +364,19 @@ var group = app.MapGroup("/api/productos");
 
 📌 **Ejemplo real:** La API de GitHub organiza sus endpoints en archivos separados: `repos/routes.cs`, `users/routes.cs`, `issues/routes.cs`...
 
-### 3.6.1. Probando con Bruno
+### 3.6.4. Probando con Bruno
 
 **Bruno** es un cliente API open source para probar endpoints. Es la alternativa gratuita a Postman. Las pruebas que hagas aquí funcionarán igual con Minimal APIs y con Controladores MVC.
 
 > 💡 **Consejo:** Instala Bruno desde [brunoapi.io](https://brunoapi.io). Es gratuito, open source y no requiere cuenta.
 
-### Instalación
+### 3.6.5. Instalación
 
 1. Descarga Bruno desde [brunoapi.io](https://brunoapi.io)
 2. Instálalo como cualquier otra aplicación
 3. Crea una nueva colección (`Collection`) para tus pruebas
 
-### Configuración
+### 3.6.6. Configuración
 
 Crea una variable de entorno `baseUrl` con la dirección de tu API:
 
@@ -355,7 +384,7 @@ Crea una variable de entorno `baseUrl` con la dirección de tu API:
 baseUrl = https://localhost:5001
 ```
 
-### Pruebas GET
+### 3.6.7. Pruebas GET
 
 **Listar todos los productos:**
 
@@ -371,7 +400,7 @@ GET {{baseUrl}}/api/productos/1
 Accept: application/json
 ```
 
-### Pruebas POST
+### 3.6.8. Pruebas POST
 
 **Crear un producto:**
 
@@ -388,7 +417,7 @@ Content-Type: application/json
 
 Respuesta esperada: `201 Created` con el producto creado y header `Location`.
 
-### Pruebas PUT
+### 3.6.9. Pruebas PUT
 
 **Actualizar un producto:**
 
@@ -403,7 +432,7 @@ Content-Type: application/json
 }
 ```
 
-### Pruebas DELETE
+### 3.6.10. Pruebas DELETE
 
 **Eliminar un producto:**
 
@@ -413,7 +442,7 @@ DELETE {{baseUrl}}/api/productos/1
 
 Respuesta esperada: `204 No Content`.
 
-### Pruebas de error
+### 3.6.11. Pruebas de error
 
 **Producto no encontrado:**
 
@@ -434,7 +463,7 @@ Content-Type: application/json
 }
 ```
 
-Respuesta esperada: `400 Bad Request`.
+Respuesta esperada: `400 Bad Request` **solo si el endpoint tiene validación** (Data Annotations en el DTO — ver [Punto 8: DTOs, Mapeadores y Validaciones](08-dtos-mapeadores-validaciones.md) — o `RequireValidation()`). **Sin validación, el endpoint devuelve `201 Created`** aunque el nombre venga vacío.
 
 > ⚠️ **Advertencia:** Si usas HTTPS, Bruno puede pedirte que aceptes el certificado autofirmado. Aceptalo en el primer request.
 
@@ -450,11 +479,11 @@ Respuesta esperada: `400 Bad Request`.
 
 > Antes de irte, diseña y construye una Minimal API completa para gestionar Funkos.
 
-### Contexto
+### 3.8.1. Contexto
 
 Vas a crear una API REST que permita **crear, leer, actualizar y eliminar** Funkos. Los datos se guardarán en una **Lista\<Funko\>** en memoria (no hay base de datos todavía).
 
-### Modelo de datos
+### 3.8.2. Modelo de datos
 
 | Propiedad | Tipo | Obligatorio |
 |-----------|------|:-----------:|
@@ -465,7 +494,7 @@ Vas a crear una API REST que permita **crear, leer, actualizar y eliminar** Funk
 | `imagen` | string | No |
 | `creadoEn` | DateTime | Sí (autogenerado) |
 
-### Almacenamiento
+### 3.8.3. Almacenamiento
 
 Los Funkos se guardan en una lista en memoria:
 
@@ -475,7 +504,7 @@ var funkos = new List<Funko>();
 
 > No hay base de datos. La lista se pierde al reiniciar el servidor. Es una primera aproximación.
 
-### Retos
+### 3.8.4. Retos
 
 **Reto 1: Diseña la API**
 
@@ -500,7 +529,7 @@ Crea un proyecto Minimal API y desarrolla cada endpoint. Recuerda:
 
 > 💡 **Consejo:** Empieza por `GET /api/funkos` (listar todos). Una vez que funciona, ve añadiendo los demás endpoints uno a uno.
 
-### 3.8.1. Results.Created() y el header Location
+### 3.8.5. Results.Created() y el header Location
 
 Cuando creas un recurso, debes devolver **201 Created** con el header `Location`:
 
@@ -522,7 +551,7 @@ Content-Type: application/json
 { "id": 1, "nombre": "Guitarra", ... }
 ```
 
-#### ¿Qué es un header?
+### 3.8.6. ¿Qué es un header?
 
 Los **headers** son pares de clave-valor que acompañan a la respuesta HTTP. Aportan información sobre la respuesta:
 
@@ -535,9 +564,9 @@ Los **headers** son pares de clave-valor que acompañan a la respuesta HTTP. Apo
 
 > 💡 **Consejo:** El header `Location` es fundamental. Sin él, el cliente no sabe dónde está el recurso que acaba de crear. Siempre inclúyelo en respuestas 201.
 
-#### ¿Por qué se usa `$"/api/productos/{producto.Id}"`?
+### 3.8.7. ¿Por qué se construye la URL a mano?
 
-Se construye la URL **a mano** porque Minimal APIs no tienen un sistema de routing que genere URLs automáticamente. Tú debes saber la ruta del endpoint GET correspondiente.
+Se construye la URL **a mano** porque Minimal APIs no tienen *named actions*: a diferencia de `CreatedAtAction` en controladores, no hay un nombre de método al que apuntar. ASP.NET Core sí dispone de `LinkGenerator` y `HttpContext` para generar URLs a partir de rutas, pero en Minimal APIs la referencia al endpoint GET correspondiente la escribes tú.
 
 > ⚠️ **Advertencia:** Si cambias la ruta del endpoint GET, también debes cambiar la URL en `Results.Created()`. No hay validación automática.
 
@@ -555,7 +584,8 @@ Se construye la URL **a mano** porque Minimal APIs no tienen un sistema de routi
 | **Results.Created()** | Respuesta 201 con ubicación |
 | **Results.NoContent()** | Respuesta 204 sin datos |
 | **Results.NotFound()** | Respuesta 404 |
-| **Results.BadRequest()** | Respuesta 400 |
+| **Results.BadRequest()** | Respuesta 400 (JSON mal formado) |
+| **Results.UnprocessableEntity()** | Respuesta 422 (datos inválidos en validación) |
 
 **¿Qué viene después?**
 

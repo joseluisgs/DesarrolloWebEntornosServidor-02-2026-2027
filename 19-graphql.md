@@ -1,24 +1,24 @@
 - [19. APIs con GraphQL](#19-apis-con-graphql)
-  - [19.1. Introduccion](#191-introduccion)
-    - [19.1.1. Que es GraphQL](#1911-que-es-graphql)
+  - [19.1. Introducción](#191-introducción)
+    - [19.1.1. Qué es GraphQL](#1911-qué-es-graphql)
     - [19.1.2. REST vs GraphQL](#1912-rest-vs-graphql)
-    - [19.1.3. Cuando Usar GraphQL](#1913-cuando-usar-graphql)
+    - [19.1.3. Cuándo Usar GraphQL](#1913-cuándo-usar-graphql)
   - [19.2. HotChocolate en ASP.NET Core](#192-hotchocolate-en-aspnet-core)
     - [19.2.1. Paquetes NuGet](#1921-paquetes-nut)
-    - [19.2.2. Configuracion en Program.cs](#1922-configuracion-en-programcs)
-    - [19.2.3. Flujo de Peticion GraphQL](#1923-flujo-de-peticion-graphql)
+    - [19.2.2. Configuración en Program.cs](#1922-configuración-en-programcs)
+    - [19.2.3. Flujo de Petición GraphQL](#1923-flujo-de-petición-graphql)
   - [19.3. Tipos y Esquema](#193-tipos-y-esquema)
-    - [19.3.1. ObjectType Basico](#1931-objecttype-basico)
+    - [19.3.1. ObjectType Básico](#1931-objecttype-básico)
     - [19.3.2. Mapeo de Tipos GraphQL](#1932-mapeo-de-tipos-graphql)
     - [19.3.3. Resolvers Personalizados](#1933-resolvers-personalizados)
     - [19.3.4. Campos Calculados](#1934-campos-calculados)
-  - [19.4. Inputs y Validacion](#194-inputs-y-validacion)
+  - [19.4. Inputs y Validación](#194-inputs-y-validación)
     - [19.4.1. Input Record](#1941-input-record)
-    - [19.4.2. Input con Validacion](#1942-input-con-validacion)
-    - [19.4.3. Input para Actualizacion Parcial](#1943-input-para-actualizacion-parcial)
+    - [19.4.2. Input con Validación](#1942-input-con-validación)
+    - [19.4.3. Input para Actualización Parcial](#1943-input-para-actualización-parcial)
   - [19.5. Queries](#195-queries)
-    - [19.5.1. Query Basica](#1951-query-basica)
-    - [19.5.2. Paginacion, Filtrado y Ordenamiento](#1952-paginacion-filtrado-y-ordenamiento)
+    - [19.5.1. Query Básica](#1951-query-básica)
+    - [19.5.2. Paginación, Filtrado y Ordenamiento](#1952-paginación-filtrado-y-ordenamiento)
     - [19.5.3. Consultas GraphQL de Ejemplo](#1953-consultas-graphql-de-ejemplo)
     - [19.5.4. Operadores de Filtro](#1954-operadores-de-filtro)
   - [19.6. Mutations](#196-mutations)
@@ -27,29 +27,29 @@
     - [19.6.3. Mutation de Eliminar](#1963-mutation-de-eliminar)
     - [19.6.4. Mutations GraphQL de Ejemplo](#1964-mutations-graphql-de-ejemplo)
   - [19.7. Subscriptions y Tiempo Real](#197-subscriptions-y-tiempo-real)
-    - [19.7.1. Patron Pub/Sub](#1971-patron-pubsub)
-    - [19.7.2. Implementacion de Subscription](#1972-implementacion-de-subscription)
-    - [19.7.3. Configuracion de WebSockets](#1973-configuracion-de-websockets)
+    - [19.7.1. Patrón Pub/Sub](#1971-patrón-pubsub)
+    - [19.7.2. Implementación de Subscription](#1972-implementación-de-subscription)
+    - [19.7.3. Configuración de WebSockets](#1973-configuración-de-websockets)
     - [19.7.4. Flujo de Subscription](#1974-flujo-de-subscription)
   - [19.8. DataLoaders y Problema N+1](#198-dataloaders-y-problema-n1)
     - [19.8.1. El Problema N+1](#1981-el-problema-n1)
-    - [19.8.2. Solucion con DataLoader](#1982-solucion-con-dataloader)
-    - [19.8.3. Implementacion de DataLoaders](#1983-implementacion-de-dataloaders)
-  - [19.9. Autorizacion](#199-autorizacion)
-    - [19.9.1. Configuracion de Autenticacion JWT](#1991-configuracion-de-autenticacion-jwt)
+    - [19.8.2. Solución con DataLoader](#1982-solución-con-dataloader)
+    - [19.8.3. Implementación de DataLoaders](#1983-implementación-de-dataloaders)
+  - [19.9. Autorización](#199-autorización)
+    - [19.9.1. Configuración de Autenticación JWT](#1991-configuración-de-autenticación-jwt)
     - [19.9.2. Proteger Queries y Mutations](#1992-proteger-queries-y-mutations)
-    - [19.9.3. Politicas Personalizadas](#1993-politicas-personalizadas)
+    - [19.9.3. Políticas Personalizadas](#1993-políticas-personalizadas)
   - [19.10. Testing](#1910-testing)
     - [19.10.1. Test de Queries](#19101-test-de-queries)
     - [19.10.2. Test de Mutations](#19102-test-de-mutations)
-  - [19.11. Buenas Practicas](#1911-buenas-practicas)
+  - [19.11. Buenas Prácticas](#1911-buenas-prácticas)
   - [19.12. Reto](#1912-reto)
 
 
 
 # 19. APIs con GraphQL
 
-> **Punto de partida:** En una tienda online, un cliente movil solo necesita el nombre y precio de un producto, pero el administrador necesita el stock, la categoria y las ventas. Con REST, haces una peticion y recibes todo (over-fetching). O haces 3 peticiones para obtener 3 recursos diferentes (under-fetching). GraphQL resuelve esto: el cliente pide exactamente lo que necesita, ni mas ni menos, en una sola peticion.
+> 💡 **Punto de partida:** En una tienda online, un cliente móvil solo necesita el nombre y precio de un producto, pero el administrador necesita el stock, la categoría y las ventas. Con REST, haces una petición y recibes todo (over-fetching). O haces 3 peticiones para obtener 3 recursos diferentes (under-fetching). GraphQL resuelve esto: el cliente pide exactamente lo que necesita, ni más ni menos, en una sola petición.
 
 **Objetivos de aprendizaje:**
 - Comprender las diferencias fundamentales entre REST y GraphQL
@@ -59,11 +59,9 @@
 - Proteger APIs GraphQL con JWT y autorizacion
 - Testear endpoints GraphQL
 
-## 19.1. Introduccion
+## 19.1. Introducción
 
-## 19.1. Introduccion
-
-### 19.1.1. Que es GraphQL
+### 19.1.1. Qué es GraphQL
 
 GraphQL es un lenguaje de consulta desarrollado por Facebook (2015) que permite al cliente especificar **exactamente que datos necesita**. A diferencia de REST, donde el servidor define la estructura de la respuesta, en GraphQL es el cliente quien decide que campos recibe.
 
@@ -89,7 +87,7 @@ graph LR
     style G3 fill:#4CAF50,color:#fff
 ```
 
-> **Analogia:** REST es como un menu fijo donde recibes el plato completo aunque solo quieras la ensalada. GraphQL es como un buffet donde sirves exactamente lo que quieres: "un poco de pollo, mucha ensalada, nada de arroz".
+> 💡 **Analogía:** REST es como un menu fijo donde recibes el plato completo aunque solo quieras la ensalada. GraphQL es como un buffet donde sirves exactamente lo que quieres: "un poco de pollo, mucha ensalada, nada de arroz".
 
 📌 Ejemplo real: **GitHub** usa GraphQL para su API. La app móvil de GitHub usa la misma API que la web, pero cada cliente pide los campos que necesita. La versión móvil pide menos datos (mas rapida), la web pide todos los campos (mas completa).
 
@@ -126,7 +124,7 @@ flowchart TD
 
 📌 Ejemplo real: **GitHub** usa GraphQL para su API. La app móvil de GitHub usa la misma API que la web, pero cada cliente pide los campos que necesita. La versión móvil pide menos datos (más rápida), la web pide todos los campos (más completa). Si GitHub usara REST, tendría que crear endpoints separados para móvil y web, o devolver siempre todos los campos (over-fetching).
 
-### 19.1.3. Cuando Usar GraphQL
+### 19.1.3. Cuándo Usar GraphQL
 
 | Usar GraphQL cuando... | Usar REST cuando... |
 |------------------------|---------------------|
@@ -136,7 +134,7 @@ flowchart TD
 | API publica con muchos clientes | Microservicios independientes |
 | Datos relacionados frecuentemente | Archivos multimedia (REST + streaming) |
 
-> **Nota:** GraphQL **no reemplaza** REST. Son complementarios. Muchas aplicaciones usan REST para operaciones simples y GraphQL para consultas complejas.
+> 📝 **Nota:** GraphQL **no reemplaza** REST. Son complementarios. Muchas aplicaciones usan REST para operaciones simples y GraphQL para consultas complejas.
 
 ## 19.2. HotChocolate en ASP.NET Core
 
@@ -155,7 +153,7 @@ dotnet add package HotChocolate.AspNetCore.Authorization
 dotnet add package GreenDonut
 ```
 
-### 19.2.2. Configuracion en Program.cs
+### 19.2.2. Configuración en Program.cs
 
 ```csharp
 using HotChocolate;
@@ -215,7 +213,7 @@ flowchart TD
     style G fill:#4CAF50,color:#fff
 ```
 
-### 19.2.3. Flujo de Peticion GraphQL
+### 19.2.3. Flujo de Petición GraphQL
 
 ```mermaid
 sequenceDiagram
@@ -234,13 +232,13 @@ sequenceDiagram
     S-->>C: { data: {...}, errors: [...] }
 ```
 
-> **Nota:** El playground de HotChocolate (Banana Cake Pop) se accede en `/graphql` en modo desarrollo. Permite explorar el esquema, ejecutar consultas y depurar suscripciones.
+> 📝 **Nota:** El playground de HotChocolate (Banana Cake Pop) se accede en `/graphql` en modo desarrollo. Permite explorar el esquema, ejecutar consultas y depurar suscripciones.
 
 ## 19.3. Tipos y Esquema
 
 HotChocolate usa **Code-First**: el esquema GraphQL se genera automaticamente desde clases C#. No necesitas escribir un `.graphql` a mano.
 
-### 19.3.1. ObjectType Basico
+### 19.3.1. ObjectType Básico
 
 ```csharp
 using HotChocolate.Types;
@@ -358,9 +356,9 @@ descriptor.Field(p => p.Nombre)
 // y se ejecuta automaticamente cuando el cliente pide ese campo
 ```
 
-> **Consejo:** Solo crea campos calculados cuando el cliente los pide. Si nadie usa `precioConDescuento`, no lo incluyas en el esquema.
+> 💡 **Consejo:** Solo crea campos calculados cuando el cliente los pide. Si nadie usa `precioConDescuento`, no lo incluyas en el esquema.
 
-## 19.4. Inputs y Validacion
+## 19.4. Inputs y Validación
 
 Los Input Types representan datos de entrada para las Mutations, equivalentes a los DTOs en REST.
 
@@ -376,9 +374,9 @@ public record CreateProductoInput(
 );
 ```
 
-> **Consejo:** Usa `record` para Inputs simples. Son inmutables, con `init` implicito y serializan bien.
+> 💡 **Consejo:** Usa `record` para Inputs simples. Son inmutables, con `init` implicito y serializan bien.
 
-### 19.4.2. Input con Validacion
+### 19.4.2. Input con Validación
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
@@ -426,7 +424,7 @@ public class CreateProductoInput : IValidatableObject
 }
 ```
 
-### 19.4.3. Input para Actualizacion Parcial
+### 19.4.3. Input para Actualización Parcial
 
 ```csharp
 public record UpdateProductoInput(
@@ -438,13 +436,13 @@ public record UpdateProductoInput(
 );
 ```
 
-> **Nota:** Todos los campos son nullable para permitir actualizaciones parciales. Solo se actualizan los campos que el cliente envia.
+> 📝 **Nota:** Todos los campos son nullable para permitir actualizaciones parciales. Solo se actualizan los campos que el cliente envia.
 
 ## 19.5. Queries
 
 Las Queries son operaciones de solo lectura, equivalentes a GET en REST.
 
-### 19.5.1. Query Basica
+### 19.5.1. Query Básica
 
 ```csharp
 using HotChocolate.Data;
@@ -465,7 +463,6 @@ public class Query
     /// <summary>
     /// Obtiene un producto por ID
     /// </summary>
-    [UseFirstOrDefault]
     public async Task<Producto?> GetProducto(
         long id,
         [Service] IProductoService service)
@@ -484,7 +481,9 @@ public class Query
 }
 ```
 
-### 19.5.2. Paginacion, Filtrado y Ordenamiento
+> 📝 **Nota:** `GetProducto` **no** lleva `[UseFirstOrDefault]`: ese atributo transforma un `IQueryable<T>` (por ejemplo el de `GetProductos`) para quedarse con el primer elemento, pero aquí devolvemos un `Task<Producto?>` ya resuelto por un servicio. Úsalo solo sobre consultas de EF Core, como en `GetProductos`.
+
+### 19.5.2. Paginación, Filtrado y Ordenamiento
 
 HotChocolate incluye atributos listos para usar:
 
@@ -717,7 +716,7 @@ mutation EliminarProducto {
 
 Las Subscriptions permiten recibir actualizaciones en tiempo real mediante WebSockets.
 
-### 19.7.1. Patron Pub/Sub
+### 19.7.1. Patrón Pub/Sub
 
 ```mermaid
 graph TB
@@ -755,7 +754,7 @@ graph TB
 
 📌 Ejemplo real: **Shopify** usa subscriptions para notificar a los comerciantes cuando se realiza un pedido nuevo. El panel de administracion se actualiza instantaneamente sin recargar la pagina.
 
-### 19.7.2. Implementacion de Subscription
+### 19.7.2. Implementación de Subscription
 
 ```csharp
 public class Subscription
@@ -806,16 +805,16 @@ subscription OnProductoCreado {
 }
 ```
 
-### 19.7.3. Configuracion de WebSockets
+### 19.7.3. Configuración de WebSockets
+
+Las subscriptions de HotChocolate viajan por **WebSocket** (no por Server-Sent Events), así que solo necesitas habilitarlos:
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddServerSentEvents();
-
 var app = builder.Build();
 
-// Habilitar WebSockets para suscripciones
+// Habilitar WebSockets para las subscriptions
 app.UseWebSockets(new WebSocketOptions
 {
     KeepAliveInterval = TimeSpan.FromMinutes(2)
@@ -825,6 +824,8 @@ app.MapGraphQL();
 
 app.Run();
 ```
+
+> 📝 **Nota:** No confundas transportes. `AddServerSentEvents()` pertenece al paquete `Microsoft.AspNetCore.ServerSentEvents` y habilita **SSE** (`text/event-stream`), un transporte alternativo que HotChocolate no usa por defecto para subscriptions. Si solo quieres subscriptions GraphQL con HotChocolate, te bastan `UseWebSockets()` + `AddInMemorySubscriptions()` (ya registrado en 19.2.2).
 
 ### 19.7.4. Flujo de Subscription
 
@@ -866,7 +867,7 @@ graph TD
     C --> D2["Para cat 2: SELECT * FROM productos WHERE catId = 2"]
     C --> D3["Para cat 3: SELECT * FROM productos WHERE catId = 3"]
 
-    D1 --> R["7 consultas en total!"]
+    D1 --> R["4 consultas en total!"]
     D2 --> R
     D3 --> R
 
@@ -877,7 +878,7 @@ graph TD
     style R fill:#f44336,color:#fff
 ```
 
-### 19.8.2. Solucion con DataLoader
+### 19.8.2. Solución con DataLoader
 
 ```mermaid
 graph TD
@@ -899,7 +900,7 @@ graph TD
     style R fill:#4CAF50,color:#fff
 ```
 
-### 19.8.3. Implementacion de DataLoaders
+### 19.8.3. Implementación de DataLoaders
 
 ```csharp
 using GreenDonut;
@@ -988,13 +989,16 @@ public class ProductoResolvers
 }
 ```
 
-## 19.9. Autorizacion
+## 19.9. Autorización
 
 HotChocolate se integra directamente con ASP.NET Core Identity y JWT.
 
-### 19.9.1. Configuracion de Autenticacion JWT
+### 19.9.1. Configuración de Autenticación JWT
 
 ```csharp
+// La clave es obligatoria: si falta, lanza excepción en el arranque (evita el CS8604)
+var jwtKey = builder.Configuration["Jwt:Key"]!;
+
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -1008,7 +1012,7 @@ builder.Services
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                Encoding.UTF8.GetBytes(jwtKey))
         };
     });
 
@@ -1018,6 +1022,8 @@ builder.Services
     .AddGraphQLServer()
     .AddAuthorization();
 ```
+
+> ⚠️ **Advertencia:** En producción, la **introspección** (`__schema`, `__type`) debe estar **deshabilitada o restringida**: expone el esquema completo de la API a cualquiera. Deja activa la introspección solo en desarrollo y, si la mantienes en producción, protégela con una política de autorización.
 
 ### 19.9.2. Proteger Queries y Mutations
 
@@ -1079,13 +1085,15 @@ public async Task<bool> EliminarProducto(long id, ...) { ... }
 public async Task<bool> EliminarProducto(long id, ...) { ... }
 ```
 
-### 19.9.3. Politicas Personalizadas
+### 19.9.3. Políticas Personalizadas
 
 ```csharp
 builder.Services.AddAuthorization(options =>
 {
+    // ⚠️ RequireRole encadenado sería AND (Admin Y Gerente).
+    // Varias roles en la misma llamada = OR (Admin O Gerente)
     options.AddPolicy("AdminGerente", policy =>
-        policy.RequireRole("Admin").RequireRole("Gerente"));
+        policy.RequireRole("Admin", "Gerente"));
 
     options.AddPolicy("PremiumUser", policy =>
         policy.RequireAssertion(ctx =>
@@ -1114,9 +1122,13 @@ public class ProductoGraphQLTests
     [SetUp]
     public void SetUp()
     {
+        // Mismo nombre de BD para el seed y para el executor:
+        // el proveedor InMemory comparte datos por nombre de base de datos
+        var databaseName = $"TestDb_{Guid.NewGuid()}";
+
         _context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
+                .UseInMemoryDatabase(databaseName)
                 .Options);
 
         // Seed data
@@ -1141,7 +1153,7 @@ public class ProductoGraphQLTests
 
         _executor = new ServiceCollection()
             .AddDbContext<ApplicationDbContext>(p =>
-                p.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}"))
+                p.UseInMemoryDatabase(databaseName))
             .AddGraphQL()
             .AddQueryType<Query>()
             .AddMutationType<Mutation>()
@@ -1241,7 +1253,7 @@ public async Task Mutation_CrearProducto_ReturnsNewProduct()
 }
 ```
 
-## 19.11. Buenas Practicas
+## 19.11. Buenas Prácticas
 
 ```csharp
 // ❌ MALO: Exponer entidades directamente sin filtrar campos
@@ -1366,6 +1378,9 @@ FunkosGraphQL/
 └── FunkosGraphQL.Test/
     └── GraphQLTests.cs
 ```
+
+
+---
 
 **Resumen del punto:**
 

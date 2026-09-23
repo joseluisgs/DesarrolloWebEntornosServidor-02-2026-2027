@@ -14,6 +14,7 @@
   - [25.7. Configuracion de Logging por Entorno](#257-configuracion-de-logging-por-entorno)
   - [25.8. Secretos de Usuario (User Secrets)](#258-secretos-de-usuario-user-secrets)
   - [25.9. Configuracion Avanzada](#259-configuracion-avanzada)
+    - [25.9.1. Clases de Configuracion Tipadas](#2591-clases-de-configuracion-tipadas)
   - [25.10. Azure App Configuration](#2510-azure-app-configuration)
   - [25.11. Buenas Practicas](#2511-buenas-practicas)
   - [25.12. Reto: Configura Entornos para FunkoApp](#2512-reto-configura-entornos-para-funkoapp)
@@ -22,7 +23,7 @@
 
 # 25. Configuracion de Entornos
 
-> **Punto de partida:** Cuando abres Instagram en tu móvil, la app se conecta a un servidor de desarrollo para probar funcionalidades nuevas. Cuando la version final sale a producción, usa configuración diferente: base de datos real, logs mínimos y seguridad estricta. Eso es lo que hacen los entornos: permitir que la misma aplicación se comporte de forma diferente según dónde se ejecute.
+> 💡 **Punto de partida:** Cuando abres Instagram en tu móvil, la app se conecta a un servidor de desarrollo para probar funcionalidades nuevas. Cuando la versión final sale a producción, usa configuración diferente: base de datos real, logs mínimos y seguridad estricta. Eso es lo que hacen los entornos: permitir que la misma aplicación se comporte de forma diferente según dónde se ejecute.
 
 En este punto aprenderás a configurar diferentes entornos en ASP.NET Core, usar variables de entorno, User Secrets y manejar configuración específica por entorno.
 
@@ -88,8 +89,8 @@ export ASPNETCORE_ENVIRONMENT=Development
 ```mermaid
 flowchart TD
     A["appsettings.json"] --> B["appsettings.{Environment}.json"]
-    B --> C["Variables de Entorno"]
-    C --> D["User Secrets (solo Development)"]
+    B --> C["User Secrets (solo Development)"]
+    C --> D["Variables de Entorno"]
     D --> E["Argumentos de linea de comandos"]
 
     style A fill:#2196F3,color:#fff
@@ -99,15 +100,15 @@ flowchart TD
     style E fill:#607D8B,color:#fff
 ```
 
-**Orden de prioridad (mayor a menor):**
+**Orden de carga (de menor a mayor prioridad):**
 
-1. Argumentos de linea de comandos
-2. Variables de entorno
+1. `appsettings.json`
+2. `appsettings.{Environment}.json`
 3. User Secrets (solo Development)
-4. `appsettings.{Environment}.json`
-5. `appsettings.json`
+4. Variables de entorno
+5. Argumentos de línea de comandos
 
-> 📝 **Nota:** Los valores que aparecen mas abajo en la lista sobrescriben a los que aparecen arriba. Por ejemplo, una variable de entorno sobrescribe el mismo valor en appsettings.json.
+> 📝 **Nota:** Los valores cargados **más arriba** en la lista (mayor prioridad) **sobrescriben** a los que aparecen más abajo. Por ejemplo, una variable de entorno sobrescribe el mismo valor en appsettings.json, y un argumento de línea de comandos gana sobre todo lo demás.
 
 ## 25.2. Configuracion por Entorno
 
@@ -181,7 +182,7 @@ FunkoApp/
     }
   },
   "ConnectionStrings": {
-    "DefaultConnection": "Server=prod-server;Database=FunkoDb;User Id=admin;Password=${DB_PASSWORD};"
+    "DefaultConnection": "Server=prod-server;Database=FunkoDb;User Id=admin;Password="
   },
   "EnableSwagger": false,
   "EnableDetailedErrors": false,
@@ -192,6 +193,21 @@ FunkoApp/
 ```
 
 > ⚠️ **Advertencia:** Nunca uses claves reales o contrasenas de produccion en appsettings.Development.json. Usa User Secrets para datos sensibles.
+
+> ⚠️ **Advertencia:** .NET **no expande** `${DB_PASSWORD}` en appsettings.json: llegaría literal a la connection string. **Nunca pongas la contraseña en el JSON**. Déjala vacía (o solo servidor/base) y sobreescribe la connection string completa en producción con una variable de entorno:
+
+```powershell
+# Producción: la contraseña llega SOLO por variable de entorno
+$env:ConnectionStrings__DefaultConnection = "Server=prod-server;Database=FunkoDb;User Id=admin;Password=MI_CONTRASENA_SECRETA"
+```
+
+```dockerfile
+# En Docker: inyecta la connection string completa como secreto
+ENV ConnectionStrings__DefaultConnection=""
+# Valor real: secretos del orquestador (Docker secrets, Key Vault, etc.)
+```
+
+En desarrollo, la contraseña (si hace falta) se guarda con User Secrets, nunca en el JSON.
 
 ## 25.3. Configuracion de Base de Datos por Entorno
 
@@ -236,13 +252,20 @@ Las variables de entorno son la forma mas segura de configurar secretos en produ
   "profiles": {
     "Development": {
       "commandName": "Project",
+      "applicationUrl": "https://localhost:5001;http://localhost:5000",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "JWT_SECRET": "clave-desarrollo-12345"
+        "Jwt__Secret": "clave-desarrollo-12345"
       }
     }
   }
 }
+```
+
+> ⚠️ **Advertencia:** `launchSettings.json` **pisa** las variables `ASPNETCORE_URLS`/`urls` definidas en el sistema o en appsettings. Si quieres respetar tus propios puertos al ejecutar en local, usa:
+
+```bash
+dotnet run --no-launch-profile
 ```
 
 **Configurar en el Sistema Operativo:**
@@ -250,14 +273,22 @@ Las variables de entorno son la forma mas segura de configurar secretos en produ
 ```powershell
 # Windows (PowerShell)
 $env:ASPNETCORE_ENVIRONMENT = "Production"
-$env:JWT_SECRET = "mi-clave-secreta-produccion"
+$env:Jwt__Secret = "mi-clave-secreta-produccion"
 ```
+
+> 💡 **Truco:** En variables de entorno, la jerarquía de configuración de .NET se expresa con `__` (doble guion bajo): `Jwt:Secret` → `Jwt__Secret`.
 
 **Configurar en Docker:**
 
 ```dockerfile
+ARG JWT_SECRET
+ENV Jwt__Secret=$JWT_SECRET
 ENV ASPNETCORE_ENVIRONMENT=Production
-ENV JWT_SECRET=${JWT_SECRET}
+```
+
+```bash
+# El secreto pasa como ARG en el build (o mejor: inyección en runtime)
+docker build --build-arg JWT_SECRET="mi-clave-secreta" -t funkoapp .
 ```
 
 📌 **Ejemplo real:** Las aplicaciones en Azure usan variables de entorno para las connection strings de bases de datos. Nunca se guardan en el codigo fuente.
@@ -408,7 +439,7 @@ var jwtSecret = builder.Configuration["Jwt:Secret"];
 
 ## 25.9. Configuracion Avanzada
 
-### Clases de Configuracion Tipadas
+### 25.9.1. Clases de Configuracion Tipadas
 
 ```csharp
 // ❌ MALO: Acceder a configuracion con strings mágicos
@@ -493,6 +524,8 @@ Tu API de Funkos necesita funcionar correctamente tanto en desarrollo como en pr
 
 > 💡 **Consejo:** Asegurate de que el .gitignore excluya archivos sensibles como .env y secrets.json. Los secretos nunca deben llegar al repositorio.
 
+---
+
 **Resumen del punto:**
 
 | Concepto | Descripcion |
@@ -505,7 +538,7 @@ Tu API de Funkos necesita funcionar correctamente tanto en desarrollo como en pr
 | **Swagger** | Debe estar deshabilitado en produccion por seguridad |
 | **Logging** | Debe ser detallado en desarrollo y minimo en produccion |
 | **Validacion de configuracion** | Previene errores de inicio por configuracion incompleta |
-| **Prioridad de configuracion** | appsettings.json < appsettings.{Env}.json < variables de entorno < user secrets |
+| **Prioridad de configuracion** | appsettings.json → appsettings.{Env}.json → user secrets (solo Development) → variables de entorno → argumentos de CLI (cada uno sobrescribe al anterior) |
 
 **¿Qué viene después?**
 

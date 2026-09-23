@@ -35,7 +35,7 @@
 
 # 31. API Gateway y Microservicios
 
-> **Punto de partida:** Netflix no tiene una sola aplicación gigante. Tiene cientos de servicios independientes: uno para recomendar contenido, otro para gestionar pagos, otro para enviar notificaciones. Cuando abres la app, todos esos servicios trabajan juntos como si fueran uno solo. ¿Cómo lo consiguen? Con **microservicios** y un **API Gateway** que coordina todo.
+> 💡 **Punto de partida:** Netflix no tiene una sola aplicación gigante. Tiene cientos de servicios independientes: uno para recomendar contenido, otro para gestionar pagos, otro para enviar notificaciones. Cuando abres la app, todos esos servicios trabajan juntos como si fueran uno solo. ¿Cómo lo consiguen? Con **microservicios** y un **API Gateway** que coordina todo.
 
 En este punto aprenderás por qué los microservicios han revolucionado el desarrollo moderno, cómo se comunican entre sí, qué es un API Gateway y cómo implementarlo con YARP y Nginx.
 
@@ -170,7 +170,7 @@ Cuando un servicio necesita datos de otro, ¿debe llamar a la URL del otro servi
 
 > 💡 **Consejo:** La **copia local** es más rápida (no hay llamada a red) y más resiliente (si B se cae, A sigue funcionando). Pero debes sincronizar los datos periódicamente, lo que introduce **consistencia eventual**.
 
-📌 **Ejemplo real:** En Netflix, el servicio de reproducción tiene una copia local de los metadatos de las películas (título, duración, sinopsis). No consulta el catálogo cada vez quedas play. Pero el servicio de pagos sí llama directamente al servicio de suscripciones porque necesita datos siempre actualizados.
+📌 **Ejemplo real:** En Netflix, el servicio de reproducción tiene una copia local de los metadatos de las películas (título, duración, sinopsis). No consulta el catálogo cada vez que das play. Pero el servicio de pagos sí llama directamente al servicio de suscripciones porque necesita datos siempre actualizados.
 
 ## 31.3. ¿Qué es un API Gateway?
 
@@ -274,6 +274,7 @@ La configuración de YARP se divide en **Routes** (cómo se redirigen las petici
         "Match": {
           "Path": "/api/productos/{**catch-all}"
         },
+        "AuthorizationPolicy": "default",
         "Transforms": [
           { "PathPattern": "/api/productos/{**catch-all}" }
         ]
@@ -302,6 +303,7 @@ La configuración de YARP se divide en **Routes** (cómo se redirigen las petici
 | Concepto | Qué es | Ejemplo |
 |----------|--------|---------|
 | **Route** | Define qué peticiones captura el Gateway | `/api/auth/{**catch-all}` |
+| **AuthorizationPolicy** | Política que el Gateway aplica antes de reenviar | `"default"` = `RequireAuthenticatedUser` |
 | **Cluster** | Define a qué servicio se redirige | `http://auth-service:5001/` |
 | **Destination** | Una instancia concreta de un servicio | Puede haber varias para balanceo de carga |
 
@@ -325,26 +327,44 @@ Solo tres líneas de código reales:
 2. **Carga** la configuración desde `appsettings.json`
 3. **Mapea** el middleware de proxy inverso en el pipeline
 
-> 💡 **Consejo:** Puedes configurar YARP también en código (sin JSON) usando `AddReverseProxy().Configure回忆(config => ...)`. Esto es útil cuando necesitas lógica dinámica en las rutas.
+> 💡 **Consejo:** Puedes configurar YARP también en código (sin JSON) usando `AddReverseProxy().Configure(config => ...)`. Esto es útil cuando necesitas lógica dinámica en las rutas.
 
 ### 31.4.4. Tokens JWT con YARP
 
-YARP **no valida tokens JWT** por sí solo. Pero puedes añadir un middleware de autenticación antes del proxy:
+YARP **no valida tokens JWT** por sí solo. Pero puedes añadir autenticación antes del proxy. Si el token se firma con una **clave simétrica** (`Jwt:Secret`, como en todo el módulo), **NO uses `Authority`** (eso es para OIDC con clave asimétrica y descubrimiento de metadatos): usa `TokenValidationParameters` con `IssuerSigningKey`.
 
 ```csharp
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// MISMO Jwt:Secret que usan Auth y Productos
+var jwtSecret = builder.Configuration["Jwt:Secret"]!;
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = "http://auth-service:5001";
-        options.Audience = "productos-api";
-        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            // El Audience lo define el servicio destino (ej: "productos-api").
+            // En el Gateway solo validamos issuer + firma + caducidad.
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtSecret)),
+            ValidateIssuerSigningKey = true
+        };
     });
 
-builder.Services.AddAuthorization();
+// Política "default" que referencian las rutas YARP con AuthorizationPolicy
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("default", policy =>
+        policy.RequireAuthenticatedUser());
+
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
@@ -357,7 +377,9 @@ app.MapReverseProxy();
 app.Run();
 ```
 
-Los headers `Authorization` pasan a través del Gateway hacia el servicio destino. El Gateway valida el token y, si es válido, reenvía la petición.
+> ⚠️ **Advertencia:** Para que el Gateway **realmente valide** el token, las rutas protegidas deben declarar `"AuthorizationPolicy": "default"` en `appsettings.json` (ver sección 31.5.3). Sin esa política, YARP reenvía la petición sin comprobar el JWT aunque la autenticación esté registrada.
+
+Los headers `Authorization` pasan a través del Gateway hacia el servicio destino. El Gateway valida el token con la política de la ruta y, si es válido, reenvía la petición.
 
 > ⚠️ **Advertencia:** Si el Gateway valida el token y el servicio destino también, se hace una **doble validación**. Decide en qué punto validas: en el Gateway (centralizado) o en cada servicio (distribuido). La mayoría de arquitecturas validan en el Gateway para simplificar los servicios.
 
@@ -389,8 +411,6 @@ graph TD
 ### 31.5.2. Docker Compose
 
 ```yaml
-version: '3.8'
-
 services:
   gateway:
     build:
@@ -398,9 +418,17 @@ services:
       dockerfile: Gateway/Dockerfile
     ports:
       - "5000:5000"
+    environment:
+      - ASPNETCORE_URLS=http://+:5000
+      - Jwt__Secret=${JWT_SECRET}
+      - Jwt__Issuer=FunkoApp
+      - ReverseProxy__Clusters__auth-cluster__Destinations__destination1__Address=http://auth-service:5001/
+      - ReverseProxy__Clusters__productos-cluster__Destinations__destination1__Address=http://productos-service:5002/
     depends_on:
-      - auth-service
-      - productos-service
+      auth-service:
+        condition: service_healthy
+      productos-service:
+        condition: service_healthy
     networks:
       - microservices-net
 
@@ -410,6 +438,12 @@ services:
       dockerfile: AuthService/Dockerfile
     environment:
       - ASPNETCORE_URLS=http://+:5001
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     networks:
       - microservices-net
 
@@ -419,6 +453,12 @@ services:
       dockerfile: ProductosService/Dockerfile
     environment:
       - ASPNETCORE_URLS=http://+:5002
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     networks:
       - microservices-net
 
@@ -426,6 +466,8 @@ networks:
   microservices-net:
     driver: bridge
 ```
+
+> ⚠️ **Advertencia:** Los healthchecks usan `curl`: la imagen debe incluirlo (ver tema 29) o usa `wget` en Alpine. Además, las direcciones de los clusters se sobreescriben con variables `ReverseProxy__Clusters__...` para no hardcodearlas solo en `appsettings.json`.
 
 > 💡 **Consejo:** Fíjate en que los servicios se comunican entre sí usando **nombres de servicio** (`auth-service`, `productos-service`), no `localhost`. Docker se encarga de resolver los nombres a las IPs internas del contenedor.
 
@@ -451,6 +493,7 @@ El `appsettings.json` del Gateway:
         "Match": {
           "Path": "/api/productos/{**catch-all}"
         },
+        "AuthorizationPolicy": "default",
         "Transforms": [
           { "PathPattern": "/api/productos/{**catch-all}" }
         ]
@@ -475,6 +518,8 @@ El `appsettings.json` del Gateway:
   }
 }
 ```
+
+> 📝 **Nota:** La ruta de auth (`/api/auth/...`) queda **pública** (login/registro no llevan token todavía). La ruta de productos declara `"AuthorizationPolicy": "default"`: el Gateway valida el JWT con `Jwt:Secret` **antes** de reenviar. Las direcciones de `Clusters` pueden sobreescribirse en compose con `ReverseProxy__Clusters__...` (ver 31.5.2).
 
 **Flujo de una petición:**
 
@@ -551,7 +596,7 @@ http {
 | **Lenguaje** | C# / .NET | C |
 | **Configuración** | JSON o código C# | Archivo `.conf` |
 | **Integración con .NET** | Nativa (middleware) | Externo (proceso aparte) |
-| **Personalización** |-total (puedes escribir C#) | Limitada a directivas |
+| **Personalización** | Total (puedes escribir C#) | Limitada a directivas |
 | **Rendimiento** | Muy bueno | Excelente (más optimizado) |
 | **Madurez** | Reciente (2020) | Más de 20 años |
 | **Curva de aprendizaje** | Baja (si conoces .NET) | Media |
@@ -613,7 +658,7 @@ graph TD
 
 ## 31.9. Buenas Prácticas
 
-- **Un servicio, una base de datos**: Nunca compartas base de datos entre servicios. Cada uno esdueño de sus datos
+- **Un servicio, una base de datos**: Nunca compartas base de datos entre servicios. Cada uno es dueño de sus datos
 - **API Gateway como único punto de entrada**: Los clientes nunca deben llamar directamente a los servicios internos
 - **Fallbacks**: Si un servicio dependiente se cae, devuelve una respuesta por defecto en vez de propagar el error
 - **Timeouts**: Siempre configura timeouts en las llamadas entre servicios. Nunca esperes indefinidamente
@@ -648,205 +693,20 @@ Imagina que vas a escalar la **FunkoApp** que estás construyendo en esta unidad
 
 ---
 
-# 31. Resumen y Conclusiones
-
-> 💡 **Punto de partida:** Has completado la Unidad 02, que cubre el desarrollo de servicios web en .NET. Desde conceptos básicos (Minimal APIs, Controladores) hasta arquitectura avanzada (CQRS, Microservicios). Este resumen consolida todos los conceptos en una sola mirada.
-
-Hemos visto la teoría completa de Desarrollo de Servicios Web en .NET. Este punto consolida todos los conceptos en una sola mirada.
-
-**Objetivos de aprendizaje:**
-
-- Repasar los conceptos fundamentales de la unidad
-- Consolidar el vocabulario técnico
-- Tener una referencia rápida para el examen
-
-## 31.1. Mapa Conceptual de la Unidad
-
-```mermaid
-graph TD
-    UD02[UD02: Desarrollo de Servicios Web] --> PART1[Parte 1: Fundamentos]
-    UD02 --> PART2[Parte 2: Persistencia y Seguridad]
-    UD02 --> PART3[Parte 3: APIs Avanzadas]
-    UD02 --> PART4[Parte 4: Arquitectura]
-
-    PART1 --> REST[APIs REST]
-    PART1 --> MIN[Minimal APIs]
-    PART1 --> MVC[Controladores MVC]
-    PART1 --> PIPE[Pipeline y Middlewares]
-    PART1 --> DI[Inyección de Dependencias]
-
-    PART2 --> EF[Entity Framework Core]
-    PART2 --> MONGO[MongoDB]
-    PART2 --> CACHE[Redis y Caché]
-    PART2 --> JWT[Autenticación JWT]
-    PART2 --> AUTH[Autorización]
-
-    PART3 --> WS[WebSockets y SignalR]
-    PART3 --> GQL[GraphQL]
-    PART3 --> FILE[Almacenamiento]
-    PART3 --> EMAIL[Email Services]
-
-    PART4 --> CQRS[CQRS y MediatR]
-    PART4 --> GW[API Gateway]
-    PART4 --> DOCKER[Docker y Despliegue]
-    PART4 --> TEST[Testing]
-
-    REST --> EF
-    EF --> MONGO
-    MONGO --> CACHE
-    CACHE --> JWT
-    JWT --> AUTH
-    AUTH --> WS
-    WS --> GQL
-    GQL --> FILE
-    FILE --> EMAIL
-    EMAIL --> CQRS
-    CQRS --> GW
-
-    style UD02 fill:#2196F3,color:#fff
-    style PART1 fill:#4CAF50,color:#fff
-    style PART2 fill:#FF9800,color:#fff
-    style PART3 fill:#9C27B0,color:#fff
-    style PART4 fill:#f44336,color:#fff
-```
-
-## 31.2. Conceptos Clave
-
-### Fundamentos del Desarrollo Web
-
-- **Servicios Web:** Funcionalidad accesible vía HTTP
-- **REST:** Arquitectura basada en recursos, métodos HTTP y JSON
-- **HTTP:** Protocolo con métodos (GET, POST, PUT, DELETE) y códigos de estado
-- **Minimal APIs:** Endpoints simples sin controladores
-- **Controladores MVC:** Arquitectura estructurada con separación de responsabilidades
-- **Pipeline:** Cadena de middlewares que procesan las peticiones
-
-📌 Ejemplo real: **Netflix** usa REST para su API pública. Cada endpoint sigue las convenciones de recursos y métodos HTTP.
-
-### Persistencia y Seguridad
-
-- **Entity Framework Core:** ORM para PostgreSQL con migraciones y LINQ
-- **MongoDB:** BD NoSQL orientada a documentos para lecturas rápidas
-- **Redis:** Cache distribuido para datos que cambian poco
-- **JWT:** Tokens autocontenidos para autenticación stateless
-- **Identity:** Gestión de usuarios, roles y contraseñas
-
-📌 Ejemplo real: **Amazon** usa PostgreSQL para escrituras (transacciones seguras) y MongoDB para lecturas (catálogos rápidos).
-
-### APIs Avanzadas
-
-- **WebSockets y SignalR:** Comunicación en tiempo real bidireccional
-- **GraphQL:** Consultas flexibles donde el cliente elige los campos
-- **Almacenamiento:** Gestión de ficheros locales y en la nube
-- **Email:** Envío de notificaciones automáticas
-
-📌 Ejemplo real: **WhatsApp** usa WebSockets para mensajes en tiempo real. **GitHub** usa GraphQL para su API.
-
-### Arquitectura
-
-- **CQRS:** Separar Commands (escrituras) de Queries (lecturas)
-- **API Gateway:** Punto de entrada único para microservicios
-- **Docker:** Contenedores para despliegue consistente
-- **Testing:** NUnit, FluentAssertions, TestContainers
-
-📌 Ejemplo real: **LinkedIn** usa CQRS para separar escrituras de perfil (PostgreSQL) de lecturas de búsqueda (MongoDB).
-
-## 31.3. Herramientas y Perfiles
-
-### SDK y CLI
-- **`dotnet new`**: Crear proyectos y soluciones
-- **`dotnet build`**: Compilar proyectos
-- **`dotnet run`**: Ejecutar proyectos
-- **`dotnet test`**: Ejecutar tests
-- **`dotnet ef`**: Migraciones de Entity Framework
-
-### NuGet
-- **HotChocolate.AspNetCore** — GraphQL
-- **MediatR** — CQRS y patrón mediator
-- **Npgsql.EntityFrameworkCore.PostgreSQL** — PostgreSQL
-- **MongoDB.EntityFrameworkCore** — MongoDB
-- **StackExchange.Redis** — Cache Redis
-- **MailKit** — Envío de emails
-- **Microsoft.AspNetCore.Authentication.JwtBearer** — JWT
-- **Testcontainers** — Tests con Docker
-
-### IDE
-- **JetBrains Rider** — IDE principal
-- **Visual Studio Code** — Alternativo ligero
-
-## 31.4. Errores Comunes a Evitar
-
-| Error | Por qué está mal | Cómo evitarlo |
-|-------|------------------|---------------|
-| No usar `AsNoTracking()` | Ralentiza consultas de solo lectura | Usar `AsNoTracking()` en queries |
-| No paginar listados | Memoria excesiva | Usar `Skip/Take` o `[UsePaging]` |
-| No validar uploads | Seguridad comprometida | Validar extensión y tamaño |
-| No cachear | Consultas lentas | Implementar Redis o MemoryCache |
-| No testear | Regresiones no detectadas | Usar TestContainers |
-
-## 31.5. Checklist de Supervivencia
-
-Antes de dar por cerrado el tema, asegúrate de poder responder **SÍ** a estas preguntas:
-
-- [ ] ¿Puedes crear una API REST con Minimal APIs o Controladores?
-- [ ] ¿Sabes usar Entity Framework Core con PostgreSQL?
-- [ ] ¿Conoces la diferencia entre Eager y Lazy Loading?
-- [ ] ¿Implementas autenticación con JWT?
-- [ ] ¿Usas TestContainers para tests de integración?
-- [ ] ¿Configuras Docker para despliegue?
-- [ ] ¿Implementas caché con Redis?
-- [ ] ¿Usas SignalR para tiempo real?
-
-> 🔧 **Truco:** Para el examen, practica crear una API completa desde cero: proyecto, CRUD, auth, tests, Docker.
-
-## 31.6. Glosario de Términos
-
-| Término | Definición |
-|---------|------------|
-| **API** | Interfaz de programación para comunicar sistemas |
-| **REST** | Arquitectura basada en HTTP y recursos |
-| **CRUD** | Create, Read, Update, Delete |
-| **EF Core** | ORM de Microsoft para .NET |
-| **LINQ** | Language Integrated Query |
-| **JWT** | JSON Web Token para autenticación |
-| **SignalR** | Librería para tiempo real en ASP.NET Core |
-| **GraphQL** | Lenguaje de consulta flexible para APIs |
-| **CQRS** | Separar lecturas de escrituras |
-| **Docker** | Plataforma de contenedores |
-| **TestContainers** | Tests con contenedores Docker |
-
-## 31.7. Ejercicios de Repaso
-
-1. **Ejercicio 1:** Crea una API REST completa para una entidad con CRUD, auth JWT y tests
-2. **Ejercicio 2:** Implementa caché con Redis en una consulta frecuente
-3. **Ejercicio 3:** Añade un endpoint GraphQL para la misma entidad
-4. **Ejercicio 4:** Containeriza la aplicación con Docker Compose
-
-## 31.8. ¿Qué viene después?
-
-En la **DAW** seguirás aprendiendo tecnologías avanzadas como microservicios con Kubernetes, CI/CD con GitHub Actions, y arquitecturas más complejas.
-
-**¿Qué viene después?**
-
-En el siguiente punto encontrarás el **Resumen General** de toda la unidad.
-
----
-
 **Resumen del punto:**
 
 | Concepto | Descripción |
 |----------|-------------|
-| **Servicios Web** | Funcionalidad accesible vía HTTP |
-| **REST** | Arquitectura basada en recursos y métodos HTTP |
-| **Minimal APIs** | Endpoints simples sin controladores |
-| **Controladores MVC** | Arquitectura estructurada con separación |
-| **EF Core** | ORM para PostgreSQL con LINQ |
-| **MongoDB** | BD NoSQL para lecturas rápidas |
-| **Redis** | Cache distribuido |
-| **JWT** | Tokens para autenticación stateless |
-| **SignalR** | Tiempo real bidireccional |
-| **GraphQL** | Consultas flexibles |
-| **CQRS** | Separar Commands de Queries |
-| **API Gateway** | Punto de entrada único |
-| **Docker** | Contenedores para despliegue |
-| **Testing** | NUnit, FluentAssertions, TestContainers |
+| **Microservicios** | Servicios independientes, desplegables y escalables por separado |
+| **API Gateway** | Punto de entrada único que enruta, autentica y limita peticiones |
+| **YARP** | Reverse proxy nativo de .NET, configurable con JSON o código |
+| **Nginx** | Reverse proxy profesional, estándar de la industria |
+| **Route / Cluster** | Ruta de entrada y destino de servicio en YARP |
+| **AuthorizationPolicy** | Política que el Gateway aplica antes de reenviar la petición |
+| **JWT en el Gateway** | Validación con IssuerSigningKey (clave simétrica compartida) |
+| **Nombres de servicio** | Comunicación entre contenedores por nombre, nunca localhost |
+| **Health checks** | Condición service_healthy en depends_on |
+
+**¿Qué viene después?**
+
+En el siguiente punto veremos el **Resumen General** de la unidad (32-resumen.md), donde consolidaremos todos los temas de UD02: Minimal APIs, EF Core, MongoDB, Redis, JWT, Testing, Docker, CQRS y API Gateway.

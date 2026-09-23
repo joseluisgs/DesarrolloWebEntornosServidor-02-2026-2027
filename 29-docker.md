@@ -13,6 +13,8 @@
   - [29.5. Variables de Entorno](#295-variables-de-entorno)
   - [29.6. Health Checks](#296-health-checks)
   - [29.7. Optimizacion de Imagenes](#297-optimizacion-de-imagenes)
+    - [29.7.1. Usar Alpine Linux](#2971-usar-alpine-linux)
+    - [29.7.2. .dockerignore](#2972-dockerignore)
   - [29.8. CI/CD con GitHub Actions](#298-cicd-con-github-actions)
   - [29.9. Buenas Practicas](#299-buenas-practicas)
   - [29.10. Reto: Despliega FunkoApp con Docker](#2910-reto-despliega-funkoapp-con-docker)
@@ -21,7 +23,7 @@
 
 # 29. Docker y Despliegue
 
-> **Punto de partida:** Recuerdas cuando instalabas un programa y decia "funciona en mi ordenador"? Docker resuelve ese problema: empaqueta tu aplicacion con todo lo que necesita (runtime, librerias, configuracion) y funciona igual en cualquier lugar. Es como un contenedor de الشحن pero para codigo.
+> 💡 **Punto de partida:** ¿Recuerdas cuando instalabas un programa y decía "funciona en mi ordenador"? Docker resuelve ese problema: empaqueta tu aplicación con todo lo que necesita (runtime, librerías, configuración) y funciona igual en cualquier lugar. Es como un contenedor de carga pero para código.
 
 En este punto aprenderás a crear Dockerfiles optimizados, usar Docker Compose para orquestar multiples contenedores, implementar multi-stage builds y configurar CI/CD con GitHub Actions.
 
@@ -96,12 +98,14 @@ FunkoApp/
 
 ### 29.2.2. Dockerfile basico
 
+> 📝 **Nota:** Antes de construir la imagen, genera la carpeta `publish` con la aplicación compilada: `dotnet publish src/FunkoApp/FunkoApp.csproj -c Release -o publish`.
+
 ```dockerfile
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY ./publish .
-EXPOSE 80
-EXPOSE 443
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
 ENTRYPOINT ["dotnet", "FunkoApp.dll"]
 ```
 
@@ -127,7 +131,7 @@ El **multi-stage build** permite construir la aplicacion en una etapa y copiar s
 # ==================================================
 # ETAPA 1: BUILD - Compilar la aplicacion
 # ==================================================
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Restaurar dependencias
@@ -150,8 +154,13 @@ RUN dotnet publish "FunkoApp.csproj" -c Release -o /app/publish
 # ==================================================
 # ETAPA 3: RUNTIME - Imagen final
 # ==================================================
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
+
+# Instalar curl para el healthcheck (las imágenes aspnet no lo incluyen)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Usuario no-root para seguridad
 RUN addgroup --system --gid 1000 appgroup \
@@ -191,8 +200,6 @@ ENTRYPOINT ["dotnet", "FunkoApp.dll"]
 ### 29.4.1. docker-compose.yml completo
 
 ```yaml
-version: '3.8'
-
 services:
   api:
     build:
@@ -249,11 +256,11 @@ networks:
 
 | Comando | Descripcion |
 |---------|-------------|
-| `docker-compose up -d` | Iniciar todos los servicios en background |
-| `docker-compose down` | Detener todos los servicios |
-| `docker-compose logs -f api` | Ver logs de la API |
-| `docker-compose build api` | Reconstruir imagen de la API |
-| `docker-compose ps` | Ver estado de los servicios |
+| `docker compose up -d` | Iniciar todos los servicios en background |
+| `docker compose down` | Detener todos los servicios |
+| `docker compose logs -f api` | Ver logs de la API |
+| `docker compose build api` | Reconstruir imagen de la API |
+| `docker compose ps` | Ver estado de los servicios |
 
 ### 29.4.2. Patron de dos archivos
 
@@ -279,6 +286,8 @@ services:
     build: .
     ports:
       - "5000:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=funkodb;Username=postgres;Password=${DB_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
@@ -286,6 +295,11 @@ services:
     image: postgres:17-alpine
     ports:
       - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 ```
 
 ```bash
@@ -319,7 +333,7 @@ services:
     env_file:
       - .env
     environment:
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=funkodb;Password=${DB_PASSWORD}
+      - ConnectionStrings__DefaultConnection=Host=db;Database=funkodb;Password=${DB_PASSWORD}
 ```
 
 > ⚠️ **Advertencia:** Nunca subas el archivo .env al repositorio. Agregalo al `.gitignore` siempre.
@@ -339,6 +353,11 @@ Los health checks monitorizan la salud de la aplicacion y permiten al orquestado
 
 ### Endpoint de Salud en ASP.NET Core
 
+```bash
+# Paquete necesario para AddDbContextCheck
+dotnet add package AspNetCore.HealthChecks.EntityFrameworkCore
+```
+
 ```csharp
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<FunkoDbContext>("database")
@@ -357,9 +376,13 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 ### Healthcheck en Dockerfile
 
 ```dockerfile
+# Requiere curl instalado en la imagen (ver multi-stage build):
+# RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD curl --fail http://localhost:8080/health || exit 1
 ```
+
+> 💡 **Truco:** En imágenes **Alpine** no hay `curl` (ni `apt-get`). Alpine trae `wget` de BusyBox: `CMD wget --spider -q http://localhost:8080/health || exit 1`.
 
 ### Healthcheck en docker-compose.yml
 
@@ -376,15 +399,22 @@ services:
 
 ## 29.7. Optimizacion de Imagenes
 
-### Usar Alpine Linux
+### 29.7.1. Usar Alpine Linux
 
 ```dockerfile
 # Imagenes Alpine son mas ligeras
-FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS final
 ```
 
-### .dockerignore
+> ⚠️ **Advertencia:** Las imágenes Alpine **no incluyen `curl`**. Usa `wget` (de BusyBox) en el healthcheck:
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD wget --spider -q http://localhost:8080/health || exit 1
+```
+
+### 29.7.2. .dockerignore
 
 ```
 .git
@@ -423,7 +453,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  DOTNET_VERSION: '8.0.x'
+  DOTNET_VERSION: '10.0.x'
 
 jobs:
   build:
@@ -444,25 +474,6 @@ jobs:
 
       - name: Build
         run: dotnet build --configuration Release --no-restore
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: ${{ github.event_name == 'push' }}
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=ref,event=branch
 
   test:
     name: Test
@@ -493,6 +504,35 @@ jobs:
           dotnet test \
             --configuration Release \
             --collect:"XPlat Code Coverage"
+
+  push:
+    name: Build and push Docker image
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
 ```
 
 📌 **Ejemplo real:** Spotify ejecuta mas de 50,000 tests en cada pull request usando pipelines CI/CD similares. Si algun test falla, el PR no se puede merge.
@@ -544,6 +584,8 @@ FunkoApp/
 ```
 
 > 💡 **Consejo:** Prueba primero con `docker compose up -d` para verificar que todo funciona. Luego configura el CI/CD para automatizar el proceso.
+
+---
 
 **Resumen del punto:**
 

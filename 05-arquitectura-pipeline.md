@@ -21,6 +21,9 @@
     - [5.5.3. Configuración del pipeline](#553-configuración-del-pipeline)
   - [5.6. Buenas Prácticas](#56-buenas-prácticas)
   - [5.7. Reto: Traza una petición HTTP](#57-reto-traza-una-petición-http)
+    - [5.7.1. Contexto](#571-contexto)
+    - [5.7.2. Ejercicio 1: Dibuja el pipeline](#572-ejercicio-1-dibuja-el-pipeline)
+    - [5.7.3. Ejercicio 2: Identifica las capas](#573-ejercicio-2-identifica-las-capas)
 
 
 
@@ -213,17 +216,17 @@ El **orden importa**. Los middlewares se ejecutan en el orden que se registran:
 
 ```csharp
 // ✅ CORRECTO: Orden adecuado
-app.UseExceptionHandler("/error");
+app.UseExceptionHandler();   // Sin ruta: patrón .NET 8+ con IExceptionHandler registrado en DI
 app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// ❌ MAL: Orden incorrecto
-app.MapControllers();          // No tiene sentido mapear antes de autenticar
-app.UseAuthentication();       // Nunca se ejecuta
-app.UseAuthorization();        // Nunca se ejecuta
+// ❌ MAL: Orden no recomendado
+app.MapControllers();        // Solo REGISTRA los endpoints (se ejecutan al final del pipeline)
+app.UseAuthentication();     // Sí se ejecuta, pero queda fuera del orden esperado
+app.UseAuthorization();      // Authentication → Authorization SIEMPRE en ese orden
 ```
 
 > ⚠️ **Advertencia:** Si `UseAuthentication` va después de `UseAuthorization`, la autorización fallará porque no sabe quién eres. Siempre: Authentication → Authorization.
@@ -278,13 +281,15 @@ app.Run();
 
 ```mermaid
 flowchart TD
-    A["Program.cs"] --> B["builder.Build()<br/>Configurar servicios"]
-    B --> C["app.*<br/>Configurar pipeline"]
-    C --> D["app.Run()<br/>Arrancar servidor"]
+    A["Program.cs"] --> B["builder.Services.*<br/>Configurar servicios"]
+    B --> C["builder.Build()<br/>Crear la app"]
+    C --> D["app.*<br/>Configurar pipeline"]
+    D --> E["app.Run()<br/>Arrancar servidor"]
     style A fill:#9C27B0,color:#fff
     style B fill:#4CAF50,color:#fff
-    style C fill:#FF9800,color:#fff
-    style D fill:#2196F3,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style D fill:#FF9800,color:#fff
+    style E fill:#2196F3,color:#fff
 ```
 
 ### 5.5.2. Registro de servicios
@@ -344,7 +349,7 @@ app.Run();
 
 > Antes de irte, dibuja el camino completo de una petición.
 
-### Contexto
+### 5.7.1. Contexto
 
 Un cliente envía esta petición a FunkoApp:
 
@@ -354,7 +359,7 @@ Host: localhost:5001
 Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 ```
 
-### Ejercicio 1: Dibuja el pipeline
+### 5.7.2. Ejercicio 1: Dibuja el pipeline
 
 Dibuja el camino que sigue esta petición desde que llega al servidor hasta que se devuelve la respuesta. Incluye:
 
@@ -362,7 +367,7 @@ Dibuja el camino que sigue esta petición desde que llega al servidor hasta que 
 - Orden de ejecución
 - Qué middleware hace qué cosa
 
-### Ejercicio 2: Identifica las capas
+### 5.7.3. Ejercicio 2: Identifica las capas
 
 Para esta petición, indica qué componente de cada capa se ejecuta:
 

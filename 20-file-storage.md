@@ -41,7 +41,7 @@
 
 # 20. File Storage: Almacenamiento de Archivos
 
-> **Punto de partida:** Cuando subes una foto de perfil en Instagram, la app recibe tu imagen, la guarda en sus servidores, la redimensiona y te devuelve una URL. Cuando otro usuario visita tu perfil, simplemente carga esa URL. Detrás de esa operación aparentemente simple hay todo un sistema de almacenamiento de archivos. En este tema aprenderemos a construir ese sistema en ASP.NET Core.
+> 💡 **Punto de partida:** Cuando subes una foto de perfil en Instagram, la app recibe tu imagen, la guarda en sus servidores, la redimensiona y te devuelve una URL. Cuando otro usuario visita tu perfil, simplemente carga esa URL. Detrás de esa operación aparentemente simple hay todo un sistema de almacenamiento de archivos. En este tema aprenderemos a construir ese sistema en ASP.NET Core.
 
 El almacenamiento de archivos es una funcionalidad común en aplicaciones web modernas: imágenes de productos, avatares de usuario, documentos adjuntos, etc. En este tema veremos cómo diseñar un sistema de almacenamiento seguro, escalable y testeable.
 
@@ -90,7 +90,7 @@ graph TD
     style D fill:#FF9800,color:#fff
 ```
 
-> **Analogia:** El almacenamiento de archivos es como el almacén de un restaurante. Cuando un cliente pide un plato especial, el mesero va al almacén, busca el ingrediente y lo trae a la cocina. El almacén puede ser físico (disco local) o externo (nube).
+> 💡 **Analogía:** El almacenamiento de archivos es como el almacén de un restaurante. Cuando un cliente pide un plato especial, el mesero va al almacén, busca el ingrediente y lo trae a la cocina. El almacén puede ser físico (disco local) o externo (nube).
 
 📌 **Ejemplo real:** Netflix almacena millones de miniaturas de películas y series. Cuando navegas por el catálogo, cada imagen viene de Azure Blob Storage. No está en la base de datos: está en un almacén de archivos optimizado para entrega rápida.
 
@@ -142,11 +142,15 @@ TuProyecto/
 └── Program.cs
 ```
 
+
+---
+
 **Resumen del punto:**
 
 - **Local (wwwroot):** Simple y rápido, ideal para desarrollo y apps pequeñas
 - **Azure Blob:** Escalable y redundante, recomendado para producción
 - **Estructura de directorios:** Organizar uploads por tipo (images, avatars, documents)
+- **`WebRootPath` puede ser `null`:** Siempre `env.WebRootPath ?? env.ContentRootPath` + `wwwroot/.gitkeep`
 
 **¿Qué viene después?**
 
@@ -184,7 +188,7 @@ graph TD
     style I fill:#FF9800,color:#fff
 ```
 
-📌 **Ejemplo real:** Cuando un navegador carga una página web, pide el HTML, luego el CSS, luego las imágenes. Todos esos archivos estáticos están en wwwroot. Si intentas acceder a ` Controllers/`, recibirás un 404: esos archivos no están en wwwroot.
+📌 **Ejemplo real:** Cuando un navegador carga una página web, pide el HTML, luego el CSS, luego las imágenes. Todos esos archivos estáticos están en wwwroot. Si intentas acceder a `Controllers/`, recibirás un 404: esos archivos no están en wwwroot.
 
 ### 20.2.2. Configuración de Límites
 
@@ -249,6 +253,9 @@ public class StorageSettings
 }
 ```
 
+
+---
+
 **Resumen del punto:**
 
 - **wwwroot:** Directorio público vía HTTP, el único accesible directamente
@@ -307,11 +314,13 @@ app.UseStaticFiles(new StaticFileOptions
 ### 20.3.3. Servir Archivos de Uploads
 
 ```csharp
-// Servir archivos desde wwwroot/uploads con RequestPath /uploads
+// WebRootPath puede ser null si no existe wwwroot (ej. carpeta vacía no commiteada)
+var webRoot = app.Environment.WebRootPath ?? app.Environment.ContentRootPath;
+
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
-        Path.Combine(app.Environment.WebRootPath, "uploads")),
+        Path.Combine(webRoot, "uploads")),
     RequestPath = "/uploads",
     ServeUnknownFileTypes = false,
     OnPrepareResponse = context =>
@@ -340,11 +349,17 @@ Console.WriteLine($"ContentRootPath: {app.Environment.ContentRootPath}");
 
 > ⚠️ **Advertencia:** No confundas `WebRootPath` con `ContentRootPath`. El primero apunta a wwwroot (público), el segundo a la raíz del proyecto (privado). Usar el equivocado puede exponer archivos sensibles.
 
+> ⚠️ **Advertencia:** `WebRootPath` **puede devolver `null`** si la carpeta `wwwroot` no existe (por ejemplo, Git no versiona carpetas vacías y `wwwroot/uploads` desaparece tras clonar). Usarlo directamente en `Path.Combine` lanza `ArgumentNullException` en tiempo de ejecución. **Siempre** usa el patrón `env.WebRootPath ?? env.ContentRootPath`. Además, crea un fichero vacío `wwwroot/.gitkeep` para que Git mantenga la carpeta.
+
+
+---
+
 **Resumen del punto:**
 
 - **UseStaticFiles():** Middleware obligatorio para servir archivos estáticos
 - **RequestPath:** Permite mapear un directorio a una ruta HTTP personalizada
 - **Cache-Control:** Configurar headers para optimizar rendimiento
+- **Fallback de `WebRootPath`:** `env.WebRootPath ?? env.ContentRootPath` (evita `null` si falta `wwwroot`)
 
 **¿Qué viene después?**
 
@@ -427,6 +442,9 @@ public interface IStorageService
 
 > 💡 **Consejo:** Diseñar una interfaz antes de implementar es clave. Si mañana cambias de Azure a AWS, solo cambias la implementación, no todo el código que usa el servicio.
 
+
+---
+
 **Resumen del punto:**
 
 - **IStorageService:** Contrato que abstrae el almacenamiento de archivos
@@ -444,6 +462,7 @@ Implementación de `IStorageService` que almacena archivos en el sistema de arch
 ### 20.5.1. Implementación Completa
 
 ```csharp
+using Microsoft.AspNetCore.Hosting;
 using TiendaApi.Apis.Configuration;
 using TiendaApi.Apis.Services.Storage;
 using Microsoft.Extensions.Options;
@@ -451,20 +470,16 @@ using Microsoft.Extensions.Options;
 namespace TiendaApi.Apis.Services.Storage.Implementation;
 
 public class FileSystemStorageService(
+    IWebHostEnvironment env,
     IOptions<StorageSettings> settings,
     ILogger<FileSystemStorageService> logger) : IStorageService
 {
-    private readonly string _rootPath;
-
-    public FileSystemStorageService()
-    {
-        _rootPath = Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory, 
-            "..", "..", "..", 
+    // Un único constructor (primary constructor).
+    // ContentRootPath ?? BaseDirectory: raíz segura aunque falten variables de entorno.
+    private readonly string _rootPath = Path.GetFullPath(
+        Path.Combine(
+            env.ContentRootPath ?? AppContext.BaseDirectory,
             settings.Value.RootPath));
-        
-        _rootPath = Path.GetFullPath(_rootPath);
-    }
 
     public Task InitAsync(CancellationToken cancellationToken = default)
     {
@@ -505,6 +520,13 @@ public class FileSystemStorageService(
         if (!settings.Value.AllowedExtensions.Contains(extension))
             throw new InvalidFileTypeException(
                 $"Tipo de archivo no permitido: {extension}");
+
+        // Validar también el Content-Type declarado (lista configurable AllowedContentTypes)
+        if (!string.IsNullOrEmpty(file.ContentType) &&
+            !settings.Value.AllowedContentTypes.Contains(
+                file.ContentType, StringComparer.OrdinalIgnoreCase))
+            throw new InvalidFileTypeException(
+                $"Tipo MIME no permitido: {file.ContentType}");
 
         var fileName = GenerateFileName(file.FileName);
         var folderPath = GetFolderPath(folder);
@@ -563,7 +585,8 @@ public class FileSystemStorageService(
 
     public string GetFilePath(string fileName, string? folder = null)
     {
-        return Path.Combine(GetFolderPath(folder), fileName);
+        // Path.GetFileName elimina cualquier ruta ("../../x.jpg" -> "x.jpg")
+        return Path.Combine(GetFolderPath(folder), Path.GetFileName(fileName));
     }
 
     public string GetUrl(string fileName, string? folder = null)
@@ -612,8 +635,16 @@ public class FileSystemStorageService(
         if (string.IsNullOrEmpty(folder))
             return _rootPath;
 
-        var folderPath = Path.Combine(_rootPath, folder);
-        return Path.GetFullPath(folderPath);
+        // Path traversal: el folder viene del query string y puede contener "../"
+        var full = Path.GetFullPath(Path.Combine(_rootPath, folder));
+        if (!full.Equals(_rootPath, StringComparison.OrdinalIgnoreCase) &&
+            !full.StartsWith(
+                _rootPath + Path.DirectorySeparatorChar,
+                StringComparison.OrdinalIgnoreCase))
+            throw new InvalidFileTypeException(
+                $"Carpeta no permitida: {folder}");
+
+        return full;
     }
 
     private static string GenerateFileName(string originalFileName)
@@ -673,12 +704,15 @@ builder.Services.Configure<StorageSettings>(
     builder.Configuration.GetSection("Storage"));
 ```
 
+
+---
+
 **Resumen del punto:**
 
 - **Generar nombres únicos:** Usar GUID + timestamp para evitar colisiones
-- **Validar antes de guardar:** Comprobar extensión y tamaño antes de escribir
+- **Validar antes de guardar:** Comprobar extensión, tipo MIME (`AllowedContentTypes`) y tamaño antes de escribir
 - **Excepciones personalizadas:** `FileSizeExceededException` e `InvalidFileTypeException`
-- **DI:** Registrar como `Scoped` con `IOptions<StorageSettings>`
+- **DI:** Registrar como `Scoped` con `IOptions<StorageSettings>` e `IWebHostEnvironment`
 
 **¿Qué viene después?**
 
@@ -715,7 +749,7 @@ public class FilesController : ControllerBase
     /// Sube un archivo al servidor
     /// </summary>
     [HttpPost("upload")]
-    [ProducesResponseType(typeof(FileUploadResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(FileUploadResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Upload(
         IFormFile file,
@@ -735,7 +769,8 @@ public class FilesController : ControllerBase
 
             _logger.LogInformation("Archivo subido: {FileName}", fileName);
 
-            return Ok(new FileUploadResponse
+            // 201 Created + Location: el recurso se acaba de crear
+            var response = new FileUploadResponse
             {
                 FileName = fileName,
                 OriginalName = file.FileName,
@@ -743,7 +778,12 @@ public class FilesController : ControllerBase
                 ContentType = file.ContentType,
                 Url = url,
                 UploadedAt = DateTime.UtcNow
-            });
+            };
+
+            return CreatedAtAction(
+                nameof(GetUrl),
+                new { fileName, folder },
+                response);
         }
         catch (FileSizeExceededException ex)
         {
@@ -873,6 +913,8 @@ public class FilesController : ControllerBase
 
 ### 20.6.2. DTOs de Respuesta
 
+> 📝 **Nota:** Un `POST` que **crea** un recurso debe devolver **201 Created** con un header `Location` que apunta al recurso recién creado (aquí, `CreatedAtAction`), no un `200 OK`. El `200 OK` se reserva para operaciones que no crean recursos nuevos: por ejemplo, `PUT` o el `POST {id}/imagen` de actualizar la imagen de un producto existente. Swagger reflejará el `201` gracias al `ProducesResponseType`.
+
 ```csharp
 public class FileUploadResponse
 {
@@ -906,9 +948,12 @@ public class FileInfoDto
 
 📌 **Ejemplo real:** Cuando subes una imagen en Discord, el cliente envía `POST /api/files/upload` con el archivo. El servidor responde con un JSON que incluye la URL de la imagen. Esa URL se inserta automáticamente en el chat.
 
+
+---
+
 **Resumen del punto:**
 
-- **Upload:** `POST /api/files/upload` con `IFormFile` en el body (multipart/form-data)
+- **Upload:** `POST /api/files/upload` con `IFormFile` en el body (multipart/form-data) → **201 Created** con `Location`
 - **Download:** `GET /api/files/download/{fileName}` devuelve el stream del archivo
 - **Delete:** `DELETE /api/files/{fileName}` elimina el archivo
 - **ProblemDetails:** Formato estándar para errores en ASP.NET Core
@@ -1076,15 +1121,19 @@ public static class FileNameValidator
 }
 ```
 
-📌 **Ejemplo real:** Gmail permite adjuntar archivos al enviar un correo, pero validate que no subas un `.exe` o `.bat`. Si lo intentas, muestra un error: "Tipo de archivo no permitido". Esa validación es exactamente lo que estamos implementando.
+📌 **Ejemplo real:** Gmail permite adjuntar archivos al enviar un correo, pero comprueba que no subas un `.exe` o `.bat`. Si lo intentas, muestra un error: "Tipo de archivo no permitido". Esa validación es exactamente lo que estamos implementando.
 
 > ⚠️ **Advertencia:** NUNCA confíes solo en la validación del lado del cliente (JavaScript). Un atacante puede saltarse esa validación fácilmente. SIEMPRE valida en el servidor.
+
+
+---
 
 **Resumen del punto:**
 
 - **Validar extensión:** Comprobar que está en la lista blanca
+- **Validar tipo MIME:** Comprobar `ContentType` contra `AllowedContentTypes` (configurable)
 - **Validar tamaño:** Limitar el tamaño máximo del archivo
-- **Path Traversal:** Usar `Path.GetFileName()` para eliminar rutas peligrosas
+- **Path Traversal:** Usar `Path.GetFileName()` y verificar que la ruta resuelta queda bajo `_rootPath`
 - **Validar nombre:** Regex + lista de extensiones peligrosas
 - **NUNCA confiar en el cliente:** Validar siempre en el servidor
 
@@ -1181,6 +1230,9 @@ public byte[] Imagen { get; set; }  // ¡NUNCA almacenes archivos binarios en la
 public string? Imagen { get; set; }  // Referencia al archivo en el almacén
 ```
 
+
+---
+
 **Resumen del punto:**
 
 - **Campo Imagen:** Guardar solo el nombre del archivo, nunca el binario
@@ -1196,6 +1248,8 @@ En el siguiente punto veremos **Azure Blob Storage**: cómo escalar el almacenam
 Para producción, Azure Blob Storage ofrece seguridad, redundancia y escalabilidad automáticas. Es el equivalente a un almacén profesional: escalable, con backup automático y acceso desde cualquier parte del mundo.
 
 ### 20.9.1. AzureBlobStorageService
+
+> 📝 **Nota:** Este es un **extracto (solo operaciones principales)** de `AzureBlobStorageService`. Para no alargar el tema omitimos `StoreAsync(Stream...)`, `GetFilePath`, `Exists`, `DeleteAsync` y `ListFilesAsync`, que también forman parte de `IStorageService`. En una implementación real deberías completar todos los métodos de la interfaz (por ejemplo, `DeleteAsync` usando `blobClient.DeleteAsyncAsync()`).
 
 ```csharp
 using Azure.Storage.Blobs;
@@ -1309,6 +1363,9 @@ else
 
 > 💡 **Consejo:** El patrón `IStorageService` permite cambiar de FileSystem a Azure Blob con una sola línea en `Program.cs`. Eso es el poder de programar contra interfaces.
 
+
+---
+
 **Resumen del punto:**
 
 - **Azure Blob:** Almacenamiento escalable en la nube para producción
@@ -1324,6 +1381,7 @@ En el siguiente punto veremos **Testing**: cómo testear el servicio de almacena
 ### 20.10.1. Test del Servicio
 
 ```csharp
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
@@ -1352,7 +1410,9 @@ public class FileSystemStorageServiceTests
         });
 
         var logger = Mock.Of<ILogger<FileSystemStorageService>>();
-        _service = new FileSystemStorageService(settings, logger);
+        var env = Mock.Of<IWebHostEnvironment>(
+            e => e.ContentRootPath == Path.GetTempPath());
+        _service = new FileSystemStorageService(env, settings, logger);
     }
 
     [TearDown]
@@ -1473,7 +1533,7 @@ public class FilesControllerTests
     }
 
     [Test]
-    public async Task Upload_WithValidFile_ReturnsOk()
+    public async Task Upload_WithValidFile_ReturnsCreatedAt()
     {
         // Arrange
         var content = new byte[] { 0xFF, 0xD8, 0xFF };
@@ -1494,8 +1554,8 @@ public class FilesControllerTests
         // Act
         var result = await _controller.Upload(fileMock.Object, "images");
 
-        // Assert
-        result.Should().BeOfType<OkObjectResult>();
+        // Assert: POST que crea recurso -> 201 Created (no 200 OK)
+        result.Should().BeOfType<CreatedAtActionResult>();
     }
 
     [Test]
@@ -1543,6 +1603,9 @@ public class FilesControllerTests
 
 > 💡 **Consejo:** Para tests de archivos, usa `MemoryStream` en lugar de archivos reales. Es más rápido y no depende del sistema de archivos.
 
+
+---
+
 **Resumen del punto:**
 
 - **Arrange-Act-Assert:** Patrón para estructurar tests claros
@@ -1558,7 +1621,7 @@ En el siguiente punto veremos **Buenas Prácticas**: recomendaciones para implem
 
 - **Siempre validar en el servidor:** Nunca confíes en la validación del cliente (JavaScript). Un atacante puede saltarse cualquier validación del navegador
 - **Generar nombres únicos:** Usar GUID + timestamp para evitar colisiones y ataques de filename
-- **Validar extensión Y tipo MIME:** No basta con comprobar la extensión; el Content-Type también puede ser manipulado
+- **Validar extensión Y tipo MIME:** No basta con comprobar la extensión; el Content-Type también puede ser manipulado — se valida en `StoreAsync` contra `AllowedContentTypes`
 - **Limitar tamaño:** Siempre establecer un tamaño máximo para evitar abuso de disco y denegación de servicio
 - **Usar la interfaz IStorageService:** Programar contra interfaces, no contra implementaciones concretas
 - **Eliminar archivos huérfanos:** Cuando se actualiza una imagen, eliminar la anterior para no llenar el disco
@@ -1566,8 +1629,13 @@ En el siguiente punto veremos **Buenas Prácticas**: recomendaciones para implem
 - **Caché inteligente:** Usar `Cache-Control` para archivos estáticos, `no-cache` para uploads de usuarios
 - **Logging:** Registrar operaciones de upload y delete para auditoría
 - **Tests unitarios:** Testear cada implementación de IStorageService con su propio entorno temporal
+- **Proteger `WebRootPath`:** Usar siempre `env.WebRootPath ?? env.ContentRootPath` y mantener `wwwroot/.gitkeep`
+- **Blindar `folder`:** Verificar en el servidor que la ruta resuelta queda bajo `_rootPath` (path traversal)
 
 > ⚠️ **Advertencia:** Si no generas nombres únicos, dos usuarios que suban "foto.jpg" se pisarán entre sí. Siempre usa GUID o timestamp en el nombre.
+
+
+---
 
 **Resumen del punto:**
 
@@ -1637,11 +1705,11 @@ public class Funko
 |----------|-------------|
 | **IStorageService** | Interfaz para desacoplar el almacenamiento |
 | **FileSystemStorageService** | Implementación local en wwwroot/uploads |
-| **wwwroot** | Directorio de archivos estáticos |
+| **wwwroot** | Directorio de archivos estáticos (proteger con `?? ContentRootPath` y `.gitkeep`) |
 | **UseStaticFiles** | Middleware para servir archivos estáticos |
-| **Validación** | Comprobar extensión y tamaño antes de guardar |
+| **Validación** | Comprobar extensión, tipo MIME y tamaño antes de guardar |
 | **Azure Blob Storage** | Almacenamiento en la nube de Microsoft |
-| **.archivos huérfanos** | Eliminar archivos anteriores al actualizar |
+| **Archivos huérfanos** | Eliminar archivos anteriores al actualizar |
 
 **¿Qué viene después?**
 

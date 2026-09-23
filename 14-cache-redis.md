@@ -205,7 +205,7 @@ flowchart TD
 | Escenario | Recomendación | Razón |
 |-----------|---------------|-------|
 | App de instancia única | MemoryCache | Más rápido, sin overhead de red |
-| Multi-instancia (负载均衡) | Redis | Compartido entre todas las instancias |
+| Multi-instancia (balanceo de carga) | Redis | Compartido entre todas las instancias |
 | Datos críticos | Redis + Persistencia | No perder datos en reinicio |
 | Sesiones de usuario | Redis | Persistente entre reinicios |
 | Datos muy volátiles | MemoryCache | Invalidación rápida y local |
@@ -515,6 +515,7 @@ volumes:
 ```bash
 dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis
 dotnet add package Microsoft.Extensions.Caching.Memory
+dotnet add package Scrutor
 ```
 
 ### 14.7.2. Interfaz ICacheService
@@ -536,7 +537,7 @@ public interface ICacheService
 }
 ```
 
-> 💡 **Consejo:** El método `GetOrSetAsync` es crucial para evitar el "cache stampede" donde múltiples hilos intentan cargar el mismo dato simultáneamente.
+> 💡 **Consejo:** El método `GetOrSetAsync` mitiga el "cache stampede" (thundering herd): cuando varios hilos piden el mismo dato a la vez, el `SemaphoreSlim` garantiza que **solo uno ejecute la `factory`** y los demás esperen y reutilicen su resultado. Ojo: el candado es **por proceso** — en un despliegue multiinstancia cada instancia puede disparar su propia carga (para eso haría falta un bloqueo distribuido en Redis).
 
 ### 14.7.3. CacheOptions (configurable desde appsettings.json)
 
@@ -585,6 +586,10 @@ public class MemoryCacheService(
 {
     private readonly CacheOptions _options = options.Value;
 
+    // Candado compartido: evita que varios hilos ejecuten la factory a la vez
+    // (mitiga el thundering herd dentro de este proceso)
+    private readonly SemaphoreSlim _factoryLock = new(1, 1);
+
     public Task<T?> GetAsync<T>(string key, CancellationToken ct = default)
     {
         cache.TryGetValue(key, out T? value);
@@ -619,10 +624,22 @@ public class MemoryCacheService(
         if (cache.TryGetValue(key, out T? cached))
             return cached;
 
-        var value = await factory();
-        if (value is not null)
-            await SetAsync(key, value, expiration, ct);
-        return value;
+        await _factoryLock.WaitAsync(ct);
+        try
+        {
+            // Doble comprobación: otro hilo pudo rellenar la caché mientras esperábamos
+            if (cache.TryGetValue(key, out cached))
+                return cached;
+
+            var value = await factory();
+            if (value is not null)
+                await SetAsync(key, value, expiration, ct);
+            return value;
+        }
+        finally
+        {
+            _factoryLock.Release();
+        }
     }
 }
 ```
@@ -646,6 +663,10 @@ public class RedisCacheService(
 {
     private readonly CacheOptions _options = options.Value;
 
+    // Candado por proceso (no distribuido): mitiga el stampede en esta instancia.
+    // Para bloqueo entre instancias haría falta un lock en Redis (SET NX).
+    private readonly SemaphoreSlim _factoryLock = new(1, 1);
+
     public async Task<T?> GetAsync<T>(string key, CancellationToken ct = default)
     {
         var data = await cache.GetStringAsync(key, ct);
@@ -654,11 +675,13 @@ public class RedisCacheService(
 
     public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken ct = default)
     {
-        var options = new DistributedCacheEntryOptions
+        var entryOptions = new DistributedCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = expiration ?? DefaultExpiration
+            AbsoluteExpirationRelativeToNow = expiration ?? _options.DefaultExpiration,
+            // Expiración deslizante: se renueva con cada acceso, igual que MemoryCacheService
+            SlidingExpiration = _options.SlidingExpiration
         };
-        await cache.SetStringAsync(key, JsonSerializer.Serialize(value), options, ct);
+        await cache.SetStringAsync(key, JsonSerializer.Serialize(value), entryOptions, ct);
     }
 
     public async Task RemoveAsync(string key, CancellationToken ct = default)
@@ -678,9 +701,22 @@ public class RedisCacheService(
         var cached = await GetAsync<T>(key, ct);
         if (cached is not null) return cached;
 
-        var value = await factory();
-        await SetAsync(key, value, expiration, ct);
-        return value;
+        await _factoryLock.WaitAsync(ct);
+        try
+        {
+            // Doble comprobación tras esperar el candado
+            cached = await GetAsync<T>(key, ct);
+            if (cached is not null) return cached;
+
+            var value = await factory();
+            if (value is not null)
+                await SetAsync(key, value, expiration, ct);
+            return value;
+        }
+        finally
+        {
+            _factoryLock.Release();
+        }
     }
 }
 ```
@@ -723,7 +759,7 @@ else
 }
 ```
 
-14.8. Qué y qué no cachear
+## 14.8. Qué y qué no cachear
 
 ```mermaid
 flowchart TD
@@ -764,8 +800,6 @@ await _cache.RemoveAsync($"producto:{producto.Id}");   // Invalidar elemento
 await _cache.RemoveAsync("productos:all");              // Invalidar listado
 // La próxima lectura obtendrá el dato actualizado de la BD
 ```
-
-## 14.8. Qué y qué no cachear
 
 | Qué cachear | Qué NO cachear |
 |-------------|----------------|
@@ -1000,6 +1034,9 @@ public class CachedProductoServiceTests
 ```csharp
 using Testcontainers.Redis;
 using NUnit.Framework;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Options;
 
 [TestFixture]
 public class RedisCacheServiceTests : IAsyncLifetime
@@ -1011,12 +1048,29 @@ public class RedisCacheServiceTests : IAsyncLifetime
     {
         _container = new RedisBuilder().WithImage("redis:7-alpine").Build();
         await _container.StartAsync();
+
         // Configurar IDistributedCache con la cadena del contenedor
+        var services = new ServiceCollection();
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = _container.GetConnectionString();
+        });
+        services.Configure<CacheOptions>(o =>
+        {
+            o.DefaultExpirationMinutes = 30;
+            o.SlidingExpirationMinutes = 10;
+        });
+
+        var provider = services.BuildServiceProvider();
+        var distributedCache = provider.GetRequiredService<IDistributedCache>();
+        var cacheOptions = provider.GetRequiredService<IOptions<CacheOptions>>();
+
+        _cache = new RedisCacheService(distributedCache, cacheOptions);
     }
 
     public async Task DisposeAsync()
     {
-        await _container.StopAsync();
+        await _container.DisposeAsync();
     }
 
     [Test]
@@ -1037,7 +1091,9 @@ public class RedisCacheServiceTests : IAsyncLifetime
 }
 ```
 
-14.13. Buenas Prácticas
+> 💡 **Consejo:** `_cache` debe construirse **después** de `StartAsync()` del contenedor, porque necesita la cadena de conexión real que TestContainers asigna al arrancar Redis.
+
+## 14.13. Buenas Prácticas
 
 ```csharp
 // ❌ MALO: Usar IMemoryCache directamente en el servicio — acoplamiento total
@@ -1072,8 +1128,6 @@ await _cache.SetAsync("productos:all", lista);             // Listado completo
 await _cache.SetAsync("productos:cat:gaming", lista);      // Listado filtrado
 await _cache.SetAsync("user:456:session", sesion);         // Sesión de usuario
 ```
-
-## 14.13. Buenas Prácticas
 
 | Práctica | Descripción |
 |----------|-------------|

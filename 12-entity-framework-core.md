@@ -211,8 +211,9 @@ dotnet add package Microsoft.EntityFrameworkCore.Design
 
 ### 12.2.2. Conexión
 
+**appsettings.json:**
+
 ```json
-// appsettings.json
 {
   "ConnectionStrings": {
     "DefaultConnection": "Host=localhost;Port=5432;Database=productos;Username=postgres;Password=postgres"
@@ -290,6 +291,36 @@ public class Producto { ... }
 public byte[] RowVersion { get; set; }
 ```
 
+> ⚠️ **Advertencia — `[Timestamp]` es patrón de SQL Server, no de PostgreSQL**
+>
+> El atributo `[Timestamp]` con `byte[] RowVersion` genera una columna `rowversion` **exclusiva de SQL Server**. En este curso usamos **PostgreSQL/Npgsql**, que **no soporta** ese tipo de columna: si lo usas, obtendrás un error de migración o de mapeo.
+>
+> **Alternativa correcta en PostgreSQL:** usar la columna de sistema `xmin` (una versión de fila que PostgreSQL mantiene automáticamente), mapeada como `uint` con la Fluent API:
+
+```csharp
+// En la entidad: NO usar [Timestamp] ni byte[] RowVersion
+public class Producto
+{
+    public long Id { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+
+    // xmin como propiedad CLR de tipo uint
+    public uint Xmin { get; set; }
+}
+
+// En OnModelCreating (Fluent API):
+modelBuilder.Entity<Producto>(entity =>
+{
+    // Mapea la columna de sistema xmin de PostgreSQL como token de concurrencia
+    entity.Property(e => e.Xmin)
+        .HasColumnName("xmin")
+        .HasColumnType("xid")
+        .IsRowVersion();
+});
+```
+
+> 💡 **Consejo:** Si más adelante trabajas con SQL Server, entonces sí podrás usar `[Timestamp]` + `byte[] RowVersion`. Cada BD tiene su propio mecanismo de concurrencia optimista.
+
 ### 12.3.5. Atributos de generación
 
 ```csharp
@@ -307,7 +338,7 @@ public byte[] RowVersion { get; set; }
 | `[StringLength(100)]` | Longitud máxima | `[StringLength(100)]` |
 | `[Column("nombre")]` | Nombre de columna | `[Column("producto_nombre")]` |
 | `[Table("tbl_prod")]` | Nombre de tabla | `[Table("tbl_productos")]` |
-| `[Timestamp]` | Concurrencia optimista | `public byte[] RowVersion { get; set; }` |
+| `[Timestamp]` | Concurrencia optimista (**solo SQL Server**) | `public byte[] RowVersion { get; set; }` — en PostgreSQL usar `uint xmin` + `IsRowVersion()` (ver 12.3.4) |
 | `[NotMapped]` | No mapear a BD | `[NotMapped] public string Temporal { get; set; }` |
 | `[ForeignKey("CategoriaId")]` | Clave foránea | `[ForeignKey("Categoria")]` |
 
@@ -786,20 +817,25 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 ### 12.13.6. Consultas típicas
 
 ```csharp
-// Paginado
-var (items, total) = db.Productos
+// Paginado (siempre con OrderBy antes de Skip/Take, y async)
+var query = db.Productos.AsQueryable();
+var total = await query.CountAsync();
+var items = await query
+    .OrderBy(p => p.Id)
     .Skip((page - 1) * pageSize)
     .Take(pageSize)
-    .ToList();
+    .ToListAsync();
 
 // Busqueda
-var resultados = db.Productos
+var resultados = await db.Productos
     .Where(p => p.Nombre.Contains(termino))
-    .ToList();
+    .ToListAsync();
 
 // Conteo
-var total = db.Productos.CountAsync();
+var totalProductos = await db.Productos.CountAsync();
 ```
+
+> ⚠️ **Advertencia:** Sin un `OrderBy` explícito, el `Skip/Take` no tiene un orden garantizado y la paginación puede devolver filas repetidas o saltadas entre páginas.
 
 ## 12.14. Migraciones
 
@@ -841,27 +877,38 @@ modelBuilder.Entity<Producto>().HasData(
 ```csharp
 // Configurar logging de consultas SQL
 options.UseNpgsql(connectionString)
-    .LogTo(Console.WriteLine, LogLevel.Information)
-    .EnableSensitiveDataLogging(); // Solo en desarrollo
+    .LogTo(Console.WriteLine, LogLevel.Information);
+
+// ⚠️ EnableSensitiveDataLogging solo en desarrollo: en producción
+// los logs filtrarían parámetros SQL y datos personales (PII)
+if (env.IsDevelopment())
+{
+    options.EnableSensitiveDataLogging();
+}
 ```
 
 ## 12.17. Control de Concurrencia
 
-```csharp
-// Optimista: RowVersion
-[Timestamp]
-public byte[] RowVersion { get; set; }
+La **concurrencia optimista** no bloquea filas: cada actualización comprueba que nadie ha modificado el registro entre que lo leíste y lo guardas.
 
-// Manejar conflicto
+En **PostgreSQL** (nuestro proveedor en el curso) se usa la columna de sistema `xmin` mapeada con `IsRowVersion()` — ver detalles en [12.3.4. Atributos de concurrencia](#1234-atributos-de-concurrencia):
+
+```csharp
+// PostgreSQL: propiedad Xmin mapeada como token de concurrencia (Fluent API)
+// entity.Property(e => e.Xmin).HasColumnName("xmin").HasColumnType("xid").IsRowVersion();
+
+// Manejar conflicto: otro usuario modificó los datos entre lectura y escritura
 try
 {
     await context.SaveChangesAsync();
 }
 catch (DbUpdateConcurrencyException)
 {
-    // Otro usuario modificó los datos
+    // El registro ha cambiado: recargar y decidir cómo resolver el conflicto
 }
 ```
+
+> 📝 **Nota:** En SQL Server se usaría `[Timestamp]` + `byte[] RowVersion`. Como el curso usa PostgreSQL, preferimos `xmin` (ver 12.3.4).
 
 ## 12.18. Testing con EF Core
 
@@ -888,6 +935,14 @@ public async Task ClassSetUp()
     await _postgres.StartAsync();
 }
 
+[OneTimeTearDown]
+public async Task ClassTearDown()
+{
+    // Dispose una sola vez al final de todos los tests del fixture;
+    // sin esto, el contenedor queda huérfano y contamina el siguiente run
+    await _postgres.DisposeAsync();
+}
+
 [SetUp]
 public async Task SetUp()
 {
@@ -912,7 +967,7 @@ public async Task SetUp()
 
 ```csharp
 [Test]
-public void Create_ProductoValido_RetornaProductoConId()
+public async Task Create_ProductoValido_RetornaProductoConId()
 {
     // Arrange
     var producto = new Producto { Nombre = "Teclado", Precio = 89.99m, CategoriaId = 1 };
@@ -925,6 +980,8 @@ public void Create_ProductoValido_RetornaProductoConId()
     producto.Id.Should().BeGreaterThan(0);
 }
 ```
+
+> 💡 **Consejo:** Si el cuerpo del test usa `await`, la firma debe ser `public async Task ...`. Un `public void` con `await` dentro **no compila**.
 
 ## 12.19. Buenas Prácticas
 
@@ -954,7 +1011,7 @@ public void Create_ProductoValido_RetornaProductoConId()
 **Puntos extra:**
 
 - Value Converters para enumeraciones
-- Concurrencia optimista con RowVersion
+- Concurrencia optimista con `xmin` (PostgreSQL) o `RowVersion` (SQL Server)
 - ExecuteUpdate para actualizar precios en lote
 
 ---

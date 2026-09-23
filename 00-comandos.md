@@ -19,6 +19,14 @@
 
 > 💡 **Punto de partida:** Esta guía recopila todos los comandos de `dotnet` que necesitas para crear, compilar, ejecutar, scaffoldear, testear y desplegar APIs en .NET 10. Guárdala como referencia rápida.
 
+**Objetivos de aprendizaje:**
+- Crear proyectos, soluciones y aplicaciones con la CLI de .NET 10
+- Gestionar paquetes NuGet, herramientas globales y migraciones de EF Core
+- Compilar, ejecutar, testear y desplegar APIs con los comandos esenciales
+- Resolver tareas comunes de desarrollo (certificados, user secrets, Docker, Git)
+
+📌 Ejemplo real: Cuando un compañero pregunta "¿cómo creo el proyecto de la práctica?", la respuesta es `dotnet new webapi -n MiApi -f net10.0`. Esta guía recopila todos esos comandos en un solo lugar.
+
 ## 1. Crear Proyectos y Soluciones
 
 ### Templates disponibles

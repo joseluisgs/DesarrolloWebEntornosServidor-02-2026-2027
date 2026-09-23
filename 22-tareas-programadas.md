@@ -7,7 +7,8 @@
     - [22.3.1. Tarea simple con intervalo fijo](#2231-tarea-simple-con-intervalo-fijo)
     - [22.3.2. Tarea con intervalo configurable](#2232-tarea-con-intervalo-configurable)
     - [22.3.3. Tarea con expresión Cron](#2233-tarea-con-expresión-cron)
-  - [22.4. Implementación con NCronTab](#224-implementación-con-ncrontab)
+    - [22.3.4. PeriodicTimer y TimeProvider](#2234-periodictimer-y-timeprovider)
+  - [22.4. Implementación con NCrontab](#224-implementación-con-ncrontab)
     - [22.4.1. Instalación](#2241-instalación)
     - [22.4.2. Servicio base con Cron](#2242-servicio-base-con-cron)
     - [22.4.3. Ejemplo: Limpieza diaria de caché](#2243-ejemplo-limpieza-diaria-de-caché)
@@ -38,7 +39,7 @@ En este punto aprenderás a crear tareas programadas en ASP.NET Core: desde un B
 
 - Comprender qué son las tareas programadas y cuándo usarlas
 - Implementar tareas con BackgroundService (intervalo fijo, configurable, Cron)
-- Usar NCronTab para expresiones Cron precisas
+- Usar NCrontab para expresiones Cron precisas
 - Configurar Hangfire para producción con dashboard y persistencia
 - Monitorear, testear y aplicar buenas prácticas
 
@@ -85,15 +86,26 @@ En ASP.NET Core existen varias formas de implementar tareas programadas, cada un
 
 | Opción | Complejidad | Características | Uso recomendado |
 |:-------|:------------|:----------------|:----------------|
-| **IHostedService** | Baja | Integrado en .NET, simple | Tareas básicas |
+| **IHostedService** | Baja | Integrado en .NET, control total del ciclo de vida | Arranque/parada a medida |
 | **BackgroundService** | Baja | Más sencillo que IHostedService | Tareas con intervalos fijos |
-| **NCronTab** | Media | Expresiones Cron precisas | Tareas con horarios específicos |
+| **NCrontab** | Media | Expresiones Cron precisas | Tareas con horarios específicos |
 | **Hangfire** | Media-Alta | Dashboard, persistencia, reintentos | Producción con monitoreo |
 | **Quartz.NET** | Alta | Muy completo y robusto | Sistemas empresariales complejos |
 
+**¿Qué diferencia hay entre `IHostedService` y `BackgroundService`?**
+
+`IHostedService` es la interfaz de más bajo nivel: tú implementas `StartAsync` (arranque) y `StopAsync` (parada), y decides cuándo empieza y cuándo para el trabajo. `BackgroundService` implementa `IHostedService` por ti y te deja un único método, `ExecuteAsync`, que arranca automáticamente con la aplicación y corre en segundo plano hasta que llega la señal de cancelación:
+
+| Interfaz | Métodos que implementas | Ciclo de vida |
+|:---------|:------------------------|:--------------|
+| **`IHostedService`** | `StartAsync` + `StopAsync` | Tú controlas cuándo se ejecuta el trabajo (bajo demanda, eventos, temporizadores propios) |
+| **`BackgroundService`** | `ExecuteAsync` | Arranca con la app y se ejecuta en bucle hasta `stoppingToken` |
+
+> 💡 **Consejo:** Para tareas "arranca y olvídate" (bucles con `Task.Delay`, Cron...), usa `BackgroundService`. Si necesitas control fino del arranque y la parada (iniciar bajo demanda, cerrar recursos ordenadamente al parar), implementa `IHostedService`.
+
 ```mermaid
 flowchart TB
-    BS["BackgroundService"] -->|"Intervalo fijo"| NC["NCronTab"]
+    BS["BackgroundService"] -->|"Intervalo fijo"| NC["NCrontab"]
     NC -->|"Persistencia + Dashboard"| HB["Hangfire"]
     HB -->|"Alta complejidad"| QZ["Quartz.NET"]
     style BS fill:#4CAF50,color:#fff
@@ -140,7 +152,16 @@ public class SimpleScheduledTask(ILogger<SimpleScheduledTask> logger) : Backgrou
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error en tarea programada");
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+
+                // Esperar antes de reintentar sin dejar que una cancelación escape
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
             }
         }
 
@@ -192,7 +213,16 @@ public class ConfigurableScheduledTask(
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error en tarea");
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+
+                // Esperar antes de reintentar sin dejar que una cancelación escape
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
             }
         }
     }
@@ -248,7 +278,14 @@ public class CronScheduledTask(ILogger<CronScheduledTask> logger) : BackgroundSe
                 }
             }
 
-            await Task.Delay(_checkInterval, stoppingToken);
+            try
+            {
+                await Task.Delay(_checkInterval, stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
         }
     }
 
@@ -276,38 +313,96 @@ public class CronScheduledTask(ILogger<CronScheduledTask> logger) : BackgroundSe
 ```csharp
 // ✅ BUENO: Crear scope para servicios Scoped
 using var scope = _serviceProvider.CreateScope();
-var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 ```
 
-## 22.4. Implementación con NCronTab
+### 22.3.4. PeriodicTimer y TimeProvider
+
+Desde .NET 6 tenemos `PeriodicTimer`, y desde .NET 8 la abstracción `TimeProvider`, que permite "desacoplar" el reloj de la tarea. Combinados, son la alternativa moderna al patrón `while + Task.Delay`:
+
+```csharp
+public class PeriodicTask(
+    ILogger<PeriodicTask> logger,
+    TimeProvider timeProvider) : BackgroundService
+{
+    private readonly TimeSpan _interval = TimeSpan.FromMinutes(5);
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        using var timer = new PeriodicTimer(_interval, timeProvider);
+
+        try
+        {
+            while (await timer.WaitForNextTickAsync(stoppingToken))
+            {
+                try
+                {
+                    logger.LogInformation(
+                        "Ejecutando tarea: {Time}", timeProvider.GetLocalNow());
+                    await DoWorkAsync();
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error en tarea periódica");
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            logger.LogInformation("Tarea periódica cancelada");
+        }
+    }
+
+    private async Task DoWorkAsync()
+    {
+        await Task.CompletedTask;
+    }
+}
+```
+
+**Registro en Program.cs:**
+
+```csharp
+// TimeProvider.System ya viene registrado por defecto desde .NET 8;
+// se declara solo si quieres sustituirlo explícitamente
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddHostedService<PeriodicTask>();
+```
+
+> 💡 **Truco (tests):** En producción inyectas `TimeProvider.System`, pero en tests puedes usar un `FakeTimeProvider` (paquete `Microsoft.Extensions.TimeProvider.Testing`) y avanzar el reloj con `timeProvider.Advance(...)`. Así un teste que "espera" 24 horas termina en milisegundos, sin dormir el hilo real.
+
+> ⚠️ **Advertencia:** `PeriodicTimer` mantiene el periodo estable (no se "desvía" como `Task.Delay` encadenado), pero sigue siendo tiempo real: para horarios concretos de reloj de pared ("cada día a las 8:30") usa el patrón `_nextRun` de la sección 22.3.3 o expresiones Cron (22.4).
+
+## 22.4. Implementación con NCrontab
 
 ### 22.4.1. Instalación
 
 ```bash
-dotnet add package NCronTab
+dotnet add package NCrontab
 ```
+
+> 📝 **Nota:** El paquete se llama **`NCrontab`** (no "NCronTab"): es el repositorio [atifaziz/NCrontab](https://github.com/atifaziz/NCrontab) y su namespace es `NCrontab`.
 
 ### 22.4.2. Servicio base con Cron
 
 ```csharp
-using NCronTab;
+using NCrontab;
 
 namespace FunkosApi.Services.Background;
 
 public abstract class CronScheduledService(ILogger logger) : BackgroundService
 {
-    private readonly CrontabSchedule _schedule = CrontabSchedule.Parse(Schedule);
     private DateTime _nextRun;
 
     protected abstract string Schedule { get; }
 
-    protected CronScheduledService(ILogger logger) : base()
-    {
-        _nextRun = _schedule.GetNextOccurrence(DateTime.Now);
-    }
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Se parsea aquí y no en un inicializador de campo:
+        // Schedule es abstracta y solo el tipo derivado puede responder
+        var schedule = CrontabSchedule.Parse(Schedule);
+        _nextRun = schedule.GetNextOccurrence(DateTime.Now);
+
         logger.LogInformation("Tarea Cron iniciada. Próxima ejecución: {NextRun}", _nextRun);
 
         while (!stoppingToken.IsCancellationRequested)
@@ -319,17 +414,24 @@ public abstract class CronScheduledService(ILogger logger) : BackgroundService
                     logger.LogInformation("Ejecutando tarea programada");
                     await DoWorkAsync();
 
-                    _nextRun = _schedule.GetNextOccurrence(DateTime.Now);
+                    _nextRun = schedule.GetNextOccurrence(DateTime.Now);
                     logger.LogInformation("Tarea completada. Próxima: {NextRun}", _nextRun);
                 }
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "Error en tarea Cron");
-                    _nextRun = _schedule.GetNextOccurrence(DateTime.Now);
+                    _nextRun = schedule.GetNextOccurrence(DateTime.Now);
                 }
             }
 
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            try
+            {
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
         }
     }
 
@@ -348,12 +450,12 @@ public class DailyCacheCleanupTask(
 
     protected override async Task DoWorkAsync()
     {
-        Logger.LogInformation("Iniciando limpieza de caché");
+        logger.LogInformation("Iniciando limpieza de caché");
 
         await cacheService.RemoveExpiredAsync();
         await cacheService.RemoveByPrefixAsync("temp:");
 
-        Logger.LogInformation("Limpieza de caché completada");
+        logger.LogInformation("Limpieza de caché completada");
     }
 }
 ```
@@ -520,19 +622,35 @@ public class NovedadesEmailTask(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Patrón _nextRun (igual que 22.3.3): comprobamos el reloj cada minuto.
+        // Dormir 24h con Task.Delay se desvía y puede saltarse el minuto 8:30
+        var proximaEjecucion = CalcularProximaEjecucion(DateTime.Now);
+
         while (!stoppingToken.IsCancellationRequested)
         {
-            var ahora = DateTime.Now;
-
-            if (ahora.Hour == 8 && ahora.Minute == 30)
+            if (DateTime.Now >= proximaEjecucion)
             {
                 await EnviarNovedadesAsync();
-                _ultimaEjecucion = ahora;
-                await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
+                _ultimaEjecucion = proximaEjecucion;
+                proximaEjecucion = CalcularProximaEjecucion(DateTime.Now);
             }
 
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            try
+            {
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
         }
+    }
+
+    private static DateTime CalcularProximaEjecucion(DateTime desde)
+    {
+        // Próxima salida a las 8:30 (si ya pasó hoy, mañana)
+        var candidata = new DateTime(desde.Year, desde.Month, desde.Day, 8, 30, 0);
+        return candidata > desde ? candidata : candidata.AddDays(1);
     }
 
     private async Task EnviarNovedadesAsync()
@@ -672,7 +790,14 @@ public class MonitoredScheduledTask(ILogger<MonitoredScheduledTask> logger) : Ba
                     stopwatch.ElapsedMilliseconds);
             }
 
-            await Task.Delay(_interval, stoppingToken);
+            try
+            {
+                await Task.Delay(_interval, stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
         }
     }
 
@@ -738,6 +863,8 @@ public class SimpleScheduledTaskTests
     }
 }
 ```
+
+> ⚠️ **Advertencia:** Estos tests duermen 1-2 segundos de reloj real (`Task.Delay`), lo que los hace lentos y potencialmente flaky en CI. Categorízalos como "lentos" (p. ej. `[Category("Slow")]`) o mejóralos con `FakeTimeProvider` + `PeriodicTimer` (sección 22.3.4): así "esperan" minutos u horas en milisegundos.
 
 **Test de servicio con dependencias:**
 
@@ -822,7 +949,7 @@ await Task.Delay(_interval, stoppingToken);
 
 ## 22.10. Comparación de opciones
 
-| Característica | BackgroundService | NCronTab | Hangfire | Quartz.NET |
+| Característica | BackgroundService | NCrontab | Hangfire | Quartz.NET |
 |:---------------|:------------------|:---------|:---------|:-----------|
 | **Complejidad** | Simple | Media | Media-Alta | Alta |
 | **Expresiones Cron** | Manual | Automático | Automático | Automático |
@@ -830,7 +957,7 @@ await Task.Delay(_interval, stoppingToken);
 | **Persistencia** | No (en memoria) | No (en memoria) | Sí (base de datos) | Sí (base de datos) |
 | **Reintentos** | Manual | Manual | Automático | Automático |
 | **Escalabilidad** | Limitada | Limitada | Alta | Alta |
-| **Dependencias** | Ninguna extra | NCronTab | Hangfire.SqlServer | Quartz |
+| **Dependencias** | Ninguna extra | NCrontab | Hangfire.SqlServer | Quartz |
 
 📌 **Ejemplo real:** Spotify usa Hangfire o similar para gestionar millones de tareas diarias (actualizar playlists, procesar pagos, enviar notificaciones). Para un proyecto académico como FunkoApp, BackgroundService es más que suficiente.
 
@@ -839,7 +966,7 @@ await Task.Delay(_interval, stoppingToken);
 | Escenario | Opción recomendada |
 |:----------|:-------------------|
 | Desarrollo/Aprendizaje | BackgroundService |
-| Proyectos personales | BackgroundService + NCronTab |
+| Proyectos personales | BackgroundService + NCrontab |
 | Producción pequeña | Hangfire |
 | Producción enterprise | Hangfire o Quartz.NET |
 | Microservicios | Hangfire con Redis |
@@ -904,7 +1031,7 @@ Implementar un sistema completo de tareas programadas para la aplicación de **F
 |:--------|:------------|
 | [Microsoft: Background tasks](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/hosted-services) | Documentación oficial de BackgroundService |
 | [Hangfire Documentation](https://docs.hangfire.io/) | Documentación completa de Hangfire |
-| [NCronTab GitHub](https://github.com/atifaziz/NCrontab) | Repositorio oficial de NCronTab |
+| [NCrontab GitHub](https://github.com/atifaziz/NCrontab) | Repositorio oficial de NCrontab |
 | [Crontab Guru](https://crontab.guru/) | Generador visual de expresiones Cron |
 
 ---
@@ -914,7 +1041,7 @@ Implementar un sistema completo de tareas programadas para la aplicación de **F
 | Concepto | Descripción |
 |----------|-------------|
 | **BackgroundService** | Forma más simple de implementar tareas programadas, ideal para desarrollo y proyectos simples |
-| **NCronTab** | Añade soporte para expresiones Cron precisas, útil cuando necesitas horarios específicos complejos |
+| **NCrontab** | Añade soporte para expresiones Cron precisas, útil cuando necesitas horarios específicos complejos |
 | **Hangfire** | Opción recomendada para producción: dashboard visual, persistencia en BD, reintentos automáticos y alta escalabilidad |
 | **Expresiones Cron** | Siguen el formato `minuto hora día-mes mes día-semana` y permiten definir horarios precisos |
 | **Monitoreo y logging** | Es crucial para identificar problemas en tareas que ejecutan en segundo plano |

@@ -226,11 +226,16 @@ flowchart TD
 await using var transaction = await context.Database.BeginTransactionAsync();
 try
 {
+    // ⚠️ FromSqlInterpolated convierte {string.Join(",", ids)} en UN único parámetro
+    // ("1,2,3"), inválido en un IN. Hay que construir un parámetro por cada id:
+    var placeholders = string.Join(",", ids.Select((_, i) => $"@p{i}"));
+    var parametros = ids.Select((id, i) => new NpgsqlParameter($"@p{i}", id)).ToArray();
+
     var productos = await context.Productos
-        .FromSqlInterpolated($@"
+        .FromSqlRaw($@"
             SELECT * FROM ""Productos""
-            WHERE ""Id"" IN ({string.Join(",", ids)})
-            FOR UPDATE")
+            WHERE ""Id"" IN ({placeholders})
+            FOR UPDATE", parametros)
         .ToListAsync();
 
     // Modificar y guardar
@@ -296,12 +301,12 @@ foreach (var item in items)
 **Fase 2 — Decremento atómico:**
 
 ```csharp
-var filas = await context.Database.ExecuteSqlRawAsync(@"
+// ✅ BUENO: ExecuteSqlInterpolatedAsync crea parámetros FormattableString
+// (uno por cada valor interpolado), válidos con cualquier proveedor (Npgsql, SqlServer...)
+var filas = await context.Database.ExecuteSqlInterpolatedAsync($@"
     UPDATE ""Productos""
-    SET ""Stock"" = ""Stock"" - @cantidad
-    WHERE ""Id"" = @id AND ""Stock"" >= @cantidad",
-    new SqlParameter("@cantidad", cantidad),
-    new SqlParameter("@id", productoId));
+    SET ""Stock"" = ""Stock"" - {cantidad}
+    WHERE ""Id"" = {productoId} AND ""Stock"" >= {cantidad}");
 
 if (filas == 0)
     return Result.Failure(...);  // Otro usuario ya compró
@@ -398,7 +403,7 @@ public class Invitacion
 ```
 
 ```csharp
-// ❌ MALO: Comparar GUIDs con == (operación costosa en某些 plataformas)
+// ❌ MALO: Comparar GUIDs con == (operación costosa en ciertas plataformas)
 if (producto.Id == otroProducto.Id) { ... } // Puede ser lento con GUIDs
 
 // ✅ BUENO: Usar Equals() para comparación eficiente de GUIDs
@@ -462,10 +467,10 @@ namespace ProductosApi.IdGenerators;
 public class YouTubeIdValueGenerator : ValueGenerator<string>
 {
     private const string Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-    private static readonly Random Random = new();
 
+    // Random.Shared es thread-safe y está disponible desde .NET 6
     public override string Next(EntityEntry entry) =>
-        new string(Enumerable.Range(0, 11).Select(_ => Chars[Random.Next(64)]).ToArray());
+        new string(Enumerable.Range(0, 11).Select(_ => Chars[Random.Shared.Next(64)]).ToArray());
 
     public override bool GeneratesTemporaryValues => false;
 }
@@ -500,7 +505,7 @@ public class Proveedor
 
 > ⚠️ **Advertencia: SaveChanges vs SaveChangesAsync**
 >
-> Si tu repositorio llama a `SaveChanges()` (sincrono) pero tu override de generacion de IDs solo esta en `SaveChangesAsync()`, **los IDs no se generaran**. Siempre override **ambos** metodos:
+> Si tu repositorio llama a `SaveChanges()` (síncrono) pero tu override de generación de IDs solo está en `SaveChangesAsync()`, **los IDs no se generarán**. Siempre override **ambos** métodos:
 >
 > ```csharp
 > // ❌ MALO: Solo override async
@@ -603,11 +608,16 @@ var productos = await context.Productos.Where(p => ids.Contains(p.Id)).ToListAsy
 // Otro usuario puede decrementar el stock entre tu SELECT y tu UPDATE
 
 // ✅ BUENO: SELECT FOR UPDATE garantiza bloqueo durante la transacción
+// Un párrafo por id: FromSqlInterpolated con string.Join daría UN único
+// parámetro "1,2,3", inválido en el IN (mismo bug que en 15.2)
+var placeholders = string.Join(",", ids.Select((_, i) => $"@p{i}"));
+var parametros = ids.Select((id, i) => new NpgsqlParameter($"@p{i}", id)).ToArray();
+
 var productos = await context.Productos
-    .FromSqlInterpolated($@"
+    .FromSqlRaw($@"
         SELECT * FROM ""Productos""
-        WHERE ""Id"" IN ({string.Join(",", ids)})
-        FOR UPDATE")
+        WHERE ""Id"" IN ({placeholders})
+        FOR UPDATE", parametros)
     .ToListAsync();
 // Bloqueo hasta COMMIT → ningún otro usuario puede modificar estas filas
 ```

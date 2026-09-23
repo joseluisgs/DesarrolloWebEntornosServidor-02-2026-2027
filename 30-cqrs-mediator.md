@@ -2,8 +2,8 @@
   - [30.1. ¿Qué es CQRS?](#301-qué-es-cqrs)
     - [30.1.1. Nuestro dominio: Productos, Categorías y Proveedores](#3011-nuestro-dominio-productos-categorías-y-proveedores)
     - [30.1.2. El problema tradicional](#3012-el-problema-tradicional)
-    - [30.1.2. La solución CQRS](#3012-la-solución-cqrs)
-    - [30.1.3. ¿Por qué separar escrituras y lecturas?](#3013-por-qué-separar-escrituras-y-lecturas)
+    - [30.1.3. La solución CQRS](#3013-la-solución-cqrs)
+    - [30.1.4. ¿Por qué separar escrituras y lecturas?](#3014-por-qué-separar-escrituras-y-lecturas)
   - [30.2. Commands y Queries](#302-commands-y-queries)
     - [30.2.1. Commands (Escrituras)](#3021-commands-escrituras)
     - [30.2.2. Queries (Lecturas)](#3022-queries-lecturas)
@@ -139,23 +139,15 @@ Cuando un cliente pide un producto, necesita ver el nombre de la categoría y el
 }
 ```
 
-PostgreSQL necesita hacer **3 consultas (JOINs)**:
+PostgreSQL necesita leer **3 tablas**. Puede hacerlo en 3 consultas separadas... o, mejor, en **1 sola consulta con JOINs** (que es justo lo que hace EF Core con `Include`):
 
 ```sql
--- 1. Buscar el producto
+-- Opción A (ineficiente): 3 consultas separadas
 SELECT * FROM Productos WHERE Id = 1;
+SELECT * FROM Categorias WHERE Id = 1;
+SELECT * FROM Proveedores WHERE Id = 5;
 
--- 2. JOIN con Categorias
-SELECT * FROM Productos p
-INNER JOIN Categorias c ON p.CategoriaId = c.Id
-WHERE p.Id = 1;
-
--- 3. JOIN con Proveedores
-SELECT * FROM Productos p
-INNER JOIN Proveedores pr ON p.ProveedorId = pr.Id
-WHERE p.Id = 1;
-
--- O todo junto (pero más complejo):
+-- Opción B (la correcta): 1 consulta con JOINs
 SELECT p.*, c.Nombre as CatNombre, pr.Nombre as ProvNombre
 FROM Productos p
 INNER JOIN Categorias c ON p.CategoriaId = c.Id
@@ -165,23 +157,23 @@ WHERE p.Id = 1;
 
 **¿Cuánto cuesta esto?**
 
-| Operación | Tiempo estimado | Memoria |
-|-----------|----------------|---------|
-| SELECT de 1 producto | 1ms | Baja |
+| Operación dentro del SELECT | Tiempo estimado | Memoria |
+|-----------------------------|----------------|---------|
+| Buscar el producto | 1ms | Baja |
 | JOIN con Categorias | +2ms | Media |
 | JOIN con Proveedores | +2ms | Media |
-| **Total** | **~5ms** | **Media** |
+| **Total (1 SELECT con 2 JOINs)** | **~5ms** | **Media** |
 
-Con 100 productos, el coste crece:
+Con 100 productos, la consulta **sigue siendo 1 solo SELECT**, pero las filas a cruzar crecen:
 
-| Productos | JOINs totales | Tiempo estimado |
-|-----------|---------------|-----------------|
+| Productos en la lista | Filas cruzadas (aprox.) | Tiempo estimado |
+|----------------|-------------|-----------------|
 | 1 | 3 | ~5ms |
 | 10 | 30 | ~20ms |
 | 100 | 300 | ~100ms |
 | 1000 | 3000 | ~500ms |
 
-📌 Ejemplo real: **Amazon** tiene millones de productos. Si cada búsqueda hiciera 3 JOINs por producto, las consultas tardarían segundos en vez de milisegundos.
+📌 Ejemplo real: **Amazon** tiene millones de productos. Si cada listado tuviera que cruzar 3 tablas con millones de filas, las consultas tardarían segundos en vez de milisegundos.
 
 > ⚠️ **Advertencia — LINQ oculta el coste real:** Cuando usas LINQ con EF Core, el código parece sencillo:
 > ```csharp
@@ -190,7 +182,7 @@ Con 100 productos, el coste crece:
 >     .Include(p => p.Proveedor)
 >     .ToListAsync();
 > ```
-> Pero por debajo, EF Core está generando **3 consultas SQL** (1 SELECT + 2 JOINs). El ORM oculta la complejidad.
+> Pero por debajo, EF Core genera **1 sola consulta SQL con 2 JOINs**. Es eficiente... pero el cruce de tablas sigue costando CPU y memoria en el servidor de BD: cuanto más datos, más tarda. El ORM oculta esa complejidad.
 
 **¿Cómo se hacen estas consultas en LINQ?**
 
@@ -259,7 +251,7 @@ flowchart TD
 | **No escala** | Crecimiento limitado | No puedes añadir nodos de solo lectura |
 | **Bloqueos** | Escrituras bloquean lecturas | Un UPDATE bloquea las consultas |
 
-### 30.1.2. La solución CQRS
+### 30.1.3. La solución CQRS
 
 CQRS resuelve esto separando en dos modelos optimizados para cada caso:
 
@@ -284,7 +276,7 @@ flowchart TD
 
 📌 Ejemplo real: **LinkedIn** usa CQRS. Cuando actualizas tu perfil (escritura), va a PostgreSQL. Cuando alguien busca tu perfil (lectura), va a un sistema optimizado para búsquedas rápidas.
 
-### 30.1.3. ¿Por qué separar escrituras y lecturas?
+### 30.1.4. ¿Por qué separar escrituras y lecturas?
 
 Para entender por qué CQRS es útil, necesitas comprender el **coste real** de cada operación:
 
@@ -916,7 +908,7 @@ sequenceDiagram
     participant CDC as Debezium
     participant Kafka as Kafka
 
-    Admin->>SQL: UPDATE Productosคะแน precio = 90
+    Admin->>SQL: UPDATE Productos SET precio = 90
     SQL->>WAL: Registrar cambio
     SQL->>SQL: Aplicar cambio en tabla
     WAL-->>CDC: Notificar: "precio cambió de 89 a 90"
@@ -990,7 +982,13 @@ flowchart LR
 
 ```bash
 dotnet add package MediatR
-dotnet add package MediatR.Extensions.Microsoft.DependencyInjection
+```
+
+```csharp
+// Program.cs — desde MediatR 12 el registro va en el propio paquete MediatR.
+// El antiguo paquete MediatR.Extensions.Microsoft.DependencyInjection está obsoleto.
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 ```
 
 ### 30.9.2. Commands con MediatR
@@ -1027,10 +1025,73 @@ public class CreateProductoHandler(
 
         var creado = repository.Add(producto);
 
-        // Publicar evento para sincronización
-        await mediator.Publish(new ProductoCreadoEvent(creado.Id), cancellationToken);
+        // 1. Persistir PRIMERO: si la escritura falla, salta la excepción
+        //    y NUNCA se publica el evento
+        await repository.SaveChangesAsync(cancellationToken);
+
+        // 2. Solo después, publicar evento CON el objeto (consistencia)
+        await mediator.Publish(new ProductoCreadoEvent(creado), cancellationToken);
 
         return creado;
+    }
+}
+```
+
+> 📝 **Nota (producción):** Si el proceso muere justo entre `SaveChangesAsync` y `Publish`, el evento se pierde. En producción se usa el patrón **Outbox**: guardar el evento en la misma transacción que el dato y publicarlo desde un Background Service. Para el ejemplo del módulo, persistir-primero-y-publicar-después es suficiente.
+
+```csharp
+// Commands adicionales (mismo estilo: IRequest<T>)
+public record UpdateProductoCommand(
+    long Id,
+    string Nombre,
+    decimal Precio
+) : IRequest<Producto>;
+
+public record DeleteProductoCommand(long Id) : IRequest<bool>;
+```
+
+```csharp
+// Update: persistir primero, publicar después
+public class UpdateProductoHandler(
+    IProductoRepository repository,
+    IMediator mediator) : IRequestHandler<UpdateProductoCommand, Producto>
+{
+    public async Task<Producto> Handle(
+        UpdateProductoCommand request,
+        CancellationToken cancellationToken)
+    {
+        var producto = await repository.GetByIdAsync(request.Id, cancellationToken)
+            ?? throw new KeyNotFoundException($"Producto {request.Id} no encontrado");
+
+        producto.Nombre = request.Nombre;
+        producto.Precio = request.Precio;
+
+        repository.Update(producto);
+        await repository.SaveChangesAsync(cancellationToken);
+
+        await mediator.Publish(new ProductoActualizadoEvent(producto), cancellationToken);
+        return producto;
+    }
+}
+
+// Delete: persistir primero, publicar después
+public class DeleteProductoHandler(
+    IProductoRepository repository,
+    IMediator mediator) : IRequestHandler<DeleteProductoCommand, bool>
+{
+    public async Task<bool> Handle(
+        DeleteProductoCommand request,
+        CancellationToken cancellationToken)
+    {
+        var producto = await repository.GetByIdAsync(request.Id, cancellationToken);
+        if (producto is null)
+            return false;
+
+        repository.Remove(producto);
+        await repository.SaveChangesAsync(cancellationToken);
+
+        await mediator.Publish(new ProductoEliminadoEvent(producto), cancellationToken);
+        return true;
     }
 }
 ```
@@ -1097,26 +1158,6 @@ public class LoggingBehavior<TRequest, TResponse>(
 
 📌 Ejemplo real: **Uber** usa behaviors para validar que el conductor tenga licencia antes de procesar un viaje. El behavior se ejecuta antes del handler y verifica los permisos.
 
-```csharp
-[Test]
-public async Task Sync_ProductoCreado_SeSincronizaMongoDB()
-{
-    // Arrange
-    var producto = new Producto { Nombre = "Teclado", Precio = 89.99m, CategoriaId = 1 };
-    await sqlContext.Productos.AddAsync(producto);
-    await sqlContext.SaveChangesAsync();
-
-    // Act
-    await syncService.SyncProductosAsync();
-
-    // Assert
-    var read = await mongoContext.Productos.FirstOrDefaultAsync(p => p.Id == producto.Id);
-    read.Should().NotBeNull();
-    read!.Nombre.Should().Be("Teclado");
-    read.Categoria.Should().NotBeNull();
-}
-```
-
 ## 30.10. Sincronización con Domain Events y MediatR
 
 En la sección 30.6 vimos que los Domain Events son una opción para sincronizar. Ahora veamos cómo implementarlos con MediatR, que ya usamos para CQRS.
@@ -1130,12 +1171,13 @@ Cuando el handler de un Command crea/modifica un producto, **ya tiene el objeto 
 **Algoritmo:**
 ```
 1. Admin crea producto → CreateProductoCommand
-2. Handler ejecuta: producto = repository.Add(dto.ToModel())
-3. Handler TIENE el objeto producto en memoria (ya lo creó)
-4. Handler publica evento: mediator.Publish(new ProductoCreadoEvent(producto))
-5. SyncHandler recibe el evento CON el objeto
-6. SyncHandler transforma a formato documento (sin JOINs)
-7. SyncHandler escribe en MongoDB (1 operación)
+2. Handler ejecuta: producto = repository.Add(...)
+3. Handler persiste: await repository.SaveChangesAsync()   ← PRIMERO la escritura
+4. Handler TIENE el objeto producto en memoria (ya lo creó)
+5. Handler publica evento: mediator.Publish(new ProductoCreadoEvent(producto))
+6. SyncHandler recibe el evento CON el objeto
+7. SyncHandler transforma a formato documento (sin JOINs)
+8. SyncHandler escribe en MongoDB (1 operación)
 ```
 
 **Comparación con polling:**
@@ -1169,31 +1211,34 @@ sequenceDiagram
 
 ### 30.10.2. Código de ejemplo
 
-**El Command Handler publica el evento:**
+**El Command Handler publica el evento** (mismo estilo `IRequest<T>` que en 30.9.2 — un solo estilo en todo el documento):
 
 ```csharp
 public class CreateProductoHandler(
     IProductoRepository repository,
-    IMediator mediator) : IRequestHandler<CreateProductoCommand, Result<ProductoDto, DomainError>>
+    IMediator mediator) : IRequestHandler<CreateProductoCommand, Producto>
 {
-    public async Task<Result<ProductoDto, DomainError>> Handle(
+    public async Task<Producto> Handle(
         CreateProductoCommand request, CancellationToken cancellationToken)
     {
         // 1. Crear producto en PostgreSQL
         var producto = new Producto
         {
-            Nombre = request.Dto.Nombre,
-            Precio = request.Dto.Precio,
-            CategoriaId = request.Dto.CategoriaId,
+            Nombre = request.Nombre,
+            Precio = request.Precio,
+            CategoriaId = request.CategoriaId,
             CreatedAt = DateTime.UtcNow
         };
 
         var creado = repository.Add(producto);
 
-        // 2. Publicar evento CON el objeto (ya está en memoria)
+        // 2. Persistir ANTES de publicar (si falla, no se publica el evento)
+        await repository.SaveChangesAsync(cancellationToken);
+
+        // 3. Publicar evento CON el objeto (ya está en memoria)
         await mediator.Publish(new ProductoCreadoEvent(creado), cancellationToken);
 
-        return Result.Success<ProductoDto, DomainError>(creado.ToDto());
+        return creado;
     }
 }
 ```
@@ -1223,13 +1268,15 @@ public class SyncProductoHandler(
             SyncAt = DateTime.UtcNow
         };
 
-        // 3. Escribir en MongoDB (1 operación)
-        await mongoContext.Productos
-            .Where(p => p.Id == producto.Id)
-            .ExecuteDeleteAsync(cancellationToken);
-
-        mongoContext.Productos.Add(read);
-        await mongoContext.SaveChangesAsync(cancellationToken);
+        // 3. Escribir en MongoDB (1 operación).
+        //    OJO: el proveedor EF de MongoDB NO implementa ExecuteDeleteAsync:
+        //    usamos el driver de MongoDB con ReplaceOneAsync + IsUpsert (upsert).
+        var collection = mongoContext.ProductosRead; // IMongoCollection<ProductoRead>
+        await collection.ReplaceOneAsync(
+            p => p.Id == producto.Id,
+            read,
+            new ReplaceOptions { IsUpsert = true },
+            cancellationToken);
     }
 }
 ```
@@ -1245,23 +1292,71 @@ public class SyncProductoHandler(
 
 ## 30.11. Testing de CQRS
 
+Estos tests cubren la lección real de los ejemplos: **Create → visible en el read model**, **Update → read model actualizado**, **Delete → GET 404**.
+
 ```csharp
-[Test]
-public async Task Sync_ProductoCreado_SeSincronizaMongoDB()
+[TestFixture]
+public class ProductoCqrsTests
 {
-    // Arrange
-    var producto = new Producto { Nombre = "Teclado", Precio = 89.99m, CategoriaId = 1 };
-    await sqlContext.Productos.AddAsync(producto);
-    await sqlContext.SaveChangesAsync();
+    [Test]
+    public async Task Sync_ProductoCreado_SeSincronizaMongoDB()
+    {
+        // Arrange
+        var producto = new Producto { Nombre = "Teclado", Precio = 89.99m, CategoriaId = 1 };
+        await sqlContext.Productos.AddAsync(producto);
+        await sqlContext.SaveChangesAsync();
 
-    // Act
-    await syncService.SyncProductosAsync();
+        // Act
+        await syncService.SyncProductosAsync();
 
-    // Assert
-    var read = await mongoContext.Productos.FirstOrDefaultAsync(p => p.Id == producto.Id);
-    read.Should().NotBeNull();
-    read!.Nombre.Should().Be("Teclado");
-    read.Categoria.Should().NotBeNull();
+        // Assert
+        var read = await mongoContext.Productos.FirstOrDefaultAsync(p => p.Id == producto.Id);
+        read.Should().NotBeNull();
+        read!.Nombre.Should().Be("Teclado");
+        read.Categoria.Should().NotBeNull();
+    }
+
+    [Test]
+    public async Task Update_Producto_ReadModelActualizado()
+    {
+        // Arrange: crear y sincronizar el producto
+        var producto = new Producto { Nombre = "Teclado", Precio = 89.99m, CategoriaId = 1 };
+        await sqlContext.Productos.AddAsync(producto);
+        await sqlContext.SaveChangesAsync();
+        await syncService.SyncProductosAsync();
+
+        // Act: actualizar en el modelo de escritura y resincronizar
+        producto.Precio = 99.99m;
+        sqlContext.Productos.Update(producto);
+        await sqlContext.SaveChangesAsync();
+        await syncService.SyncProductosAsync();
+
+        // Assert: el read model refleja el nuevo precio
+        var read = await mongoContext.Productos.FirstOrDefaultAsync(p => p.Id == producto.Id);
+        read.Should().NotBeNull();
+        read!.Precio.Should().Be(99.99m);
+    }
+
+    [Test]
+    public async Task Delete_Producto_GetDevuelve404()
+    {
+        // Arrange: crear, sincronizar y verificar que existe
+        var producto = new Producto { Nombre = "Ratón", Precio = 19.99m, CategoriaId = 1 };
+        await sqlContext.Productos.AddAsync(producto);
+        await sqlContext.SaveChangesAsync();
+        await syncService.SyncProductosAsync();
+
+        var okResponse = await client.GetAsync($"/api/productos/{producto.Id}");
+        okResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // Act: borrar en el modelo de escritura y resincronizar
+        await mediator.Send(new DeleteProductoCommand(producto.Id));
+        await syncService.SyncProductosAsync();
+
+        // Assert: la lectura ya no encuentra el producto → 404
+        var response = await client.GetAsync($"/api/productos/{producto.Id}");
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
 }
 ```
 

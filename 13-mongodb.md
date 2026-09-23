@@ -254,7 +254,7 @@ var logs = collection<Log>.Find(_ => true).ToList();
 // Si un producto tiene millones de logs embebidos →.DocumentExceedsSizeLimitException
 
 // ✅ BUENO: Usar Subset Pattern — embeber solo los más recientes
-varproducto = collection<Producto>.Find(p => p.Id == id).First();
+var producto = collection<Producto>.Find(p => p.Id == id).First();
 // Producto tiene: ReviewsRecientes [últimos 5] + ReviewCount
 // El resto de reviews se obtiene de una colección separada si hace falta
 ```
@@ -527,15 +527,14 @@ collection.Indexes.CreateOne(new CreateIndexModel<Producto>(
         .Ascending(p => p.Categoria)
         .Descending(p => p.Precio)));
 // Optimiza: WHERE categoria = 'X' ORDER BY precio DESC
-```
 
 // Índice único
-indices.CreateOne(new CreateIndexModel<Producto>(
+collection.Indexes.CreateOne(new CreateIndexModel<Producto>(
     Builders<Producto>.IndexKeys.Ascending(p => p.Nombre),
     new CreateIndexOptions { Unique = true }));
 
 // Índice compuesto
-indices.CreateOne(new CreateIndexModel<Producto>(
+collection.Indexes.CreateOne(new CreateIndexModel<Producto>(
     Builders<Producto>.IndexKeys
         .Ascending(p => p.Categoria)
         .Descending(p => p.Precio)));
@@ -935,7 +934,7 @@ public class FunkoMongoRepository(IMongoDatabase database) : IFunkoRepository
         _collection.Find(f => !f.IsDeleted).ToList();
 
     public Funko? GetById(ObjectId id) =>
-        _collection.Find(f => f.Id == id).FirstOrDefault();
+        _collection.Find(f => f.Id == id && !f.IsDeleted).FirstOrDefault();
 
     public Funko Add(Funko funko)
     {
@@ -975,7 +974,7 @@ public class FunkoEfCoreRepository(TiendaDbContext db) : IFunkoRepository
         db.Funkos.Where(f => !f.IsDeleted).ToList();
 
     public Funko? GetById(ObjectId id) =>
-        db.Funkos.FirstOrDefault(f => f.Id == id);
+        db.Funkos.FirstOrDefault(f => f.Id == id && !f.IsDeleted);
 
     public Funko Add(Funko funko)
     {
@@ -1183,6 +1182,11 @@ public class FunkoRepositoryTests : MongoTestBase
     [SetUp]
     public void SetUp()
     {
+        // Limpieza entre tests: cada test arranca con la colección vacía
+        // (si no, los documentos de tests anteriores contaminan los asserts)
+        Database.GetCollection<BsonDocument>("funkos")
+            .DeleteMany(FilterDefinition<BsonDocument>.Empty);
+
         _repository = new FunkoMongoRepository(Database);
     }
 
@@ -1225,10 +1229,12 @@ public class FunkoRepositoryTests : MongoTestBase
 
         // Assert
         resultado.Should().BeTrue();
-        _repository.GetById(funko.Id).Should().BeNull();
+        _repository.GetById(funko.Id).Should().BeNull(); // GetById filtra IsDeleted
     }
 }
 ```
+
+> 💡 **Consejo:** El repositorio debe filtrar `IsDeleted` también en `GetById`, no solo en `GetAll`. Si no, un elemento borrado lógicamente seguiría siendo visible por ID — inconsistente con el test `Delete → GetById == Null`.
 
 ### 13.7.4. Tests con EF Core
 
@@ -1246,6 +1252,8 @@ public class TiendaMongoDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Funko>().ToCollection("funkos");
+        // Query Filter: oculta los borrados lógicamente en TODAS las consultas
+        modelBuilder.Entity<Funko>().HasQueryFilter(f => !f.IsDeleted);
     }
 }
 
@@ -1341,7 +1349,7 @@ public Producto GetProducto(int id)
 // ✅ BUENO: MongoClient como singleton — thread-safe, reutilizable
 // Registrar en DI como singleton:
 builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://localhost:27017"));
-// Linyectarlo en repositorios/servicios — UN solo cliente para toda la app
+// Inyectarlo en repositorios/servicios — UN solo cliente para toda la app
 ```
 
 ```csharp
