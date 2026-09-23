@@ -1,4 +1,4 @@
-# 30. CQRS: Command Query Responsibility Segregation
+﻿# 30. CQRS: Command Query Responsibility Segregation
 
 - [30. CQRS: Command Query Responsibility Segregation](#30-cqrs-command-query-responsibility-segregation)
   - [30.1. ¿Qué es CQRS?](#301-qué-es-cqrs)
@@ -14,14 +14,15 @@
     - [30.4.1. Documentos denormalizados](#3041-documentos-denormalizados)
     - [30.4.2. Producto con relaciones embebidas](#3042-producto-con-relaciones-embebidas)
     - [30.4.3. Otras opciones para lecturas](#3043-otras-opciones-para-lecturas)
-  - [30.5. Sincronización SQL → MongoDB](#305-sincronización-sql--mongodb)
-    - [30.5.1. Opciones de sincronización](#3051-opciones-de-sincronización)
-    - [30.5.2. BackgroundService](#3052-backgroundservice)
-    - [30.5.3. Domain Events](#3053-domain-events)
-    - [30.5.4. CDC con Kafka](#3054-cdc-con-kafka)
-    - [30.5.5. RX.NET Observables](#3055-rxnet-observables)
-    - [30.5.6. Comparativa](#3056-comparativa)
-  - [30.6. Consistencia Eventual](#306-consistencia-eventual)
+  - [30.5. Consistencia Eventual](#305-consistencia-eventual)
+  - [30.6. Sincronización SQL → MongoDB](#306-sincronización-sql--mongodb)
+    - [30.6.1. Opciones de sincronización](#3061-opciones-de-sincronización)
+    - [30.6.2. BackgroundService](#3062-backgroundservice)
+    - [30.6.3. Domain Events](#3063-domain-events)
+    - [30.6.4. CDC con Kafka](#3064-cdc-con-kafka)
+    - [30.6.5. CDC](#3065-cdc)
+    - [30.6.6. RX.NET Observables](#3066-rxnet-observables)
+    - [30.6.7. Comparativa](#3067-comparativa)
   - [30.7. Ventajas y Desventajas](#307-ventajas-y-desventajas)
   - [30.8. Kafka: la opción profesional](#308-kafka-la-opción-profesional)
   - [30.9. MediatR: Implementando CQRS](#309-mediatr-implementando-cqrs)
@@ -168,6 +169,49 @@ Con 100 productos, el coste crece:
 | 1000 | 3000 | ~500ms |
 
 📌 Ejemplo real: **Amazon** tiene millones de productos. Si cada búsqueda hiciera 3 JOINs por producto, las consultas tardarían segundos en vez de milisegundos.
+
+> ⚠️ **Advertencia — LINQ oculta el coste real:** Cuando usas LINQ con EF Core, el código parece sencillo:
+> ```csharp
+> var productos = await context.Productos
+>     .Include(p => p.Categoria)
+>     .Include(p => p.Proveedor)
+>     .ToListAsync();
+> ```
+> Pero por debajo, EF Core está generando **3 consultas SQL** (1 SELECT + 2 JOINs). El ORM oculta la complejidad.
+
+**¿Cómo se hacen estas consultas en LINQ?**
+
+Hay 3 formas de cargar datos relacionados en EF Core:
+
+**1. Eager Loading (Include):** Carga todo de golpe con JOINs
+```csharp
+var productos = await context.Productos
+    .Include(p => p.Categoria)      // JOIN con Categorias
+    .Include(p => p.Proveedor)      // JOIN con Proveedores
+    .ToListAsync();                 // Genera 1 consulta con 2 JOINs
+```
+
+**2. Lazy Loading:** Carga cada relación bajo demanda (N+1 queries)
+```csharp
+var productos = await context.Productos.ToListAsync(); // 1 consulta
+foreach (var p in productos)
+{
+    var cat = p.Categoria;  // Cada acceso = 1 consulta nueva
+    var prov = p.Proveedor; // Cada acceso = 1 consulta nueva
+}
+// 1 + N + N = 2N+1 consultas
+```
+
+**3. Explicit Loading:** Carga manualmente bajo demanda
+```csharp
+var productos = await context.Productos.ToListAsync(); // 1 consulta
+foreach (var p in productos)
+{
+    await context.Entry(p).Reference(x => x.Categoria).LoadAsync(); // 1 por producto
+}
+```
+
+> 📝 **Nota:** Si tu DTO "monta" datos de 3 tablas (Producto + Categoria + Proveedor), **siempre** vas a leer de las 3 tablas. No hay forma de evitarlo. La única diferencia es cuándo y cómo se hacen esas lecturas. Por eso CQRS es útil: separar las lecturas (que necesitan JOINs) de las escrituras (que no los necesitan).
 
 ### 30.1.2. El problema tradicional
 
@@ -508,220 +552,30 @@ MongoDB es solo **una opción**. También puedes usar:
 
 📌 Ejemplo real: **Netflix** usa MongoDB para el catálogo de contenido (documentos anidados con temporadas, episodios, actores) pero Elasticsearch para las búsquedas de texto.
 
-## 30.5. Sincronización SQL → MongoDB
+## 30.5. Consistencia Eventual
 
-La sincronización es el corazón de CQRS. Hay varias formas de pasar datos de PostgreSQL a MongoDB, cada una con diferentes niveles de complejidad y latencia.
-
-### 30.5.1. Opciones de sincronización
-
-| Opción | Latencia | Complejidad | Cuándo usar |
-|--------|----------|-------------|-------------|
-| **BackgroundService (polling)** | 1-5 min | Baja | Datos que cambian poco, prototipos |
-| **Domain Events** | Segundos | Media | Cuando ya tienes el patrón implementado |
-| **Change Data Capture (CDC)** | Muy baja | Alta | Producción con millones de registros |
-| **RX.NET Observables** | Segundos | Media | Cuando necesitas reactividad en tiempo real |
-
-📌 Ejemplo real: **Amazon** usa CDC con Kafka para sincronizar datos entre cientos de microservicios. Cada cambio en PostgreSQL genera un evento que actualiza ElasticSearch en menos de 1 segundo.
-
-### 30.5.2. Opción 1: BackgroundService (polling)
-
-La forma más simple. Un servicio en segundo plano consulta PostgreSQL periódicamente y actualiza MongoDB.
-
-```csharp
-public class SyncBackgroundService : BackgroundService
-{
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<SyncBackgroundService> _logger;
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try
-            {
-                await SyncProductosAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error en sincronización");
-            }
-
-            // Intervalo de 1 minuto (no 5, que es demasiado)
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
-        }
-    }
-
-    private async Task SyncProductosAsync()
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var sqlContext = scope.ServiceProvider.GetRequiredService<SqlDbContext>();
-        var mongoContext = scope.ServiceProvider.GetRequiredService<MongoDbContext>();
-
-        var productos = await sqlContext.Productos
-            .Include(p => p.Categoria)
-            .Include(p => p.Proveedor)
-            .ToListAsync();
-
-        foreach (var producto in productos)
-        {
-            var read = new ProductoRead
-            {
-                Id = producto.Id,
-                Nombre = producto.Nombre,
-                Precio = producto.Precio,
-                Categoria = new CategoriaRead { Id = producto.Categoria.Id, Nombre = producto.Categoria.Nombre },
-                Proveedor = new ProveedorRead { Id = producto.Proveedor.Id, Nombre = producto.Proveedor.Nombre },
-                SyncAt = DateTime.UtcNow
-            };
-
-            await mongoContext.Productos.ReplaceOneAsync(
-                p => p.Id == producto.Id, read,
-                new ReplaceOptions { IsUpsert = true });
-        }
-    }
-}
-```
-
-✅ **Ventajas**: Simple de implementar, no necesita herramientas extra
-❌ **Desventajas**: Latencia de 1-5 minutos, consume recursos periódicamente
-
-### 30.5.3. Opción 2: Domain Events
-
-Cuando se crea/modifica/elimina un producto, se publica un evento que el servicio de sincronización escucha.
-
-```csharp
-// Publicar evento después de crear producto
-public class ProductoService
-{
-    private readonly IProductoRepository _repository;
-    private readonly IEventBus _eventBus;
-
-    public async Task<Producto> CreateAsync(CreateProductoDto dto)
-    {
-        var producto = _repository.Add(dto.ToModel());
-        
-        // Publicar evento
-        await _eventBus.PublishAsync(new ProductoCreadoEvent(producto.Id, producto.Nombre));
-        
-        return producto;
-    }
-}
-
-// Escuchar evento
-public class SyncEventHandler
-{
-    private readonly IMongoDbContext _mongoContext;
-    private readonly ISqlDbContext _sqlContext;
-
-    public async Task Handle(ProductoCreadoEvent evento)
-    {
-        var producto = await _sqlContext.Productos
-            .Include(p => p.Categoria)
-            .Include(p => p.Proveedor)
-            .FirstAsync(p => p.Id == evento.ProductoId);
-
-        await _mongoContext.Productos.ReplaceOneAsync(
-            p => p.Id == producto.Id, producto.ToRead(),
-            new ReplaceOptions { IsUpsert = true });
-    }
-}
-```
-
-✅ **Ventajas**: Latencia de segundos, no consume recursos periódicamente
-❌ **Desventajas**: Más código, necesita implementar el patrón de eventos
-
-### 30.5.4. Opción 3: Change Data Capture (CDC)
-
-CDC captura los cambios en PostgreSQL y los propaga a MongoDB automáticamente. La herramienta más común es **Debezium** con **Kafka**.
-
-```mermaid
-sequenceDiagram
-    participant Admin as Admin
-    participant SQL as PostgreSQL
-    participant CDC as Debezium (CDC)
-    participant Kafka as Kafka
-    participant Consumer as Sync Service
-    participant Mongo as MongoDB
-
-    Admin->>SQL: INSERT INTO Productos
-    SQL-->>CDC: WAL change event
-    CDC->>Kafka: Publish event
-    Kafka->>Consumer: Consume event
-    Consumer->>Mongo: Insert into productos_read
-```
-
-✅ **Ventajas**: Latencia de segundos, escalable, profesional
-❌ **Desventajas**: Complejo de configurar, necesita Kafka + Debezium
-
-### 30.5.5. Opción 4: RX.NET con Observables
-
-Usa programación reactiva para escuchar cambios en tiempo real:
-
-```csharp
-public class ReactiveSyncService
-{
-    private readonly Subject<Producto> _productoChanges = new();
-
-    public void OnProductoChanged(Producto producto)
-    {
-        _productoChanges.OnNext(producto);
-    }
-
-    public IDisposable Subscribe(Action<Producto> onSync)
-    {
-        return _productoChanges
-            .Throttle(TimeSpan.FromSeconds(30)) // Esperar 30s de calma
-            .Subscribe(producto => onSync(producto));
-    }
-}
-
-// En ProductoService:
-public class ProductoService
-{
-    private readonly ReactiveSyncService _syncService;
-
-    public async Task<Producto> CreateAsync(CreateProductoDto dto)
-    {
-        var producto = _repository.Add(dto.ToModel());
-        _syncService.OnProductoChanged(producto); // Publicar cambio
-        return producto;
-    }
-}
-```
-
-✅ **Ventajas**: Reactivo, latencia baja, no consume recursos periódicamente
-❌ **Desventajas**: Más complejo, necesita entender programación reactiva
-
-### 30.5.6. Comparativa de opciones
-
-| Criterio | BackgroundService | Domain Events | CDC | RX.NET |
-|----------|-------------------|---------------|-----|--------|
-| **Latencia** | 1-5 min | Segundos | < 1s | Segundos |
-| **Complejidad** | Baja | Media | Alta | Media |
-| **Herramientas** | Ninguna | Ninguna | Kafka + Debezium | RX.NET |
-| **Escalabilidad** | Limitada | Buena | Excelente | Buena |
-| **Coste** | Bajo | Bajo | Medio-Alto | Bajo |
-| **Producción** | Solo datos lentos | Recomendado | Ideal | Alternativa |
-
-> 📝 **Nota:** Para este curso usamos **BackgroundService con 1 minuto** por simplicidad pedagógica. En producción real, usarías **Domain Events** o **CDC** según la escala de tu aplicación.
-
-📌 Ejemplo real: **LinkedIn** usa CDC con Kafka para sincronizar datos entre cientos de microservicios. Cuando actualizas tu perfil, el evento viaja por Kafka y actualiza ElasticSearch, caches y sistemas de recomendación en menos de 1 segundo.
-
-## 30.6. Consistencia Eventual
-
-### 30.6.1. Qué es la consistencia eventual
+### 30.5.1. Qué es la consistencia eventual
 
 La **consistencia eventual** significa que después de una escritura, las lecturas no reflejan el cambio **inmediatamente**. Hay una **ventana de inconsistencia** donde los datos están desincronizados.
 
 📌 Ejemplo real: Cuando publicas una foto en **Instagram**, tus seguidores no la ven al instante. Hay un pequeño retraso (segundos o minutos) mientras el sistema sincroniza los datos entre servidores. Eso es consistencia eventual.
 
-### 30.6.2. Ventana de inconsistencia
+### 30.5.2. Ventana de inconsistencia
+
+El **SyncService** es el componente que se encarga de sincronizar datos entre PostgreSQL y MongoDB. Puede funcionar de diferentes maneras:
+
+| Tipo de SyncService | Cómo funciona | Ejemplo |
+|---------------------|---------------|---------|
+| **Polling** | Consulta cada X tiempo | `Task.Delay(60s)` |
+| **Domain Events** | Escucha cada evento de cambio | `OnProductoCreado` |
+| **CDC** | Lee el log de la BD | Debezium + Kafka |
+| **RX.NET** | Observable reactivo | `Subject<T>.Throttle(30s)` |
 
 ```mermaid
 sequenceDiagram
     participant Admin as Admin
     participant SQL as PostgreSQL
-    participant Sync as BackgroundService
+    participant Sync as SyncService
     participant Mongo as MongoDB
     participant Cliente as Cliente
 
@@ -730,11 +584,11 @@ sequenceDiagram
     SQL-->>SQL: Confirmado
 
     Note over Cliente: t1: Consulta producto
-    Cliente->>Mongo: SELECT (no existe aún)
+    Cliente->>Mongo: SELECT (no existe aun)
     Mongo-->>Cliente: null
 
-    Note over Sync: t2: Sync detecta cambio (5 min)
-    Sync->>SQL: SELECT productos
+    Note over Sync: t2: SyncService detecta cambio
+    Sync->>SQL: SELECT producto
     SQL-->>Sync: Producto nuevo
     Sync->>Mongo: INSERT INTO productos_read
     Mongo-->>Sync: OK
@@ -743,23 +597,23 @@ sequenceDiagram
     Cliente->>Mongo: SELECT (ya existe)
     Mongo-->>Cliente: Producto completo
 
-    Note over Cliente: Ventana de inconsistencia: t0 → t3 (5 min)
+    Note over Cliente: Ventana de inconsistencia: t0 → t3
 ```
 
-### 30.6.3. Cómo manejarla
+### 30.5.3. Cómo manejarla
 
 | Estrategia | Descripción |
 |------------|-------------|
 | **Mostrar timestamp** | Indicar "datos actualizados hace X min" |
 | **Forzar refresh** | Botón para recargar datos manualmente |
-| **Polling corto** | Sincronizar cada 30s en vez de 5min |
+| **Sync más rápido** | Usar Domain Events en vez de polling |
 | **Cache corto** | TTL bajo en la capa de lectura |
-| **Aceptar la latencia** | Si 5 min es aceptable, no hacer nada |
+| **Aceptar la latencia** | Si la latencia es aceptable, no hacer nada |
 
 ❌ **MALO**: Mentir al usuario diciendo que los datos están actualizados:
 
 ```csharp
-// Si el sync tarda 5 minutos, el usuario cree que el cambio fue inmediato
+// Si el sync tarda, el usuario cree que el cambio fue inmediato
 return Ok(new { message = "Producto creado correctamente" });
 ```
 
@@ -768,9 +622,229 @@ return Ok(new { message = "Producto creado correctamente" });
 ```csharp
 return Ok(new { 
     message = "Producto creado correctamente",
-    syncEstimated = "Los cambios serán visibles en ~5 minutos"
+    syncNote = "Los cambios serán visibles en breve"
 });
 ```
+
+## 30.6. Sincronización SQL → MongoDB
+
+El objetivo de la sincronización es **reducir la latencia** de la consistencia eventual. Cuanto más rápido sincronicemos, menor será la ventana de inconsistencia.
+
+La sincronización es el corazón de CQRS. Sin ella, las lecturas mostrarían datos obsoletos.
+
+### 30.6.1. El problema: ¿Qué pasa si sincronizamos TODO?
+
+Si cada minuto leemos **todos** los productos de PostgreSQL, hacemos JOINs con Categorías y Proveedores, y reescribimos todo en MongoDB...
+
+```mermaid
+flowchart TD
+    subgraph PROBLEMA["Problema: Sync completo cada minuto"]
+        A["10 millones de productos"] --> B["SELECT * FROM Productos\n+ JOIN Categorias\n+ JOIN Proveedores"]
+        B --> C["10 millones de operaciones"]
+        C --> D["ReplaceOne en MongoDB\npor cada producto"]
+    end
+
+    subgraph CONSECUENCIAS["Consecuencias"]
+        E["PostgreSQL: Carga extrema\nde CPU y memoria"]
+        F["MongoDB: Sobrecarga\nde escrituras"]
+        G["Red: Tráfico masivo\nentre servidores"]
+    end
+
+    PROBLEMA --> CONSECUENCIAS
+
+    style PROBLEMA fill:#f44336,color:#fff
+    style CONSECUENCIAS fill:#f44336,color:#fff
+```
+
+📌 Ejemplo real: Si **Amazon** sincronizara todos sus millones de productos cada minuto, sus servidores de BD colapsarían en segundos.
+
+| Consecuencia | Impacto |
+|--------------|---------|
+| **CPU SQL** | 100% durante la sync |
+| **Memoria SQL** | Carga millones de registros en RAM |
+| **CPU MongoDB** | Sobrecarga de escrituras |
+| **Red** | Tráfico masivo entre servidores |
+| **Latencia** | La API se ralentiza durante la sync |
+
+### 30.6.2. Enfoque 1: Sync Completo (NO recomendado)
+
+Lee **todos** los registros, los transforma y los reescribe en MongoDB.
+
+**Algoritmo:**
+```
+1. Cada 60 segundos:
+   a. SELECT * FROM Productos (todos)
+   b. JOIN con Categorias (para cada producto)
+   c. JOIN con Proveedores (para cada producto)
+   d. Para CADA producto (10 millones):
+      - Crear documento denormalizado
+      - ReplaceOne en MongoDB (upsert)
+   e. Guardar timestamp de sync
+```
+
+```mermaid
+flowchart LR
+    A["PostgreSQL\n10M registros"] -->|"Lee TODO"| B["Transformar"]
+    B -->|"10M operaciones"| C["MongoDB"]
+
+    style A fill:#f44336,color:#fff
+    style C fill:#f44336,color:#fff
+```
+
+| Pros | Contras |
+|------|---------|
+| Simple de implementar | Destroza SQL y MongoDB |
+| Siempre consistente | No escala con millones de registros |
+| Sin código adicional | Latencia de 1-5 minutos |
+
+### 30.6.3. Enfoque 2: Sync Incremental
+
+Solo sincroniza los registros que **cambiaron** desde la última sync. Usa el campo `UpdatedAt` como marca de agua.
+
+**Algoritmo:**
+```
+1. Leer LastSyncTime de MongoDB
+2. SELECT * FROM Productos WHERE UpdatedAt > LastSyncTime
+3. Para CADA producto cambiado (ej: 3 de 10M):
+   a. Crear documento denormalizado
+   b. ReplaceOne en MongoDB (upsert)
+4. Actualizar LastSyncTime en MongoDB
+```
+
+```mermaid
+flowchart LR
+    A["PostgreSQL\n10M registros"] -->|"Lee SOLO los que\ncambiaron"| B["3 registros"]
+    B -->|"3 operaciones"| C["MongoDB"]
+
+    style A fill:#4CAF50,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#4CAF50,color:#fff
+```
+
+| Pros | Contras |
+|------|---------|
+| Rápido (solo 3 ops en vez de 10M) | Sigue siendo polling |
+| Eficiente en recursos | Latencia de 1 minuto |
+| Escala con millones de registros | Si nadie cambia nada, desperdicia una consulta |
+
+### 30.6.4. Enfoque 3: Domain Events (Ideal)
+
+Cuando se crea/modifica/borra, se publica un evento. No hay polling.
+
+**Algoritmo:**
+```
+1. Admin crea producto → Handler ejecuta Create
+2. Handler publica evento "ProductoCreado" con el ID
+3. SyncHandler escucha el evento
+4. SyncHandler lee SOLO ese producto de PostgreSQL (con JOINs)
+5. SyncHandler crea documento denormalizado
+6. SyncHandler escribe en MongoDB (1 operación)
+```
+
+```mermaid
+flowchart LR
+    A["Admin crea producto"] -->|"Publica evento"| B["Evento\nProductoCreado"]
+    B -->|"Escucha"| C["SyncHandler"]
+    C -->|"1 operación"| D["MongoDB"]
+
+    style A fill:#2196F3,color:#fff
+    style B fill:#FF9800,color:#fff
+    style C fill:#9C27B0,color:#fff
+    style D fill:#4CAF50,color:#fff
+```
+
+| Pros | Contras |
+|------|---------|
+| Tiempo real (segundos) | Más código |
+| No desperdicia recursos | Necesita patrón de eventos |
+| Escala perfectamente | Complejidad adicional |
+
+### 30.6.5. Enfoque 4: CDC (Profesional)
+
+Change Data Capture captura cambios a nivel de base de datos con Kafka + Debezium.
+
+**Algoritmo:**
+```
+1. Admin crea producto → PostgreSQL escribe en WAL (Write-Ahead Log)
+2. Debezium lee el WAL en tiempo real
+3. Debezium publica evento a Kafka
+4. Consumer escucha Kafka
+5. Consumer lee el producto de PostgreSQL (con JOINs)
+6. Consumer escribe en MongoDB (1 operación)
+```
+
+```mermaid
+sequenceDiagram
+    participant Admin as Admin
+    participant SQL as PostgreSQL
+    participant WAL as WAL (Log)
+    participant CDC as Debezium
+    participant Kafka as Kafka
+    participant Consumer as Sync Service
+    participant Mongo as MongoDB
+
+    Admin->>SQL: INSERT INTO Productos
+    SQL->>WAL: Escribir cambio
+    WAL-->>CDC: Notificar cambio
+    CDC->>Kafka: Publicar evento
+    Kafka-->>Consumer: Consumir evento
+    Consumer->>SQL: SELECT producto con JOINs
+    SQL-->>Consumer: Producto denormalizado
+    Consumer->>Mongo: ReplaceOne (upsert)
+```
+
+| Pros | Contras |
+|------|---------|
+| Latencia < 1s | Necesita Kafka + Debezium |
+| Escalable | Complejo de configurar |
+| No necesita código | Coste de infraestructura |
+
+### 30.6.6. Enfoque 5: RX.NET con Observables
+
+Usa programación reactiva para escuchar cambios en tiempo real. Cuando se produce un cambio, se notifica inmediatamente.
+
+**Algoritmo:**
+```
+1. ProductoService crea/modifica/borra producto
+2. ProductoService publica cambio en Subject<Producto>
+3. ReactiveSyncService escucha el Subject
+4. Throttle de 30 segundos (esperar 30s de calma)
+5. Cuando hay cambio, lee ese producto de PostgreSQL (con JOINs)
+6. Crea documento denormalizado
+7. Escribe en MongoDB (1 operación)
+```
+
+```mermaid
+flowchart LR
+    A["ProductoService"] -->|"OnNext(producto)"| B["Subject<Producto>"]
+    B -->|"Throttle 30s"| C["ReactiveSyncService"]
+    C -->|"Lee 1 producto"| D["PostgreSQL"]
+    D -->|"1 operación"| E["MongoDB"]
+
+    style A fill:#2196F3,color:#fff
+    style B fill:#FF9800,color:#fff
+    style C fill:#9C27B0,color:#fff
+    style D fill:#f44336,color:#fff
+    style E fill:#4CAF50,color:#fff
+```
+
+| Pros | Contras |
+|------|---------|
+| Reactivo (no polling) | Más complejo de entender |
+| Latencia baja | Necesita programación reactiva |
+| Throttle agrupa cambios | Más código que Domain Events |
+
+### 30.6.7. Comparativa
+
+| Criterio | Sync Completo | Sync Incremental | Domain Events | CDC | RX.NET |
+|----------|---------------|------------------|---------------|-----|--------|
+| **Eficiencia** | Mala | Buena | Excelente | Excelente | Excelente |
+| **Latencia** | 1-5 min | 1 min | Segundos | < 1s | Segundos |
+| **Escalabilidad** | No escala | Escala | Escala | Escala mucho | Escala |
+| **Complejidad** | Baja | Baja | Media | Alta | Media |
+| **Coste** | Alto (recursos) | Bajo | Bajo | Medio | Bajo |
+
+> 📝 **Nota:** Cada enfoque tiene sus ventajas y desventajas. Elige según la escala y complejidad de tu aplicación.
 
 ## 30.7. Ventajas y Desventajas
 
@@ -785,9 +859,94 @@ return Ok(new {
 
 **Apache Kafka** es un sistema de streaming de eventos usado en producción para sincronizar datos entre sistemas. En lugar de polling, Kafka recibe eventos de cambios y los propaga a los consumidores.
 
-> 📝 **Nota:** En este curso usamos un BackgroundService de sincronización por simplicidad pedagógica. En producción real, Kafka sería la opción recomendada para sincronizar PostgreSQL → MongoDB de forma escalable y fiable.
+### 30.8.1. ¿Qué es Kafka?
+
+Kafka es como una **cola de mensajes distribuida**. Cuando algo cambia en PostgreSQL, Kafka recibe un mensaje y lo propaga a todos los sistemas que estén escuchando.
+
+```mermaid
+flowchart LR
+    subgraph PRODUCIDOR["Productor"]
+        A[PostgreSQL] -->|"Cambio detectado"| B[Kafka Producer]
+    end
+
+    subgraph KAFKA["Kafka (Broker)"]
+        B --> C[Topic: productos-changes]
+        C --> D[Partición 1]
+        C --> E[Partición 2]
+        C --> F[Partición N]
+    end
+
+    subgraph CONSUMIDORES["Consumidores"]
+        D --> G[MongoDB Sync]
+        D --> H[ElasticSearch]
+        D --> I[Cache Redis]
+    end
+
+    style PRODUCIDOR fill:#2196F3,color:#fff
+    style KAFKA fill:#FF9800,color:#fff
+    style CONSUMIDORES fill:#4CAF50,color:#fff
+```
 
 📌 Ejemplo real: **LinkedIn** usa Kafka para sincronizar datos entre cientos de microservicios. Cuando actualizas tu perfil, el evento viaja por Kafka y actualiza ElasticSearch, caches y sistemas de recomendación.
+
+### 30.8.2. ¿Qué es Debezium (CDC)?
+
+**Debezium** es una herramienta de **Change Data Capture** que lee el **WAL** (Write-Ahead Log) de PostgreSQL en tiempo real.
+
+**¿Qué es el WAL?** Es el log de transacciones de PostgreSQL. Cada vez que modificas datos, PostgreSQL escribe primero el cambio en el WAL (para seguridad) y luego lo aplica a las tablas. Debezium lee ese WAL.
+
+```mermaid
+sequenceDiagram
+    participant Admin as Admin
+    participant SQL as PostgreSQL
+    participant WAL as WAL (Log)
+    participant CDC as Debezium
+    participant Kafka as Kafka
+
+    Admin->>SQL: UPDATE Productosคะแน precio = 90
+    SQL->>WAL: Registrar cambio
+    SQL->>SQL: Aplicar cambio en tabla
+    WAL-->>CDC: Notificar: "precio cambió de 89 a 90"
+    CDC->>Kafka: Publicar evento
+```
+
+📌 Ejemplo real: **Amazon** usa Debezium para capturar cambios en sus bases de datos de productos. Cada vez que un vendedor actualiza un precio, Debezium lo detecta y propaga el cambio a sistemas de búsqueda y caché.
+
+### 30.8.3. Flujo completo: PostgreSQL → Kafka → MongoDB
+
+```mermaid
+flowchart LR
+    subgraph ORIGEN["Origen"]
+        A[Admin] -->|CREATE/UPDATE/DELETE| B[(PostgreSQL)]
+        B -->|Escribe en WAL| C[WAL]
+    end
+
+    subgraph CAPTURA["Captura"]
+        C -->|Lee en tiempo real| D[Debezium]
+        D -->|Publica evento| E[Kafka]
+    end
+
+    subgraph DESTINO["Destino"]
+        E -->|Consume evento| F[Sync Service]
+        F -->|Transforma| G[(MongoDB)]
+    end
+
+    style ORIGEN fill:#2196F3,color:#fff
+    style CAPTURA fill:#FF9800,color:#fff
+    style DESTINO fill:#4CAF50,color:#fff
+```
+
+### 30.8.4. Ventajas y desventajas de Kafka
+
+| Ventaja | Desventaja |
+|---------|------------|
+| Latencia menor a 1 segundo | Complejo de configurar |
+| Escalable: maneja millones de eventos | Necesita infraestructura adicional |
+| No necesita código de sincronización | Coste de servidores Kafka + Debezium |
+| Desacopla productores de consumidores | Curva de aprendizaje pronunciada |
+| Persiste eventos (no se pierden) | Más difícil de debuggear |
+
+> 📝 **Nota:** Kafka es una herramienta profesional. Para aprender, primero domina los conceptos de CQRS con las opciones más simples.
 
 ## 30.9. MediatR: Implementando CQRS
 
@@ -984,7 +1143,7 @@ public async Task Sync_ProductoCreado_SeSincronizaMongoDB()
 
 1. **Modelo SQL:** Funko con CategoriaId y ProveedorId (claves foráneas)
 2. **Modelo MongoDB:** FunkoRead con Categoría y Proveedor embebidos
-3. **BackgroundService** de sincronización cada 5 minutos
+3. **Mecanismo de sincronización** entre PostgreSQL y MongoDB
 4. **Queries en MongoDB** (lecturas rápidas con documentos denormalizados)
 5. **Commands en PostgreSQL** (escrituras transaccionales)
 6. **Tests:** Verificar que la sincronización funciona correctamente
