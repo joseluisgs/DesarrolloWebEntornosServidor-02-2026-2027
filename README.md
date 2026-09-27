@@ -1,31 +1,12 @@
-- [2. Desarrollo de servicios web en .NET](#2-desarrollo-de-servicios-web-en-net)
-  - [Contenidos](#contenidos)
-  - [Proyecto Integrador](#proyecto-integrador)
-  - [Contenido en YouTube](#contenido-en-youtube)
-  - [Resultados de Aprendizaje y Criterios de Evaluación](#resultados-de-aprendizaje-y-criterios-de-evaluación)
-  - [Autor](#autor)
-    - [Contacto](#contacto)
-  - [Licencia de uso](#licencia-de-uso)
+# Desarrollo Web en Entorno Servidor - 02 -Desarrollo de servicios web en .NET
 
-
-
-# 2. Desarrollo de servicios web en .NET
-
-> 💡 **Punto de partida:** ¿Por qué existen tantas unidades si todas hablan de lo mismo: construir servicios web? Porque cada tema es un ladrillo: primero los cimientos (servicios y REST), luego la casa completa (arquitectura, testing y despliegue). Esta UD02 es el mapa de todo lo que vas a construir con .NET.
-
-**Objetivos de aprendizaje:**
-- Localizar el contenido de la unidad: temas, prácticas y proyectos de referencia
-- Identificar los resultados de aprendizaje (RA) que trabaja esta unidad
-- Acceder a los recursos de YouTube y documentación asociada
-
-📌 Ejemplo real: Al empezar un módulo nuevo en clase, el profesor reparte el índice: qué temas hay, qué prácticas se entregarán y dónde está el repositorio del proyecto. Este README cumple exactamente esa función para la UD02.
-
-UD02. Desarrollo de servicios web en .NET. 2DAW. Curso 2026-2027.
+UD02. Desarrollo de servicios web en .NET. 2DAW. Curso 2026-2027
 
 ![imagen](https://github.com/joseluisgs/DesarrolloWebEntornosServidor-00-2023-2024/raw/master/images/servicios.png)
 
 
 ## Contenidos
+
 0.  [Guía de Supervivencia: Comandos .NET CLI](00-comandos.md)
 1.  [Servicios Web](01-conceptos-servicios.md)
 2.  [APIs REST](02-rest-api.md)

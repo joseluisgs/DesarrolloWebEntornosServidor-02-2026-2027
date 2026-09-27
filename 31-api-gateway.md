@@ -20,6 +20,9 @@
     - [31.5.1. Arquitectura del ejemplo](#3151-arquitectura-del-ejemplo)
     - [31.5.2. Docker Compose](#3152-docker-compose)
     - [31.5.3. Configuración de rutas](#3153-configuración-de-rutas)
+    - [31.5.4. Diagrama: Flujo completo de autenticación y autorización](#3154-diagrama-flujo-completo-de-autenticación-y-autorización)
+    - [31.5.5. Diagrama: Qué pasa cuando la autenticación falla](#3155-diagrama-qué-pasa-cuando-la-autenticación-falla)
+    - [31.5.6. Diagrama: Pipeline interno del Gateway](#3156-diagrama-pipeline-interno-del-gateway)
   - [31.6. Nginx: La alternativa profesional](#316-nginx-la-alternativa-profesional)
     - [31.6.1. ¿Qué es Nginx?](#3161-qué-es-nginx)
     - [31.6.2. Configuración de Nginx](#3162-configuración-de-nginx)
@@ -529,6 +532,206 @@ El `appsettings.json` del Gateway:
 4. El servicio de auth devuelve un token JWT
 5. El cliente envía `GET http://localhost:5000/api/productos` con el header `Authorization: Bearer <token>`
 6. El Gateway valida el token y redirige a `http://productos-service:5002/api/productos`
+
+### 31.5.4. Diagrama: Flujo completo de autenticación y autorización
+
+Este diagrama muestra **el ciclo de vida completo** de un usuario: desde el login hasta el acceso a recursos protegidos. Observa en qué punto se valida el token y dónde se procesa la autorización:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Cliente as Cliente (App/Web)
+    participant GW as API Gateway :5000
+    participant Auth as Auth Service :5001
+    participant Productos as Productos Service :5002
+    participant DB_Auth as BD Auth (SQLite)
+    participant DB_Prod as BD Productos (SQLite)
+
+    Note over Cliente,DB_Prod: ═══ PASO 1: Login (ruta pública, sin token) ═══
+
+    Cliente->>GW: POST /api/auth/login {email, password}
+    Note over GW: Ruta /api/auth → SIN AuthorizationPolicy
+    GW->>Auth: POST /api/auth/login {email, password}
+    Auth->>DB_Auth: SELECT usuario WHERE email = ?
+    DB_Auth-->>Auth: Usuario encontrado
+    Auth->>Auth: Verificar password (BCrypt)
+    Auth->>Auth: Generar JWT (Issuer, Audience, Expiry)
+    Auth-->>GW: 200 OK {token: "eyJhbG..."}
+    GW-->>Cliente: 200 OK {token: "eyJhbG..."}
+
+    Note over Cliente,DB_Prod: ═══ PASO 2: Acceso a recurso protegido (con token) ═══
+
+    Cliente->>GW: GET /api/productos
+    Note over GW: Header: Authorization: Bearer eyJhbG...
+    GW->>GW: 1. Validar JWT (Issuer, Firma, Caducidad)
+    GW->>GW: 2. AuthorizationPolicy: RequireAuthenticatedUser
+    GW->>GW: 3. ¿Token válido? → SÍ ✅
+    GW->>Productos: GET /api/productos (headers reenviados)
+    Productos->>DB_Prod: SELECT * FROM Productos
+    DB_Prod-->>Productos: Lista de productos
+    Productos-->>GW: 200 OK [productos...]
+    GW-->>Cliente: 200 OK [productos...]
+
+    Note over Cliente,DB_Prod: ═══ PASO 3: Crear producto (operación de escritura) ═══
+
+    Cliente->>GW: POST /api/productos {nombre, precio, categoriaId}
+    Note over GW: Header: Authorization: Bearer eyJhbG...
+    GW->>GW: Validar JWT → OK ✅
+    GW->>Productos: POST /api/productos {nombre, precio, categoriaId}
+    Productos->>DB_Prod: INSERT INTO Productos
+    DB_Prod-->>Productos: OK (id=42)
+    Productos-->>GW: 201 Created {id: 42}
+    GW-->>Cliente: 201 Created {id: 42}
+
+    Note over Cliente,DB_Prod: ═══ PASO 4: Logout (invalidar token) ═══
+
+    Cliente->>GW: POST /api/auth/logout
+    GW->>Auth: POST /api/auth/logout
+    Auth->>Auth: Añadir token a blacklist (Redis/BD)
+    Auth-->>GW: 200 OK
+    GW-->>Cliente: 200 OK
+    Note over Cliente: Token ya no es válido para futuras peticiones
+```
+
+📌 Ejemplo real: **Netflix** usa este mismo flujo. Cuando abres la app, haces login (el servicio de auth genera un token), y cada petición (buscar película, reproducir, añadir a favoritos) pasa por el Gateway que valida tu token antes de reenviar al servicio correspondiente.
+
+**Tabla resumen del flujo:**
+
+| Paso | Ruta | ¿Auth? | ¿Qué valida el Gateway? | Servicio destino |
+|------|------|--------|--------------------------|------------------|
+| **1. Login** | `POST /api/auth/login` | ❌ No | Nada (ruta pública) | Auth Service |
+| **2. Leer productos** | `GET /api/productos` | ✅ Sí | JWT válido (Issuer + firma + caducidad) | Productos Service |
+| **3. Crear producto** | `POST /api/productos` | ✅ Sí | JWT válido | Productos Service |
+| **4. Logout** | `POST /api/auth/logout` | ❌ No | Nada (ruta pública) | Auth Service |
+
+### 31.5.5. Diagrama: Qué pasa cuando la autenticación falla
+
+El Gateway rechaza peticiones **antes** de que lleguen al servicio destino. Esto protege los servicios de tráfico no autorizado:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Cliente as Cliente
+    participant GW as API Gateway
+    participant Auth as Auth Service
+    participant Productos as Productos Service
+
+    Note over Cliente,Productos: ═══ CASO 1: No envía token ═══
+
+    Cliente->>GW: GET /api/productos (sin Authorization header)
+    GW->>GW: ¿Tiene header Authorization? → NO ❌
+    GW-->>Cliente: 401 Unauthorized {"error": "Token required"}
+
+    Note over Cliente,Productos: ═══ CASO 2: Token caducado (exp < DateTime.UtcNow) ═══
+
+    Cliente->>GW: GET /api/productos (token caducado)
+    GW->>GW: Validar JWT → ¿Caducado? → SÍ ❌
+    GW-->>Cliente: 401 Unauthorized {"error": "Token expired"}
+
+    Note over Cliente,Productos: ═══ CASO 3: Token con firma inválida (secret incorrecto) ═══
+
+    Cliente->>GW: GET /api/productos (token firmado con otro secret)
+    GW->>GW: Validar JWT → ¿Firma válida? → NO ❌
+    GW-->>Cliente: 401 Unauthorized {"error": "Invalid token"}
+
+    Note over Cliente,Productos: ═══ CASO 4: Token válido pero Audience incorrecto ═══
+
+    Cliente->>GW: GET /api/productos (token Audience="otros-api")
+    GW->>GW: Validar JWT → ¿Issuer + Firma OK? → SÍ
+    GW->>GW: ValidateAudience = false (configurado así en Gateway)
+    GW->>Productos: GET /api/productos (reenvía)
+    Productos->>Productos: Validar Audience → ¿"productos-api"? → NO ❌
+    Productos-->>GW: 403 Forbidden {"error": "Invalid audience"}
+    GW-->>Cliente: 403 Forbidden
+
+    Note over Cliente,Productos: ═══ CASO 5: Token válido + Audience correcto ═══
+
+    Cliente->>GW: GET /api/productos (token Audience="productos-api")
+    GW->>GW: Validar JWT → OK ✅
+    GW->>Productos: GET /api/productos
+    Productos->>Productos: Validar Audience → OK ✅
+    Productos-->>GW: 200 OK [productos]
+    GW-->>Cliente: 200 OK [productos]
+```
+
+📌 Ejemplo real: **Amazon** rechaza el 99% de las peticiones no autenticadas en el Gateway. Si intentas acceder a "Mis Pedidos" sin token, ni siquiera llegas al servicio de pedidos. Esto reduce la carga en los servicios internos.
+
+**Tabla de errores de autenticación:**
+
+| Error | Código HTTP | Causa | ¿Dónde se detecta? |
+|-------|-------------|-------|---------------------|
+| **Token required** | 401 | No se envía header `Authorization` | Gateway |
+| **Token expired** | 401 | `exp` del JWT < `DateTime.UtcNow` | Gateway |
+| **Invalid signature** | 401 | Firma JWT no coincide con `Jwt:Secret` | Gateway |
+| **Invalid issuer** | 401 | `iss` del JWT no coincide con `Jwt:Issuer` | Gateway |
+| **Invalid audience** | 403 | `aud` del JWT no coincide con el servicio destino | Servicio destino |
+
+> ⚠️ **Advertencia:** Si el Gateway **no** configura `"AuthorizationPolicy": "default"` en la ruta, las peticiones pasan **sin validar token**. El Gateway actúa como simple proxy inverso. Asegúrate de que cada ruta protegida declarar la política.
+
+### 31.5.6. Diagrama: Pipeline interno del Gateway
+
+¿Qué pasa **dentro** del Gateway cuando recibe una petición? Este diagrama muestra el **pipeline de middleware** que procesa cada request antes de reenviarla:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Cliente as Cliente
+    participant RateLimit as 1. Rate Limiting
+    participant Auth as 2. Authentication
+    participant Authoriz as 3. Authorization
+    participant Route as 4. Route Matching
+    participant Transform as 5. Transforms
+    participant Proxy as 6. Reverse Proxy
+    participant Service as Microservicio
+
+    Cliente->>RateLimit: GET /api/productos (Bearer token)
+    Note over RateLimit: ¿Supera 100 req/min por IP?
+    RateLimit->>RateLimit: Contador: 47/100 → OK ✅
+    RateLimit->>Auth: Continuar...
+
+    Note over Auth: Extraer token del header Authorization
+    Auth->>Auth: Parse JWT → Header + Payload + Signature
+    Auth->>Auth: Validar Issuer → "FunkoApp" ✅
+    Auth->>Auth: Validar Firma → Jwt:Secret ✅
+    Auth->>Auth: Validar Caducidad → exp > now ✅
+    Auth->>Auth: Claims → {sub: "42", role: "admin"}
+    Auth->>Authoriz: HttpContext.User = ClaimsPrincipal
+
+    Note over Authoriz: ¿La ruta requiere auth?
+    Authoriz->>Authoriz: AuthorizationPolicy: "default"
+    Authoriz->>Authoriz: RequireAuthenticatedUser → User.Identity.IsAuthenticated = true ✅
+    Authoriz->>Route: Continuar...
+
+    Note over Route: ¿Qué ruta coincide?
+    Route->>Route: Path = "/api/productos" → Match "productos-route" ✅
+    Route->>Route: ClusterId = "productos-cluster"
+    Route->>Transform: Continuar...
+
+    Note over Transform: Aplicar transforms configurados
+    Transform->>Transform: PathPattern = "/api/productos/{**catch-all}"
+    Transform->>Transform: Headers: X-Forwarded-For, X-Request-ID
+    Transform->>Proxy: URL final = "http://productos-service:5002/api/productos"
+
+    Note over Proxy: Enviar petición al servicio destino
+    Proxy->>Service: GET http://productos-service:5002/api/productos
+    Service-->>Proxy: 200 OK [productos...]
+    Proxy-->>Cliente: 200 OK [productos...]
+```
+
+📌 Ejemplo real: **Netflix** procesa más de **2 mil millones** de peticiones al día a través de sus Gateways. Cada petición pasa por rate limiting (para evitar abusos), autenticación (validar suscripción), autorización (¿puedes ver este contenido?) y enrutamiento (¿a qué servicio va?). Todo esto en **menos de 50 milisegundos**.
+
+**Pasos del Pipeline en Detalle:**
+
+| Paso | Middleware | ¿Qué hace? | ¿Cuándo falla? |
+|------|-----------|-------------|-----------------|
+| **1. Rate Limiting** | `IRateLimitingService` | Cuenta peticiones por IP/cliente | 429 Too Many Requests |
+| **2. Authentication** | `UseAuthentication()` | Extrae y valida el JWT | 401 Unauthorized |
+| **3. Authorization** | `UseAuthorization()` | Comprueba si el usuario tiene permiso | 403 Forbidden |
+| **4. Route Matching** | YARP Route | Busca ruta que coincida con el path | 404 Not Found |
+| **5. Transforms** | YARP Transforms | Modifica headers, path, query strings | Error de config |
+| **6. Reverse Proxy** | YARP Proxy | Reenvía la petición al servicio destino | 502 Bad Gateway |
+
+> 💡 **Consejo:** El orden importa. Si el Rate Limiting va primero, rechaza peticiones antes de gastar CPU en validar tokens. Si Authentication va antes de Authorization, siempre sabes quién es el usuario antes de decidir si puede hacer algo. Este orden es el estándar de la industria.
 
 ## 31.6. Nginx: La alternativa profesional
 

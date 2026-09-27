@@ -18,6 +18,10 @@
     - [30.5.1. Qué es la consistencia eventual](#3051-qué-es-la-consistencia-eventual)
     - [30.5.2. Ventana de inconsistencia](#3052-ventana-de-inconsistencia)
     - [30.5.3. Cómo manejarla](#3053-cómo-manejarla)
+    - [30.5.4. Diagrama: Ciclo completo con timestamps](#3054-diagrama-ciclo-completo-con-timestamps)
+    - [30.5.5. Diagrama: Lectura durante la ventana de inconsistencia](#3055-diagrama-lectura-durante-la-ventana-de-inconsistencia)
+    - [30.5.6. Diagrama: Polling vs Domain Events](#3056-diagrama-polling-vs-domain-events)
+    - [30.5.7. Diagrama: Manejo de errores en sincronización](#3057-diagrama-manejo-de-errores-en-sincronización)
   - [30.6. Sincronización SQL a MongoDB](#306-sincronización-sql-a-mongodb)
     - [30.6.1. El problema: ¿Qué pasa si sincronizamos TODO?](#3061-el-problema-qué-pasa-si-sincronizamos-todo)
     - [30.6.2. Enfoque 1: Sync Completo (NO recomendado)](#3062-enfoque-1-sync-completo-no-recomendado)
@@ -37,6 +41,7 @@
     - [30.9.2. Commands con MediatR](#3092-commands-con-mediatr)
     - [30.9.3. Queries con MediatR](#3093-queries-con-mediatr)
     - [30.9.4. Pipeline Behaviors](#3094-pipeline-behaviors)
+    - [30.9.5. Diagrama: Flujo completo de Commands y Queries](#3095-diagrama-flujo-completo-de-commands-y-queries)
   - [30.10. Sincronización con Domain Events y MediatR](#3010-sincronización-con-domain-events-y-mediatr)
     - [30.10.1. La idea clave: ya tienes los datos en memoria](#30101-la-idea-clave-ya-tienes-los-datos-en-memoria)
     - [30.10.2. Código de ejemplo](#30102-código-de-ejemplo)
@@ -631,6 +636,256 @@ return Ok(new {
 });
 ```
 
+### 30.5.4. Diagrama: Ciclo completo con timestamps
+
+Este diagrama muestra el **ciclo de vida completo** de una operación CQRS con consistencia eventual, marcando cada instante de tiempo para que veas exactamente **dónde** ocurre la latencia:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Admin as Administrador
+    participant API as API (Controller)
+    participant WriteBD as PostgreSQL (Escritura)
+    participant Sync as SyncService
+    participant ReadBD as MongoDB (Lectura)
+    participant Cliente as Cliente
+
+    Note over Admin,Cliente: t=0s — El admin crea un producto
+
+    Admin->>API: POST /api/productos
+    API->>WriteBD: INSERT INTO Productos
+    WriteBD-->>API: OK (id=42)
+    API-->>Admin: 201 Created {id: 42}
+
+    Note over Admin,Cliente: t=0.5s — Un cliente consulta el producto nuevo
+
+    Cliente->>ReadBD: GET /api/productos/42
+    ReadBD-->>Cliente: 404 Not Found ❌ (aún no existe)
+
+    Note over Admin,Cliente: t=2s — El SyncService detecta el cambio
+
+    Sync->>WriteBD: SELECT producto 42 con JOINs
+    WriteBD-->>Sync: Producto + Categoria + Proveedor
+    Sync->>ReadBD: ReplaceOne (upsert)
+    ReadBD-->>Sync: OK
+
+    Note over Admin,Cliente: t=2.5s — El cliente vuelve a consultar
+
+    Cliente->>ReadBD: GET /api/productos/42
+    ReadBD-->>Cliente: 200 OK ✅ (producto completo)
+
+    Note over Cliente: Ventana de inconsistencia: t=0s a t=2s (2 segundos)
+```
+
+📌 Ejemplo real: **Instagram** tiene esta misma ventana. Cuando publicas una foto, tus seguidores no la ven al instante. En 2-5 segundos, los servidores de lectura se actualizan y la foto aparece.
+
+**¿Qué Determina el Tamaño de la Ventana?**
+
+| Factor | Ventana corta (< 1s) | Ventana larga (> 5min) |
+|--------|----------------------|------------------------|
+| **Mecanismo** | Domain Events o CDC | Polling cada 5 min |
+| **Carga del sistema** | Baja | Alta (muchos registros) |
+| **Latencia de red** | Baja (mismos servidores) | Alta (servidores lejanos) |
+| ** Complejidad** | Media-Alta | Baja |
+
+### 30.5.5. Diagrama: Lectura durante la ventana de inconsistencia
+
+Este diagrama muestra **qué pasa exactamente** cuando un cliente lee datos **dentro** de la ventana de inconsistencia, y cómo el sistema maneja esa situación:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Admin as Administrador
+    participant WriteBD as PostgreSQL
+    participant Sync as SyncService
+    participant ReadBD as MongoDB
+    participant Cliente1 as Cliente A (lento)
+    participant Cliente2 as Cliente B (rápido)
+
+    Note over Admin,Cliente2: Escenario: Dos clientes consultan el mismo producto
+
+    Admin->>WriteBD: UPDATE precio: 89.99 → 99.99
+    WriteBD-->>Admin: OK (precio actualizado)
+
+    Note over Cliente1: Cliente A consulta INMEDIATAMENTE
+
+    Cliente1->>ReadBD: GET /api/productos/42
+    ReadBD-->>Cliente1: 200 OK {precio: 89.99} ⚠️ (precio viejo)
+
+    Note over Sync: SyncService detecta cambio (2s después)
+
+    Sync->>WriteBD: SELECT producto 42
+    WriteBD-->>Sync: {precio: 99.99}
+    Sync->>ReadBD: ReplaceOne {precio: 99.99}
+    ReadBD-->>Sync: OK
+
+    Note over Cliente2: Cliente B consulta DESPUÉS del sync
+
+    Cliente2->>ReadBD: GET /api/productos/42
+    ReadBD-->>Cliente2: 200 OK {precio: 99.99} ✅ (precio nuevo)
+
+    Note over Cliente1,Cliente2: Cliente A vio precio viejo, Cliente B vio precio nuevo
+    Note over Cliente1,Cliente2: Ambos son válidos: consistencia eventual
+```
+
+📌 Ejemplo real: **Amazon** maneja esto mostrando "precio puede variar según el vendedor". Cuando un vendedor baja un precio, algunos usuarios ven el precio viejo unos segundos. No es un error: es consistencia eventual.
+
+**¿Qué Hace la API con Datos Potencialmente Obsoletos?**
+
+```csharp
+// Opción 1: Mostrar timestamp de última sync
+public record ProductoReadDto(
+    long Id,
+    string Nombre,
+    decimal Precio,
+    DateTime SyncAt  // "Última actualización: hace 30 segundos"
+);
+
+// Opción 2: Aceptar la ventana y documentarla
+// En la documentación de la API:
+// "Los datos de lectura pueden tener una latencia de hasta 5 segundos
+//  respecto a las escrituras"
+```
+
+### 30.5.6. Diagrama: Polling vs Domain Events
+
+Compara visualmente **cuánto tiempo** tarda cada enfoque en sincronizar. La diferencia es abismal:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Admin as Administrador
+    participant WriteBD as PostgreSQL
+    participant Polling as Polling (BackgroundService)
+    participant Events as Domain Events (MediatR)
+    participant ReadBD as MongoDB
+    participant Cliente as Cliente
+
+    Note over Admin,Cliente: PARTE 1: Polling cada 60 segundos
+
+    Admin->>WriteBD: INSERT producto (t=0s)
+    WriteBD-->>Admin: OK
+
+    Note over Polling: Esperando... 58 segundos más
+
+    Polling->>WriteBD: SELECT * WHERE UpdatedAt > lastSync
+    WriteBD-->>Polling: 3 productos cambiados
+    Polling->>ReadBD: ReplaceOne × 3
+    ReadBD-->>Polling: OK
+
+    Note over Cliente: t=60s: Cliente finalmente ve el producto
+
+    Note over Admin,Cliente: PARTE 2: Domain Events (instantáneo)
+
+    Admin->>WriteBD: INSERT producto (t=0s)
+    WriteBD-->>Admin: OK
+
+    Note over Events: ¡Evento publicado INMEDIATAMENTE!
+
+    Events->>ReadBD: ReplaceOne (upsert)
+    ReadBD-->>Events: OK
+
+    Note over Cliente: t=0.5s: Cliente ve el producto casi al instante
+```
+
+| Métrica | Polling (60s) | Domain Events |
+|---------|---------------|---------------|
+| **Latencia máxima** | 60 segundos | < 1 segundo |
+| **Latencia promedio** | 30 segundos | ~0.5 segundos |
+| **CPU extra en SQL** | Consulta cada 60s | Solo cuando hay cambio |
+| **Complejidad** | Baja | Media |
+| **¿Cuándo usarlo?** | Datos que cambian poco, poca latencia aceptable | Datos en tiempo real, UX crítica |
+
+📌 Ejemplo real: **Twitter/X** usa Domain Events. Cuando publicas un tweet, aparece en el timeline de tus seguidores en menos de 1 segundo. Con polling, tardaría minutos.
+
+### 30.5.7. Diagrama: Manejo de errores en sincronización
+
+¿Qué pasa si la sincronización **falla**? Este diagrama muestra el flujo de reintentos y cómo se recupera el sistema:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Admin as Administrador
+    participant WriteBD as PostgreSQL
+    participant Sync as SyncService
+    participant ReadBD as MongoDB
+    participant Log as Logs
+
+    Admin->>WriteBD: INSERT producto
+    WriteBD-->>Admin: OK
+
+    Note over Sync: Intento 1: Sync falla (MongoDB caído)
+
+    Sync->>ReadBD: ReplaceOne
+    ReadBD-->>Sync: ❌ TimeoutException
+
+    Sync->>Log: Registrar error: "Sync falló para producto 42"
+    Note over Sync: Esperar 5 segundos (backoff)
+
+    Note over Sync: Intento 2: Reintentar
+
+    Sync->>ReadBD: ReplaceOne
+    ReadBD-->>Sync: ❌ TimeoutException (sigue caído)
+
+    Sync->>Log: Registrar error: "Reintento 2 falló para producto 42"
+    Note over Sync: Esperar 15 segundos (backoff exponencial)
+
+    Note over Sync: Intento 3: MongoDB se recupera
+
+    Sync->>ReadBD: ReplaceOne
+    ReadBD-->>Sync: ✅ OK
+
+    Sync->>Log: Registrar éxito: "Sync completado para producto 42"
+```
+
+📌 Ejemplo real: **Netflix** usa reintentos con backoff exponencial para sincronizar datos entre centros de datos. Si un centro está caído, reintenta automáticamente sin perder datos.
+
+**Estrategias de Recuperación:**
+
+| Estrategia | Descripción | Cuándo usar |
+|------------|-------------|-------------|
+| **Reintento simple** | Reintentar N veces con delay fijo | Errores transitorios (red) |
+| **Backoff exponencial** | Delay crece: 5s, 15s, 45s... | Sobrecarga temporal |
+| **Dead Letter Queue** | Eventos fallidos van a una cola para revisar después | Errores persistentes |
+| **Idempotencia** | Reintentar sin crear duplicados | Siempre (buena práctica) |
+
+```csharp
+// Ejemplo de reintento con backoff exponencial
+public class SyncProductoHandler(
+    MongoDbContext mongoContext,
+    ILogger<SyncProductoHandler> logger) : INotificationHandler<ProductoCreadoEvent>
+{
+    private const int MaxRetries = 3;
+
+    public async Task Handle(ProductoCreadoEvent notification, CancellationToken ct)
+    {
+        for (int intento = 1; intento <= MaxRetries; intento++)
+        {
+            try
+            {
+                var read = MapToReadModel(notification.Producto);
+                await mongoContext.ProductosRead.ReplaceOneAsync(
+                    p => p.Id == notification.Producto.Id,
+                    read,
+                    new ReplaceOptions { IsUpsert = true }, ct);
+                return; // Éxito
+            }
+            catch (Exception ex) when (intento < MaxRetries)
+            {
+                var delay = TimeSpan.FromSeconds(5 * intento); // 5s, 10s, 15s
+                logger.LogWarning(ex,
+                    "Sync falló (intento {Intento}/{Max}), retry en {Delay}s",
+                    intento, MaxRetries, delay.TotalSeconds);
+                await Task.Delay(delay, ct);
+            }
+        }
+        // Si agota reintentos: log error crítico (no perder el dato)
+        logger.LogError("Sync agotó reintentos para producto {Id}",
+            notification.Producto.Id);
+    }
+}
+```
+
 ## 30.6. Sincronización SQL a MongoDB
 
 El objetivo de la sincronización es **reducir la latencia** de la consistencia eventual. Cuanto más rápido sincronicemos, menor será la ventana de inconsistencia.
@@ -1157,6 +1412,111 @@ public class LoggingBehavior<TRequest, TResponse>(
 ```
 
 📌 Ejemplo real: **Uber** usa behaviors para validar que el conductor tenga licencia antes de procesar un viaje. El behavior se ejecuta antes del handler y verifica los permisos.
+
+### 30.9.5. Diagrama: Flujo completo de Commands y Queries
+
+Este diagrama muestra **todos los dominios** fluyendo a través de MediatR: Commands (Create, Update, Delete), Queries (GetAll, GetById) y la sincronización a MongoDB vía Domain Events. Observa cómo cada uno recorre el **pipeline completo** con Behaviors intercalados:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Ctrl as Controller
+    participant MediatR as MediatR
+    participant Log as LoggingBehavior
+    participant Valid as ValidationBehavior
+    participant Cache as CachingBehavior
+    participant Handler as Command/Query Handler
+    participant Repo as Repository (PostgreSQL)
+    participant Domain as Domain Events
+    participant Sync as SyncHandler
+    participant Mongo as MongoDB
+
+    Note over Ctrl,Mongo: ═══ COMMAND: Crear Producto ═══
+
+    Ctrl->>MediatR: Send(CreateProductoCommand)
+    MediatR->>Log: Handle(CreateProductoCommand)
+    Log->>Valid: next()
+    Valid->>Cache: next()
+    Cache->>Handler: next() → Handle()
+    Handler->>Repo: Add(producto)
+    Handler->>Repo: SaveChangesAsync()
+    Repo-->>Handler: OK (id=42)
+    Handler->>MediatR: Publish(ProductoCreadoEvent)
+    MediatR->>Sync: Handle(ProductoCreadoEvent)
+    Sync->>Sync: Mapear a formato documento
+    Sync->>Mongo: ReplaceOne (upsert)
+    Mongo-->>Sync: OK
+    Handler-->>Ctrl: Producto creado
+    Ctrl-->>Ctrl: 201 Created
+
+    Note over Ctrl,Mongo: ═══ COMMAND: Actualizar Producto ═══
+
+    Ctrl->>MediatR: Send(UpdateProductoCommand)
+    MediatR->>Log: Handle(UpdateProductoCommand)
+    Log->>Valid: next()
+    Valid->>Cache: next()
+    Cache->>Handler: next() → Handle()
+    Handler->>Repo: GetByIdAsync(42)
+    Repo-->>Handler: Producto existente
+    Handler->>Repo: Update(producto)
+    Handler->>Repo: SaveChangesAsync()
+    Repo-->>Handler: OK
+    Handler->>MediatR: Publish(ProductoActualizadoEvent)
+    MediatR->>Sync: Handle(ProductoActualizadoEvent)
+    Sync->>Mongo: ReplaceOne (upsert)
+    Mongo-->>Sync: OK
+    Handler-->>Ctrl: Producto actualizado
+    Ctrl-->>Ctrl: 200 OK
+
+    Note over Ctrl,Mongo: ═══ COMMAND: Eliminar Producto ═══
+
+    Ctrl->>MediatR: Send(DeleteProductoCommand)
+    MediatR->>Log: Handle(DeleteProductoCommand)
+    Log->>Valid: next()
+    Valid->>Handler: next() → Handle()
+    Handler->>Repo: GetByIdAsync(42)
+    Repo-->>Handler: Producto existente
+    Handler->>Repo: Remove(producto)
+    Handler->>Repo: SaveChangesAsync()
+    Repo-->>Handler: OK
+    Handler->>MediatR: Publish(ProductoEliminadoEvent)
+    MediatR->>Sync: Handle(ProductoEliminadoEvent)
+    Sync->>Mongo: DeleteOne
+    Mongo-->>Sync: OK
+    Handler-->>Ctrl: true
+    Ctrl-->>Ctrl: 200 OK
+
+    Note over Ctrl,Mongo: ═══ QUERY: Buscar Productos ═══
+
+    Ctrl->>MediatR: Send(SearchProductosQuery)
+    MediatR->>Log: Handle(SearchProductosQuery)
+    Log->>Cache: next()
+    Cache->>Handler: next() → Handle()
+    Handler->>Repo: SearchAsync("teclado")
+    Repo-->>Handler: List<Producto>
+    Handler-->>Ctrl: List<Producto>
+    Ctrl-->>Ctrl: 200 OK
+```
+
+📌 Ejemplo real: **Amazon** usa este patrón completo. Cuando un vendedor crea un producto (Command), pasa por validación, logging y sincronización. Cuando un cliente busca (Query), pasa por cache y logging. Todo desacoplado vía MediatR.
+
+**Resumen del Flujo por Tipo de Operación:**
+
+| Operación | Tipo | Pipeline | Destino |
+|-----------|------|----------|---------|
+| `CreateProductoCommand` | Command | Log → Valid → Handler → Event → Sync | PostgreSQL → MongoDB |
+| `UpdateProductoCommand` | Command | Log → Valid → Handler → Event → Sync | PostgreSQL → MongoDB |
+| `DeleteProductoCommand` | Command | Log → Valid → Handler → Event → Sync | PostgreSQL → MongoDB |
+| `GetAllProductosQuery` | Query | Log → Cache → Handler | PostgreSQL |
+| `GetProductoByIdQuery` | Query | Log → Cache → Handler | PostgreSQL |
+| `SearchProductosQuery` | Query | Log → Cache → Handler | PostgreSQL |
+
+**¿Por qué es importante este diagrama?**
+
+1. **Desacoplamiento**: El Controller no sabe qué Handler procesa el Command. Solo envía a MediatR.
+2. **Pipeline configurable**: Los Behaviors (Log, Valid, Cache) se ejecutan en orden y se pueden añadir/quitar sin tocar Handlers.
+3. **Domain Events**: Después de cada Command, se publica un evento que sincroniza MongoDB. La sincronización es **parte del mismo flujo**.
+4. **Consistencia**: El evento se publica **después** de `SaveChangesAsync`. Si la escritura falla, nunca se publica el evento.
 
 ## 30.10. Sincronización con Domain Events y MediatR
 
