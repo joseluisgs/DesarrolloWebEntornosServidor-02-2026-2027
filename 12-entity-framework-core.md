@@ -58,6 +58,7 @@
     - [12.13.5. Borrado lógico](#12135-borrado-lógico)
     - [12.13.6. Consultas típicas](#12136-consultas-típicas)
   - [12.14. Migraciones](#1214-migraciones)
+    - [12.14.1. Migraciones sobre una BD existente (baseline)](#12141-migraciones-sobre-una-bd-existente-baseline)
   - [12.15. Seed Data](#1215-seed-data)
   - [12.16. Logging](#1216-logging)
   - [12.17. Control de Concurrencia](#1217-control-de-concurrencia)
@@ -857,6 +858,32 @@ dotnet ef migrations script
 ```
 
 📌 Ejemplo real: **Netflix** usa migraciones para gestionar cambios de esquema en sus microservicios. Cada cambio de BD es una migración versionada que se aplica automáticamente en despliegue.
+
+### 12.14.1. Migraciones sobre una BD existente (baseline)
+
+El caso real: tu API ya está **en producción con datos** y llevas meses usando `Database.EnsureCreated()`. Aquí hay una trampa clásica:
+
+> ⚠️ **Advertencia:** `EnsureCreated` **solo crea la BD si no existe**. Si ya existe, **no toca nada**: no añade tablas nuevas, no añade índices, no modifica el esquema. Tus "mejoras de rendimiento" (índices, columnas) **nunca llegarán** a una BD ya creada.
+
+La solución es migrar a EF Core Migrations con un **baseline** (línea base):
+
+1. **Crear la migración inicial** del esquema *tal como está hoy*: `dotnet ef migrations add InitialCreate`.
+2. **En producción**, sustituir `EnsureCreated()` por `context.Database.Migrate()`:
+   - BD nueva → la crea y aplica todo.
+   - BD existente **sin** `__EFMigrationsHistory` → necesita el paso 3.
+3. **El baseline:** se crea la tabla `__EFMigrationsHistory` y se marca `InitialCreate` como aplicada **sin ejecutarla**. Así `Migrate()` solo aplica las migraciones **futuras** y **los datos quedan intactos**.
+4. **En desarrollo** puedes seguir con `EnsureDeleted + EnsureCreated` (más rápido) o usar también `Migrate()`.
+
+```csharp
+// Producción: aplica solo lo pendiente, sin tocar los datos existentes
+context.Database.Migrate();
+```
+
+> 💡 **Analogía:** El baseline es sellar el expediente: "todo lo anterior ya está hecho"; a partir de aquí, solo se ejecuta lo nuevo.
+
+📌 **Ejemplo real:** TiendaAPI hizo exactamente esto: generó `InitialCreate` (tablas + los 3 índices únicos que ya existían), lo marcó como aplicada sin ejecutarlo, y después `AddOptimizationIndexes` (5 índices de rendimiento) se ejecutó al arrancar sobre la BD viva. Verificado con datos: usuarios, categorías y productos **intactos** tras migrar.
+
+> 💡 **Truco:** si al ejecutar `dotnet ef` se ejecuta tu `Program.cs` en design-time y eso borra la BD (por tu código de arranque), define un `IDesignTimeDbContextFactory<TContext>`: las herramientas EF usarán esa fábrica y no arrancarán la aplicación.
 
 ## 12.15. Seed Data
 

@@ -27,7 +27,12 @@
     - [11.6.1. Organización de carpetas](#1161-organización-de-carpetas)
     - [11.6.2. Capas y sus contenidos](#1162-capas-y-sus-contenidos)
   - [11.7. Buenas prácticas](#117-buenas-prácticas)
-  - [11.8. Reto](#118-reto)
+  - [11.8. Decisiones de arquitectura: ADRs](#118-decisiones-de-arquitectura-adrs)
+    - [11.8.1. ¿Qué es un ADR?](#1181-qué-es-un-adr)
+    - [11.8.2. Plantilla de ADR (formato MADR)](#1182-plantilla-de-adr-formato-madr)
+    - [11.8.3. Ejemplo completo: rate limiting nativo](#1183-ejemplo-completo-rate-limiting-nativo)
+    - [11.8.4. Reglas de oro](#1184-reglas-de-oro)
+  - [11.9. Reto](#119-reto)
 
 
 
@@ -623,7 +628,119 @@ MiApi/
 - **Clean Architecture para equipos:** En proyectos con varios desarrolladores, Clean Architecture da claridad
 
 
-## 11.8. Reto
+## 11.8. Decisiones de arquitectura: ADRs
+
+Hemos comparado capas, Onion y Clean... y llegará el día en que tu equipo tenga que **elegir**. El problema no es decidir: es que seis meses después nadie recuerda **por qué** se decidió.
+
+### 11.8.1. ¿Qué es un ADR?
+
+Un **ADR** (*Architecture Decision Record*, "registro de decisiones de arquitectura") es un fichero de texto corto que documenta **una decisión importante** de forma que cualquiera (incluido el "yo" del futuro) pueda entenderla.
+
+📌 **Ejemplo real:** El término lo acuñó **Michael Nygard en 2011** con su artículo *"Documenting Architecture Decisions"*. Desde entonces, multitud de equipos lo usan con plantillas como **MADR** (*Markdown Any Decision Records*).
+
+**¿Para qué sirve?**
+
+| Sin ADR | Con ADR |
+|---------|---------|
+| "¿Por qué usamos MediatR?" — "Porque sí, ya estaba" | El ADR-0003 lo explica con contexto y opciones |
+| Discusiones que se repiten cada semestre | La decisión ya está tomada y justificada |
+| Un nuevo ve el código y "mejora" lo que no estaba roto | El ADR avisa de las consecuencias que asumiste |
+
+> 💡 **Analogía:** Es la bitácora de un barco: no te dice hacia dónde va ahora (eso es el README), te dice **por qué giró** cuando el capitán lo decidió.
+
+### 11.8.2. Plantilla de ADR (formato MADR)
+
+La plantilla más extendida es **MADR**. En el proyecto la verás en inglés; aquí la tienes traducida:
+
+```markdown
+# ADR-0005. Título corto de la decisión
+
+* Estado: propuesta | aceptada | rechazada | obsoleta (reemplazada por ADR-0007)
+* Fecha: 2026-09-27
+* Decisores: equipo API
+
+## Contexto y problema
+
+¿Qué situación obliga a decidir? Dos o tres frases.
+
+## Factores de decisión
+
+* Mantenimiento de la dependencia
+* Compatibilidad con AOT/trimming
+* ...
+
+## Opciones consideradas
+
+1. Opción A
+2. Opción B
+
+## Resultado de la decisión
+
+Elegimos la **opción A** porque <justificación>.
+
+### Consecuencias
+
+* Buena, porque ...
+* Mala, porque ...
+```
+
+Los campos clave son **Estado**, **Contexto**, **Opciones** y **Consecuencias**: si no puedes rellenar las opciones, probablemente no haya decisión (solo una imposición).
+
+### 11.8.3. Ejemplo completo: rate limiting nativo
+
+Este es un ADR real de nuestro ámbito: la decisión de sustituir `AspNetCoreRateLimit` por la API nativa de .NET (la que viste en el tema 23, sección 23.5.2).
+
+```markdown
+# ADR-0005. Rate limiting nativo de .NET en vez de AspNetCoreRateLimit
+
+* Estado: Aceptada
+* Fecha: 2026-09-27
+* Decisores: equipo API
+
+## Contexto y problema
+
+Necesitamos limitar peticiones por IP. El paquete `AspNetCoreRateLimit` lleva más de
+4 años sin mantenimiento y no trae las cabeceras `RateLimit-*` que pide el estándar.
+
+## Factores de decisión
+
+* Dependencia mantenida y compatible con .NET 10
+* Control de las cabeceras de respuesta
+* Superficie de código que tenemos que mantener nosotros
+
+## Opciones consideradas
+
+1. Seguir con `AspNetCoreRateLimit`
+2. Usar `System.Threading.RateLimiting` + middleware propio
+
+## Resultado de la decisión
+
+Elegimos la **opción 2**: viene con el framework y nos deja definir las 4 reglas
+y los headers exactamente como queremos.
+
+### Consecuencias
+
+* Buena, porque eliminamos una dependencia abandonada y controlamos el 429.
+* Buena, porque las cabeceras `RateLimit-*` y `Retry-After` quedan como exige el estándar.
+* Mala, porque tenemos que escribir y mantener ~100 líneas de middleware.
+```
+
+> 📝 **Nota:** Un ADR **aceptada no se edita**. Si dentro de un año cambias de opinión, escribes un ADR nuevo y el antiguo pasa a `Estado: obsoleta (reemplazada por ADR-0012)`. Así queda la **historia** de las decisiones.
+
+### 11.8.4. Reglas de oro
+
+- **Uno por decisión:** si un fichero documenta tres decisiones, en realidad no documenta ninguna.
+- **Corto:** una o dos páginas. Si no cabe, es un diseño, no un ADR.
+- **En el momento:** se escribe mientras se decide; reconstruirlo meses después es ficción.
+- **Con opciones reales:** documenta al menos dos alternativas contempladas.
+- **Versionado con el código:** vive en el repositorio (`doc/adr/0005-titulo.md`), se revisa en el mismo PR.
+- **No todo es un ADR:** solo decisiones con **coste de cambiar de opinión** (elegir ORM, sí; elegir nombre de variable, no).
+
+> 💡 **Consejo:** Numera los ficheros (`0001-`, `0002-`...): el orden te enseña la **evolución** de la arquitectura del proyecto de un vistazo.
+
+> ⚠️ **Advertencia:** El ADR más peligroso es el que no existe: sin él, el siguiente desarrollador "arreglará" tu decisión porque nadie dejó escrita la razón.
+
+## 11.9. Reto
 
 > Diseña la arquitectura de FunkoApp.
 

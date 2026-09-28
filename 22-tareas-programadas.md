@@ -24,6 +24,7 @@
   - [22.7. Monitoreo y Logging](#227-monitoreo-y-logging)
   - [22.8. Testing de tareas programadas](#228-testing-de-tareas-programadas)
   - [22.9. Buenas prácticas](#229-buenas-prácticas)
+    - [22.9.1. Endurecer el fire-and-forget](#2291-endurecer-el-fire-and-forget)
   - [22.10. Comparación de opciones](#2210-comparación-de-opciones)
   - [22.11. Reto: Sistema de Tareas para FunkoApp](#2211-reto-sistema-de-tareas-para-funkoapp)
 
@@ -946,6 +947,41 @@ Thread.Sleep(10000);                          // ¡NUNCA hacer esto!
 // ✅ BUENO: Task.Delay es no bloqueante y respeta CancellationToken
 await Task.Delay(_interval, stoppingToken);
 ```
+
+### 22.9.1. Endurecer el fire-and-forget
+
+A veces quieres lanzar un trabajo **sin esperar** a que termine: invalidar una caché, enviar un email, avisar por WebSocket. Eso es **fire-and-forget** ("lanza y olvídate"). El problema: si descartas la Task (`_ = ...`) y la lambda lanza una excepción, **nadie la ve**... y en producción se convierte en un fallo silencioso.
+
+```csharp
+// ❌ MALO: si algo lanza dentro, la excepción se pierde
+_ = Task.Run(() => _cache.Remove($"producto:{id}"));
+
+// ✅ BUENO: guarda interior con log (sin await y sin WhenAll, a propósito)
+_ = Task.Run(() =>
+{
+    try
+    {
+        _cache.Remove($"producto:{id}");
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning(ex, "No se pudo invalidar la caché de {Key}", $"producto:{id}");
+    }
+});
+```
+
+📌 **Ejemplo real:** en TiendaAPI hicieron inventario de **29** llamadas `_ = Task.Run(...)` (13 en Producto, 11 en Pedidos, 3 en Usuario, 2 en Categoría). 28 ya tenían la guarda `try/catch` interior; se endureció la única que no la tenía (invalidación de caché en `UserService`). Todas **sin `await` y sin `WhenAll`**: el punto justamente es no esperar.
+
+**¿Qué nivel de log?**
+
+| Situación | Nivel | Motivo |
+|-----------|-------|--------|
+| Fallo "secundario" (caché, WebSocket, email) | `LogWarning` | La respuesta ya se envió; el efecto se reintentará |
+| Fallo en el flujo principal (p. ej. crear pedido) | `LogError` | El usuario sí lo notó: merece alerta |
+
+> 💡 **Consejo:** Si **necesitas** el resultado o el error, eso no es fire-and-forget: haz `await`. Y si lanzas varias sin esperar entre sí pero sí quieres comprobar todas al final: `await Task.WhenAll(tarea1, tarea2)`.
+
+> ⚠️ **Advertencia:** Un `_ = Task.Run(...)` lanzado desde un request HTTP puede ejecutarse **después** de que se envíe la respuesta, cuando el scope de DI de la petición ya se ha disposed: recibirás un `ObjectDisposedException` de vez en cuando. Para trabajo que debe sobrevivir al request, usa un `BackgroundService` o una cola (secciones 22.3 y 22.5).
 
 ## 22.10. Comparación de opciones
 

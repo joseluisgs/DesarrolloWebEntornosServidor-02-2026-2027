@@ -26,6 +26,7 @@
     - [3.6.9. Pruebas PUT](#369-pruebas-put)
     - [3.6.10. Pruebas DELETE](#3610-pruebas-delete)
     - [3.6.11. Pruebas de error](#3611-pruebas-de-error)
+    - [3.6.12. Alternativa: archivos .http](#3612-alternativa-archivos-http)
   - [3.7. Buenas prácticas](#37-buenas-prácticas)
   - [3.8. Reto: API de Funkos con CRUD en memoria](#38-reto-api-de-funkos-con-crud-en-memoria)
     - [3.8.1. Contexto](#381-contexto)
@@ -466,6 +467,82 @@ Content-Type: application/json
 Respuesta esperada: `400 Bad Request` **solo si el endpoint tiene validación** (Data Annotations en el DTO — ver [Punto 8: DTOs, Mapeadores y Validaciones](08-dtos-mapeadores-validaciones.md) — o `RequireValidation()`). **Sin validación, el endpoint devuelve `201 Created`** aunque el nombre venga vacío.
 
 > ⚠️ **Advertencia:** Si usas HTTPS, Bruno puede pedirte que aceptes el certificado autofirmado. Aceptalo en el primer request.
+
+### 3.6.12. Alternativa: archivos .http
+
+Bruno es cómodo para explorar, pero para **probar tu CRUD y versionarlo junto al código** hay algo aún más ligero: los ficheros **`.http`** (o `.rest`), que Rider ejecuta **sin salir del IDE**.
+
+📌 **Ejemplo real:** el **HTTP Client** de JetBrains (Rider e IntelliJ) interpreta ficheros `.http` en formato *"Request in Editor"*: escribes la petición como texto, pinchas la flecha del gutter y ves la respuesta al lado. En VS Code hace lo mismo la extensión **REST Client**.
+
+**Sintaxis básica:** cada petición se separa con `###` (y puedes dejar un comentario tras él):
+
+```http
+### Obtener todos los productos
+GET http://localhost:5000/api/productos
+Accept: application/json
+
+### Crear producto (400 si no lleva validación)
+POST http://localhost:5000/api/productos
+Content-Type: application/json
+
+{
+  "nombre": "Teclado mecánico",
+  "precio": 89.99
+}
+
+### Obtener uno que no existe (devuelve 404)
+GET http://localhost:5000/api/productos/99999
+Accept: application/json
+```
+
+- `#` o `//` para comentarios fuera de la petición.
+- Varias peticiones en un mismo fichero, cada una ejecutable por separado.
+
+**Variables en el propio fichero** (evitan repetir la URL):
+
+```http
+@host = http://localhost:5000
+
+### Listado
+GET {{host}}/api/productos
+
+### Alta
+POST {{host}}/api/productos
+Content-Type: application/json
+
+{ "nombre": "Ratón", "precio": 25.50 }
+```
+
+**Variables por entorno y secretos:** al lado del `.http`, Rider lee dos ficheros:
+
+| Fichero | Qué guarda | ¿Se sube a git? |
+|---------|------------|-----------------|
+| `http-client.env.json` | `host`, puerto, ids por entorno (dev/prod) | ✅ Sí |
+| `http-client.private.env.json` | tokens, contraseñas | ❌ No |
+
+```json
+// http-client.env.json
+{
+  "development": { "host": "http://localhost:5000" },
+  "production": { "host": "https://api.mi-tienda.com" }
+}
+```
+
+```http
+### Con variable de entorno
+GET {{host}}/api/productos
+Authorization: Bearer {{token}}
+```
+
+> ⚠️ **Advertencia:** Nunca pegues tokens en el `.http`. Lo privado va en `http-client.private.env.json` (que se ignora en git); lo compartible, en `http-client.env.json`.
+
+| Herramienta | Ideal para | Vive en |
+|-------------|------------|---------|
+| **Bruno** | Colecciones gráficas compartidas, con scripts | Su propio formato en el repo |
+| **`.http`** | Probar el CRUD actual, versionado con el código | Ficheros de texto en el repo |
+| **curl** | Rápido desde terminal/CI | Donde tú quieras |
+
+> 💡 **Consejo:** versiona los `.http` en el repositorio: son **documentación viva** que además se ejecuta. Cualquiera clona el proyecto y prueba la API sin instalar nada más.
 
 ## 3.7. Buenas prácticas
 

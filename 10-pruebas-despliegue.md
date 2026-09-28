@@ -13,8 +13,9 @@
     - [10.4.2. Multi-stage build](#1042-multi-stage-build)
     - [10.4.3. Docker Compose](#1043-docker-compose)
   - [10.5. Podman: la alternativa a Docker](#105-podman-la-alternativa-a-docker)
-  - [10.6. Buenas prácticas](#106-buenas-prácticas)
-  - [10.7. Reto](#107-reto)
+  - [10.6. Verificación automatizada del repo](#106-verificación-automatizada-del-repo)
+  - [10.7. Buenas prácticas](#107-buenas-prácticas)
+  - [10.8. Reto](#108-reto)
 
 
 
@@ -378,7 +379,56 @@ flowchart TD
 ```
 
 
-## 10.6. Buenas prácticas
+## 10.6. Verificación automatizada del repo
+
+Ningún equipo puede recordar a mano todas las reglas del repositorio: formato, compilación sin avisos, tests, dependencias vulnerables, documentación... La solución son **scripts de verificación** que se ejecutan solos y **fallan en rojo** si algo no cumple.
+
+📌 **Ejemplo real:** TiendaAPI tiene una carpeta `scripts/` con varios verificadores que se ejecutan antes de cada commit: `check-style.ps1` (estilo), `check-audit.mjs` (vulnerabilidades NuGet), `check-docs.mjs` (documentación) y `check-parity.mjs` (que dos variantes del proyecto sigan igual). **Si uno falla, no se commitea.**
+
+| Verificador | Qué comprueba | Herramienta base |
+|-------------|---------------|------------------|
+| `check-style` | Formato y estilo del código | `dotnet format --verify-no-changes` |
+| `check-audit` | Dependencias con vulnerabilidades | `dotnet list package --vulnerable` |
+| `check-docs` | Que la documentación cumpla la plantilla | script propio (expresiones regulares) |
+| `check-openapi` | Que el contrato OpenAPI no haya cambiado | diff del `swagger.json` (ver tema 28) |
+
+Los comandos que usan **ya los conoces** (tema 00, secciones 5 y 9). Lo único nuevo es el envoltorio: un script que los ejecuta en orden y **devuelve un código de salida distinto de cero** si algo falla.
+
+```powershell
+# scripts/check-style.ps1 - verifica el estilo SIN modificar ficheros
+Write-Host "Verificando formato..." -ForegroundColor Cyan
+dotnet format --verify-no-changes
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "ERROR: hay ficheros mal formateados (ejecuta: dotnet format)" -ForegroundColor Red
+    exit 1          # ← esto es lo que rompe la ejecución
+}
+
+Write-Host "OK: estilo correcto" -ForegroundColor Green
+```
+
+Y la batería completa, orquestada:
+
+```powershell
+# scripts/check.ps1 - se ejecuta antes de cada commit importante
+./scripts/check-style.ps1          # 1. Estilo
+dotnet build --warnaserror         # 2. Compila sin avisos (los avisos son errores)
+dotnet test                        # 3. Tests en verde
+dotnet list package --vulnerable   # 4. Sin vulnerabilidades conocidas
+```
+
+```bash
+# Y en CI (GitHub Actions, GitLab CI...), el mismo guion:
+./scripts/check.ps1
+```
+
+> ⚠️ **Advertencia:** Un verificador que **imprime** el error pero sale con código `0` no verifica nada: la CI lo daría por bueno. La clave es siempre el `exit 1` (PowerShell) o `process.exit(1)` (Node).
+
+> 💡 **Consejo:** Engánchalos a la **CI** (obligatorio) y, si quieres rapidez local, también a un hook de `pre-commit` de git. La regla: *si no pasa la verificación, no hay commit*.
+
+> 📝 **Nota:** `dotnet format` solo **comprueba** con `--verify-no-changes`; para **arreglar** los ficheros mal formateados, ejecuta `dotnet format` sin ese flag (tema 00, sección 9).
+
+## 10.7. Buenas prácticas
 
 | Práctica | Por qué |
 |----------|---------|
@@ -391,7 +441,7 @@ flowchart TD
 | **Dockerfile multi-stage** | Imágenes pequeñas y seguras |
 | **No subir secrets al Dockerfile** | Usar variables de entorno o docker-compose |
 
-## 10.7. Reto
+## 10.8. Reto
 
 > Testea FunkoApp y despliega la API con Docker.
 

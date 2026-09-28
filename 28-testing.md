@@ -21,10 +21,14 @@
     - [28.9.1. Optimización: un contenedor por assembly](#2891-optimización-un-contenedor-por-assembly)
   - [28.10. Tests de Controladores con WebApplicationFactory](#2810-tests-de-controladores-con-webapplicationfactory)
     - [28.10.1. Tests de la forma de los errores](#28101-tests-de-la-forma-de-los-errores)
-  - [28.11. Tests en Paralelo vs Secuenciales](#2811-tests-en-paralelo-vs-secuenciales)
-  - [28.12. Comandos Utiles](#2812-comandos-utiles)
-  - [28.13. Buenas Practicas](#2813-buenas-practicas)
-  - [28.14. Reto: Tests para FunkoApp](#2814-reto-tests-para-funkoapp)
+  - [28.11. Tests de contrato: OpenAPI](#2811-tests-de-contrato-openapi)
+    - [28.11.1. Cambios que rompen el contrato](#28111-cambios-que-rompen-el-contrato)
+    - [28.11.2. Tu primer test de contrato](#28112-tu-primer-test-de-contrato)
+    - [28.11.3. ¿Dónde encaja en la pirámide?](#28113-dónde-encaja-en-la-pirámide)
+  - [28.12. Tests en Paralelo vs Secuenciales](#2812-tests-en-paralelo-vs-secuenciales)
+  - [28.13. Comandos Utiles](#2813-comandos-utiles)
+  - [28.14. Buenas Practicas](#2814-buenas-practicas)
+  - [28.15. Reto: Tests para FunkoApp](#2815-reto-tests-para-funkoapp)
 
 
 
@@ -848,7 +852,83 @@ public async Task LimiteDePeticiones_Devuelve429_ConHeadersYCuerpo()
 
 > ⚠️ **Advertencia:** Al ser tests de `WebApplicationFactory`, necesitan el `public partial class Program;` del final del `Program.cs` (apartado anterior) y, si la suite comparte contenedor, su propia base de datos creada en el `[OneTimeSetUp]` (apartado 28.9.1).
 
-## 28.11. Tests en Paralelo vs Secuenciales
+## 28.11. Tests de contrato: OpenAPI
+
+En 28.10.1 fijamos la **forma de los errores** de la API. Un paso más allá está el **test de contrato**: comprobar que la especificación OpenAPI publicada (`swagger.json`) **no ha cambiado** sin que nadie lo decidiera. No mide si el código es correcto: mide si la API **sigue prometiendo lo mismo** que ayer.
+
+> 💡 **Analogía:** Es el contrato de un alquiler. Si el casero cambia una cláusula sin avisar, el inquilino (tu Frontend, tu app móvil, el otro equipo) se entera tarde y mal. El documento OpenAPI es lo que tu API **promete** a sus consumidores.
+
+📌 **Ejemplo real:** TiendaAPI existe en dos variantes (API simple y variante CQRS con MediatR). El script `scripts/check-openapi.mjs` arranca ambas (puertos 5041 y 5042), descarga el `swagger.json` de cada una y hace un **diff profundo**: **22 rutas, 39 operaciones y 0 diferencias** significa que las dos cumplen exactamente el mismo contrato.
+
+### 28.11.1. Cambios que rompen el contrato
+
+| Cambio en la API | ¿Rompe contrato? | Ejemplo |
+|------------------|------------------|---------|
+| Eliminar un endpoint | ✅ Sí | `DELETE /funkos` desaparece |
+| Cambiar un código de estado | ✅ Sí | `201 Created` → `200 OK` |
+| Renombrar o eliminar un campo | ✅ Sí | `nombre` → `name` |
+| Cambiar el tipo de un campo | ✅ Sí | `precio` string → number |
+| Añadir un campo opcional | ❌ No | nuevo campo con valor por defecto |
+| Cambiar descripciones o ejemplos | ❌ No | texto libre de Swagger |
+
+> ⚠️ **Advertencia:** "Solo he cambiado el nombre de un campo" es la frase que más Frontends ha roto. El diff lo detecta en milisegundos; tu usuario lo detecta en producción.
+
+### 28.11.2. Tu primer test de contrato
+
+La idea es siempre la misma: **descargar el contrato y compararlo**.
+
+```bash
+# 1. Arranca las dos versiones del servicio (o la de hoy vs la de ayer)
+# 2. Descarga el contrato de cada una
+curl -s http://localhost:5041/swagger/v1/swagger.json -o contrato-a.json
+curl -s http://localhost:5042/swagger/v1/swagger.json -o contrato-b.json
+
+# 3. Compara con un diff profundo (rutas, operaciones, esquemas)
+node scripts/check-openapi.mjs
+```
+
+Y este es el esqueleto de un script equivalente, sin dependencias:
+
+```js
+// check-openapi.mjs (versión mínima, Node 18+)
+const [a, b] = await Promise.all([
+  fetch("http://localhost:5041/swagger/v1/swagger.json").then(r => r.json()),
+  fetch("http://localhost:5042/swagger/v1/swagger.json").then(r => r.json())
+]);
+
+const rutas = doc => Object.keys(doc.paths).sort();
+const soloEnA = rutas(a).filter(r => !rutas(b).includes(r));
+
+if (soloEnA.length > 0) {
+  console.error("❌ Rutas que solo están en un contrato:", soloEnA);
+  process.exit(1); // ← esto es lo que rompe el CI
+}
+
+console.log(`✅ ${rutas(a).length} rutas idénticas`);
+```
+
+La pieza clave es el `process.exit(1)`: un test de contrato **solo sirve si su fallo detiene la ejecución** (CI/CD o pre-commit).
+
+### 28.11.3. ¿Dónde encaja en la pirámide?
+
+- **Más barato que un E2E:** no recorres flujos, solo comparas documentos.
+- **Más fiel que un unit:** valida lo que realmente se expone al exterior.
+- Encaja justo **por debajo de los E2E** y por encima de los tests unitarios de detalle.
+
+> 💡 **Consejo:** Ejecuta el diff **antes de cada despliegue**. Si comparas dos variantes del servicio, ambas deben estar arrancadas; si comparas contra la última versión publicada, versiona el `swagger.json` en el repo y compáralo contra él.
+
+> 📝 **Nota:** Para contratos **entre servicios** (el consumidor declara lo que espera) existen herramientas dedicadas como **Pact**. Para verificar tu propia API publicada, un diff de `swagger.json` es suficiente y no necesita dependencias.
+
+**Resumen de la sección:**
+
+| Concepto | Descripción |
+|----------|-------------|
+| **Contrato OpenAPI** | Lo que tu API promete a sus consumidores |
+| **Cambio roto** | Eliminar endpoints/campos o alterar códigos/tipos |
+| **Test de contrato** | Diff profundo entre dos `swagger.json` (o contra el versionado) |
+| **Gate real** | El script debe terminar con código ≠ 0 para fallar el CI |
+
+## 28.12. Tests en Paralelo vs Secuenciales
 
 NUnit puede ejecutar tests en paralelo para acelerar el tiempo de ejecucion.
 
@@ -870,7 +950,7 @@ public class FunkoIntegrationTests { }
 | Tests que comparten base de datos | **Secuencial** | Evitar conflictos |
 | **Tests con Testcontainers** | **Limitado** | Cada contenedor es pesado |
 
-## 28.12. Comandos Utiles
+## 28.13. Comandos Utiles
 
 ```bash
 # Ejecutar todos los tests
@@ -889,7 +969,7 @@ dotnet test --filter "FullyQualifiedName~FunkoServiceTests"
 dotnet test --filter "Category=Integration"
 ```
 
-## 28.13. Buenas Practicas
+## 28.14. Buenas Practicas
 
 | Practica | Descripcion |
 |----------|-------------|
@@ -906,7 +986,7 @@ dotnet test --filter "Category=Integration"
 
 > ⚠️ **Advertencia:** No sobre-testear. Tests que testean el framework o la implementacion interna son fragiles y se rompen con cambios de refactorizacion. Testea el comportamiento, no la implementacion.
 
-## 28.14. Reto: Tests para FunkoApp
+## 28.15. Reto: Tests para FunkoApp
 
 > Antes de irte, implementa una suite completa de tests para tu API de Funkos.
 

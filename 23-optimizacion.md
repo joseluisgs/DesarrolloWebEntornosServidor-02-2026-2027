@@ -19,6 +19,7 @@
     - [23.4.1. Compresión de respuestas](#2341-compresión-de-respuestas)
     - [23.4.2. Mínimo de peticiones HTTP](#2342-mínimo-de-peticiones-http)
     - [23.4.3. Query Tracking](#2343-query-tracking)
+    - [23.4.4. Serialización JSON source-generated](#2344-serialización-json-source-generated)
   - [23.5. Rate Limiting](#235-rate-limiting)
     - [23.5.1. Rate Limiting con ASP.NET Core](#2351-rate-limiting-con-aspnet-core)
     - [23.5.2. Middleware propio con headers RateLimit-*](#2352-middleware-propio-con-headers-ratelimit)
@@ -550,6 +551,63 @@ var productos = await context.Productos
 ```
 
 📌 **Ejemplo real:** Un endpoint de listado de productos que recibe miles de peticiones por minuto no necesita rastrear cambios. `AsNoTracking` reduce el uso de memoria un 30-40% en estos casos.
+
+### 23.4.4. Serialización JSON source-generated
+
+Casi todas tus respuestas salen serializadas a JSON. Por defecto, `System.Text.Json` lo hace con **reflexión**: en la primera petición de cada tipo descubre sus propiedades "mirándolas" en tiempo de ejecución. Funciona, pero:
+
+- Cuesta CPU justo cuando llega el primer usuario (y en cada proceso nuevo).
+- Usa reflexión, incompatible con las publicaciones **AOT/trimming** (`PublishAot`).
+
+La alternativa es la **source generation**: le dices al compilador qué tipos vas a serializar y él **genera el código de serialización en tiempo de compilación**.
+
+**Paso 1 — Declarar los tipos.** Una clase `partial` que hereda de `JsonSerializerContext`:
+
+```csharp
+[JsonSerializable(typeof(ProductoDto))]
+[JsonSerializable(typeof(List<ProductoDto>))]
+[JsonSerializable(typeof(PagedResult<ProductoDto>))]
+public partial class AppJsonContext : JsonSerializerContext;
+```
+
+📌 **Ejemplo real:** TiendaAPI declara unos 30 tipos en su `AppJsonContext`: todos los DTOs de entrada/salida, los modelos de dominio, los `PagedResult<T>` de paginación y las `List<T>` de respuesta. El compilador genera un fichero por tipo (se ve en `obj/.../System.Text.Json.SourceGeneration/`).
+
+**Paso 2 — Conectarlo.** Declarar la clase **no basta**: hay que indicarle a ASP.NET Core que la use.
+
+```csharp
+// Con controladores
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.TypeInfoResolver = AppJsonContext.Default;
+});
+
+// Con Minimal APIs
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.TypeInfoResolver = AppJsonContext.Default;
+});
+```
+
+> ⚠️ **Advertencia:** Si declaras el contexto y **no lo conectas**, la aplicación sigue usando reflexión: has ganado exactamente cero. El compilador genera el código, pero nadie lo invoca.
+
+> ⚠️ **Advertencia:** Desde .NET 7 **ya no hay fallback silencioso a reflexión**: si serializas un tipo que no está declarado, recibes un `InvalidOperationException` en runtime (*"Metadata for type ... was not provided"*). Lo que antes "funcionaba sin avisar", ahora te avisa... en producción.
+
+**¿Y si me olvido de algún tipo?** Puedes combinar source generation con reflexión como red de seguridad (pero esos tipos no obtienen las ventajas):
+
+```csharp
+options.JsonSerializerOptions.TypeInfoResolver = JsonTypeInfoResolver.Combine(
+    AppJsonContext.Default,
+    new DefaultJsonTypeInfoResolver()); // fallback a reflexión
+```
+
+| Aspecto | Reflexión (por defecto) | Source generation |
+|---------|------------------------|-------------------|
+| Descubrimiento de tipos | En tiempo de ejecución | En tiempo de compilación |
+| Primer arranque | Más lento | Código ya compilado |
+| AOT / trimming | ❌ No compatible | ✅ Compatible |
+| Tipo no declarado | Funciona | ❌ Lanza error en runtime |
+
+> 💡 **Consejo:** Cada vez que añadas un DTO nuevo, añade su `[JsonSerializable]`. Y para no olvidarte: escribe un test que serialice y deserialice todos tus DTOs contra `AppJsonContext.Default`.
 
 ## 23.5. Rate Limiting
 
