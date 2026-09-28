@@ -18,7 +18,9 @@
     - [28.8.2. Tipos de Setup](#2882-tipos-de-setup)
     - [28.8.3. Verify - Verificar Interacciones](#2883-verify---verificar-interacciones)
   - [28.9. Testcontainers](#289-testcontainers)
+    - [28.9.1. Optimización: un contenedor por assembly](#2891-optimización-un-contenedor-por-assembly)
   - [28.10. Tests de Controladores con WebApplicationFactory](#2810-tests-de-controladores-con-webapplicationfactory)
+    - [28.10.1. Tests de la forma de los errores](#28101-tests-de-la-forma-de-los-errores)
   - [28.11. Tests en Paralelo vs Secuenciales](#2811-tests-en-paralelo-vs-secuenciales)
   - [28.12. Comandos Utiles](#2812-comandos-utiles)
   - [28.13. Buenas Practicas](#2813-buenas-practicas)
@@ -551,6 +553,119 @@ public class FunkoRepositoryTests : IntegrationTestBase
 
 > ⚠️ **Advertencia:** Cada test debe empezar con la BD limpia. Haz la limpieza real en el `[SetUp]` de cada fixture (como en el ejemplo: `TRUNCATE TABLE ... RESTART IDENTITY CASCADE` con `ExecuteSqlRaw`, o `DeleteMany` en MongoDB). El `InitializeAsync` de `IAsyncLifetime` solo levanta el contenedor una vez: no sirve para limpiar entre tests.
 
+### 28.9.1. Optimización: un contenedor por assembly
+
+El patrón de arriba funciona bien, pero tiene un coste: **cada clase de tests arranca su propio PostgreSQL**. Con 10 clases de integración (y más si además usas MongoDB), la suite arranca una veintena de contenedores: cada arranque cuesta unos segundos y se suman en cada ejecución.
+
+La solución es un **`[SetUpFixture]` a nivel de assembly**: un único contenedor para toda la suite, y el aislamiento entre clases se consigue con **bases de datos de nombre propio** dentro de ese contenedor.
+
+> 💡 **Analogía:** Es la diferencia entre que cada clase alquile su propia sala de reuniones (10 contenedores) o que todo el grupo comparta una sala grande con una pizarra por equipo (un contenedor, bases de datos separadas).
+
+```csharp
+// Un solo [SetUpFixture] gobierna todos los tests de este namespace
+[SetUpFixture]
+public sealed class AssemblyContainerFixture
+{
+    private static PostgreSqlContainer? _postgres;
+
+    internal static PostgreSqlContainer Postgres =>
+        _postgres ?? throw new InvalidOperationException("El contenedor no está arrancado.");
+
+    [OneTimeSetUp]
+    public async Task InitializeAsync()
+    {
+        _postgres = new PostgreSqlBuilder().WithImage("postgres:17-alpine").Build();
+        await _postgres.StartAsync();
+    }
+
+    // Crea (o recrea) una BD con nombre propio para una clase de tests
+    internal static async Task<string> CreateDatabaseAsync(string dbName)
+    {
+        var admin = new NpgsqlConnectionStringBuilder(Postgres.GetConnectionString())
+        {
+            Database = "postgres"
+        };
+
+        await using var conn = new NpgsqlConnection(admin.ConnectionString);
+        await conn.OpenAsync();
+
+        // WITH (FORCE) mata las conexiones vivas: si un test anterior
+        // dejó una abierta, el DROP no falla
+        await using (var drop = new NpgsqlCommand(
+            $"DROP DATABASE IF EXISTS \"{dbName}\" WITH (FORCE)", conn))
+        {
+            await drop.ExecuteNonQueryAsync();
+        }
+
+        await using (var create = new NpgsqlCommand($"CREATE DATABASE \"{dbName}\"", conn))
+        {
+            await create.ExecuteNonQueryAsync();
+        }
+
+        var target = new NpgsqlConnectionStringBuilder(Postgres.GetConnectionString())
+        {
+            Database = dbName
+        };
+        return target.ConnectionString;
+    }
+
+    internal static async Task DropDatabaseAsync(string dbName)
+    {
+        var admin = new NpgsqlConnectionStringBuilder(Postgres.GetConnectionString())
+        {
+            Database = "postgres"
+        };
+
+        await using var conn = new NpgsqlConnection(admin.ConnectionString);
+        await conn.OpenAsync();
+
+        await using var drop = new NpgsqlCommand(
+            $"DROP DATABASE IF EXISTS \"{dbName}\" WITH (FORCE)", conn);
+        await drop.ExecuteNonQueryAsync();
+    }
+
+    [OneTimeTearDown]
+    public async Task DisposeAsync()
+    {
+        if (_postgres is not null)
+        {
+            await _postgres.DisposeAsync();
+            _postgres = null;
+        }
+    }
+}
+```
+
+Cada clase de tests solo pide su propia base de datos:
+
+```csharp
+public class ProductoServiceIntegrationTests
+{
+    private const string DatabaseName = "it_producto_service";
+    private string _connectionString = string.Empty;
+
+    [OneTimeSetUp]
+    public async Task OneTimeSetup() =>
+        _connectionString = await AssemblyContainerFixture.CreateDatabaseAsync(DatabaseName);
+
+    [OneTimeTearDown]
+    public async Task OneTimeTearDown() =>
+        await AssemblyContainerFixture.DropDatabaseAsync(DatabaseName);
+}
+```
+
+**Resultado medido** (TiendaAPI, suite de integración, dos pasadas sin fallos):
+
+| Métrica | Antes (contenedor por clase) | Después (1 por assembly) |
+|---------|------------------------------|--------------------------|
+| Arranques de contenedor | 19 | **2** |
+| Tests de integración | 193 | 203 |
+| Duración de la suite | **88,3 s** | **23 s** |
+
+> ⚠️ **Advertencia:** El `[SetUpFixture]` gobierna el **namespace donde está declarado**. Los tests fuera de ese namespace no lo usan: si esperan encontrar contenedor ahí, fallarán. Y aunque el contenedor se comparta, **los datos siguen sin compartirse**: una base de datos por clase.
+
+> 💡 **Truco:** `DROP DATABASE ... WITH (FORCE)` (PostgreSQL 13+) es la clave: elimina las conexiones que un test anterior haya dejado abiertas, que si no bloquearían la creación de la siguiente BD. En MongoDB basta con `new MongoClient(cs).DropDatabase(nombre)`.
+
 ## 28.10. Tests de Controladores con WebApplicationFactory
 
 `WebApplicationFactory` crea un servidor en memoria para probar endpoints HTTP sin necesidad de un servidor real.
@@ -648,6 +763,90 @@ public class FunkosControllerTests
 ```
 
 📌 **Ejemplo real:** Netflix usa WebApplicationFactory para testear sus APIs internas antes de cada despliegue. Cada endpoint se prueba con requests HTTP reales sin levantar un servidor completo.
+
+### 28.10.1. Tests de la forma de los errores
+
+No basta con comprobar que un error devuelve `400`: hay que comprobar **la forma** (el *shape*) del cuerpo, porque tus clientes la parsean. Cada origen de error tiene su propio formato:
+
+| Status | Origen | Cuerpo esperado |
+|--------|--------|-----------------|
+| `400` | Validación de `[ApiController]` | ProblemDetails: `status`, `title`, `errors` por campo |
+| `401` | Sin token (challenge JWT) | Cuerpo vacío + cabecera `WWW-Authenticate: Bearer` |
+| `401` | Credenciales inválidas (dominio `Result`) | `{ "message": "..." }` |
+| `404` / `409` | Errores de dominio (patrón `Result`) | `{ "message": "..." }` |
+| `429` | Rate limiting | `{ errorType, message, path, limit, window, retryAfter }` + `Retry-After` y `RateLimit-*` |
+
+> 💡 **Analogía:** Es el **contrato** de tu API. Si cambias `message` por `error`, rompes a todos los clientes que ya lo parsean; estos tests son la red de seguridad que lo impide.
+
+📌 **Ejemplo real:** TiendaAPI añadió una clase `ErrorShapeApiTests` (10 tests) que fija esta forma: 400 con `errors` agrupados por campo, 401 con `WWW-Authenticate`, 404/409 de dominio con `message` (**y sin `errorId`**, porque esos errores no pasan por el manejador global de excepciones) y 429 con `errorType: "RateLimitError"`, `limit: 10`, `window: "1m"` y las cabeceras `RateLimit-Limit`/`Remaining`/`Reset`.
+
+```csharp
+[Test]
+public async Task CuerpoInvalido_Devuelve400_ConProblemDetails()
+{
+    // Act
+    var response = await _client.PostAsJsonAsync(
+        "/api/auth/signin", new Dictionary<string, string>());
+
+    // Assert
+    response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+    var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+    body.GetProperty("status").GetInt32().Should().Be(400);
+    body.GetProperty("title").GetString().Should().NotBeNullOrWhiteSpace();
+    body.TryGetProperty("errors", out var errors).Should().BeTrue(
+        "la validacion de [ApiController] debe agrupar errores por campo");
+    errors.EnumerateObject().Should().NotBeEmpty();
+}
+
+[Test]
+public async Task RecursoDuplicado_Devuelve409_ConShapeDeDominio()
+{
+    // Act
+    var response = await _client.PostAsJsonAsync("/api/funkos", funkoExistente);
+
+    // Assert
+    response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+
+    var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+    body.GetProperty("message").GetString().Should().NotBeNullOrWhiteSpace();
+    body.TryGetProperty("errorId", out _).Should().BeFalse(
+        "los errores de dominio no pasan por el manejador global de excepciones");
+}
+
+[Test]
+public async Task LimiteDePeticiones_Devuelve429_ConHeadersYCuerpo()
+{
+    // Sonda con IP propia: cada IP tiene su ventana de rate limiting,
+    // asi este test no consume la cuota de los demas
+    for (var i = 0; i < 12; i++)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/signin")
+        {
+            Content = JsonContent.Create(new { username = "sonda", password = "noimporta" })
+        };
+        request.Headers.Add("X-Forwarded-For", "172.16.9.9");
+
+        var response = await _client.SendAsync(request);
+        if (response.StatusCode != HttpStatusCode.TooManyRequests)
+        {
+            continue;
+        }
+
+        response.Headers.RetryAfter.Should().NotBeNull();
+
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("errorType").GetString().Should().Be("RateLimitError");
+        body.GetProperty("limit").GetInt32().Should().Be(10);
+        body.GetProperty("window").GetString().Should().Be("1m");
+        return;
+    }
+
+    Assert.Fail("el limite de autenticacion es 10 peticiones por minuto");
+}
+```
+
+> ⚠️ **Advertencia:** Al ser tests de `WebApplicationFactory`, necesitan el `public partial class Program;` del final del `Program.cs` (apartado anterior) y, si la suite comparte contenedor, su propia base de datos creada en el `[OneTimeSetUp]` (apartado 28.9.1).
 
 ## 28.11. Tests en Paralelo vs Secuenciales
 

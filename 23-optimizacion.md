@@ -21,7 +21,8 @@
     - [23.4.3. Query Tracking](#2343-query-tracking)
   - [23.5. Rate Limiting](#235-rate-limiting)
     - [23.5.1. Rate Limiting con ASP.NET Core](#2351-rate-limiting-con-aspnet-core)
-    - [23.5.2. Token Bucket Algorithm](#2352-token-bucket-algorithm)
+    - [23.5.2. Middleware propio con headers RateLimit-*](#2352-middleware-propio-con-headers-ratelimit)
+    - [23.5.3. Token Bucket Algorithm](#2353-token-bucket-algorithm)
   - [23.6. Monitoring y Profiling](#236-monitoring-y-profiling)
     - [23.6.1. Health Checks](#2361-health-checks)
     - [23.6.2. Application Metrics](#2362-application-metrics)
@@ -558,7 +559,9 @@ El rate limiting protege tu API limitando el número de peticiones que un client
 
 ### 23.5.1. Rate Limiting con ASP.NET Core
 
-ASP.NET Core incluye rate limiting nativo. Puedes configurar diferentes políticas por endpoint o por usuario.
+ASP.NET Core incluye rate limiting nativo en `System.Threading.RateLimiting` (desde .NET 7). Puedes configurar diferentes políticas por endpoint o por usuario.
+
+> ⚠️ **Advertencia — No uses `AspNetCoreRateLimit`:** Durante años el paquete de terceros `AspNetCoreRateLimit` fue el estándar de facto, pero lleva **más de 4 años sin actualizarse** (su última versión es la 5.0.0). Paquetes abandonados son un riesgo de seguridad y de compatibilidad con versiones nuevas de .NET. **No lo instales**: la API nativa `System.Threading.RateLimiting` cubre el 100% de los casos de uso sin añadir dependencias.
 
 ```csharp
 builder.Services.AddRateLimiter(options =>
@@ -611,7 +614,151 @@ app.MapGet("/api/productos",
 async (IProductoService service) => { });
 ```
 
-### 23.5.2. Token Bucket Algorithm
+### 23.5.2. Middleware propio con headers RateLimit-*
+
+El rate limiting nativo de ASP.NET Core se configura con políticas globales. Pero a veces necesitas **reglas más granulares** (por ejemplo: ventana corta general + ventana de un minuto solo para escrituras o autenticación) y emitir las **cabeceras estándar `RateLimit-*`** del borrador IETF. Para eso puedes escribir un **middleware propio** sobre `System.Threading.RateLimiting`.
+
+📌 **Ejemplo real:** El proyecto **TiendaAPI** usa exactamente este enfoque. Eliminó `AspNetCoreRateLimit` y lo sustituyó por un middleware propio con `FixedWindowRateLimiter`, emitiendo `RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset` y `Retry-After`.
+
+**Las reglas de ejemplo (una por periodo, se aplica la más restrictiva):**
+
+| Regla | Ventana | Límite | Cuándo aplica |
+|-------|---------|--------|---------------|
+| **General** | 15 segundos | 100 | Todas las peticiones |
+| **Autenticación** | 1 minuto | 10 | Rutas `/api/auth/*` (fuerza bruta) |
+| **Escritura** | 1 minuto | 20 | Cualquier `POST` |
+
+```mermaid
+flowchart TD
+    A["Petición entrante"] --> B{"Ventana 15s\ngeneral (100)"}
+    B -->|"No supera"| C{"¿Es auth o POST?"}
+    B -->|"Superada"| D["429 Too Many Requests\n+ Retry-After"]
+    C -->|"No"| E["Headers RateLimit-*\n→ Siguiente middleware"]
+    C -->|"Sí"| F{"Ventana 1 min\n(auth 10 / POST 20)"}
+    F -->|"No supera"| E
+    F -->|"Superada"| D
+
+    style A fill:#2196F3,color:#fff
+    style D fill:#f44336,color:#fff
+    style E fill:#4CAF50,color:#fff
+```
+
+**El estado: particiones por IP + verbo + ruta**
+
+Cada combinación `IP + verbo + ruta` tiene sus propios contadores, guardados en un `ConcurrentDictionary` con limpieza de particiones inactivas:
+
+```csharp
+// RateLimitConfig.cs — reglas del middleware
+public static class RateLimitConfig
+{
+    public const int GeneralLimit = 100;                                  // 100 por 15s
+    public static readonly TimeSpan GeneralWindow = TimeSpan.FromSeconds(15);
+    public const int AuthLimit = 10;                                      // 10/min en auth
+    public const int WriteLimit = 20;                                     // 20/min en escritura
+    public static readonly TimeSpan MinuteWindow = TimeSpan.FromMinutes(1);
+    public const string AuthPathPrefix = "/api/auth/";
+
+    public static IServiceCollection AddRateLimitingPolicy(this IServiceCollection services)
+    {
+        services.AddSingleton<RateLimitingState>(); // particiones (IP + verbo + ruta)
+        return services;
+    }
+
+    public static IApplicationBuilder UseRateLimiting(this IApplicationBuilder app)
+    {
+        app.UseMiddleware<RateLimitMiddleware>();
+        return app;
+    }
+}
+```
+
+**La creación de limitadores (ventana fija nativa):**
+
+```csharp
+// RateLimitPartition.Create — un limitador general y, si aplica, otro de 1 minuto
+var general = new FixedWindowRateLimiter(new FixedWindowRateLimiterOptions
+{
+    PermitLimit = RateLimitConfig.GeneralLimit,   // 100
+    Window = RateLimitConfig.GeneralWindow,       // 15 s
+    QueueLimit = 0,                               // sin cola: se rechaza al instante
+    AutoReplenishment = true
+});
+
+// Ventana de un minuto: 10 en /api/auth/*, 20 en cualquier POST.
+// Si dos reglas comparten periodo, gana la más restrictiva.
+var minuteLimit = 0;
+if (path.StartsWith(RateLimitConfig.AuthPathPrefix, StringComparison.Ordinal))
+{
+    minuteLimit = RateLimitConfig.AuthLimit;      // 10/min
+}
+else if (HttpMethods.IsPost(method))
+{
+    minuteLimit = RateLimitConfig.WriteLimit;     // 20/min
+}
+```
+
+**El proceso de cada petición:**
+
+```csharp
+// RateLimitMiddleware.cs — extracto del flujo
+// 1. Obtener (o crear) la partición de esta IP + verbo + ruta
+var partition = _state.GetOrCreate(ResolveClientIp(context), method, path);
+
+// 2. Primero la ventana corta (15s)
+using var generalLease = await partition.General.AcquireAsync(1, context.RequestAborted);
+if (!generalLease.IsAcquired)
+{
+    await RejectAsync(context, generalLease, RateLimitConfig.GeneralLimit, RateLimitConfig.GeneralWindow);
+    return; // 429
+}
+
+// 3. Después la ventana de un minuto, si la ruta la tiene
+if (partition.HasMinuteWindow)
+{
+    using var minuteLease = await partition.Minute!.AcquireAsync(1, context.RequestAborted);
+    if (!minuteLease.IsAcquired)
+    {
+        await RejectAsync(context, minuteLease, partition.MinuteLimit, RateLimitConfig.MinuteWindow);
+        return; // 429
+    }
+}
+
+// 4. Petición permitida: emitir headers y continuar
+SetRateLimitHeaders(context, partition);
+await _next(context);
+```
+
+**Cabeceras estándar en cada respuesta permitida:**
+
+| Cabecera | Significado |
+|----------|-------------|
+| `RateLimit-Limit` | Límite de la ventana activa |
+| `RateLimit-Remaining` | Peticiones restantes |
+| `RateLimit-Reset` | Segundos hasta reiniciar la ventana |
+| `Retry-After` | Segundos hasta reintentar (solo en 429) |
+
+Y en el rechazo, **429 con cuerpo JSON**:
+
+```json
+{
+  "message": "Demasiadas solicitudes. Por favor, intente más tarde.",
+  "errorType": "RateLimitError",
+  "timestamp": "2026-09-28T10:00:00Z",
+  "path": "/api/productos",
+  "method": "POST",
+  "limit": 20,
+  "window": "1m",
+  "retryAfter": 42
+}
+```
+
+> 💡 **Consejo:** Para que el middleware funcione detrás de un reverse proxy (Nginx, API Gateway), resuelve la IP real desde `X-Forwarded-For` o `X-Real-IP` antes de la IP de conexión. Si no, todas las peticiones parecerán venir de la misma IP (la del proxy).
+
+> 📝 **Nota:** El estado vive en memoria por instancia. Si despliegas varias réplicas del servicio, cada una contará por su cuenta: para límites globales compartidos necesitas almacenar los contadores en **Redis** (ver sección 14).
+
+> 💡 **Truco:** Para tests del middleware, inyecta un `FakeTimeProvider` (paquete `Microsoft.Extensions.TimeProvider.Testing`) y avanza el reloj manualmente: tests deterministas, sin `Thread.Sleep`. Los tests deben cubrir: permitido con headers, 429 en el límite, `Retry-After` positivo, contadores independientes por IP y que el 429 no ejecuta el siguiente middleware.
+
+### 23.5.3. Token Bucket Algorithm
 
 El algoritmo Token Bucket es una implementación popular de rate limiting. Cada cliente tiene un "cubo" de tokens que se rellena periódicamente. Cada petición consume un token.
 
@@ -663,7 +810,7 @@ public class TokenBucketRateLimiter(
 }
 ```
 
-> 💡 **Truco:** Para tests del rate limiter, inyecta un `FakeTimeProvider` (paquete `Microsoft.Extensions.TimeProvider.Testing`) y avanza el reloj manualmente: tests deterministas, sin `Thread.Sleep`.
+> 💡 **Truco:** En los tests de esta clase, inyecta un `FakeTimeProvider` y avanza el reloj para forzar el relleno del cubo sin esperar el tiempo real: asserts instantáneos y deterministas.
 
 ## 23.6. Monitoring y Profiling
 

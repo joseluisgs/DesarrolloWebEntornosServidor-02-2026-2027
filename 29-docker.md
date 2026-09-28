@@ -162,13 +162,11 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Usuario no-root para seguridad
-RUN addgroup --system --gid 1000 appgroup \
-    && adduser --system --uid 1000 --ingroup appgroup --shell /bin/sh appuser
+# Usuario no-root para seguridad: la imagen aspnet:10.0 YA trae el usuario
+# "app" (UID 1654). Ver advertencia debajo: no existe adduser/addgroup aquí.
+COPY --from=publish --chown=app:app /app/publish .
 
-COPY --from=publish /app/publish .
-RUN chown -R appuser:appgroup /app
-USER appuser
+USER app
 
 EXPOSE 8080
 
@@ -180,6 +178,8 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 ENTRYPOINT ["dotnet", "FunkoApp.dll"]
 ```
+
+> ⚠️ **Advertencia — No uses `adduser`/`addgroup` en `aspnet:10.0`:** La imagen `mcr.microsoft.com/dotnet/aspnet:10.0` **no incluye** las utilidades `adduser` ni `addgroup` (si incluye `useradd`/`groupadd`, del paquete `passwd`), así que un `RUN adduser ...` **rompe el build**. Además ya trae de fábrica el usuario no-root **`app` con UID 1654** (`app:x:1654:1654::/home/app:/bin/sh`), por lo que basta con `USER app` y, si quieres los ficheros en propiedad del usuario, `COPY --chown=app:app` (evita además una capa extra de `RUN chown`).
 
 📌 **Ejemplo real:** La imagen de Netflix Backend usa multi-stage builds. La etapa de build tiene el SDK completo (~800MB), pero la imagen final solo tiene el runtime (~200MB). Esto reduce el tiempo de despliegue y el ataque superficial de seguridad.
 

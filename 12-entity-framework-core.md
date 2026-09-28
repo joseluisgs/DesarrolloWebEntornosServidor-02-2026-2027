@@ -963,6 +963,8 @@ public async Task SetUp()
 2. **`[OneTimeTearDown]`** — dispose una sola vez al final
 3. **`TRUNCATE ... RESTART IDENTITY CASCADE`** — limpiar antes de cada test
 
+> 📝 **Nota:** La regla "un contenedor por fixture" es la más sencilla y vale para suites pequeñas. Si tu suite crece y los arranques se acumulan, puedes pasar a **un único contenedor por assembly con base de datos por clase** (misma garantía de aislamiento, menos arranques): ver **28.9.1**.
+
 ### 12.18.4. Patrón AAA
 
 ```csharp

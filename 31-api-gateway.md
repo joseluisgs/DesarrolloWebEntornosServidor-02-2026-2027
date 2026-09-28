@@ -724,7 +724,7 @@ sequenceDiagram
 
 | Paso | Middleware | ¿Qué hace? | ¿Cuándo falla? |
 |------|-----------|-------------|-----------------|
-| **1. Rate Limiting** | `IRateLimitingService` | Cuenta peticiones por IP/cliente | 429 Too Many Requests |
+| **1. Rate Limiting** | `RateLimitMiddleware` | Cuenta peticiones por IP/cliente | 429 Too Many Requests |
 | **2. Authentication** | `UseAuthentication()` | Extrae y valida el JWT | 401 Unauthorized |
 | **3. Authorization** | `UseAuthorization()` | Comprueba si el usuario tiene permiso | 403 Forbidden |
 | **4. Route Matching** | YARP Route | Busca ruta que coincida con el path | 404 Not Found |

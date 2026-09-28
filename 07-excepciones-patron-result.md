@@ -786,6 +786,7 @@ public IActionResult Create([FromBody] ProductoDto dto)
 - Usa CSharpFunctionalExtensions con `Result<T, DomainError>`
 - Añade `ProblemDetails` en las respuestas de error
 - Documenta los códigos de error con `[ProducesResponseType]`
+- Fija la forma de los errores con tests (400/401/404/409): ver **28.10.1**
 
 ---
 
