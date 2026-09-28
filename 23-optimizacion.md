@@ -600,6 +600,8 @@ options.JsonSerializerOptions.TypeInfoResolver = JsonTypeInfoResolver.Combine(
     new DefaultJsonTypeInfoResolver()); // fallback a reflexión
 ```
 
+📌 **Ejemplo real:** TiendaAPI aplica ese mismo `Combine` en **7 puntos de serialización**: MVC (`AddJsonOptions`), Minimal APIs (`ConfigureHttpJsonOptions`), el `GlobalExceptionHandler`, el cuerpo 429 del rate limiting, sus dos WebSockets (pedidos y productos) y la caché Redis. En todos: source-gen para sus ~30 tipos declarados y reflexión como red de seguridad para el que se escape.
+
 | Aspecto | Reflexión (por defecto) | Source generation |
 |---------|------------------------|-------------------|
 | Descubrimiento de tipos | En tiempo de ejecución | En tiempo de compilación |
