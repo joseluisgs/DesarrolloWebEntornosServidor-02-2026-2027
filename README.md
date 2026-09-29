@@ -42,20 +42,21 @@ UD02. Desarrollo de servicios web en .NET. 2DAW. Curso 2026-2027
 32. [Resumen](32-resumen.md)
 
 ## Proyecto Integrador
-El proyecto realizado en clase podrás seguirlo desde el repositorio de GitHub:
-- [Proyecto Integrador](https://github.com/joseluisgs/TiendaDawApi-NetCore)
+Los proyectos realizados en clase:
+- [Proyecto Integrador APIS](https://github.com/joseluisgs/TiendaDawApi-NetCore)
+- [Proyecto Integrador APIS CQRS](https://github.com/joseluisgs/TiendaDawApi-Cqrs-MediatR-NetCore)
   
 ## Contenido en YouTube
-- [Resumen]()
-- [REST API]()
-- [Entity Core Framework y SQL]()
-- [NoSQL y Mongo con .NET/ASP Core]()
-- [WebSockets con .NET/ASP Core]()
-- [GraphQL con .NET/ASP Core]()
-- [Caché avanzada con Redis en .NET/ASP Core]()
-- [Seguridad: Autenticación y Autorización con .NET/ASP Core]()
-- [CQRS y Mediator con .NET/ASP Core]()
-- [API Gateway y Microservicios con .NET/ASP Core]()
+- [Resumen](https://youtu.be/FhjthcSROeo)
+- [REST API](https://youtu.be/sMFroJJCKSI)
+- [Entity Core Framework y SQL](https://youtu.be/_xknwIXg6lI)
+- [NoSQL y Mongo con .NET/ASP Core](https://youtu.be/Ox7rGnrfx6Q)
+- [WebSockets con .NET/ASP Core](https://youtu.be/zDSOj6atVsA)
+- [GraphQL con .NET/ASP Core](https://youtu.be/9_slzfm5ods)
+- [Caché avanzada con Redis en .NET/ASP Core](https://youtu.be/w95LVes-Bn4)
+- [Seguridad: Autenticación y Autorización con .NET/ASP Core](https://youtu.be/LpP6EsaugXY)
+- [CQRS y Mediator con .NET/ASP Core](https://youtu.be/ut8QgCSPGbo)
+- [API Gateway y Microservicios con .NET/ASP Core](https://youtu.be/o2WMCAlCnm4)
 - [Lista de Reproducción](https://www.youtube.com/playlist?list=PLLiuVpAc3Gv4)
 
 ## Resultados de Aprendizaje y Criterios de Evaluación
