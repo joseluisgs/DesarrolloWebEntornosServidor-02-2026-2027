@@ -662,14 +662,14 @@
 
 **Tema 32: Resumen**
 
-99. ¿Qué abarca la Unidad 02 del módulo?
-    A) Los fundamentos web y el C# avanzado (LINQ, ROP, reactividad)
-    B) El desarrollo de servicios web en .NET: APIs con ASP.NET Core, persistencia, seguridad, tiempo real y despliegue
-    C) El diseño de interfaces con HTML y CSS
-    D) La programación de escritorio con Java Swing
+99. Un endpoint protegido con `[Authorize]` recibe una petición sin token o con un token caducado. ¿Qué código de estado devuelve la API y por qué?
+    A) 401 Unauthorized: el cliente no está autenticado
+    B) 403 Forbidden: el cliente está autenticado pero no tiene permisos suficientes
+    C) 404 Not Found: el recurso solicitado no existe
+    D) 400 Bad Request: la petición está mal formada
 
-100. ¿Cuál es el siguiente paso tras completar la Unidad 02?
-    A) Repetir la Unidad 01 desde el principio
-    B) Ponerlo todo en práctica construyendo y desplegando la API de Funkos completa (la práctica de la unidad)
-    C) Aprender PHP desde cero
-    D) Dejar de programar en .NET
+100. ¿Cuál de estas afirmaciones sobre la API de Funkos es correcta?
+    A) El `DbContext` debe registrarse como Singleton para no repetir la conexión
+    B) Los DTOs devuelven las entidades de EF Core tal cual para ahorrar los mapeos
+    C) Los middleware se ejecutan en el orden en que se registran y el servidor valida el JWT en cada petición sin guardar sesión
+    D) Swagger genera el contrato únicamente si la API está construida con controladores MVC
