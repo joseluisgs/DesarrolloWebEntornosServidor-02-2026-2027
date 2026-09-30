@@ -1,129 +1,73 @@
+using System.Text.Json;
 using ProductosMinimalApi.Models;
+using ProductosMinimalApi.Repositories;
 
 namespace ProductosMinimalApi.Routes;
 
 /// <summary>
-/// Almacenamiento en memoria con Dictionary y endpoints como extensiones.
+/// Endpoints de productos. El almacenamiento vive en <see cref="IProductoRepository"/>;
+/// aquí solo queda el mapa de rutas y la traducción a resultados HTTP.
 /// </summary>
 public static class ProductosRoutes
 {
-    private static readonly Dictionary<long, Producto> _productos = new();
-    private static long _nextId = 1;
-
     public static void MapProductosRoutes(this WebApplication app)
     {
+        // El repositorio está registrado como singleton: lo resolvemos una vez al mapear.
+        var repo = app.Services.GetRequiredService<IProductoRepository>();
+
         var g = app.MapGroup("/api/productos").WithTags("Productos");
 
-        g.MapGet("/", () => Results.Ok(_productos.Values.Where(p => p.IsActivo)));
+        // ─── CRUD ─────────────────────────────────────────────
+
+        g.MapGet("/", () => Results.Ok(repo.GetAll()));
 
         g.MapGet("/{id:long}", (long id) =>
-            _productos.TryGetValue(id, out var p) && p.IsActivo
-                ? Results.Ok(p)
+            repo.GetById(id) is { } producto
+                ? Results.Ok(producto)
                 : Results.NotFound());
 
         g.MapPost("/", (Producto producto) =>
         {
-            producto.Id = _nextId++;
-            producto.CreatedAt = DateTime.UtcNow;
-            _productos[producto.Id] = producto;
-            return Results.Created($"/api/productos/{producto.Id}", producto);
+            var creado = repo.Add(producto);
+            return Results.Created($"/api/productos/{creado.Id}", creado);
         });
 
         g.MapPut("/{id:long}", (long id, Producto producto) =>
-        {
-            if (!_productos.TryGetValue(id, out var existente) || !existente.IsActivo)
-                return Results.NotFound();
-
-            existente.Nombre = producto.Nombre;
-            existente.Precio = producto.Precio;
-            existente.Categoria = producto.Categoria;
-            existente.Imagen = producto.Imagen;
-            existente.UpdatedAt = DateTime.UtcNow;
-            return Results.Ok(existente);
-        });
+            repo.Update(id, producto) is { } actualizado
+                ? Results.Ok(actualizado)
+                : Results.NotFound());
 
         g.MapPatch("/{id:long}", (long id, Dictionary<string, object> cambios) =>
         {
-            if (!_productos.TryGetValue(id, out var existente) || !existente.IsActivo)
-                return Results.NotFound();
-
-            if (cambios.TryGetValue("precio", out var precio) && precio is System.Text.Json.JsonElement jsonVal)
+            if (cambios.TryGetValue("precio", out var precio) && precio is JsonElement json)
             {
-                existente.Precio = jsonVal.GetDecimal();
-                existente.UpdatedAt = DateTime.UtcNow;
-                return Results.Ok(existente);
+                return repo.UpdatePrecio(id, json.GetDecimal()) is { } actualizado
+                    ? Results.Ok(actualizado)
+                    : Results.NotFound();
             }
 
             return Results.BadRequest();
         });
 
         g.MapDelete("/{id:long}", (long id) =>
-        {
-            if (!_productos.TryGetValue(id, out var existente) || !existente.IsActivo)
-                return Results.NotFound();
+            repo.SoftDelete(id)
+                ? Results.NoContent()
+                : Results.NotFound());
 
-            existente.DeletedAt = DateTime.UtcNow;
-            return Results.NoContent();
-        });
+        // ─── Consultas ────────────────────────────────────────
 
-        // ─── Consultas LINQ ─────────────────────────────────────
-
-        g.MapGet("/search", (string? nombre) =>
-        {
-            var resultados = _productos.Values
-                .Where(p => p.IsActivo)
-                .Where(p => p.Nombre.Contains(nombre ?? "", StringComparison.OrdinalIgnoreCase))
-                .OrderBy(p => p.Nombre)
-                .ToList();
-            return Results.Ok(resultados);
-        });
+        g.MapGet("/search", (string? nombre) => Results.Ok(repo.Search(nombre)));
 
         g.MapGet("/categoria/{categoria}", (string categoria) =>
-        {
-            var resultados = _productos.Values
-                .Where(p => p.IsActivo)
-                .Where(p => p.Categoria.Equals(categoria, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-            return Results.Ok(resultados);
-        });
+            Results.Ok(repo.GetByCategoria(categoria)));
 
         g.MapGet("/precio", (decimal? min, decimal? max) =>
-        {
-            var resultados = _productos.Values
-                .Where(p => p.IsActivo)
-                .Where(p => p.Precio >= (min ?? 0) && p.Precio <= (max ?? decimal.MaxValue))
-                .OrderBy(p => p.Precio)
-                .ToList();
-            return Results.Ok(resultados);
-        });
+            Results.Ok(repo.GetByPrecio(min, max)));
 
-        g.MapGet("/ordenar", (bool? asc) =>
-        {
-            var resultados = (asc ?? true)
-                ? _productos.Values.Where(p => p.IsActivo).OrderBy(p => p.Precio).ToList()
-                : _productos.Values.Where(p => p.IsActivo).OrderByDescending(p => p.Precio).ToList();
-            return Results.Ok(resultados);
-        });
+        g.MapGet("/ordenar", (bool? asc) => Results.Ok(repo.GetOrdered(asc ?? true)));
 
-        g.MapGet("/grupo-categoria", () =>
-        {
-            var grupos = _productos.Values
-                .Where(p => p.IsActivo)
-                .GroupBy(p => p.Categoria)
-                .ToDictionary(g => g.Key, g => g.ToList());
-            return Results.Ok(grupos);
-        });
+        g.MapGet("/grupo-categoria", () => Results.Ok(repo.GroupByCategoria()));
 
-        g.MapGet("/estadisticas", () =>
-        {
-            var activos = _productos.Values.Where(p => p.IsActivo).ToList();
-            return Results.Ok(new
-            {
-                Total = activos.Count,
-                PrecioMedio = activos.Any() ? activos.Average(p => p.Precio) : 0,
-                PorCategoria = activos.GroupBy(p => p.Categoria)
-                    .ToDictionary(g => g.Key, g => g.Count())
-            });
-        });
+        g.MapGet("/estadisticas", () => Results.Ok(repo.GetEstadisticas()));
     }
 }

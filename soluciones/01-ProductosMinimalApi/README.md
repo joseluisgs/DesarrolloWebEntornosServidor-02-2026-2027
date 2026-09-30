@@ -6,7 +6,9 @@ API REST de productos con **Minimal APIs** en ASP.NET Core (.NET 10).
 
 Ejemplo introductorio de Minimal APIs: CRUD completo de productos con almacenamiento en memoria (`Dictionary<long, Producto>`), consultas LINQ (búsqueda, filtrado, ordenación, agrupación y estadísticas) y eliminación lógica mediante `DeletedAt`.
 
-- Rutas definidas en un grupo (`Routes/ProductosRoutes.cs`) con `MapGroup("/api/productos")`
+- Almacenamiento aislado en un repositorio (`Repositories/ProductoRepository.cs`) con `Dictionary<long, Producto>`, registrado como **singleton** en la DI
+- Modelo `Producto` como **`record` inmutable** (propiedades `init`): los cambios se hacen con `with`, sin anotaciones de base de datos
+- Rutas definidas en un grupo (`Routes/ProductosRoutes.cs`) con `MapGroup("/api/productos")`: solo mapa de rutas y respuestas HTTP
 - Serialización JSON en `camelCase`
 - Sin validación de negocio en este primer ejemplo (solo errores de binding)
 - Sin Swagger ni Docker: solo se necesita el SDK de .NET
@@ -85,6 +87,7 @@ Prefijo base: `http://localhost:5000/api/productos`
 ```
 
 > 📝 `id`, `createdAt` los asigna el servidor; `isActivo` es de solo lectura.
+> Como `Producto` es un `record` inmutable, el repositorio no lo modifica: crea una copia con `with` y la guarda en el `Dictionary`.
 
 ## Estructura
 
@@ -93,7 +96,12 @@ Prefijo base: `http://localhost:5000/api/productos`
 ├── ProductosMinimalApi.slnx
 ├── ProductosMinimalApi/
 │   ├── Program.cs
-│   ├── Models/Producto.cs
+│   ├── Models/
+│   │   ├── Producto.cs
+│   │   └── ProductoEstadisticas.cs
+│   ├── Repositories/
+│   │   ├── IProductoRepository.cs
+│   │   └── ProductoRepository.cs
 │   └── Routes/ProductosRoutes.cs
 ├── automation/test-runner.mjs
 └── README.md

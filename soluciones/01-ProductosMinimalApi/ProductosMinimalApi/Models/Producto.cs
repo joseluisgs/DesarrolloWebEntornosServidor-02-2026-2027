@@ -1,22 +1,39 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace ProductosMinimalApi.Models;
 
 /// <summary>
 /// Representa un producto en el sistema.
 /// </summary>
-public class Producto
+/// <remarks>
+/// Es un <see langword="record"/> inmutable (<c>init</c>): para modificarlo se usa <c>with</c>.
+/// El servidor asigna <see cref="Id"/> y <see cref="CreatedAt"/> en el repositorio, e ignora
+/// esos valores si llegan en la petición.
+/// </remarks>
+public record Producto
 {
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public long Id { get; set; }
-    public string Nombre { get; set; } = string.Empty;
-    public decimal Precio { get; set; }
-    public string Categoria { get; set; } = string.Empty;
-    public string? Imagen { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-    public DateTime? DeletedAt { get; set; }
+    /// <summary>Identificador asignado por el servidor.</summary>
+    public long Id { get; init; }
+
+    /// <summary>Nombre del producto.</summary>
+    public string Nombre { get; init; } = string.Empty;
+
+    /// <summary>Precio en euros.</summary>
+    public decimal Precio { get; init; }
+
+    /// <summary>Categoría a la que pertenece.</summary>
+    public string Categoria { get; init; } = string.Empty;
+
+    /// <summary>URL de la imagen del producto, si tiene.</summary>
+    public string? Imagen { get; init; }
+
+    /// <summary>Fecha de creación (UTC).</summary>
+    public DateTime CreatedAt { get; init; }
+
+    /// <summary>Última modificación (UTC), si la ha habido.</summary>
+    public DateTime? UpdatedAt { get; init; }
+
+    /// <summary>Fecha de borrado lógico (UTC); <c>null</c> mientras esté activo.</summary>
+    public DateTime? DeletedAt { get; init; }
+
+    /// <summary><c>true</c> si el producto no ha sido borrado lógicamente.</summary>
     public bool IsActivo => DeletedAt is null;
 }
