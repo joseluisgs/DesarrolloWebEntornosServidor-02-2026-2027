@@ -33,8 +33,9 @@
   - [7.8. Integración con Controladores](#78-integración-con-controladores)
     - [7.8.1. Opción A: Match + switch inline](#781-opción-a-match--switch-inline)
     - [7.8.2. Opción B: Función privada GetHttpResult()](#782-opción-b-función-privada-gethttpresult)
-    - [7.8.3. Opción C: Método de extensión ToHttpResult()](#783-opción-c-método-de-extensión-tohttpresult)
-    - [7.8.4. Comparación](#784-comparación)
+    - [7.8.3. Opción C: Método de extensión ToHttpResult\<T\>()](#783-opción-c-método-de-extensión-tohttpresultt)
+    - [7.8.4. Endpoints sin payload tipado (204)](#784-endpoints-sin-payload-tipado-204)
+    - [7.8.5. Comparación](#785-comparación)
   - [7.9. Buenas prácticas](#79-buenas-prácticas)
   - [7.10. Reto](#710-reto)
 
@@ -120,7 +121,7 @@ Imagina este método:
 public Producto GetById(int id)
 {
     var producto = _repository.Find(id);
-    if (producto == null)
+    if (producto is null)
         throw new NotFoundException("Producto no encontrado");
     return producto;
 }
@@ -188,7 +189,7 @@ public class ProductoService
             throw new ValidationException("El ID debe ser mayor que cero");
 
         var producto = _repository.Find(id);
-        if (producto == null)
+        if (producto is null)
             throw new NotFoundException($"Producto {id} no encontrado");
 
         return producto;
@@ -215,7 +216,7 @@ try
     var producto = service.GetById(id);
     return Ok(producto);
 }
-catch (ValidationException ex) { return UnprocessableEntity(ex.Message); }  // Validación de datos → 422 (ver tema 02)
+catch (ValidationException ex) { return BadRequest(ex.Message); }  // Validación de datos → 400 (ver tema 02)
 catch (NotFoundException ex) { return NotFound(ex.Message); }
 catch (ConflictException ex) { return Conflict(ex.Message); }
 ```
@@ -482,7 +483,8 @@ public sealed record ConflictError(string Message) : DomainError(Message);
 Result<Producto, DomainError> resultado = service.GetById(id);
 
 // Si es NotFoundError, devolver 404
-// Si es ValidationError, devolver 422 (validación de datos; 400 solo para JSON malformado)
+// Si es ValidationError, devolver 400 (validación de campos)
+// Si es BusinessRuleError, devolver 422 (regla de negocio)
 // Si es ConflictError, devolver 409
 ```
 
@@ -511,8 +513,8 @@ public sealed record NotFoundError(string Message) : DomainError(Message)
         new($"{resourceType} con ID {id} no encontrado");
 }
 
-// 422 Unprocessable Entity - Validación de datos
-// (400 solo para peticiones malformadas, p. ej. JSON con sintaxis rota — ver tema 02, 2.4.4)
+// 400 Bad Request - Validación de datos
+// (422 es para reglas de negocio: ver BusinessRuleError y tema 02, 2.4.4)
 public sealed record ValidationError(string Message, Dictionary<string, string[]>? Errors = null)
     : DomainError(Message)
 {
@@ -596,11 +598,13 @@ public Result<Producto, DomainError> Create(ProductoDto dto)
 
 ### 7.8.1. Opción A: Match + switch inline
 
-Cada endpoint tiene su propio switch. Simple pero repetitivo:
+Cada endpoint tiene su propio switch. Simple pero repetitivo.
+
+Fíjate en la firma: devolvemos **`ActionResult<Producto>`** y no `IActionResult`. El tipo de la firma es el que consumirá Swagger/OpenAPI para documentar la respuesta, así que tiene que decir la verdad (ver 4.4.2 de *Controladores y MVC*):
 
 ```csharp
 [HttpGet("{id:long}")]
-public IActionResult GetById(long id)
+public ActionResult<Producto> GetById(long id)
 {
     var resultado = service.GetById(id);
 
@@ -614,7 +618,7 @@ public IActionResult GetById(long id)
 }
 
 [HttpPost]
-public IActionResult Create([FromBody] ProductoDto dto)
+public ActionResult<Producto> Create([FromBody] ProductoDto dto)
 {
     var resultado = service.Create(dto);
 
@@ -622,8 +626,9 @@ public IActionResult Create([FromBody] ProductoDto dto)
         onSuccess: producto => CreatedAtAction(nameof(GetById), new { id = producto.Id }, producto),
         onFailure: error => error switch
         {
-            ValidationError ve => UnprocessableEntity(new { message = ve.Message, errors = ve.Errors }),
+            ValidationError ve => BadRequest(new { message = ve.Message, errors = ve.Errors }),
             ConflictError => Conflict(new { message = error.Message }),
+            BusinessRuleError => UnprocessableEntity(new { message = error.Message }),
             _ => StatusCode(500, new { message = error.Message })
         });
 }
@@ -631,6 +636,8 @@ public IActionResult Create([FromBody] ProductoDto dto)
 
 **Ventaja:** Flexible — cada endpoint puede manejar errores de forma diferente.
 **Desventaja:** Repetición — si muchos endpoints manejan los mismos errores, el switch se duplica.
+
+> 📝 **Nota:** `Match` devuelve el tipo común de los dos lambdas. Aquí `Ok(producto)` es un `OkObjectResult` y el `switch` un `ObjectResult` → el común es `ActionResult`, que C# convierte implícitamente a `ActionResult<Producto>`. Por eso el `return` compila sin cast.
 
 ### 7.8.2. Opción B: Función privada GetHttpResult()
 
@@ -642,7 +649,7 @@ Un solo switch en una función privada del controlador. Cada endpoint llama a es
 public class ProductosController(IProductoService service) : ControllerBase
 {
     [HttpGet("{id:long}")]
-    public IActionResult GetById(long id)
+    public ActionResult<Producto> GetById(long id)
     {
         var resultado = service.GetById(id);
         return resultado.Match(
@@ -651,7 +658,7 @@ public class ProductosController(IProductoService service) : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult Create([FromBody] ProductoDto dto)
+    public ActionResult<Producto> Create([FromBody] ProductoDto dto)
     {
         var resultado = service.Create(dto);
         return resultado.Match(
@@ -660,19 +667,19 @@ public class ProductosController(IProductoService service) : ControllerBase
     }
 
     [HttpDelete("{id:long}")]
-    public IActionResult Delete(long id)
+    public ActionResult Delete(long id)
     {
         var resultado = service.Delete(id);
         return resultado.Match(
-            _ => NoContent(),
+            () => NoContent(),
             error => GetHttpResult(error));
     }
 
     // ✅ Un solo sitio para el mapeo de errores
-    private IActionResult GetHttpResult(DomainError error) => error switch
+    private ActionResult GetHttpResult(DomainError error) => error switch
     {
         NotFoundError => NotFound(new { message = error.Message }),
-        ValidationError ve => UnprocessableEntity(new { message = ve.Message, errors = ve.Errors }),
+        ValidationError ve => BadRequest(new { message = ve.Message, errors = ve.Errors }),
         ConflictError => Conflict(new { message = error.Message }),
         UnauthorizedError => Unauthorized(new { message = error.Message }),
         ForbiddenError => StatusCode(403, new { message = error.Message }),
@@ -685,17 +692,19 @@ public class ProductosController(IProductoService service) : ControllerBase
 **Ventaja:** Un solo sitio para mantener. Si añades un nuevo tipo de error, solo tocas `GetHttpResult`.
 **Desventaja:** Todos los endpoints manejan errores de la misma forma (menos flexible).
 
-### 7.8.3. Opción C: Método de extensión ToHttpResult()
+> ⚠️ **Advertencia:** En `UnitResult<DomainError>` el `onSuccess` de `Match` **no recibe parámetro**: se escribe `() => NoContent()`. Si pones `_ => NoContent()` el compilador no encuentra esa sobrecarga y acaba enganchándose a `Match(Func<TNew>, Func<string, TNew>)`, con lo que `error` se infiere como `string` y obtienes un montón de errores `CS0029`/`CS1503` que no tienen nada que ver con lo que has escrito. En `Result<T, DomainError>` (los Get y el Create) sí hay parámetro, porque hay un valor que devolver.
 
-Un método de extensión sobre `DomainError` que se puede usar en cualquier controlador:
+### 7.8.3. Opción C: Método de extensión ToHttpResult\<T\>()
+
+Un método de extensión **genérico** sobre `DomainError` que se puede usar en cualquier controlador. El genérico `T` es el tipo del payload correcto, de modo que el resultado ya es un `ActionResult<T>` y no hace falta convertir nada:
 
 ```csharp
 public static class DomainErrorExtensions
 {
-    public static IActionResult ToHttpResult(this DomainError error) => error switch
+    public static ActionResult<T> ToHttpResult<T>(this DomainError error) => error switch
     {
         NotFoundError => new NotFoundObjectResult(new { message = error.Message }),
-        ValidationError ve => new UnprocessableEntityObjectResult(new { message = ve.Message, errors = ve.Errors }),
+        ValidationError ve => new BadRequestObjectResult(new { message = ve.Message, errors = ve.Errors }),
         ConflictError => new ConflictObjectResult(new { message = error.Message }),
         UnauthorizedError => new UnauthorizedObjectResult(new { message = error.Message }),
         ForbiddenError => new ObjectResult(new { message = error.Message }) { StatusCode = 403 },
@@ -705,25 +714,38 @@ public static class DomainErrorExtensions
 }
 ```
 
-**Uso en el controlador:**
+**Uso en el controlador** — la firma lleva el tipo y la extensión se llama con `ToHttpResult<Producto>()`:
 
 ```csharp
 [HttpGet("{id:long}")]
-public IActionResult GetById(long id)
+public ActionResult<Producto> GetById(long id)
 {
     var resultado = service.GetById(id);
     return resultado.Match(
         producto => Ok(producto),
-        error => error.ToHttpResult());
+        error => error.ToHttpResult<Producto>());
 }
 
 [HttpPost]
-public IActionResult Create([FromBody] ProductoDto dto)
+public ActionResult<Producto> Create([FromBody] ProductoDto dto)
 {
     var resultado = service.Create(dto);
     return resultado.Match(
         producto => CreatedAtAction(nameof(GetById), new { id = producto.Id }, producto),
-        error => error.ToHttpResult());
+        error => error.ToHttpResult<Producto>());
+}
+```
+
+**Y también con el ternario**, que es la forma más corta (así se escriben los endpoints de los ejemplos de esta unidad):
+
+```csharp
+[HttpGet]
+public ActionResult<List<Producto>> GetAll()
+{
+    var resultado = service.GetAll();
+    return resultado.IsSuccess
+        ? Ok(resultado.Value)
+        : resultado.Error.ToHttpResult<List<Producto>>();
 }
 ```
 
@@ -736,7 +758,40 @@ public IActionResult Create([FromBody] ProductoDto dto)
 | Cada endpoint necesita errores diferentes | Opción A o B — más flexibilidad |
 | Errores siempre iguales (REST estándar) | Opción C — consistencia |
 
-### 7.8.4. Comparación
+### 7.8.4. Endpoints sin payload tipado (204)
+
+En un `Delete` no hay `T` que poner: el éxito es un **204 No Content**, no un cuerpo. Y como `ToHttpResult<T>()` necesita el tipo del payload, ahí no puedes usarlo.
+
+📌 Ejemplo real: es lo mismo que hace Tienda en su endpoint de borrado — en lugar de `ActionResult<T>` devuelve `ActionResult` plano y resuelve el error con un `switch` de dos brazos:
+
+```csharp
+[HttpDelete("{id:long}")]
+public ActionResult Delete(long id)
+{
+    var result = service.Delete(id);
+    if (result.IsSuccess) return NoContent();
+
+    // ✅ Un solo error posible (404) + red de seguridad para lo inesperado
+    var error = result.Error;
+    return error switch
+    {
+        NotFoundError => NotFound(new { message = error.Message }),
+        _ => StatusCode(StatusCodes.Status500InternalServerError, new { message = error.Message })
+    };
+}
+```
+
+**Regla rápida:**
+
+| El endpoint devuelve | Firma | Mapeo de errores |
+|----------------------|-------|------------------|
+| Payload tipado (200, 201) | `ActionResult<T>` | `error.ToHttpResult<T>()` |
+| 204 sin payload | `ActionResult` | `switch` inline de dos brazos |
+| Paginación | `ActionResult<PagedResponse<T>>` | `error.ToHttpResult<PagedResponse<T>>()` |
+
+> 💡 **Consejo:** Si dudas, mira la firma. `ActionResult<Producto>` documenta en OpenAPI qué cuerpo devuelve el 200; `IActionResult` no dice nada y Swagger mostrará "200 OK" sin esquema.
+
+### 7.8.5. Comparación
 
 | | Opción A (inline) | Opción B (privada) | Opción C (extensión) |
 |--|-------------------|--------------------|--------------------|
@@ -756,7 +811,8 @@ public IActionResult Create([FromBody] ProductoDto dto)
 - **Un error por dominio:** Crea clases estáticas como `ProductoError`, `AuthError` con métodos factory
 - **Excepciones para lo excepcional:** BD caída, bug, fichero no encontrado → sí excepciones
 - **No olvides UnitResult:** Para operaciones sin retorno (Delete, Update) usa `UnitResult<DomainError>`
-- **Match siempre que sea posible:** Prioriza `Match` sobre `IsSuccess`/`IsFailure` — fuerza el manejo de ambos casos; `IsSuccess` solo compensa en flujos muy simples (por ejemplo, un `NoContent` directo)
+- **La firma del controlador también dice la verdad:** Devuelve `ActionResult<T>` (nunca `IActionResult` en endpoints con payload) y mapea con `error.ToHttpResult<T>()`; Swagger documentará el esquema real del 200
+- **Match siempre que sea posible:** Prioriza `Match` sobre `IsSuccess`/`IsFailure` — fuerza el manejo de ambos casos; `IsSuccess` solo compensa en flujos muy simples (por ejemplo, un `NoContent` directo). Ojo: sobre `UnitResult` el `onSuccess` va **sin parámetro** (`() => NoContent()`)
 
 > 💡 **Consejo:** Aunque uses Result Pattern, **siempre** debes tener un middleware de excepciones global como safety net. Si se te escapa un bug, una excepción de BD, o un error inesperado, el middleware lo captura y devuelve una respuesta 500 coherente en lugar de un HTML crudo. Es como el airbag de tu coche: confías en que no lo necesitarás, pero ahí está por si acaso.
 
@@ -769,15 +825,15 @@ public IActionResult Create([FromBody] ProductoDto dto)
 1. **Errores de dominio:** Crea `DomainError` base y tipos concretos (`NotFoundError`, `ValidationError`, `ConflictError`)
 2. **Errores por dominio:** Crea `ProductoError` con métodos factory
 3. **Servicio con Result:** Modifica `IProductoService` para que devuelva `Result<Producto, DomainError>`
-4. **Controlador:** Implementa la Opción B (función privada `GetHttpResult`) o la Opción C (extensión)
+4. **Controlador:** Implementa la Opción B (función privada `GetHttpResult`) o la Opción C (extensión `ToHttpResult<T>`), con firmas `ActionResult<T>` en los endpoints con payload y `ActionResult` en el Delete de 204
 
 **Casos a modelar:**
 
 | Operación | Caso correcto | Casos incorrectos |
 |-----------|---------------|-------------------|
-| Crear producto | 201 Created | 422 (nombre vacío), 422 (precio ≤ 0), 409 (nombre duplicado) |
+| Crear producto | 201 Created | 400 (nombre vacío), 400 (precio ≤ 0), 409 (nombre duplicado) |
 | Buscar por ID | 200 OK | 404 (no existe) |
-| Actualizar | 200 OK | 404 (no existe), 422 (precio ≤ 0) |
+| Actualizar | 200 OK | 404 (no existe), 400 (precio ≤ 0) |
 | Eliminar | 204 No Content | 404 (no existe) |
 | Listar | 200 OK | Nunca falla (devuelve lista vacía) |
 

@@ -202,8 +202,8 @@ app.MapGet("/api/productos/{id}", (int id) =>
 | `Results.Created()` | 201 | Recurso creado |
 | `Results.NoContent()` | 204 | Éxito sin datos |
 | `Results.NotFound()` | 404 | Recurso no encontrado |
-| `Results.BadRequest()` | 400 | Petición mal formada |
-| `Results.UnprocessableEntity()` | 422 | Datos validados incorrectamente |
+| `Results.BadRequest()` | 400 | Petición mal formada o validación fallida |
+| `Results.UnprocessableEntity()` | 422 | Regla de negocio incumplida |
 
 ### 3.4.2. TypedResults: respuestas tipadas
 
@@ -242,12 +242,15 @@ flowchart TD
     C -->|Sí| D["Results.NoContent()"]
     C -->|No| E{"¿El recurso existe?"}
     E -->|No| F["Results.NotFound()"]
-    E -->|Sí| G{"¿Los datos son válidos?"}
-    G -->|No| H["Results.UnprocessableEntity()"]
-    G -->|Sí| I["Results.Ok()"]
+    E -->|Sí| G{"¿Los campos son válidos?"}
+    G -->|No| H0["Results.BadRequest()"]
+    G -->|Sí| G2{"¿Regla de negocio cumplida?"}
+    G2 -->|No| H["Results.UnprocessableEntity()"]
+    G2 -->|Sí| I["Results.Ok()"]
     style B fill:#4CAF50,color:#fff
     style D fill:#4CAF50,color:#fff
     style F fill:#f44336,color:#fff
+    style H0 fill:#FF9800,color:#fff
     style H fill:#FF9800,color:#fff
     style I fill:#4CAF50,color:#fff
 ```
@@ -661,8 +664,8 @@ Se construye la URL **a mano** porque Minimal APIs no tienen *named actions*: a 
 | **Results.Created()** | Respuesta 201 con ubicación |
 | **Results.NoContent()** | Respuesta 204 sin datos |
 | **Results.NotFound()** | Respuesta 404 |
-| **Results.BadRequest()** | Respuesta 400 (JSON mal formado) |
-| **Results.UnprocessableEntity()** | Respuesta 422 (datos inválidos en validación) |
+| **Results.BadRequest()** | Respuesta 400 (JSON mal formado o validación fallida) |
+| **Results.UnprocessableEntity()** | Respuesta 422 (regla de negocio incumplida) |
 
 **¿Qué viene después?**
 

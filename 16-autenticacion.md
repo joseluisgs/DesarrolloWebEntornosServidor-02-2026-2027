@@ -705,7 +705,7 @@ public class AuthService(
     public async Task<AuthResponse> SignupAsync(SignupRequest request)
     {
         var existing = await userRepository.FindByEmailAsync(request.Email);
-        if (existing != null)
+        if (existing is not null)
         {
             throw new InvalidOperationException("El email ya esta registrado");
         }
@@ -739,7 +739,7 @@ public class AuthService(
     public async Task<AuthResponse> LoginAsync(string email, string password)
     {
         var user = await userRepository.FindByEmailAsync(email);
-        if (user == null || user.IsDeleted)
+        if (user is null || user.IsDeleted)
         {
             throw new UnauthorizedAccessException("Credenciales invalidas");
         }
@@ -1300,7 +1300,7 @@ public class AuthIdentityController(
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var user = await userManager.FindByEmailAsync(request.Email);
-        if (user == null)
+        if (user is null)
         {
             return Unauthorized(new ProblemDetails
             {
@@ -1352,7 +1352,7 @@ public class AuthIdentityController(
     public async Task<IActionResult> GetCurrentUser()
     {
         var user = await userManager.GetUserAsync(User);
-        if (user == null) return NotFound();
+        if (user is null) return NotFound();
 
         var roles = await userManager.GetRolesAsync(user);
 
@@ -1467,7 +1467,7 @@ public async Task<IActionResult> ExternalLoginCallback(
     string? returnUrl = null)
 {
     var info = await signInManager.GetExternalLoginInfoAsync();
-    if (info == null)
+    if (info is null)
         return BadRequest("Error obteniendo informacion del proveedor");
 
     var result = await signInManager
@@ -1599,7 +1599,7 @@ public static class SeedService
             .GetRequiredService<IUserRepository>();
 
         var existing = await repository.FindByEmailAsync("admin@funko.com");
-        if (existing == null)
+        if (existing is null)
         {
             await repository.CreateAsync(new User
             {

@@ -316,7 +316,7 @@ Los códigos de estado HTTP comunican al cliente qué ha pasado con su petición
 
 | Código | Nombre | Cuándo usarlo |
 |--------|--------|---------------|
-| **400** | Bad Request | La petición está mal formada (JSON con errores de sintaxis) |
+| **400** | Bad Request | La petición está mal formada o sus campos no superan la validación (JSON con sintaxis rota, campo obligatorio vacío) |
 | **401** | Unauthorized | No estás autenticado (no envías token) |
 | **403** | Forbidden | Estás autenticado pero no tienes permisos |
 | **404** | Not Found | El recurso no existe |
@@ -327,12 +327,12 @@ Los códigos de estado HTTP comunican al cliente qué ha pasado con su petición
 
 | Código | Significado | Ejemplo |
 |--------|-------------|---------|
-| **400** | El cliente envió algo **malformado** | JSON con errores de sintaxis, campo "edad" con texto en vez de número |
-| **422** | El formato es correcto pero los datos **no tienen sentido de negocio** | Precio negativo, email sin @, nombre vacío |
+| **400** | No supera la **validación**: mal formado o campos inválidos/ausentes | JSON con errores de sintaxis, nombre vacío, precio con texto en vez de número |
+| **422** | Los campos están bien, pero una **regla de negocio** rechaza la operación | Stock insuficiente, no se puede eliminar una categoría que tiene productos |
 
-> ⚠️ **Advertencia:** No uses 400 para todo. Si el JSON es correcto pero el precio es negativo, es un **422**, no un 400. El 400 es para errores de formato, el 422 para errores de validación. El **409** es para duplicados (nombre ya existente).
+> ⚠️ **Advertencia:** No los confundas. Si falta el nombre o el precio es `-5€`, eso es **validación de datos → 400** (ASP.NET Core ya te lo devuelve solo con `[ApiController]`). El **422** es para cuando los datos son correctos pero el negocio dice "no puedo". El **409** es para duplicados (nombre ya existente).
 
-📌 **Ejemplo real:** En Amazon, si envías un JSON con la sintaxis rota → 400. Si envías un formulario sin rellenar el nombre → 422. Si pones un precio de -5€ → 422.
+📌 **Ejemplo real:** En Amazon, si envías un JSON con la sintaxis rota → 400. Si envías un formulario sin rellenar el nombre → 400. Si pones un precio de -5€ → 400. Pero si pides 10 unidades de un artículo con stock 3 → 422: los datos son válidos, pero la operación no se puede procesar.
 
 ### 2.4.5. 401 vs 403
 
@@ -361,9 +361,11 @@ flowchart TD
     D -->|No| E["401 Unauthorized"]
     D -->|Sí| F{"¿Autorizado?"}
     F -->|No| G["403 Forbidden"]
-    F -->|Sí| H{"¿Datos válidos?"}
-    H -->|No| I["422 Unprocessable"]
-    H -->|Sí| J{"¿Es POST?"}
+    F -->|Sí| H{"¿Campos válidos?"}
+    H -->|No| I["400 Bad Request"]
+    H -->|Sí| H2{"¿Regla de negocio cumplida?"}
+    H2 -->|No| I2["422 Unprocessable"]
+    H2 -->|Sí| J{"¿Es POST?"}
     J -->|Sí| K{"¿Ya existe?"}
     K -->|Sí| L["409 Conflict"]
     K -->|No| M["201 Created"]
@@ -376,6 +378,7 @@ flowchart TD
     style E fill:#f44336,color:#fff
     style G fill:#f44336,color:#fff
     style I fill:#FF9800,color:#fff
+    style I2 fill:#FF9800,color:#fff
     style L fill:#f44336,color:#fff
     style M fill:#4CAF50,color:#fff
     style O fill:#f44336,color:#fff
@@ -502,11 +505,12 @@ Un Funko tiene estas propiedades:
 | **200** | Éxito con datos |
 | **201** | Recurso creado |
 | **204** | Éxito sin datos |
-| **400** | JSON mal formado |
+| **400** | Petición mal formada o validación fallida |
 | **401** | No autenticado |
 | **403** | No autorizado |
 | **404** | Recurso no encontrado |
-| **422** | Datos inválidos (validación) |
+| **409** | Recurso duplicado |
+| **422** | Regla de negocio incumplida |
 
 **¿Qué viene después?**
 

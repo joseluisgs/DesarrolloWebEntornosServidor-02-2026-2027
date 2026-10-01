@@ -538,7 +538,7 @@ public class EmailBackgroundWorker(
             try
             {
                 var email = await queue.DequeueAsync(stoppingToken);
-                if (email != null)
+                if (email is not null)
                 {
                     // IEmailService es Scoped y el worker es Singleton:
                     // creamos un scope por cada envío (patrón correcto)

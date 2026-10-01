@@ -953,7 +953,7 @@ var context = new AppDbContext(options);
 
 ```csharp
 private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
-    .WithImage("postgres:16-alpine")
+    .WithImage("postgres:17-alpine")
     .Build();
 
 [OneTimeSetUp]

@@ -273,7 +273,7 @@ public class ProductoService(
 
         producto = await context.Productos.FindAsync(id);
 
-        if (producto != null)
+        if (producto is not null)
         {
             cache.Set(cacheKey, producto, _cacheDuration);
         }
@@ -312,7 +312,7 @@ public class ProductoCacheService(
         var cacheKey = $"producto:{id}";
         var cached = await cache.GetStringAsync(cacheKey);
 
-        if (cached != null)
+        if (cached is not null)
         {
             return serializer.Deserialize<ProductoDto>(cached);
         }

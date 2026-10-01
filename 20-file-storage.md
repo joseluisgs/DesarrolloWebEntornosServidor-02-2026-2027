@@ -509,7 +509,7 @@ public class FileSystemStorageService(
         string? folder = null,
         CancellationToken cancellationToken = default)
     {
-        if (file == null || file.Length == 0)
+        if (file is null || file.Length == 0)
             throw new ArgumentException("El archivo es nulo o vacío", nameof(file));
 
         if (file.Length > settings.Value.MaxFileSize)
@@ -549,7 +549,7 @@ public class FileSystemStorageService(
         string? folder = null,
         CancellationToken cancellationToken = default)
     {
-        if (stream == null)
+        if (stream is null)
             throw new ArgumentNullException(nameof(stream));
         
         var extension = Path.GetExtension(fileName).ToLowerInvariant();
@@ -591,7 +591,7 @@ public class FileSystemStorageService(
 
     public string GetUrl(string fileName, string? folder = null)
     {
-        var path = folder != null ? $"/uploads/{folder}/{fileName}" : $"/uploads/{fileName}";
+        var path = folder is not null ? $"/uploads/{folder}/{fileName}" : $"/uploads/{fileName}";
         return path.Replace("\\", "/");
     }
 
@@ -757,7 +757,7 @@ public class FilesController : ControllerBase
     {
         try
         {
-            if (file == null || file.Length == 0)
+            if (file is null || file.Length == 0)
                 return BadRequest(new ProblemDetails
                 {
                     Title = "Archivo inválido",
@@ -1195,7 +1195,7 @@ public async Task<IActionResult> UpdateImage(
     [FromServices] IStorageService storageService)
 {
     var producto = await productoService.GetByIdAsync(id);
-    if (producto == null)
+    if (producto is null)
         return NotFound();
 
     // Eliminar imagen anterior si existe
@@ -1323,7 +1323,7 @@ public class AzureBlobStorageService : IStorageService
 
     private string GetBlobPath(string fileName, string? folder)
     {
-        return folder != null ? $"{folder}/{fileName}" : fileName;
+        return folder is not null ? $"{folder}/{fileName}" : fileName;
     }
 
     private static string GenerateFileName(string originalFileName)

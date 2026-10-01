@@ -706,13 +706,13 @@ public IActionResult Create([FromBody] CreateProductoDto dto)
 
 // ✅ BUENO: La validación se ejecuta automáticamente antes del controller
 [HttpPost]
-public IActionResult Create([FromBody] CreateProductoDto dto)
+public ActionResult<ProductoDto> Create([FromBody] CreateProductoDto dto)
 {
     // Aquí el DTO ya está validado — si llegamos aquí, todo está bien
     var result = service.Create(dto);
     return result.Match(
         producto => CreatedAtAction(nameof(GetById), new { id = producto.Id }, producto.ToDto()),
-        error => error.ToHttpResult());
+        error => error.ToHttpResult<ProductoDto>());
 }
 ```
 

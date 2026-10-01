@@ -701,7 +701,7 @@ public class FunkoAppWebApplicationFactory : WebApplicationFactory<Program>
         {
             var descriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<FunkoDbContext>));
-            if (descriptor != null)
+            if (descriptor is not null)
                 services.Remove(descriptor);
 
             services.AddDbContext<FunkoDbContext>(options =>

@@ -565,7 +565,7 @@ public class SwaggerExamplesFilter : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
-        if (operation.RequestBody?.Content != null)
+        if (operation.RequestBody?.Content is not null)
         {
             foreach (var content in operation.RequestBody.Content)
             {

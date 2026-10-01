@@ -318,13 +318,13 @@ public async Task<Producto?> GetProductoAsync(int id)
     
     // 1. Intentar obtener del caché
     var cached = await _cache.GetAsync<Producto>(cacheKey);
-    if (cached != null) return cached; // HIT
+    if (cached is not null) return cached; // HIT
     
     // 2. Cache MISS - obtener de la base de datos
     var producto = await _repository.GetByIdAsync(id);
     
     // 3. Guardar en caché para próximas solicitudes
-    if (producto != null)
+    if (producto is not null)
         await _cache.SetAsync(cacheKey, producto, TimeSpan.FromMinutes(30));
     
     return producto;

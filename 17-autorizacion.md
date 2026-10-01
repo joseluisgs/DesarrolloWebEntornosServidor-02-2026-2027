@@ -608,7 +608,7 @@ public static class SeedIdentityData
         // Crear usuario admin
         var adminEmail = "admin@funko.com";
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
-        if (adminUser == null)
+        if (adminUser is null)
         {
             adminUser = new User
             {
@@ -628,7 +628,7 @@ public static class SeedIdentityData
         // Crear usuario normal
         var userEmail = "user@funko.com";
         var normalUser = await userManager.FindByEmailAsync(userEmail);
-        if (normalUser == null)
+        if (normalUser is null)
         {
             normalUser = new User
             {

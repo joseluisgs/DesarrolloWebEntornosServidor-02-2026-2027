@@ -1095,7 +1095,7 @@ sequenceDiagram
     participant M as MongoDB
 
     T->+TC: Build contenedor
-    TC->+D: docker run mongo:7
+    TC->+D: docker run mongo:7.0
     D->+M: Iniciar MongoDB
     M-->>-D: Listo
     D-->>-TC: Puerto asignado
@@ -1123,7 +1123,7 @@ using Testcontainers.MongoDb;
 public abstract class MongoTestBase : IAsyncLifetime
 {
     private readonly MongoDbContainer _mongo = new MongoDbBuilder()
-        .WithImage("mongo:7")
+        .WithImage("mongo:7.0")
         .Build();
 
     protected IMongoDatabase Database { get; private set; } = null!;
@@ -1172,14 +1172,14 @@ public abstract class MongoTestBase : IAsyncLifetime
 > public abstract class MongoTestBase : IAsyncLifetime
 > {
 >     private static readonly MongoDbContainer _mongo = new MongoDbBuilder()
->         .WithImage("mongo:7").Build();
+>         .WithImage("mongo:7.0").Build();
 > }
 >
 > // ✅ BUENO: instance field — cada fixture obtiene su propio contenedor
 > public abstract class MongoTestBase : IAsyncLifetime
 > {
 >     private readonly MongoDbContainer _mongo = new MongoDbBuilder()
->         .WithImage("mongo:7").Build();
+>         .WithImage("mongo:7.0").Build();
 > }
 > ```
 >
