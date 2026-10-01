@@ -1,0 +1,5 @@
+name: Prueba
+variables:
+  - name: url
+    value: http://localhost:5000/api
+    description: url de la api

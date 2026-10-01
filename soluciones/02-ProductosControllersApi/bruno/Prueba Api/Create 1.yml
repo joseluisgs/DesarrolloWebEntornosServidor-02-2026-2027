@@ -1,0 +1,25 @@
+info:
+  name: Create
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{url}}/productos"
+  body:
+    type: json
+    data: |-
+      {
+        "nombre": "{{$randomNoun}}",
+        "precio": {{$randomPrice}},
+        "categoria": "Ropa",
+        "imagen": "{{$randomImageUrl}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

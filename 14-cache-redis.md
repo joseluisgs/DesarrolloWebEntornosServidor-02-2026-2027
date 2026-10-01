@@ -859,6 +859,10 @@ await cache.RemoveAsync($"productos:cat:{producto.CategoriaId}"); // lista por c
 // Garantiza que la próxima lectura siempre traiga datos frescos
 ```
 
+> 📝 **Nota:** Fíjate en que `productos:all` **solo aparece si alguien la lee**. Invalidar una clave que nadie consulta es **código muerto**: cuesta un viaje a Redis y no protege nada. Antes de añadir una clave a la lista de invalidación, pregúntate *"¿hay algún `GetAsync` que la pida?"*. Si la respuesta es no, borra tanto la lectura como la invalidación.
+>
+> 📌 Ejemplo real: en TiendaAPI eliminaron las claves `productos:all`, `categorias:all`, `usuarios:all` y `pedidos:all` de la invalidación porque tenían **0 lectores** (las listas se servían por `OutputCache` con tags). Commit `fix: eliminar claves muertas :all de invalidación`.
+
 ### 14.9.3. Invalidación en Cascada
 
 Cuando un dato relacionado cambia, todas las cachés derivadas deben invalidarse:
@@ -884,6 +888,10 @@ flowchart TD
 | **DELETE** | Invalidar | Invalidar |
 
 > 💡 **Consejo:** No hay una respuesta universal. La mejor estrategia depende de tu patrón de acceso. Analiza si las lecturas del mismo elemento son frecuentes antes de decidir.
+
+> ⚠️ **Advertencia:** La regla asume que **esa clave existe y se lee**. La regla de oro completa es: *"invalida el elemento y las listas **que efectivamente estés cacheando**"*. Invalidar listas fantasma (`xxx:all` sin lector) es ruido; y si una lista se cachea **pero nunca se invalida**, es un fallo de coherencia disfrazado de optimización.
+
+> 💡 **Analogía:** Piensa en las etiquetas de un armario de un almacén. Si mueves una caja y borras la etiqueta de una balda que nadie usa, solo pierdes tiempo. Pero si dejas la etiqueta vieja en la balda donde sí mira la gente, acabarán llevándose la caja equivocada.
 
 ## 14.10. CRUD con Caché: Diagrama Completo
 

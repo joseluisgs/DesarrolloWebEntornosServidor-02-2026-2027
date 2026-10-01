@@ -42,6 +42,7 @@
     - [30.9.3. Queries con MediatR](#3093-queries-con-mediatr)
     - [30.9.4. Pipeline Behaviors](#3094-pipeline-behaviors)
     - [30.9.5. Diagrama: Flujo completo de Commands y Queries](#3095-diagrama-flujo-completo-de-commands-y-queries)
+    - [30.9.6. GraphQL también pasa por MediatR](#3096-graphql-también-pasa-por-mediatr)
   - [30.10. Sincronización con Domain Events y MediatR](#3010-sincronización-con-domain-events-y-mediatr)
     - [30.10.1. La idea clave: ya tienes los datos en memoria](#30101-la-idea-clave-ya-tienes-los-datos-en-memoria)
     - [30.10.2. Código de ejemplo](#30102-código-de-ejemplo)
@@ -1517,6 +1518,55 @@ sequenceDiagram
 2. **Pipeline configurable**: Los Behaviors (Log, Valid, Cache) se ejecutan en orden y se pueden añadir/quitar sin tocar Handlers.
 3. **Domain Events**: Después de cada Command, se publica un evento que sincroniza MongoDB. La sincronización es **parte del mismo flujo**.
 4. **Consistencia**: El evento se publica **después** de `SaveChangesAsync`. Si la escritura falla, nunca se publica el evento.
+
+### 30.9.6. GraphQL también pasa por MediatR
+
+Todo lo que hemos visto hasta ahora entra por **REST**. Pero CQRS no es cosa de HTTP: si tu API también expone GraphQL, las queries **deben pasar por el mismo `IMediator`**. Si no, acabas con dos caminos distintos hacia los mismos datos, y tarde o temprano divergen.
+
+```csharp
+/// <summary>
+/// Consultas GraphQL de la tienda.
+///
+/// 🎓 CQRS consistente: GraphQL pasa por MediatR igual que REST.
+/// Las queries usan los mismos Query Handlers que los controladores REST.
+///
+/// 🎓 Seguridad: GraphQL solo expone DTOs, nunca entidades del modelo de escritura.
+/// </summary>
+public class TiendaQuery
+{
+    /// <summary>Obtiene todos los productos.</summary>
+    /// <param name="mediator">Mediator para enviar queries CQRS.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Lista de productos (DTOs).</returns>
+    public async Task<IReadOnlyList<ProductoDto>> GetProductos(
+        [Service] IMediator mediator,
+        CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetAllProductosListQuery(), ct);
+        if (result.IsFailure)
+            throw new Exception(result.Error.Message);
+
+        return result.Value;
+    }
+
+    // El resto de campos siguen el mismo patrón: resolver → Send(...) → DTO
+}
+```
+
+**Qué se gana con esto:**
+
+| GraphQL llamando a los servicios directamente | GraphQL pasando por MediatR |
+|---|---|
+| Dos implementaciones de «traer todos los productos» | Un solo Query Handler para REST y GraphQL |
+| Los Behaviors (Logging, Validación, Caché) solo corren en REST | Los Behaviors corren **también** en GraphQL |
+| Cambias la regla de negocio en un sitio y GraphQL no se entera | Un único sitio que cambiar |
+| Los tests de GraphQL prueban otra cosa | Los tests de GraphQL prueban el mismo handler |
+
+> 📝 **Nota:** Fíjate en el `[Service] IMediator mediator` de la firma: HotChocolate inyecta el mediator **por resolver**, sin necesidad de constructor. Y el patrón de errores —`if (result.IsFailure) throw ...`— es el puente entre el `Result` funcional que devuelven los Handlers y el modelo de excepciones que GraphQL entiende.
+
+📌 **Ejemplo real:** en TiendaAPI (repo CQRS/MediatR) el commit *feat: GraphQL queries pasan por MediatR (CQRS consistente con REST)* creó `GetAllProductosListQuery` y `GetAllCategoriasListQuery` y reescribió `TiendaQuery` para que todo pasara por `IMediator.Send`; los tests se adaptaron en el commit siguiente (*fix: tests GraphQL actualizados para usar IMediator*). CQRS es una **disciplina, no un detalle de transporte**: REST y GraphQL son dos ventanas a la misma caja.
+
+> 💡 **Consejo:** Si tu GraphQL llama directamente a los servicios (`[Service] IProductoService service`), tienes **dos arquitecturas viviendo en el mismo proyecto**. Pasa las queries por MediatR **antes** de que el esquema crezca: una vez que los resolvers cuelgan de los Handlers, no hay vuelta atrás sin reescribir.
 
 ## 30.10. Sincronización con Domain Events y MediatR
 

@@ -938,7 +938,7 @@ Sin Redis, si el Cliente A esta en la Instancia 1 y el Cliente B en la Instancia
 | **Conexion no autenticada** | `[Authorize]` en el Hub |
 | **Token expirado** | `accessTokenFactory` renueva el token |
 | **Origen malicioso** | `AllowedOrigins` en `UseWebSockets` |
-| **Abuso de conexiones** | Rate limiting en el Hub |
+| **Abuso de conexiones** | Rate limiting en el Hub **+ tope duro de conexiones simultaneas** |
 | **Mensajes maliciosos** | Validacion de datos en el Hub |
 
 ```csharp
@@ -979,6 +979,59 @@ public class ProductosHub : Hub
 ```
 
 > 📝 **Nota:** Otra alternativa es dar caducidad a cada entrada (guardar `DateTime` junto al contador y descartar las antiguas). Lo importante es que **el diccionario no crezca indefinidamente**: `OnDisconnectedAsync` es el lugar natural para limpiar.
+
+**El tope duro de conexiones: otro limite distinto al de mensajes**
+
+El rate limiting de arriba limita los **mensajes**, pero un atacante ni siquiera necesita llegar a mandar ninguno: basta con **abrir miles de conexiones vacias** y dejarlas ahi. Cada WebSocket ocupa memoria y un hilo/estructura en el servidor. Para eso hace falta un techo **en el propio enlace**, y hay dos niveles:
+
+```csharp
+// NIVEL 1 — Kestrel: limite global de conexiones "subidas" a WebSocket.
+// Verificado en .NET 10: KestrelServerOptions.Limits.MaxConcurrentUpgradedConnections existe y es opcional (null = sin limite).
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxConcurrentConnections = 1000;          // conexiones HTTP totales
+    options.Limits.MaxConcurrentUpgradedConnections = 1000;  // de ellas, las que se han convertido en WebSocket
+});
+```
+
+```csharp
+// NIVEL 2 — Tu handler: rechazar en el handshake y decir por que
+public class ProductosWebSocketHandler(ILogger<ProductosWebSocketHandler> logger)
+{
+    // ✅ Tope duro: si ya esta lleno, no aceptes mas
+    private const int MaxConnections = 1000;
+
+    private readonly ConcurrentDictionary<string, WebSocket> _connections = new();
+
+    public async Task HandleConnectionAsync(HttpContext context, WebSocket webSocket)
+    {
+        if (_connections.Count >= MaxConnections)
+        {
+            logger.LogWarning("Limite de conexiones WebSocket alcanzado: {Count}/{Max}",
+                _connections.Count, MaxConnections);
+            await webSocket.CloseAsync(
+                WebSocketCloseStatus.PolicyViolation,
+                "Limite de conexiones alcanzado",
+                CancellationToken.None);
+            return;   // no se registra: no se queda colgada la entrada
+        }
+
+        var connectionId = Guid.NewGuid().ToString();
+        _connections.TryAdd(connectionId, webSocket);
+        // ... resto del manejo
+    }
+}
+```
+
+| Proteccion | Que limita | Qué evita |
+|------------|-----------|-----------|
+| **Rate limiting en el Hub** | Mensajes por usuario | Flood de mensajes |
+| **Tope de conexiones** | Conexiones simultaneas | Agotar memoria y descriptors |
+| **Keep-alive** | Conexiones zombis | Sockets muertos que nunca se cierran |
+
+📌 **Ejemplo real:** en TiendaAPI el endpoint `/ws/productos` se quedo con un techo de **1000 conexiones**: al superarlo, el servidor cierra el socket con `PolicyViolation` y escribe un `LogWarning`. Antes de eso, el `ConcurrentDictionary` de conexiones crecia sin limite y un proceso automatizado bastaba para llevar el contenedor a la muerte **sin llegar a procesar un solo mensaje** (commit *fix: limite de conexiones WebSocket en /ws/productos*).
+
+> ⚠️ **Advertencia:** rechazar **despues** de `AcceptWebSocketAsync` no te ahorra recursos: en ese punto la conexion ya esta consumida. El chequeo tiene que ir **antes** de aceptar, y hay que cerrar el socket de forma explicita para que el cliente se entere (mejor `503` a nivel HTTP si aun no has aceptado).
 
 > ⚠️ **Advertencia:** Nunca confies en que el cliente envia datos validos. Siempre valida en el Hub, igual que lo harias en un Controller. Un usuario malicioso puede enviar cualquier cosa al Hub usando herramientas como la consola del navegador.
 
@@ -1144,6 +1197,33 @@ public class ProductosHubTests
     }
 }
 ```
+
+**Probar los WebSockets con Bruno (y su limitacion)**
+
+Si añades requests de WebSocket a tus colecciones de Bruno, hay una limitacion de la herramienta que conviene conocer antes de echarlo a correr en CI:
+
+> ⚠️ **Advertencia:** **Bruno CLI no soporta el protocolo `ws://`.** Las peticiones `type: ws` solo funcionan en **Bruno Desktop**. Si metes un test de WebSocket en tu coleccion y luego la ejecutas en el pipeline con `bru run`, ese test falla… y el problema parecera de tu API cuando en realidad es de la herramienta.
+
+La solucion es **etiquetar** esos requests y excluirlos cuando corras por CLI:
+
+```
+meta {
+  name: [080] WEBSOCKET - Todos los productos
+  type: ws
+  tags: desktop-only
+}
+```
+
+```bash
+# Terminal / CI: Bruno CLI excluye lo que solo funciona en escritorio
+bru run ./coleccion --env local --exclude-tags=desktop-only
+
+# Bruno Desktop: se ejecuta todo, WebSockets incluidos
+```
+
+📌 **Ejemplo real:** en TiendaAPI la carpeta `12 - WEBSOCKETS` lleva `tags: desktop-only` en cada fichero `.bru`, y el `collection.bru` documenta los dos modos de ejecucion. Commit *fix: tag desktop-only en tests WebSocket Bruno CLI*.
+
+> 💡 **Consejo:** La regla general es **etiquetar por capacidad de la herramienta, no por capricho**: `desktop-only`, `requiere-docker`, `lento`. Así la misma coleccion te sirve en el portatil y en el pipeline, y el pipeline se salta explicitamente lo que no puede hacer — en vez de fallar y obligarte a adivinar.
 
 ## 18.13. Reto
 

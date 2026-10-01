@@ -1,0 +1,25 @@
+info:
+  name: Update
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{url}}/productos/99"
+  body:
+    type: json
+    data: |-
+      {
+        "nombre": "{{$randomNoun}}",
+        "precio": {{$randomPrice}},
+        "categoria": "Ropa",
+        "imagen": "{{$randomImageUrl}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

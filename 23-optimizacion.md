@@ -449,6 +449,20 @@ app.MapGet("/api/productos/{id}", async (long id, HttpContext ctx) =>
 });
 ```
 
+> ⚠️ **Advertencia — el ETag decorativo:** el ETag debe derivarse del **contenido**, no de un valor aleatorio. Este código compila, no lanza ninguna excepción y **no funciona nunca**:
+
+```csharp
+// ❌ MALO: ETag distinto en cada respuesta — la validación NUNCA puede coincidir
+ctx.Response.Headers.ETag = Guid.NewGuid().ToString("N");
+
+// ✅ BUENO: deriva de algo que solo cambia cuando cambia el dato
+var etag = $"\"{producto.Version}-{producto.UpdatedAt.Ticks:x}\"";
+```
+
+Si el ETag cambia en cada respuesta, `If-None-Match` nunca lo iguala → el servidor responde siempre **200 con el cuerpo completo** → el cliente no ahorra ancho de banda **y además** invalida su caché local en cada vuelta. Un ETag que siempre cambia es **peor** que no tener ETag.
+
+📌 **Ejemplo real:** en TiendaAPI había un `ETag = Guid.NewGuid()` copiado de un tutorial. No rompía nada visible, pero anulaba por completo la ventaja de las peticiones condicionales. Se eliminó con el commit *fix: eliminar ETag Guid.NewGuid() decorativo (OutputCache ya gestiona la caché HTTP)*. **Regla:** si no puedes explicar **de dónde sale** tu ETag, es decorativo.
+
 **Alternativa en .NET 10 con `[OutputCache]`:**
 
 ```csharp
@@ -926,6 +940,116 @@ app.MapHealthChecks("/health", new HealthCheckOptions
     }
 });
 ```
+
+**Un health check de caché real mira métricas, no solo el `ping`**
+
+El ejemplo de arriba responde *«¿responde Redis?»*. Pero hay fallos que el `ping` no ve: Redis contesta perfectamente y **las operaciones siguen fallando** (auth rechazada, clave demasiado grande, timeout de serialización…). Para eso se exponen **métricas de errores de la propia caché dentro del health check**:
+
+```csharp
+// Singleton con contadores atómicos — sin dependencias externas
+public class CacheMetrics
+{
+    private long _getTotal;    private long _getErrors;
+    private long _setTotal;    private long _setErrors;
+    private long _removeTotal; private long _removeErrors;
+    private DateTime _lastErrorAt = DateTime.MinValue;
+    private string _lastErrorMessage = string.Empty;
+
+    public long GetTotal  => Interlocked.Read(ref _getTotal);
+    public long GetErrors => Interlocked.Read(ref _getErrors);
+    // … Set y Remove siguen exactamente la misma pinta
+
+    public long TotalErrors => GetErrors + SetErrors + RemoveErrors;
+
+    // 0.0 = sin errores, 1.0 = todo falla
+    public double ErrorRate
+    {
+        get
+        {
+            var total = GetTotal + SetTotal + RemoveTotal;
+            return total == 0 ? 0.0 : (double)TotalErrors / total;
+        }
+    }
+
+    public void RecordGetSuccess() => Interlocked.Increment(ref _getTotal);
+
+    public void RecordGetError(string message)
+    {
+        Interlocked.Increment(ref _getTotal);
+        Interlocked.Increment(ref _getErrors);
+        _lastErrorAt = DateTime.UtcNow;
+        _lastErrorMessage = message;
+    }
+
+    public object ToSummary() => new
+    {
+        getTotal        = GetTotal,
+        getErrors       = GetErrors,
+        totalErrors     = TotalErrors,
+        errorRate       = $"{ErrorRate:P2}",
+        lastErrorAt     = LastErrorAt == DateTime.MinValue ? (DateTime?)null : LastErrorAt,
+        lastErrorMessage = string.IsNullOrEmpty(LastErrorMessage) ? null : LastErrorMessage
+    };
+}
+```
+
+El servicio de caché las registra y el health check las devuelve:
+
+```csharp
+// En RedisCacheService: envolver cada operación y anotar el resultado
+public async Task<string?> GetAsync(string key)
+{
+    try
+    {
+        var value = await _db.GetStringAsync(key);
+        _metrics.RecordGetSuccess();
+        return value;
+    }
+    catch (Exception ex)
+    {
+        _metrics.RecordGetError(ex.Message);   // ← el ping jamás habría visto esto
+        return null;
+    }
+}
+
+// En el health check: inyectar el singleton y meterlo en el Data
+public class RedisHealthCheck(IDistributedCache cache, CacheMetrics metrics) : IHealthCheck
+{
+    public async Task<HealthCheckResult> CheckHealthAsync(
+        HealthCheckContext context, CancellationToken ct = default)
+    {
+        try
+        {
+            await cache.SetStringAsync("health:probe", "ping",
+                new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1) },
+                ct);
+
+            var data = new Dictionary<string, object> { ["cache"] = metrics.ToSummary() };
+            return HealthCheckResult.Healthy("Redis accesible", data);
+        }
+        catch (Exception ex)
+        {
+            return HealthCheckResult.Unhealthy("Redis no accesible", ex);
+        }
+    }
+}
+```
+
+> ⚠️ **Advertencia:** `HealthCheckResult.Healthy(texto, data)` mete los datos en `report.Entries[x].Data`, pero **el JSON solo los muestra si tu `ResponseWriter` los serializa**. El writer de ejemplo de arriba no los incluye, así que las métricas se pierden en silencio. Añade la propiedad `data`:
+
+```csharp
+checks = report.Entries.Select(e => new
+{
+    name = e.Key,
+    status = e.Value.Status.ToString(),
+    duration = e.Value.Duration.TotalMilliseconds,
+    data = e.Value.Data          // ← sin esta línea, CacheMetrics no llega a nadie
+})
+```
+
+📌 **Ejemplo real:** en TiendaAPI, `CacheMetrics` es un singleton registrado en `CacheConfig.AddCache`, se alimenta desde `RedisCacheService` y se lee en `RedisHealthCheck`. Commits: *feat: CacheMetrics — métricas de errores de caché expuestas en /health*, *fix: añadir using CacheMetrics en HealthChecksConfig* y *fix: CacheMetrics — cast explícito `DateTime?` en ToSummary*. La idea es poder prescindir de Prometheus/OpenTelemetry en un proyecto de aula: **`GET /health` basta** para notar que la caché anda mal.
+
+> 💡 **Consejo:** Un health check que solo hace `ping` te dice *«Redis contesta»*. Las métricas te dicen **«Redis contesta, pero falla el 0,12 % de las operaciones»** — que es lo que de verdad duele en producción. Y `lastErrorMessage` te ahorra veinte minutos de log-diving: el mensaje ya está ahí.
 
 ### 23.6.2. Application Metrics
 

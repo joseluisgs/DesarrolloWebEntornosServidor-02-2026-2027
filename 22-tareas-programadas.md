@@ -364,11 +364,17 @@ public class PeriodicTask(
 **Registro en Program.cs:**
 
 ```csharp
-// TimeProvider.System ya viene registrado por defecto desde .NET 8;
-// se declara solo si quieres sustituirlo explícitamente
+// ⚠️ TimeProvider NO viene registrado en DI por defecto.
+// Si tu servicio lo recibe como parámetro OBLIGATORIO, esta línea es OBLIGATORIA:
+// sin ella, al arrancar recibirás
+// "InvalidOperationException: No service for type 'System.TimeProvider' has been registered".
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddHostedService<PeriodicTask>();
 ```
+
+> 📝 **Nota:** Distinta de `TimeProvider.System` (el valor por defecto del BCL) es el **registro** en el contenedor: son dos cosas diferentes. Solo puedes prescindir del `AddSingleton` si tu clase lo acepta como parámetro **opcional** con valor por defecto, patrón que verás en la sección 23.5.2 (`TimeProvider? timeProvider = null` + `timeProvider ?? TimeProvider.System`). Con parámetro obligatorio, el contenedor necesita saber a qué instancia entregártelo.
+
+> ⚠️ **Advertencia:** Ojo con el comentario clásico *"ya viene registrado por defecto desde .NET 8"*: es **falso**. Lo he comprobado con `WebApplication.CreateBuilder` en .NET 10: `GetRequiredService<TimeProvider>()` lanza `InvalidOperationException`. Si borras el `AddSingleton` pensando que es redundante, tu `BackgroundService` revienta al arrancar.
 
 > 💡 **Truco (tests):** En producción inyectas `TimeProvider.System`, pero en tests puedes usar un `FakeTimeProvider` (paquete `Microsoft.Extensions.TimeProvider.Testing`) y avanzar el reloj con `timeProvider.Advance(...)`. Así un teste que "espera" 24 horas termina en milisegundos, sin dormir el hilo real.
 
@@ -970,7 +976,9 @@ _ = Task.Run(() =>
 });
 ```
 
-📌 **Ejemplo real:** en TiendaAPI hicieron inventario de **29** llamadas `_ = Task.Run(...)` (13 en Producto, 11 en Pedidos, 3 en Usuario, 2 en Categoría). 28 ya tenían la guarda `try/catch` interior; se endureció la única que no la tenía (invalidación de caché en `UserService`). Todas **sin `await` y sin `WhenAll`**: el punto justamente es no esperar.
+📌 **Ejemplo real:** en TiendaAPI hicieron inventario de **24** llamadas `_ = Task.Run(...)` (12 en Producto, 10 en Pedidos, 1 en Usuario, 1 en Categoría), **todas ellas con la guarda `try/catch` interior**: notificaciones WebSocket y SignalR, eventos de GraphQL Subscription y precarga de caché (`SET`). Todas **sin `await` y sin `WhenAll`**: el punto justamente es no esperar.
+
+> 📝 **Nota:** Este inventario **no es un dato fijo**. Cuando se escribió por primera vez eran **29** llamadas (13 en Producto, 11 en Pedidos, 3 en Usuario, 2 en Categoría); luego el proyecto **dejó la invalidación de caché de fire-and-forget** y pasó a `await InvalidarCacheXxxAsync(...)`, con lo que el contador bajó a 24. La lección no es el número, sino **qué queda dentro**: solo lo que de verdad puede perderse sin que nadie se entere.
 
 **¿Qué nivel de log?**
 

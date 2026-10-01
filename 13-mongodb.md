@@ -963,6 +963,46 @@ public class FunkoMongoRepository(IMongoDatabase database) : IFunkoRepository
 }
 ```
 
+**Atrapar el `E11000` cuando el upsert es intencionado**
+
+Si añades un índice único (sección 13.3.10) y haces un *upsert* con `ReplaceOne(..., IsUpsert = true)` o `UpdateOne(...)` con `IsUpsert`, MongoDB puede devolverte el error **`E11000 duplicate key error`**. Ojo: **no siempre es un bug**.
+
+Cuando existe una *guarda de versión* («solo sobrescribe si el documento guardado no es más reciente que el entrante»), el filtro no coincide con el documento existente, así que el driver intenta **insertar** y se choca contra el `_id` ya presente:
+
+```csharp
+// Filtro con guarda de versión: solo entra si el guardado NO es más reciente
+var filter = Builders<ProductoRead>.Filter.Eq(p => p.Id, producto.Id)
+           & Builders<ProductoRead>.Filter.Lte(p => p.UpdatedAt, producto.UpdatedAt);
+
+try
+{
+    var result = await Collection.ReplaceOneAsync(
+        filter,
+        producto,
+        new ReplaceOptions { IsUpsert = true });
+
+    if (result.MatchedCount == 0 && result.UpsertedId is null)
+        logger.LogDebug("Upsert omitido (dato más reciente ya presente): {Id}", producto.Id);
+    else
+        logger.LogDebug("Producto sincronizado en MongoDB (upsert): {Id}", producto.Id);
+}
+catch (MongoWriteException ex) when (ex.WriteError?.Code == 11000)
+{
+    // E11000: el documento existente tiene UpdatedAt más reciente,
+    // el filtro no coincide y el upsert intenta insertar con _id duplicado.
+    // Es el comportamiento esperado de la guardia de versión — omitir a propósito.
+    logger.LogDebug("Upsert omitido por guardia de versión (E11000): {Id}", producto.Id);
+}
+```
+
+📌 **Ejemplo real:** en TiendaAPI (repo CQRS/MediatR) el commit *fix: atrapar E11000 en upsert de MongoDB — version guard omitido a propósito, no es fallo* añadió exactamente ese `catch` con el filtro `when`. Antes, cada sincronización normal entre SQL y Mongo generaba un **log de error y una alerta ruidosa** por algo que estaba funcionando perfectamente.
+
+> 📝 **Nota:** La clave está en el **`when`** (`ex.WriteError?.Code == 11000`). Sin ese filtro, el `catch` se tragaría **todos** los errores de escritura — red caída, permisos insuficientes, documento demasiado grande — y los convertiría en «éxitos». Con el filtro, solo se ignora el `11000` y el resto sigue saltando.
+
+> ⚠️ **Advertencia:** Antes de dar por bueno un `E11000`, comprueba **qué índice** lo ha provocado. Si **no** tienes guardia de versión y no has tocado el esquema, ese duplicado es un problema real de integridad (dos escrituras simultáneas, ID mal generado…). Ignorar un duplicado sin leer `ex.WriteError` es como cerrar el ojo al humo porque «a veces humea».
+
+> 💡 **Truco:** `ex.WriteError?.Code` devuelve el código numérico (`11000`); si prefieres no dejar números mágicos en el código, usa `ex.WriteError?.Category == WriteErrorCategory.DuplicateKey`. Es la misma condición, pero se lee sola.
+
 ### 13.6.4. Implementación con EF Core
 
 ```csharp

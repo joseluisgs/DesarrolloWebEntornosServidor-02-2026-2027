@@ -371,6 +371,31 @@ public record CreateProductoDto
 
 📌 Ejemplo real: **Twitter/X** valida que un tweet no supere los 280 caracteres. Eso es un `[MaxLength(280)]`. Un campo de email lleva `[EmailAddress]`. Un campo de edad tiene `[Range(0, 150)]`. Un formulario de registro usa `[Required]` en todos los campos obligatorios y `[Compare("Password")]` para confirmar la contraseña. Data Annotations en estado puro.
 
+> ⚠️ **Advertencia:** si tu DTO es un **record posicional** (los de la sección 8.1.2, `record X(...)` con los parámetros en la firma), los atributos **necesitan el prefijo `property:`**. Sin él, C# los coloca en el **parámetro del constructor**, la propiedad queda **sin ningún atributo**, y `Validator.TryValidateObject` no los encuentra: la validación **se salta sin dar ningún error**. Es el fallo más silencioso que existe, porque el compilador no se queja.
+
+```csharp
+// ❌ MALO: el [Range] se va al PARÁMETRO; la propiedad Page queda sin atributos
+public record ProductoFilterDto(
+    [Range(1, 100, ErrorMessage = "La página debe estar entre 1 y 100")] int Page = 1,
+    [Range(1, 100, ErrorMessage = "El tamaño debe estar entre 1 y 100")] int Size = 10);
+
+// ✅ BUENO: 'property:' reaplica el atributo en la propiedad que genera el record
+public record ProductoFilterDto(
+    [property: Range(1, 100, ErrorMessage = "La página debe estar entre 1 y 100")] int Page = 1,
+    [property: Range(1, 100, ErrorMessage = "El tamaño debe estar entre 1 y 100")] int Size = 10);
+```
+
+Comprobado con reflexión y `Validator.TryValidateObject` sobre `Page = 0` (fuera del rango `1..100`):
+
+| DTO | Atributos en la **propiedad** `Page` | Atributos en el **parámetro** | Resultado de la validación |
+|-----|--------------------------------------|-------------------------------|----------------------------|
+| **Sin** `property:` | **ninguno** | `RangeAttribute` | `True` → **acepta el valor inválido** ❌ |
+| **Con** `property:` | `RangeAttribute` | ninguno | `False` → *"La página debe estar entre 1 y 100"* ✅ |
+
+📌 Ejemplo real: en TiendaAPI el filtro de paginación (`ProductoFilterDto`) tenía exactamente este bug: `[Range(0, int.MaxValue)]` escrito "a pelo" en un record posicional, así que `Page = -5` pasaba sin más. Se corrigió con el commit *fix: `property:` en `[Range]` de records posicionales*.
+
+> 💡 **Truco:** si tu record usa el estilo con propiedades (`public record X { public int Page { get; init; } }`), **no necesitas `property:`**: el atributo ya está escrito sobre la propia propiedad. El prefijo solo hace falta en los records **posicionales**.
+
 #### 8.3.1.1. Ejemplo completo con múltiples atributos
 
 ```csharp
@@ -913,9 +938,33 @@ app.MapGet("/api/productos", (
 | Práctica | Ejemplo |
 |----------|---------|
 | Valores por defecto | `page = 1`, `pageSize = 10` |
-| Límites | `pageSize` máximo 100 |
+| Límites | `page >= 1` y `pageSize` entre 1 y 100 |
 | Nombres consistentes | `page`, `pageSize`, `sortBy`, `q` |
 | Opcionales | `string?`, `decimal?`, `int?` |
+
+**El techo de paginación se pone en dos capas:**
+
+```csharp
+// 1) Borde REST: declarativo, sobre el DTO de filtro
+public record ProductoFilterDto(
+    [property: Range(1, int.MaxValue, ErrorMessage = "La página no puede ser negativa")] int Page = 1,
+    [property: Range(1, 100, ErrorMessage = "El tamaño debe estar entre 1 y 100")] int Size = 10);
+
+// 2) Capa de datos: imperativo, SIEMPRE, aunque el objeto no venga de una petición
+page = Math.Max(page, 1);
+pageSize = Math.Clamp(pageSize, 1, 100);
+```
+
+> 💡 **Consejo:** el paso 2 **no es redundante**. La validación del DTO solo se dispara si la petición pasa por el pipeline de ASP.NET. Si otro código —GraphQL, un job programado, un test, un consumidor de mensajes— construye el filtro **en código**, ese filtro **no se valida nunca** y te llega `pageSize = 5000000` directo a la consulta.
+
+> ⚠️ **Advertencia:** `page = 0` y `pageSize = 0` **no son valores inocuos**, y no siempre producen un error visible:
+>
+> - `page = 0` → `Skip((0 - 1) * pageSize)` = `Skip(-10)` → en LINQ-to-Objects **devuelve todos los registros**, no lanza excepción: el techo se te ha saltado en silencio y devuelves la tabla entera.
+> - `pageSize = 0` → `(int)Math.Ceiling((double)total / 0)` = **2147483647** (`int.MaxValue`) y `Take(0)` devuelve una lista **vacía**: una respuesta sin filas y un `totalPages` absurdo.
+>
+> Por eso el techo es `Math.Clamp(pageSize, 1, 100)`: **los dos extremos** importan, no solo el superior.
+
+📌 Ejemplo real: en TiendaAPI el techo se aplicaba solo en el `[Range]` del DTO, pero como GraphQL construye `ProductoFilterDto` **en código**, ese techo nunca llegaba a ejecutarse. Lo movieron también a los repositorios (commit *fix: clamp Size/Page en repositorios — cubre GraphQL*).
 
 ## 8.6. El nuevo método HTTP QUERY (RFC 10008)
 
@@ -1262,7 +1311,7 @@ public record ProductoDto(
 - **Funciones de extensión > AutoMapper** para proyectos pequeños/medianos
 - **Data Annotations para formato, FluentValidation para negocio:** No mezcles
 - **Query parameters opcionales:** Usa `string?`, `int?` para que sean opcionales
-- **Límites en paginación:** Nunca permitas `pageSize` infinito
+- **Límites en paginación:** Nunca permitas `pageSize` infinito — clampa **en el DTO y en la capa de datos** (`Math.Clamp(pageSize, 1, 100)` y `Math.Max(page, 1)`); ver 8.5.4
 - **HATEOAS:** Incluye enlaces de paginación en headers o body
 - **Consistencia:** Usa los mismos nombres de query parameters en todos los endpoints
 - **JSON por defecto:** Usa JSON como formato estándar, XML solo para compatibilidad

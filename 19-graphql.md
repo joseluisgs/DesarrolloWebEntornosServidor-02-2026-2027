@@ -1103,6 +1103,39 @@ builder.Services.AddAuthorization(options =>
 });
 ```
 
+**Desactiva la introspección fuera de desarrollo**
+
+Hay una pieza de seguridad que **no** depende de `[Authorize]`: la **introspección**. Mientras esté activa, cualquiera puede preguntarle al servidor *«enséñame tu esquema completo»* y recibir la lista de queries, mutations, tipos, argumentos y campos — **sin estar autenticado**. Ese esquema es el mapa que necesita un atacante para preparar el siguiente paso.
+
+```csharp
+var builder = services
+    .AddGraphQLServer()
+    .AddAuthorization()
+    .AddQueryType<TiendaQuery>()
+    // … tus types (mutation, subscription)
+    .ModifyRequestOptions(opt =>
+    {
+        // Detalles de las excepciones: solo en desarrollo
+        opt.IncludeExceptionDetails = environment.IsDevelopment();
+    });
+
+// 🛡️ Introspección: solo en desarrollo. En producción permite
+// descubrir el esquema completo del API (query/mutation names,
+// tipos, argumentos), lo que facilita ataques dirigidos.
+if (!environment.IsDevelopment())
+{
+    builder.DisableIntrospection();
+}
+
+return builder;
+```
+
+📌 **Ejemplo real:** en TiendaAPI el commit *fix: deshabilitar introspección GraphQL en producción (DisableIntrospection, solo Development)* añadió exactamente este bloque en `GraphQLConfig`. Con ello, en producción `__schema` y `__type` devuelven error, y el IDE **Banana Cake Pop** deja de poder explorar el esquema — que es precisamente el objetivo: en local lo tienes todo, en producción nada que no esté declarado en los resolvers.
+
+> ⚠️ **Advertencia:** `DisableIntrospection()` **no sustituye** a la autorización. Desactivarla tapa el descubrimiento del esquema, pero **no autoriza** nada por sí solo: cada resolver sigue necesitando su `[Authorize]` y su validación de entrada. Son dos capas distintas — lo que quita la introspección no es lo que protege tus datos.
+
+> 💡 **Consejo:** ¿cómo pruebas entonces el esquema en local? Con el entorno `Development` activo (`dotnet run --environment Development` o `ASPNETCORE_ENVIRONMENT=Development`). La regla mental: **introspección = entorno de desarrollo**. Si algún día necesitas consultar el esquema en staging, cámbialo con un flag de entorno explícito, nunca con la rama en `main`.
+
 ## 19.10. Testing
 
 ### 19.10.1. Test de Queries

@@ -131,6 +131,39 @@ appsettings.Production.json      ← Valores para producción
 
 > ⚠️ **Advertencia:** .NET **no expande** `${DB_PASSWORD}` en JSON (esa sintaxis es propia de shells o de docker-compose, no de `appsettings.json`). El valor real de la contraseña **no va en el JSON**: se define en la variable de entorno `ConnectionStrings__DefaultConnection` (o en `user-secrets` / Azure Key Vault), que **sobreescribe la cadena completa**.
 
+**Fail-fast: en producción, si falta una credencial, la app NO arranca**
+
+Fíjate en que el `appsettings.Production.json` de arriba **no lleva contraseña en la cadena de conexión**. No es un descuido, es una decisión: en desarrollo puedes tolerar valores por defecto, en producción **no**.
+
+```csharp
+// ❌ MALO: fallback silencioso — producción arranca "bien" contra la nada
+var connectionString = configuration.GetConnectionString("DefaultConnection")
+    ?? "Host=localhost;Database=tienda;Username=admin;Password=admin123";
+
+// ✅ BUENO: en desarrollo caemos a los valores por defecto, en producción lanzamos
+var connectionString = configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(connectionString))
+{
+    if (environment.IsDevelopment())
+    {
+        connectionString = "Host=localhost;Database=tienda;Username=admin;Password=admin123";
+        Log.Warning("⚠️ Usando credenciales por defecto de desarrollo (ConnectionStrings:DefaultConnection no definida)");
+    }
+    else
+    {
+        throw new InvalidOperationException(
+            "ConnectionStrings:DefaultConnection no está definida. " +
+            "En producción es obligatorio configurarla (appsettings.json o variables de entorno).");
+    }
+}
+```
+
+📌 **Ejemplo real:** en TiendaAPI el commit *fix: fail-fast en producción — credenciales BD/Mongo/Redis obligatorias (fallback solo en dev)* reescribió `AddDatabases` y `AddCache` con este mismo patrón: **tres** excepciones `InvalidOperationException` (PostgreSQL, MongoDB y Redis) que saltan al arrancar si falta la configuración.
+
+> 📝 **Nota:** Se llama *fail-fast* («fallar rápido») porque el error aparece en el **primer segundo** de vida de la aplicación, justo cuando el orquestador puede verlo y reiniciar con la configuración corregida. La alternativa —el `??` silencioso— produce una app que **arranca en verde** y empieza a escupir `Connection refused` con la primera petición real, a las 3 de la mañana, con nadie mirando.
+
+> 💡 **Analogía:** Es como revisar las llaves antes de salir de casa. Si te das cuenta en la puerta, vuelves y las coges (2 segundos). Si no te das cuenta hasta llegar al coche y arrancar, descubrirás el problema en el barrio de destino... o peor: el coche arranca igualmente (llega a intentar conectar) y el fallo real aparece cuando ya no puedes volver.
+
 ### 9.1.3. Variables de entorno
 
 Para secrets (contraseñas, tokens) **nunca** se usan ficheros JSON. Se usan **variables de entorno**:
