@@ -21,6 +21,7 @@
     - [13.3.8. Borrar documentos](#1338-borrar-documentos)
     - [13.3.9. Builders de filtros y actualizaciones](#1339-builders-de-filtros-y-actualizaciones)
     - [13.3.10. Índices](#13310-índices)
+    - [13.3.11. Composición y referencias con el Driver](#13311-composición-y-referencias-con-el-driver)
   - [13.4. EF Core con MongoDB](#134-ef-core-con-mongodb)
     - [13.4.1. Paquete NuGet](#1341-paquete-nuget)
     - [13.4.2. DbContext con UseMongoDB](#1342-dbcontext-con-usemongodb)
@@ -174,24 +175,97 @@ En SQL, las relaciones se hacen con claves foráneas y JOINs. En MongoDB, hay **
 **Referencia** (estilo SQL):
 ```json
 // Colección "productos"
-{ "_id": 1, "nombre": "Teclado", "categoriaId": 10 }
+{ "_id": ObjectId("..."), "nombre": "Teclado", "proveedor_id": ObjectId("64b000000000000000000001") }
 
-// Colección "categorias"
-{ "_id": 10, "nombre": "Periféricos" }
+// Colección "proveedores"
+{ "_id": ObjectId("64b000000000000000000001"), "nombre": "Logitech" }
 ```
 
 **Documento embebido** (estilo NoSQL):
 ```json
 // Colección "productos" - la categoría está DENTRO del producto
 {
-  "_id": 1,
+  "_id": ObjectId("..."),
   "nombre": "Teclado",
   "categoria": {
-    "_id": 10,
-    "nombre": "Periféricos"
+    "nombre": "Electrónica",
+    "descripcion": "Componentes electrónicos"
   }
 }
 ```
+
+En C# la diferencia se ve en **el tipo de la propiedad**:
+
+**Referencia** — la propiedad es un `ObjectId`:
+
+```csharp
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
+public class Producto
+{
+    [BsonId]
+    public ObjectId Id { get; set; }
+
+    [BsonElement("nombre")]
+    public string Nombre { get; set; } = string.Empty;
+
+    // REFERENCIA: solo el _id del proveedor viaja dentro del producto
+    [BsonElement("proveedor_id")]
+    public ObjectId ProveedorId { get; set; }
+}
+
+public class Proveedor
+{
+    [BsonId]
+    public ObjectId Id { get; set; }
+
+    [BsonElement("nombre")]
+    public string Nombre { get; set; } = string.Empty;
+
+    [BsonElement("contacto")]
+    public string Contacto { get; set; } = string.Empty;
+}
+```
+
+El producto ocupa **exactamente lo mismo** con o sin proveedor: solo cambia un campo de 12 bytes.
+
+**Composición** — la propiedad es **otro objeto**:
+
+```csharp
+public class Producto
+{
+    [BsonId]
+    public ObjectId Id { get; set; }
+
+    [BsonElement("nombre")]
+    public string Nombre { get; set; } = string.Empty;
+
+    // COMPOSICIÓN: la categoría vive DENTRO del producto
+    [BsonElement("categoria")]
+    public Categoria Categoria { get; set; } = null!;
+}
+
+public class Categoria
+{
+    [BsonElement("nombre")]
+    public string Nombre { get; set; } = string.Empty;
+
+    [BsonElement("descripcion")]
+    public string Descripcion { get; set; } = string.Empty;
+}
+```
+
+> 💡 **Regla rápida:** mira la propiedad. Si es `ObjectId` → **referencia**. Si es una clase → **composición**. El `[BsonElement(...)]` solo dice cómo se llama el campo en BSON; no cambia el comportamiento.
+
+| | Composición (`Categoria`) | Referencia (`ProveedorId`) |
+|---|---|---|
+| **Tipo en C#** | clase `Categoria` | `ObjectId` |
+| **En BSON** | subdocumento `{ ... }` | `ObjectId("...")` |
+| **Colecciones necesarias** | 1 | 2 |
+| **Consultas para leerlo** | 1 | 2 |
+
+📌 Ejemplo real: **Amazon** guarda la categoría **dentro** del producto (se lee siempre junto), pero el vendedor va en otra colección: millones de productos comparten vendedor y este cambia nombre, email y dirección constantemente.
 
 ### 13.2.3. Cuándo embeber vs cuándo referenciar
 
@@ -262,6 +336,25 @@ var producto = collection<Producto>.Find(p => p.Id == id).First();
 > 💡 **Analogía:** Piensa en MongoDB como una carpeta de expediente. Puedes pegar notas, fotos y documentos dentro de la misma carpeta (embeber). Pero si la carpeta crece demasiado, necesitarás un archivador separado (referenciar) y solo dejar un Post-It con la referencia.
 
 📌 Ejemplo real: **Netflix** embebe la lista de "episodios" dentro de cada "serie" porque siempre se ven juntos. Pero usa referencias para los "actores" porque un actor aparece en múltiples series.
+
+Aplicado a nuestro modelo de productos, la decisión queda así:
+
+```mermaid
+graph LR
+    P[Producto] -->|"embebido · 1 consulta"| C[Categoria]
+    P -->|"referencia · 2 consultas"| PR[Proveedor]
+
+    style P fill:#2196F3,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style PR fill:#FF9800,color:#fff
+```
+
+| Relación | Decisión | ¿Por qué? |
+|----------|----------|-----------|
+| **Producto → Categoría** | ✅ **Embeber** | Se lee siempre junto, es pequeña y casi nunca cambia |
+| **Producto → Proveedor** | ✅ **Referenciar** | Miles de productos comparten proveedor, y este cambia nombre, contacto y país |
+
+> ⚠️ **Advertencia:** la pregunta no es «¿es una relación?», sino **«¿cuándo y cómo se leen estos datos?»**. Si decides por la forma de los datos en SQL, acabarás recreando tablas y JOINs dentro de un documento, y perderás lo que MongoDB aporta.
 
 ### 13.2.4. El límite de 16 MB
 
@@ -540,6 +633,77 @@ collection.Indexes.CreateOne(new CreateIndexModel<Producto>(
         .Descending(p => p.Precio)));
 ```
 
+### 13.3.11. Composición y referencias con el Driver
+
+Las dos formas conviven en el mismo modelo. La regla de oro: **primero lo referenciado, después lo compuesto**.
+
+```csharp
+using MongoDB.Bson;
+using MongoDB.Driver;
+
+var productos = database.GetCollection<Producto>("productos");
+var proveedores = database.GetCollection<Proveedor>("proveedores");
+
+// 1) Primero el referenciado: si no existe, el producto queda colgado
+var proveedor = new Proveedor
+{
+    Id = ObjectId.Parse("64b000000000000000000001"),
+    Nombre = "Logitech",
+    Contacto = "exportaciones@logitech.com"
+};
+proveedores.InsertOne(proveedor);
+
+// 2) Después el compuesto, apuntando al proveedor ya creado
+var producto = new Producto
+{
+    Nombre = "Teclado Mecánico",
+    Precio = 89.99m,
+    Categoria = new Categoria { Nombre = "Electrónica", Descripcion = "Componentes" },
+    ProveedorId = proveedor.Id
+};
+productos.InsertOne(producto);
+```
+
+Lo que queda en MongoDB:
+
+```json
+{
+  "_id": ObjectId("6abf69e28f1db051c52c96d9"),
+  "nombre": "Teclado Mecánico",
+  "precio": NumberDecimal("89.99"),
+  "categoria": { "nombre": "Electrónica", "descripcion": "Componentes" },
+  "proveedor_id": ObjectId("64b000000000000000000001"),
+  "is_deleted": false
+}
+```
+
+Fíjate en la diferencia: `categoria` es un **subdocumento completo** y `proveedor_id` es **solo un `ObjectId`**.
+
+**Resolver la referencia** — dos consultas, porque no hay JOINs:
+
+```csharp
+var producto = productos.Find(p => p.Id == productoId).FirstOrDefault();
+var proveedor = producto is null
+    ? null
+    : proveedores.Find(p => p.Id == producto.ProveedorId).FirstOrDefault();
+```
+
+**Consultar y actualizar por la referencia:**
+
+```csharp
+// Productos de un proveedor concreto
+var delProveedor = productos.Find(p => p.ProveedorId == proveedorId).ToList();
+
+// Cambiar de proveedor: solo se toca un campo, no el documento entero
+productos.UpdateOne(
+    p => p.Id == productoId,
+    Builders<Producto>.Update.Set(p => p.ProveedorId, otroProveedorId));
+```
+
+> 💡 **Consejo:** si cada página de listado necesita el nombre del proveedor, estás pagando **2 consultas por página**. Ese es exactamente el motivo de decidir bien en el apartado 13.2.3: lo que se lee siempre junto, se embebe.
+
+📌 Ejemplo real: **Glovo** embebe dentro del restaurante sus horarios y su carta (se leen juntos en cada pantalla), pero el repartidor va **referenciado**: se asigna y cambia en cada pedido sin tocar el documento del restaurante.
+
 ## 13.4. MongoDB con EF Core
 
 ### 13.4.1. Paquete NuGet
@@ -579,6 +743,7 @@ services.AddDbContext<TiendaDbContext>(options =>
 ### 13.4.3. Data Annotations en MongoDB
 
 ```csharp
+using System.ComponentModel.DataAnnotations;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -598,8 +763,13 @@ public class Producto
     [BsonElement("imagen")]
     public string Imagen { get; set; } = string.Empty;
 
-    [BsonElement("categoria_id")]
-    public long CategoriaId { get; set; }
+    // Composición: el objeto entero se serializa como subdocumento
+    [BsonElement("categoria")]
+    public Categoria Categoria { get; set; } = null!;
+
+    // Referencia: solo el ObjectId viaja en el campo indicado
+    [BsonElement("proveedor_id")]
+    public ObjectId ProveedorId { get; set; }
 }
 ```
 
@@ -745,37 +915,113 @@ public class LineaPedido
 }
 ```
 
+> ⚠️ **Advertencia:** los tipos Owned **no se pueden compartir**. Si dos productos apuntan al **mismo objeto** `Categoria`, EF Core solo la guarda en uno de ellos y los demás se quedan con `"categoria": null`. Cada producto necesita **su propia instancia**:
+
+```csharp
+// ❌ MALO: la misma instancia compartida — solo UN producto guardará la categoría
+var categorias = new[]
+{
+    new Categoria { Nombre = "Electrónica", Descripcion = "Componentes" },
+    new Categoria { Nombre = "Mobiliario", Descripcion = "Muebles" }
+};
+
+var productos = new List<Producto>
+{
+    new() { Nombre = "Teclado", Categoria = categorias[0] },
+    new() { Nombre = "Ratón", Categoria = categorias[0] }   // ¡misma instancia!
+};
+// Resultado en MongoDB: el Ratón queda con "categoria": null
+
+// ✅ BUENO: cada producto con su propia instancia
+var productosOk = new List<Producto>
+{
+    new()
+    {
+        Nombre = "Teclado",
+        Categoria = new Categoria { Nombre = "Electrónica", Descripcion = "Componentes" }
+    },
+    new()
+    {
+        Nombre = "Ratón",
+        Categoria = new Categoria { Nombre = "Electrónica", Descripcion = "Componentes" }
+    }
+};
+```
+
+> 📝 **Nota:** el **Driver Nativo** no tiene este problema: serializa el objeto tal cual esté. La restricción es de EF Core, que lleva la cuenta de las entidades en su *change tracker* y asume que cada instancia Owned pertenece a una sola entidad propietaria.
+
+📌 Ejemplo real: en `12-ProductosMongo`, el seeder construye la categoría con `NuevaCategoria(indice)` en lugar de reutilizar un array de objetos, precisamente por esto.
+
 ### 13.4.6. Referencias manuales
 
-Cuando los datos cambian a menudo o se consultan independientemente, usa **referencias** en vez de embeber:
+Cuando los datos cambian a menudo o se consultan independientemente, usa **referencias** en vez de embeber. En EF Core se hace con **dos `DbSet`** y una propiedad escalar `ObjectId`:
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+
+public class ProductosMongoDbContext(DbContextOptions<ProductosMongoDbContext> options)
+    : DbContext(options)
+{
+    public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<Proveedor> Proveedores => Set<Proveedor>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Producto>().ToCollection("productos");
+        modelBuilder.Entity<Proveedor>().ToCollection("proveedores");
+    }
+}
+```
+
+La propiedad de referencia es un simple `ObjectId`. **No hay navegación, ni `[ForeignKey]`, ni `[InverseProperty]`**: en MongoDB eso no existe.
 
 ```csharp
 public class Producto
 {
     [BsonId]
     public ObjectId Id { get; set; }
+
     public string Nombre { get; set; } = string.Empty;
 
-    // Referencia a Categoría (no se embebe)
-    public long CategoriaId { get; set; }
-}
+    // REFERENCIA: solo el _id. Sin objeto anidado y sin [ForeignKey]
+    [BsonElement("proveedor_id")]
+    public ObjectId ProveedorId { get; set; }
 
-public class Categoria
-{
-    [BsonId]
-    public long Id { get; set; }
-    public string Nombre { get; set; } = string.Empty;
+    // COMPOSICIÓN: objeto con [Owned] (apartado 13.4.5)
+    public Categoria Categoria { get; set; } = null!;
 }
 ```
 
-Para obtener la categoría, debes hacer **dos consultas**:
+Para obtener el proveedor, **dos consultas a mano**:
 
 ```csharp
-var producto = await db.Productos.FindAsync(productoId);
-var categoria = await db.Categorias.FindAsync(producto.CategoriaId);
+var producto = await db.Productos.FirstOrDefaultAsync(p => p.Id == id);
+var proveedor = producto is null
+    ? null
+    : await db.Proveedores.FirstOrDefaultAsync(p => p.Id == producto.ProveedorId);
 ```
 
-> ⚠️ **Advertencia:** A diferencia de SQL, MongoDB **no tiene JOINs** ni `Include()` como en EF Core relacional. Cada consulta es independiente. Si necesitas los datos juntos, embebe.
+Y para filtrar por la referencia, LINQ normal:
+
+```csharp
+var delProveedor = await db.Productos
+    .Where(p => p.ProveedorId == proveedorId && !p.IsDeleted)
+    .ToListAsync();
+```
+
+> ⚠️ **Advertencia:** a diferencia de SQL, MongoDB **no tiene JOINs** ni `Include()` como en EF Core relacional. Cada consulta es independiente. Si necesitas los datos juntos, embebe.
+
+> 💡 **Truco:** si la referencia puede no existir, haz la segunda consulta solo cuando la primera haya devuelto algo:
+
+```csharp
+if (producto is not null)
+{
+    var proveedor = await db.Proveedores
+        .FirstOrDefaultAsync(p => p.Id == producto.ProveedorId);
+}
+```
+
+📌 Ejemplo real: en el ejemplo `12-ProductosMongo`, `GET /api/productos` devuelve la categoría embebida en la misma consulta y solo el `proveedorId`: la API no resuelve el proveedor porque no lo necesita.
 
 ### 13.4.7. Consultas LINQ
 
@@ -817,8 +1063,22 @@ var existe = await db.Productos.AnyAsync(p => p.Nombre == "Teclado");
 | **LINQ básico** | ✅ Sí | Where, OrderBy, Count, Any |
 | **Owned Types** | ✅ Sí | Documentos embebidos |
 | **SaveChanges** | ✅ Sí | Insert/Update/Delete |
+| **Transacciones** | ⚠️ Solo con réplica set | En un servidor **standalone** salta `NotSupportedException` |
+| **Instancias Owned compartidas** | ⚠️ No | Dos entidades no pueden apuntar al mismo objeto (13.4.5) |
 
 > 📝 **Nota:** El proveedor MongoDB EF Core está en desarrollo activo. Algunas features pueden añadirse en el futuro. Consulta siempre la [documentación oficial](https://www.mongodb.com/es/docs/entity-framework/current/limitations/) para ver el estado actual.
+
+> ⚠️ **Advertencia — transacciones en standalone:** el provider EF Core envuelve cada `SaveChanges` con varios documentos en una **transacción**, y un MongoDB standalone (el de nuestro `docker-compose.yml`) no las soporta. Si necesitas sembrar o escribir varios documentos de golpe sin montar un replica set, puedes desactivarlas:
+
+```csharp
+protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+{
+    // Standalone: sin transacciones. En producción con réplica set, quita esta línea.
+    Database.AutoTransactionBehavior = AutoTransactionBehavior.Never;
+}
+```
+
+> 💡 **Consejo:** una única escritura (`Add` + `SaveChanges` de UN producto) funciona igualmente sin tocar nada. Este ajuste solo hace falta cuando agrupas varios documentos en la misma operación.
 
 ## 13.5. Driver Nativo vs EF Core: Comparativa
 
@@ -1361,6 +1621,55 @@ public class MongoDbSeeder(IMongoDatabase database)
 }
 ```
 
+Cuando hay **referencias**, el orden de siembra importa: **primero lo referenciado, después lo compuesto**. Y los IDs de lo referenciado deben ser **fijos**, o los productos quedarían apuntando a proveedores que ya no existen tras cada reinicio:
+
+```csharp
+public static class MongoDbSeeder
+{
+    // IDs fijos: si fueran aleatorios, las referencias se romperían en cada arranque
+    private static readonly ObjectId LogitechId = ObjectId.Parse("64b000000000000000000001");
+    private static readonly ObjectId IkeaId = ObjectId.Parse("64b000000000000000000002");
+
+    public static void Seed(IMongoDatabase database)
+    {
+        var proveedores = database.GetCollection<Proveedor>("proveedores");
+        var productos = database.GetCollection<Producto>("productos");
+
+        // 1) Referenciados PRIMERO
+        proveedores.DeleteMany(FilterDefinition<Proveedor>.Empty);
+        proveedores.InsertMany(new[]
+        {
+            new Proveedor { Id = LogitechId, Nombre = "Logitech", Contacto = "exportaciones@logitech.com" },
+            new Proveedor { Id = IkeaId, Nombre = "Ikea", Contacto = "proveedores@ikea.com" }
+        });
+
+        // 2) Compuestos DESPUÉS: cada uno apunta a un proveedor ya existente
+        productos.DeleteMany(FilterDefinition<Producto>.Empty);
+        productos.InsertMany(new[]
+        {
+            new Producto
+            {
+                Nombre = "Teclado Mecánico",
+                Precio = 89.99m,
+                Categoria = new Categoria { Nombre = "Electrónica", Descripcion = "Componentes" },
+                ProveedorId = LogitechId,
+                CreatedAt = DateTime.UtcNow
+            },
+            new Producto
+            {
+                Nombre = "Silla Ergonómica",
+                Precio = 249.99m,
+                Categoria = new Categoria { Nombre = "Mobiliario", Descripcion = "Muebles" },
+                ProveedorId = IkeaId,
+                CreatedAt = DateTime.UtcNow
+            }
+        });
+    }
+}
+```
+
+> 📝 **Nota:** en el ejemplo real `12-ProductosMongo` son **5 proveedores** y **10 productos**, y cada producto lleva **su propia instancia** de `Categoria` — comparte instancia y EF Core solo la guarda en uno (apartado 13.4.5).
+
 ### Con EF Core
 
 ```csharp
@@ -1370,6 +1679,29 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var seeder = scope.ServiceProvider.GetRequiredService<MongoDbSeeder>();
     await seeder.SeedAsync();
+}
+```
+
+Y el seeder equivalente con EF Core, con el mismo orden:
+
+```csharp
+public static void SeedEfCore(ProductosMongoDbContext context)
+{
+    // 1) Referenciados primero
+    context.Proveedores.AddRange(
+        new Proveedor { Id = ObjectId.Parse("64b000000000000000000001"), Nombre = "Logitech" });
+
+    // 2) Compuestos después, con su propia instancia de Categoria
+    context.Productos.AddRange(
+        new Producto
+        {
+            Nombre = "Teclado Mecánico",
+            Categoria = new Categoria { Nombre = "Electrónica", Descripcion = "Componentes" },
+            ProveedorId = ObjectId.Parse("64b000000000000000000001"),
+            CreatedAt = DateTime.UtcNow
+        });
+
+    context.SaveChanges();
 }
 ```
 
@@ -1415,20 +1747,22 @@ public ObjectId Id { get; set; } // Indexado automáticamente, búsqueda óptima
 
 ## 13.10. Reto
 
-Implementa un repositorio CRUD de **Funkos con Categorías embebidas** usando MongoDB.
+Implementa un repositorio CRUD de **Funkos con Categoría embebida y Proveedor referenciado** usando MongoDB.
 
 **Especificación:**
 
 1. **Modelo Funko:** `Nombre`, `Precio`, `Imagen`, `IsDeleted`, `CreatedAt`, `UpdatedAt`
-2. **Categoría embebida:** `Categoria` como propiedad dentro de Funko (no como colección separada)
-3. **Implementa DOS versiones:**
+2. **Categoría embebida (composición):** `Categoria` como propiedad dentro de Funko (no como colección separada)
+3. **Proveedor referenciado (referencia):** colección `proveedores` aparte y solo `ProveedorId` dentro de Funko — nunca el objeto entero
+4. **Implementa DOS versiones:**
    - Una con Driver Nativo (`MongoDB.Driver`)
    - Otra con EF Core (`MongoDB.EntityFrameworkCore`)
-4. **Repositorio:** Create, Read (GetAll, GetById), Update, Delete (borrado lógico), IsDuplicated
-5. **Tests con TestContainers:** Al menos 5 tests: Create, GetById, GetAll, Delete lógico, IsDuplicated
-6. **Seed data:** 5 Funkos con categorías embebidas que se insertan al arrancar en desarrollo
+5. **Repositorio:** Create, Read (GetAll, GetById), Update, Delete (borrado lógico), IsDuplicated
+6. **Tests con TestContainers:** Al menos 6 tests: Create, GetById, GetAll, Delete lógico, IsDuplicated y **que la referencia al proveedor se persista sin embeberse**
+7. **Seed data:** 3 proveedores con **ID fijo** + 5 Funkos que apuntan a ellos; se insertan al arrancar en desarrollo, **primero los referenciados**
+8. **Validación:** un Funko sin `ProveedorId` debe devolver `400`
 
-**Ejemplo de documento Funko con categoría embebida:**
+**Ejemplo de documento Funko: categoría embebida + proveedor referenciado:**
 
 ```json
 {
@@ -1440,6 +1774,7 @@ Implementa un repositorio CRUD de **Funkos con Categorías embebidas** usando Mo
     "nombre": "Cómics",
     "descripcion": "Personajes de cómic y superhéroes"
   },
+  "proveedor_id": ObjectId("64b000000000000000000001"),
   "is_deleted": false,
   "created_at": "2026-09-21T10:00:00Z",
   "updated_at": null
@@ -1456,7 +1791,8 @@ ProductosMongo/
 ├── ProductosMongo/
 │   ├── Program.cs
 │   ├── Models/
-│   │   └── Funko.cs
+│   │   ├── Funko.cs
+│   │   └── Proveedor.cs                 # documento referenciado
 │   ├── Repositories/
 │   │   ├── IFunkoRepository.cs
 │   │   ├── FunkoMongoRepository.cs      # Driver nativo
