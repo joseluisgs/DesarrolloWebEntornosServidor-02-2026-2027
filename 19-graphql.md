@@ -1413,10 +1413,6 @@ FunkosGraphQL/
 ```
 
 
----
-
-**Resumen del punto:**
-
 ```mermaid
 graph TD
     GQL[GraphQL] --> CONCEPTOS[Conceptos]
@@ -1454,6 +1450,10 @@ graph TD
     style AUTH fill:#9C27B0,color:#fff
     style NUNIT fill:#4CAF50,color:#fff
 ```
+
+---
+
+**Resumen del punto:**
 
 | Concepto | Descripcion |
 |----------|-------------|

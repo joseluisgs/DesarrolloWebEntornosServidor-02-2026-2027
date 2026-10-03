@@ -1812,10 +1812,6 @@ ProductosMongo/
         └── FunkoEfCoreRepositoryTests.cs
 ```
 
----
-
-**Resumen del punto:**
-
 ```mermaid
 graph TD
     MONGO[MongoDB] --> NOSQL[NoSQL Documentos]
@@ -1856,6 +1852,10 @@ graph TD
     style CRUD2 fill:#7B1FA2,color:#fff
     style TC fill:#7B1FA2,color:#fff
 ```
+
+---
+
+**Resumen del punto:**
 
 | Concepto | Descripción |
 |----------|-------------|
