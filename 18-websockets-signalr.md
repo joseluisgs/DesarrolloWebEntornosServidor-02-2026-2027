@@ -1046,7 +1046,7 @@ flowchart TB
     end
 
     subgraph "Seguridad"
-        S1="[Authorize] en Hubs"]
+        S1["[Authorize] en Hubs"]
         S2["JWT via accessTokenFactory"]
         S3["Validar datos en Hub"]
     end
