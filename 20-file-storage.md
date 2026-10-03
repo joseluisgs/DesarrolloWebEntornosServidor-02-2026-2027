@@ -147,10 +147,12 @@ TuProyecto/
 
 **Resumen del punto:**
 
-- **Local (wwwroot):** Simple y rápido, ideal para desarrollo y apps pequeñas
-- **Azure Blob:** Escalable y redundante, recomendado para producción
-- **Estructura de directorios:** Organizar uploads por tipo (images, avatars, documents)
-- **`WebRootPath` puede ser `null`:** Siempre `env.WebRootPath ?? env.ContentRootPath` + `wwwroot/.gitkeep`
+| Concepto | Descripción |
+|----------|-------------|
+| **Local (wwwroot)** | Simple y rápido, ideal para desarrollo y apps pequeñas |
+| **Azure Blob** | Escalable y redundante, recomendado para producción |
+| **Estructura de directorios** | Organizar uploads por tipo (images, avatars, documents) |
+| **`WebRootPath` puede ser `null`** | Siempre `env.WebRootPath ?? env.ContentRootPath` + `wwwroot/.gitkeep` |
 
 **¿Qué viene después?**
 
@@ -258,9 +260,11 @@ public class StorageSettings
 
 **Resumen del punto:**
 
-- **wwwroot:** Directorio público vía HTTP, el único accesible directamente
-- **Límites:** Configurar `FormOptions` y `Kestrel` para permitir uploads
-- **StorageSettings:** Clase de configuración tipada con `IOptions<T>`
+| Concepto | Descripción |
+|----------|-------------|
+| **wwwroot** | Directorio público vía HTTP, el único accesible directamente |
+| **Límites** | Configurar `FormOptions` y `Kestrel` para permitir uploads |
+| **StorageSettings** | Clase de configuración tipada con `IOptions<T>` |
 
 **¿Qué viene después?**
 
@@ -356,10 +360,12 @@ Console.WriteLine($"ContentRootPath: {app.Environment.ContentRootPath}");
 
 **Resumen del punto:**
 
-- **UseStaticFiles():** Middleware obligatorio para servir archivos estáticos
-- **RequestPath:** Permite mapear un directorio a una ruta HTTP personalizada
-- **Cache-Control:** Configurar headers para optimizar rendimiento
-- **Fallback de `WebRootPath`:** `env.WebRootPath ?? env.ContentRootPath` (evita `null` si falta `wwwroot`)
+| Concepto | Descripción |
+|----------|-------------|
+| **UseStaticFiles()** | Middleware obligatorio para servir archivos estáticos |
+| **RequestPath** | Permite mapear un directorio a una ruta HTTP personalizada |
+| **Cache-Control** | Configurar headers para optimizar rendimiento |
+| **Fallback de `WebRootPath`** | `env.WebRootPath ?? env.ContentRootPath` (evita `null` si falta `wwwroot`) |
 
 **¿Qué viene después?**
 
@@ -447,9 +453,11 @@ public interface IStorageService
 
 **Resumen del punto:**
 
-- **IStorageService:** Contrato que abstrae el almacenamiento de archivos
-- **Métodos principales:** Store, Load, Delete, Exists, ListFiles, GetUrl
-- **Patrón:** Interface + Implementación permite cambiar de proveedor sin tocar el resto del código
+| Concepto | Descripción |
+|----------|-------------|
+| **IStorageService** | Contrato que abstrae el almacenamiento de archivos |
+| **Métodos principales** | Store, Load, Delete, Exists, ListFiles, GetUrl |
+| **Patrón** | Interface + Implementación permite cambiar de proveedor sin tocar el resto del código |
 
 **¿Qué viene después?**
 
@@ -709,10 +717,12 @@ builder.Services.Configure<StorageSettings>(
 
 **Resumen del punto:**
 
-- **Generar nombres únicos:** Usar GUID + timestamp para evitar colisiones
-- **Validar antes de guardar:** Comprobar extensión, tipo MIME (`AllowedContentTypes`) y tamaño antes de escribir
-- **Excepciones personalizadas:** `FileSizeExceededException` e `InvalidFileTypeException`
-- **DI:** Registrar como `Scoped` con `IOptions<StorageSettings>` e `IWebHostEnvironment`
+| Concepto | Descripción |
+|----------|-------------|
+| **Generar nombres únicos** | Usar GUID + timestamp para evitar colisiones |
+| **Validar antes de guardar** | Comprobar extensión, tipo MIME (`AllowedContentTypes`) y tamaño antes de escribir |
+| **Excepciones personalizadas** | `FileSizeExceededException` e `InvalidFileTypeException` |
+| **DI** | Registrar como `Scoped` con `IOptions<StorageSettings>` e `IWebHostEnvironment` |
 
 **¿Qué viene después?**
 
@@ -953,10 +963,12 @@ public class FileInfoDto
 
 **Resumen del punto:**
 
-- **Upload:** `POST /api/files/upload` con `IFormFile` en el body (multipart/form-data) → **201 Created** con `Location`
-- **Download:** `GET /api/files/download/{fileName}` devuelve el stream del archivo
-- **Delete:** `DELETE /api/files/{fileName}` elimina el archivo
-- **ProblemDetails:** Formato estándar para errores en ASP.NET Core
+| Concepto | Descripción |
+|----------|-------------|
+| **Upload** | `POST /api/files/upload` con `IFormFile` en el body (multipart/form-data) → **201 Created** con `Location` |
+| **Download** | `GET /api/files/download/{fileName}` devuelve el stream del archivo |
+| **Delete** | `DELETE /api/files/{fileName}` elimina el archivo |
+| **ProblemDetails** | Formato estándar para errores en ASP.NET Core |
 
 **¿Qué viene después?**
 
@@ -1130,12 +1142,14 @@ public static class FileNameValidator
 
 **Resumen del punto:**
 
-- **Validar extensión:** Comprobar que está en la lista blanca
-- **Validar tipo MIME:** Comprobar `ContentType` contra `AllowedContentTypes` (configurable)
-- **Validar tamaño:** Limitar el tamaño máximo del archivo
-- **Path Traversal:** Usar `Path.GetFileName()` y verificar que la ruta resuelta queda bajo `_rootPath`
-- **Validar nombre:** Regex + lista de extensiones peligrosas
-- **NUNCA confiar en el cliente:** Validar siempre en el servidor
+| Concepto | Descripción |
+|----------|-------------|
+| **Validar extensión** | Comprobar que está en la lista blanca |
+| **Validar tipo MIME** | Comprobar `ContentType` contra `AllowedContentTypes` (configurable) |
+| **Validar tamaño** | Limitar el tamaño máximo del archivo |
+| **Path Traversal** | Usar `Path.GetFileName()` y verificar que la ruta resuelta queda bajo `_rootPath` |
+| **Validar nombre** | Regex + lista de extensiones peligrosas |
+| **NUNCA confiar en el cliente** | Validar siempre en el servidor |
 
 **¿Qué viene después?**
 
@@ -1235,9 +1249,11 @@ public string? Imagen { get; set; }  // Referencia al archivo en el almacén
 
 **Resumen del punto:**
 
-- **Campo Imagen:** Guardar solo el nombre del archivo, nunca el binario
-- **Eliminar anterior:** Antes de subir nueva imagen, eliminar la vieja
-- **URL pública:** Usar `GetUrl()` para generar la URL accesible al cliente
+| Concepto | Descripción |
+|----------|-------------|
+| **Campo Imagen** | Guardar solo el nombre del archivo, nunca el binario |
+| **Eliminar anterior** | Antes de subir nueva imagen, eliminar la vieja |
+| **URL pública** | Usar `GetUrl()` para generar la URL accesible al cliente |
 
 **¿Qué viene después?**
 
@@ -1368,9 +1384,11 @@ else
 
 **Resumen del punto:**
 
-- **Azure Blob:** Almacenamiento escalable en la nube para producción
-- **Patrón Strategy:** Cambiar implementación según el entorno (dev/prod)
-- **Misma interfaz:** `IStorageService` se usa igual con FileSystem o Azure Blob
+| Concepto | Descripción |
+|----------|-------------|
+| **Azure Blob** | Almacenamiento escalable en la nube para producción |
+| **Patrón Strategy** | Cambiar implementación según el entorno (dev/prod) |
+| **Misma interfaz** | `IStorageService` se usa igual con FileSystem o Azure Blob |
 
 **¿Qué viene después?**
 
@@ -1608,10 +1626,12 @@ public class FilesControllerTests
 
 **Resumen del punto:**
 
-- **Arrange-Act-Assert:** Patrón para estructurar tests claros
-- **TearDown:** Limpiar archivos temporales después de cada test
-- **Mock IStorageService:** Para tests del controller, mockear el servicio
-- **MemoryStream:** Para simular archivos sin crearlos en disco
+| Concepto | Descripción |
+|----------|-------------|
+| **Arrange-Act-Assert** | Patrón para estructurar tests claros |
+| **TearDown** | Limpiar archivos temporales después de cada test |
+| **Mock IStorageService** | Para tests del controller, mockear el servicio |
+| **MemoryStream** | Para simular archivos sin crearlos en disco |
 
 **¿Qué viene después?**
 
@@ -1639,9 +1659,11 @@ En el siguiente punto veremos **Buenas Prácticas**: recomendaciones para implem
 
 **Resumen del punto:**
 
-- **Seguridad:** Validar siempre en el servidor, generar nombres únicos, limitar tamaño
-- **Arquitectura:** Usar interfaces, eliminar archivos huérfanos, logging
-- **Testing:** Tests con MemoryStream y carpetas temporales
+| Concepto | Descripción |
+|----------|-------------|
+| **Seguridad** | Validar siempre en el servidor, generar nombres únicos, limitar tamaño |
+| **Arquitectura** | Usar interfaces, eliminar archivos huérfanos, logging |
+| **Testing** | Tests con MemoryStream y carpetas temporales |
 
 **¿Qué viene después?**
 
