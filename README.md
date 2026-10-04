@@ -1,4 +1,4 @@
-# Desarrollo Web en Entorno Servidor - 02 - Desarrollo de servicios web en .NET
+﻿# Desarrollo Web en Entorno Servidor - 02 - Desarrollo de servicios web en .NET
 
 UD02. Desarrollo de servicios web en .NET. 2DAW. Curso 2026-2027
 
@@ -8,7 +8,7 @@ UD02. Desarrollo de servicios web en .NET. 2DAW. Curso 2026-2027
   - [Contenidos](#contenidos)
   - [Proyecto integrador](#proyecto-integrador)
   - [Contenido en YouTube](#contenido-en-youtube)
-  - [Resultados de aprendizaje y criterios de evaluación](#resultados-de-aprendizaje-y-criterios-de-evaluación)
+  - [Resultados de Aprendizaje y Criterios de Evaluación](#resultados-de-aprendizaje-y-criterios-de-evaluación)
   - [Autor](#autor)
     - [Contacto](#contacto)
   - [Licencia de uso](#licencia-de-uso)
@@ -68,7 +68,7 @@ Los proyectos realizados en clase:
 - [API Gateway y microservicios con .NET/ASP Core](https://youtu.be/o2WMCAlCnm4)
 - [Lista de reproducción](https://www.youtube.com/playlist?list=PLLiuVpAc3Gv4)
 
-## Resultados de aprendizaje y criterios de evaluación
+## Resultados de Aprendizaje y Criterios de Evaluación
 
 - RA6: Desarrolla aplicaciones web de acceso a almacenes de datos, aplicando medidas para mantener la seguridad y la integridad de la información.
 
