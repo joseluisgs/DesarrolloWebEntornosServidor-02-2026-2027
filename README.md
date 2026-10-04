@@ -4,6 +4,15 @@ UD02. Desarrollo de servicios web en .NET. 2DAW. Curso 2026-2027
 
 ![imagen](https://github.com/joseluisgs/DesarrolloWebEntornosServidor-00-2023-2024/raw/master/images/servicios.png)
 
+- [Desarrollo Web en Entorno Servidor - 02 - Desarrollo de servicios web en .NET](#desarrollo-web-en-entorno-servidor-02---desarrollo-de-servicios-web-en-net)
+  - [Contenidos](#contenidos)
+  - [Proyecto integrador](#proyecto-integrador)
+  - [Contenido en YouTube](#contenido-en-youtube)
+  - [Resultados de aprendizaje y criterios de evaluación](#resultados-de-aprendizaje-y-criterios-de-evaluación)
+  - [Autor](#autor)
+    - [Contacto](#contacto)
+  - [Licencia de uso](#licencia-de-uso)
+
 
 ## Contenidos
 
