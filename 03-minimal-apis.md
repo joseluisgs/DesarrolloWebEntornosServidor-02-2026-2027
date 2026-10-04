@@ -1,8 +1,8 @@
 - [3. Minimal APIs](#3-minimal-apis)
-  - [3.1. ¿Qué es una Minimal API?](#31-qué-es-una-minimal-api)
-    - [3.1.1. Minimal API vs Controller-based](#311-minimal-api-vs-controller-based)
+  - [3.1. ¿Qué es una minimal API?](#31-qué-es-una-minimal-api)
+    - [3.1.1. Minimal API vs controller-based](#311-minimal-api-vs-controller-based)
     - [3.1.2. ¿Cuándo usar cada una?](#312-cuándo-usar-cada-una)
-  - [3.2. Estructura de una Minimal API](#32-estructura-de-una-minimal-api)
+  - [3.2. Estructura de una minimal API](#32-estructura-de-una-minimal-api)
     - [3.2.1. El archivo Program.cs](#321-el-archivo-programcs)
     - [3.2.2. El ciclo de vida de una petición](#322-el-ciclo-de-vida-de-una-petición)
   - [3.3. Definir rutas y métodos HTTP](#33-definir-rutas-y-métodos-http)
@@ -18,7 +18,7 @@
     - [3.6.1. El problema](#361-el-problema)
     - [3.6.2. La solución: archivos de rutas con extensiones](#362-la-solución-archivos-de-rutas-con-extensiones)
     - [3.6.3. MapGroup: agrupar rutas](#363-mapgroup-agrupar-rutas)
-    - [3.6.4. Probando con Bruno](#364-probando-con-bruno)
+    - [3.6.4. Probando con bruno](#364-probando-con-bruno)
     - [3.6.5. Instalación](#365-instalación)
     - [3.6.6. Configuración](#366-configuración)
     - [3.6.7. Pruebas GET](#367-pruebas-get)
@@ -33,7 +33,7 @@
     - [3.8.2. Modelo de datos](#382-modelo-de-datos)
     - [3.8.3. Almacenamiento](#383-almacenamiento)
     - [3.8.4. Retos](#384-retos)
-    - [3.8.5. Results.Created() y el header Location](#385-resultscreated-y-el-header-location)
+    - [3.8.5. Results.Created() y el header location](#385-resultscreated-y-el-header-location)
     - [3.8.6. ¿Qué es un header?](#386-qué-es-un-header)
     - [3.8.7. ¿Por qué se construye la URL a mano?](#387-por-qué-se-construye-la-url-a-mano)
 
@@ -53,7 +53,7 @@ En este punto aprenderás a crear endpoints con Minimal APIs en ASP.NET Core: ru
 - Devolver respuestas correctas con los métodos de Results
 - Entender las diferencias con los controladores
 
-## 3.1. ¿Qué es una Minimal API?
+## 3.1. ¿Qué es una minimal API?
 
 Una **Minimal API** es una forma simplificada de crear endpoints en ASP.NET Core. En lugar de crear clases Controlador con atributos, cada endpoint se define como una **función lambda** directamente en `Program.cs`.
 
@@ -64,14 +64,14 @@ flowchart LR
     A["🌐 Cliente"] -->|HTTP| B["Minimal API"]
     B -->|"lambda()"| C["Endpoint"]
     C -->|Response| A
-    style A fill:#2196F3,color:#fff
-    style B fill:#4CAF50,color:#fff
-    style C fill:#FF9800,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#FF980,color:#fff0,color:#fff
 ```
 
 📌 **Ejemplo real:** Así lo harías con ASP.NET Core: si Twitter/X quisiera un endpoint simple como "obtener un tweet" o "dar like", con Minimal API sería una sola lambda en `Program.cs`, sin la ceremonia de un controlador.
 
-### 3.1.1. Minimal API vs Controller-based
+### 3.1.1. Minimal API vs controller-based
 
 | Característica | Minimal API | Controller-based |
 |----------------|:-----------:|:----------------:|
@@ -90,13 +90,13 @@ flowchart TD
     A -->|No| C{"¿Necesitas filtros, validación compleja?"}
     C -->|No| B
     C -->|Sí| D["Controller-based"]
-    style B fill:#4CAF50,color:#fff
-    style D fill:#FF9800,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#FF980,color:#fff0,color:#fff
 ```
 
 > 💡 **Consejo:** Empieza siempre con Minimal APIs. Si la API crece y necesitas más estructura, migras a controladores. No complices lo que puedes hacer simple.
 
-## 3.2. Estructura de una Minimal API
+## 3.2. Estructura de una minimal API
 
 ### 3.2.1. El archivo Program.cs
 
@@ -130,12 +130,12 @@ flowchart TD
     C --> D["Ejecuta la lambda"]
     D --> E["Devuelve la respuesta"]
     E --> F["Cliente recibe JSON"]
-    style A fill:#2196F3,color:#fff
-    style B fill:#4CAF50,color:#fff
-    style C fill:#FF9800,color:#fff
-    style D fill:#9C27B0,color:#fff
-    style E fill:#4CAF50,color:#fff
-    style F fill:#2196F3,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#FF980,color:#fff0,color:#fff
+    style D fill:#9C27B,color:#fff0,color:#fff
+    style E fill:#4CAF5,color:#fff0,color:#fff
+    style F fill:#2196F,color:#fff3,color:#fff
 ```
 
 ## 3.3. Definir rutas y métodos HTTP
@@ -247,12 +247,12 @@ flowchart TD
     G -->|Sí| G2{"¿Regla de negocio cumplida?"}
     G2 -->|No| H["Results.UnprocessableEntity()"]
     G2 -->|Sí| I["Results.Ok()"]
-    style B fill:#4CAF50,color:#fff
-    style D fill:#4CAF50,color:#fff
-    style F fill:#f44336,color:#fff
-    style H0 fill:#FF9800,color:#fff
-    style H fill:#FF9800,color:#fff
-    style I fill:#4CAF50,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#4CAF5,color:#fff0,color:#fff
+    style F fill:#f4433,color:#fff6,color:#fff
+    style H0 fill:#FF980,color:#fff0,color:#fff
+    style H fill:#FF980,color:#fff0,color:#fff
+    style I fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 ## 3.5. Gestión de la clave primaria
@@ -284,7 +284,7 @@ app.MapPost("/api/funkos", (FunkoDto dto) =>
 });
 ```
 
-### Generar id con Max()
+### Generar id con max()
 
 Otra opción: calcular el siguiente id a partir de la lista existente:
 
@@ -368,7 +368,7 @@ var group = app.MapGroup("/api/productos");
 
 📌 **Ejemplo real:** La API de GitHub organiza sus endpoints en archivos separados: `repos/routes.cs`, `users/routes.cs`, `issues/routes.cs`...
 
-### 3.6.4. Probando con Bruno
+### 3.6.4. Probando con bruno
 
 **Bruno** es un cliente API open source para probar endpoints. Es la alternativa gratuita a Postman. Las pruebas que hagas aquí funcionarán igual con Minimal APIs y con Controladores MVC.
 
@@ -467,7 +467,7 @@ Content-Type: application/json
 }
 ```
 
-Respuesta esperada: `400 Bad Request` **solo si el endpoint tiene validación** (Data Annotations en el DTO — ver [Punto 8: DTOs, Mapeadores y Validaciones](08-dtos-mapeadores-validaciones.md) — o `RequireValidation()`). **Sin validación, el endpoint devuelve `201 Created`** aunque el nombre venga vacío.
+Respuesta esperada: `400 Bad Request` **solo si el endpoint tiene validación** (Data Annotations en el DTO — ver [Punto 8: DTOs, Mapeadores y Validaciones](08-dtos-mapeadores-validaciones.md) ; o `RequireValidation()`). **Sin validación, el endpoint devuelve `201 Created`** aunque el nombre venga vacío.
 
 > ⚠️ **Advertencia:** Si usas HTTPS, Bruno puede pedirte que aceptes el certificado autofirmado. Aceptalo en el primer request.
 
@@ -609,7 +609,7 @@ Crea un proyecto Minimal API y desarrolla cada endpoint. Recuerda:
 
 > 💡 **Consejo:** Empieza por `GET /api/funkos` (listar todos). Una vez que funciona, ve añadiendo los demás endpoints uno a uno.
 
-### 3.8.5. Results.Created() y el header Location
+### 3.8.5. Results.Created() y el header location
 
 Cuando creas un recurso, debes devolver **201 Created** con el header `Location`:
 

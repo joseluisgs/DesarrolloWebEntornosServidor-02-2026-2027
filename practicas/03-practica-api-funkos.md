@@ -1,12 +1,12 @@
-# Práctica 3: Construcción de la API de Funkos
+# Práctica 3: construcción de la API de Funkos
 
-- [Práctica 3: Construcción de la API de Funkos](#práctica-3-construcción-de-la-api-de-funkos)
+- [Práctica 3: construcción de la API de Funkos](#práctica-3-construcción-de-la-api-de-funkos)
   - [Objetivo](#objetivo)
   - [Descripción](#descripción)
-  - [Tareas a Realizar](#tareas-a-realizar)
+  - [Tareas a realizar](#tareas-a-realizar)
   - [Tecnologías](#tecnologías)
-  - [Estructura de Proyecto](#estructura-de-proyecto)
-  - [Formato de Entrega](#formato-de-entrega)
+  - [Estructura de proyecto](#estructura-de-proyecto)
+  - [Formato de entrega](#formato-de-entrega)
 
 ---
 
@@ -18,7 +18,7 @@ Construir, de principio a fin, una API REST completa de gestión de una colecci�
 
 ## Descripción
 
-A lo largo de los temas de la unidad has ido proponiendo —en los **Retos** finales de cada tema— las piezas de un mismo proyecto: la API de Funkos. En esta práctica esas piezas se ensamblan en un único entregable evolutivo.
+A lo largo de los temas de la unidad has ido proponiendo (en los **Retos** finales de cada tema) las piezas de un mismo proyecto: la API de Funkos. En esta práctica esas piezas se ensamblan en un único entregable evolutivo.
 
 **Contexto:** una tienda online necesita gestionar su catálogo de Funkos: consultarlos, crearlos, modificarlos y eliminarlos, con autenticación, persistencia y despliegue.
 
@@ -28,14 +28,14 @@ Un Funko tiene, como mínimo, estas propiedades: `Id`, `Nombre`, `Precio`, `Stoc
 
 ---
 
-## Tareas a Realizar
+## Tareas a realizar
 
-### 1. Define tu recurso (Tema 1)
+### 1. Define tu recurso (tema 1)
 
 - Enumera las propiedades de un Funko y justifica cada una.
 - Identifica quién es tu cliente y tu servidor en este sistema.
 
-### 2. Diseña la API en papel (Tema 2)
+### 2. Diseña la API en papel (tema 2)
 
 > ⚠️ **Advertencia:** No escribas código todavía. Primero el papel.
 
@@ -50,52 +50,52 @@ Un Funko tiene, como mínimo, estas propiedades: `Id`, `Nombre`, `Precio`, `Stoc
 | Eliminar un Funko | | | |
 | Buscar Funkos por nombre | | | |
 
-### 3. Tu primera API (Tema 3)
+### 3. Tu primera API (tema 3)
 
 - Implementa el CRUD completo como **Minimal API** con los datos en memoria (`List<Funko>`).
 - Verifica con las colecciones `.http` o con Swagger los seis endpoints del paso anterior.
 
-### 4. La misma API con controladores (Tema 4)
+### 4. La misma API con controladores (tema 4)
 
 - Reimplementa el CRUD con **controladores MVC** (`FunkosController`).
 - Compara ambos enfoques y anota en el README cuál elegirías para un proyecto real y por qué.
 
-### 5. Inyección de dependencias completa (Tema 6)
+### 5. Inyección de dependencias completa (tema 6)
 
 - Separa `IFunkoService`/`FunkoService` e `IFunkoRepository`/`FunkoRepository` (en memoria con `Dictionary<long, Funko>`).
 - Registra todo en DI con ciclos de vida adecuados y constructor primario.
 
-### 6. Errores con patrón Result (Tema 7)
+### 6. Errores con patrón result (tema 7)
 
 - Gestiona los errores de dominio (Funko no encontrado, nombre duplicado, stock insuficiente) con `Result<T>`.
 - Añade un manejador global de excepciones que devuelva Problem Details.
 
-### 7. DTOs, validaciones y mapeadores (Tema 8)
+### 7. DTOs, validaciones y mapeadores (tema 8)
 
 - Crea los DTOs de entrada y salida (`CreateFunkoDto`, `UpdateFunkoDto`, `FunkoDto`).
 - Valida con Data Annotations y un validador de dominio; mapea con métodos de extensión.
 
-### 8. Configuración y logs (Tema 9)
+### 8. Configuración y logs (tema 9)
 
 - Mueve la configuración a `appsettings.json` + perfiles por entorno.
 - Configura Serilog con salida a consola y fichero, con log estructurado de las operaciones CRUD.
 
-### 9. Persistencia real (Tema 12)
+### 9. Persistencia real (tema 12)
 
 - Sustituye la lista en memoria por **Entity Framework Core** con PostgreSQL (o SQLite en desarrollo).
 - Relación Uno a Muchos con `Categoria`, borrado lógico con `IsDeleted` y migraciones.
 
-### 10. Seguridad (Temas 16 y 17)
+### 10. Seguridad (temas 16 y 17)
 
 - Añade autenticación **JWT** y **BCrypt** para las contraseñas.
 - Protege las operaciones de escritura: solo usuarios autenticados; el borrado, solo rol `Admin`.
 
-### 11. Documentación y calidad (Temas 24 y 28)
+### 11. Documentación y calidad (temas 24 y 28)
 
 - Documenta la API con **Swagger/OpenAPI** (comentarios XML incluidos).
 - Escribe tests unitarios del servicio y tests de integración del endpoint con `WebApplicationFactory`.
 
-### 12. Despliegue (Tema 29)
+### 12. Despliegue (tema 29)
 
 - Dockeriza la API con **Dockerfile multi-etapa** y levanta API + base de datos con `docker-compose`.
 
@@ -115,7 +115,7 @@ Un Funko tiene, como mínimo, estas propiedades: `Id`, `Nombre`, `Precio`, `Stoc
 
 ---
 
-## Estructura de Proyecto
+## Estructura de proyecto
 
 ```
 FunkoApp/
@@ -143,7 +143,7 @@ FunkoApp/
 
 ---
 
-## Formato de Entrega
+## Formato de entrega
 
 - Repositorio en **GitHub** con el nombre `FunkoApp`, con commits incrementales (uno por fase).
 - **README** con: instrucciones de uso, cómo ejecutar los tests, cómo levantar la API con Docker y una sección de **justificación de decisiones** (enfoque Minimal API o controladores, elección de base de datos, estrategia de seguridad).

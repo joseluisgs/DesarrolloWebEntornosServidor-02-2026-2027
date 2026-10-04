@@ -41,25 +41,25 @@ UD02. Desarrollo de servicios web en .NET. 2DAW. Curso 2026-2027
 31. [API Gateway y Microservicios](31-api-gateway.md)
 32. [Resumen](32-resumen.md)
 
-## Proyecto Integrador
+## Proyecto integrador
 Los proyectos realizados en clase:
-- [Proyecto Integrador APIS](https://github.com/joseluisgs/TiendaDawApi-NetCore)
-- [Proyecto Integrador APIS CQRS](https://github.com/joseluisgs/TiendaDawApi-Cqrs-MediatR-NetCore)
+- [Proyecto integrador APIS](https://github.com/joseluisgs/TiendaDawApi-NetCore)
+- [Proyecto integrador APIS CQRS](https://github.com/joseluisgs/TiendaDawApi-Cqrs-MediatR-NetCore)
   
 ## Contenido en YouTube
 - [Resumen](https://youtu.be/FhjthcSROeo)
 - [REST API](https://youtu.be/sMFroJJCKSI)
-- [Entity Core Framework y SQL](https://youtu.be/_xknwIXg6lI)
-- [NoSQL y Mongo con .NET/ASP Core](https://youtu.be/Ox7rGnrfx6Q)
+- [Entity Core framework y SQL](https://youtu.be/_xknwIXg6lI)
+- [NoSQL y mongo con .NET/ASP Core](https://youtu.be/Ox7rGnrfx6Q)
 - [WebSockets con .NET/ASP Core](https://youtu.be/zDSOj6atVsA)
 - [GraphQL con .NET/ASP Core](https://youtu.be/9_slzfm5ods)
 - [Caché avanzada con Redis en .NET/ASP Core](https://youtu.be/w95LVes-Bn4)
-- [Seguridad: Autenticación y Autorización con .NET/ASP Core](https://youtu.be/LpP6EsaugXY)
+- [Seguridad: autenticación y autorización con .NET/ASP Core](https://youtu.be/LpP6EsaugXY)
 - [CQRS y Mediator con .NET/ASP Core](https://youtu.be/ut8QgCSPGbo)
-- [API Gateway y Microservicios con .NET/ASP Core](https://youtu.be/o2WMCAlCnm4)
-- [Lista de Reproducción](https://www.youtube.com/playlist?list=PLLiuVpAc3Gv4)
+- [API Gateway y microservicios con .NET/ASP Core](https://youtu.be/o2WMCAlCnm4)
+- [Lista de reproducción](https://www.youtube.com/playlist?list=PLLiuVpAc3Gv4)
 
-## Resultados de Aprendizaje y Criterios de Evaluación
+## Resultados de aprendizaje y criterios de evaluación
 
 - RA6: Desarrolla aplicaciones web de acceso a almacenes de datos, aplicando medidas para mantener la seguridad y la integridad de la información.
 

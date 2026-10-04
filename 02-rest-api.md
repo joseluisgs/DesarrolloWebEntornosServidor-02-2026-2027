@@ -1,38 +1,38 @@
-- [2. APIs REST: Recursos, Métodos y Respuestas](#2-apis-rest-recursos-métodos-y-respuestas)
+- [2. APIs REST: recursos, métodos y respuestas](#2-apis-rest-recursos-métodos-y-respuestas)
   - [2.1. ¿Qué es REST?](#21-qué-es-rest)
     - [2.1.1. Principios de REST](#211-principios-de-rest)
     - [2.1.2. REST no es solo HTTP](#212-rest-no-es-solo-http)
-  - [2.2. Recursos y Endpoints](#22-recursos-y-endpoints)
+  - [2.2. Recursos y endpoints](#22-recursos-y-endpoints)
     - [2.2.1. Convenciones de rutas](#221-convenciones-de-rutas)
     - [2.2.2. Parámetros en la URL](#222-parámetros-en-la-url)
   - [2.3. Métodos HTTP](#23-métodos-http)
-    - [2.3.1. GET: Leer recursos](#231-get-leer-recursos)
-    - [2.3.2. POST: Crear recursos](#232-post-crear-recursos)
-    - [2.3.3. PUT: Actualizar completo](#233-put-actualizar-completo)
-    - [2.3.4. PATCH: Actualizar parcial](#234-patch-actualizar-parcial)
-    - [2.3.5. DELETE: Eliminar recursos](#235-delete-eliminar-recursos)
+    - [2.3.1. GET: leer recursos](#231-get-leer-recursos)
+    - [2.3.2. POST: crear recursos](#232-post-crear-recursos)
+    - [2.3.3. PUT: actualizar completo](#233-put-actualizar-completo)
+    - [2.3.4. PATCH: actualizar parcial](#234-patch-actualizar-parcial)
+    - [2.3.5. DELETE: eliminar recursos](#235-delete-eliminar-recursos)
     - [2.3.6. Idempotencia](#236-idempotencia)
   - [2.4. Códigos de respuesta](#24-códigos-de-respuesta)
-    - [2.4.1. 2xx: Éxito](#241-2xx-éxito)
+    - [2.4.1. 2xx: éxito](#241-2xx-éxito)
     - [2.4.2. 200 vs 201 vs 204](#242-200-vs-201-vs-204)
-    - [2.4.3. 4xx: Error del cliente](#243-4xx-error-del-cliente)
+    - [2.4.3. 4xx: error del cliente](#243-4xx-error-del-cliente)
     - [2.4.4. 400 vs 422](#244-400-vs-422)
     - [2.4.5. 401 vs 403](#245-401-vs-403)
-    - [2.4.6. 5xx: Error del servidor](#246-5xx-error-del-servidor)
+    - [2.4.6. 5xx: error del servidor](#246-5xx-error-del-servidor)
     - [2.4.7. ¿Cuándo usar cada código?](#247-cuándo-usar-cada-código)
-  - [2.5. Request y Response](#25-request-y-response)
+  - [2.5. Request y response](#25-request-y-response)
     - [2.5.1. Estructura de un request](#251-estructura-de-un-request)
     - [2.5.2. Estructura de un response](#252-estructura-de-un-response)
     - [2.5.3. Headers comunes](#253-headers-comunes)
   - [2.6. Buenas prácticas](#26-buenas-prácticas)
-  - [2.7. Reto: Diseña la API de Funkos](#27-reto-diseña-la-api-de-funkos)
+  - [2.7. Reto: diseña la API de Funkos](#27-reto-diseña-la-api-de-funkos)
     - [2.7.1. Contexto](#271-contexto)
     - [2.7.2. Modelo de datos](#272-modelo-de-datos)
-    - [2.7.3. Ejercicio: Completa la tabla](#273-ejercicio-completa-la-tabla)
+    - [2.7.3. Ejercicio: completa la tabla](#273-ejercicio-completa-la-tabla)
 
 
 
-# 2. APIs REST: Recursos, Métodos y Respuestas
+# 2. APIs REST: recursos, métodos y respuestas
 
 > 💡 **Punto de partida:** Cuando usas Spotify y buscas un artista, tu aplicación envía una petición a la API de Spotify. El servidor busca en millones de canciones y te devuelve una lista en milisegundos. Eso es una API REST: un contrato claro entre cliente y servidor que usa HTTP y JSON.
 
@@ -56,8 +56,8 @@ En este punto aprenderás a diseñar APIs REST: qué son los recursos, cómo se 
 flowchart LR
     A["🌐 Cliente"] -->|HTTP Request| B["📡 API REST"]
     B -->|HTTP Response| A
-    style A fill:#2196F3,color:#fff
-    style B fill:#4CAF50,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 📌 **Ejemplo real:** La API de Twitter/X sigue REST. Cuando abres la app, envía `GET /api/tweets` para obtener los tweets. Cuando publicas, envía `POST /api/tweets` con el texto. Todo sigue el mismo patrón.
@@ -70,11 +70,11 @@ flowchart TD
     A --> C["📭 Sin Estado"]
     A --> D["💾 Cacheable"]
     A --> E["🧩 Uniforme"]
-    style A fill:#9C27B0,color:#fff
-    style B fill:#4CAF50,color:#fff
-    style C fill:#2196F3,color:#fff
-    style D fill:#FF9800,color:#fff
-    style E fill:#607D8B,color:#fff
+    style A fill:#9C27B,color:#fff0,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#2196F,color:#fff3,color:#fff
+    style D fill:#FF980,color:#fff0,color:#fff
+    style E fill:#607D8,color:#fffB,color:#fff
 ```
 
 | Principio | Significado |
@@ -90,7 +90,7 @@ flowchart TD
 
 REST usa HTTP como transporte, pero REST es un **estilo arquitectónico**. Puedes hacer REST con HTTP, pero también con otros protocolos. Lo que define a REST es cómo organizas los recursos y las operaciones sobre ellos.
 
-## 2.2. Recursos y Endpoints
+## 2.2. Recursos y endpoints
 
 En REST, todo es un **recurso**. Un producto es un recurso. Una categoría es un recurso. Un usuario es un recurso. Cada recurso se identifica con una **URL** (endpoint).
 
@@ -114,12 +114,12 @@ flowchart LR
     A -->|POST| D["Crear nuevo"]
     A -->|PUT /1| E["Actualizar"]
     A -->|DELETE /1| F["Eliminar"]
-    style A fill:#2196F3,color:#fff
-    style B fill:#4CAF50,color:#fff
-    style C fill:#4CAF50,color:#fff
-    style D fill:#FF9800,color:#fff
-    style E fill:#FF9800,color:#fff
-    style F fill:#f44336,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#FF980,color:#fff0,color:#fff
+    style E fill:#FF980,color:#fff0,color:#fff
+    style F fill:#f4433,color:#fff6,color:#fff
 ```
 
 ### 2.2.2. Parámetros en la URL
@@ -144,7 +144,7 @@ https://api.tienda.com/api/productos?categoria=musica&page=1&pageSize=10
 
 Cada método HTTP tiene un significado claro en REST. No son intercambiables.
 
-### 2.3.1. GET: Leer recursos
+### 2.3.1. GET: leer recursos
 
 **GET** obtiene un recurso o una lista de recursos. **No modifica nada**. Es seguro e idempotente.
 
@@ -166,7 +166,7 @@ Content-Type: application/json
 
 📌 **Ejemplo real:** `GET /api/productos/1` → Obtener el producto con ID 1.
 
-### 2.3.2. POST: Crear recursos
+### 2.3.2. POST: crear recursos
 
 **POST** crea un nuevo recurso. Devuelve **201 Created** con el recurso creado y un header `Location` con la URL del nuevo recurso.
 
@@ -197,7 +197,7 @@ Location: /api/productos/1
 
 > ⚠️ **Advertencia:** POST **no** es idempotente. Si envías el mismo POST dos veces, crearás **dos recursos** distintos. Por eso no se usa para actualizar.
 
-### 2.3.3. PUT: Actualizar completo
+### 2.3.3. PUT: actualizar completo
 
 **PUT** reemplaza un recurso completo. Debes enviar **todos** los campos. Es idempotente.
 
@@ -227,7 +227,7 @@ Content-Type: application/json
 
 > 💡 **Consejo:** PUT reemplaza el recurso completo. Si olvidas un campo, ese campo se pierde. Por eso se usa **PATCH** para actualizaciones parciales.
 
-### 2.3.4. PATCH: Actualizar parcial
+### 2.3.4. PATCH: actualizar parcial
 
 **PATCH** modifica solo los campos que envías. El resto se mantiene igual.
 
@@ -255,7 +255,7 @@ Content-Type: application/json
 
 📌 **Ejemplo real:** En Netflix, cuando cambias solo tu contraseña, usa PATCH. No necesitas enviar nombre, email y todo lo demás.
 
-### 2.3.5. DELETE: Eliminar recursos
+### 2.3.5. DELETE: eliminar recursos
 
 **DELETE** elimina un recurso. Devuelve **204 No Content** (sin cuerpo de respuesta).
 
@@ -290,7 +290,7 @@ HTTP/1.1 204 No Content
 
 Los códigos de estado HTTP comunican al cliente qué ha pasado con su petición. Usar el código correcto es **fundamental** para que el cliente sepa cómo reaccionar.
 
-### 2.4.1. 2xx: Éxito
+### 2.4.1. 2xx: éxito
 
 | Código | Nombre | Cuándo usarlo |
 |--------|--------|---------------|
@@ -312,7 +312,7 @@ Los códigos de estado HTTP comunican al cliente qué ha pasado con su petición
 
 > 💡 **Consejo:** **201 Created** siempre debe incluir el header `Location` con la URL del recurso creado. Si no lo incluyes, el cliente no sabe dónde está el nuevo recurso.
 
-### 2.4.3. 4xx: Error del cliente
+### 2.4.3. 4xx: error del cliente
 
 | Código | Nombre | Cuándo usarlo |
 |--------|--------|---------------|
@@ -341,7 +341,7 @@ Los códigos de estado HTTP comunican al cliente qué ha pasado con su petición
 | **401** | No sabes quién eres (sin token) | Intentar acceder a `/api/admin` sin iniciar sesión |
 | **403** | Sabes quién eres pero no puedes (sin permisos) | Un usuario normal intentando acceder a `/api/admin` |
 
-### 2.4.6. 5xx: Error del servidor
+### 2.4.6. 5xx: error del servidor
 
 | Código | Nombre | Cuándo usarlo |
 |--------|--------|---------------|
@@ -374,19 +374,19 @@ flowchart TD
     N -->|Sí| P{"¿Es DELETE?"}
     P -->|Sí| Q["204 No Content"]
     P -->|No| R["200 OK"]
-    style C fill:#FF9800,color:#fff
-    style E fill:#f44336,color:#fff
-    style G fill:#f44336,color:#fff
-    style I fill:#FF9800,color:#fff
-    style I2 fill:#FF9800,color:#fff
-    style L fill:#f44336,color:#fff
-    style M fill:#4CAF50,color:#fff
-    style O fill:#f44336,color:#fff
-    style Q fill:#4CAF50,color:#fff
-    style R fill:#4CAF50,color:#fff
+    style C fill:#FF980,color:#fff0,color:#fff
+    style E fill:#f4433,color:#fff6,color:#fff
+    style G fill:#f4433,color:#fff6,color:#fff
+    style I fill:#FF980,color:#fff0,color:#fff
+    style I2 fill:#FF980,color:#fff0,color:#fff
+    style L fill:#f4433,color:#fff6,color:#fff
+    style M fill:#4CAF5,color:#fff0,color:#fff
+    style O fill:#f4433,color:#fff6,color:#fff
+    style Q fill:#4CAF5,color:#fff0,color:#fff
+    style R fill:#4CAF5,color:#fff0,color:#fff
 ```
 
-## 2.5. Request y Response
+## 2.5. Request y response
 
 ### 2.5.1. Estructura de un request
 
@@ -451,7 +451,7 @@ Location: /api/productos/1
 - **Documenta tus códigos:** Cada endpoint debe indicar qué códigos devuelve y por qué
 - **Consistencia:** Si un endpoint devuelve `{ data: ... }`, todos deben hacerlo
 
-## 2.7. Reto: Diseña la API de Funkos
+## 2.7. Reto: diseña la API de Funkos
 
 > Antes de irte, diseña los endpoints de tu API. No escribas código: piensa en el diseño.
 
@@ -472,7 +472,7 @@ Un Funko tiene estas propiedades:
 | `imagen` | string | No |
 | `creadoEn` | DateTime | Sí (autogenerado) |
 
-### 2.7.3. Ejercicio: Completa la tabla
+### 2.7.3. Ejercicio: completa la tabla
 
 **Para cada operación, rellena:** endpoint, método, datos que envías, código de respuesta, qué devuelve y si necesita autorización.
 

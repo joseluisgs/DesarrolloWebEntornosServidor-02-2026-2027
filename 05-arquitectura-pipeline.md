@@ -1,8 +1,8 @@
-- [5. Arquitectura y Pipeline HTTP](#5-arquitectura-y-pipeline-http)
-  - [5.1. ASP.NET Core: El framework](#51-aspnet-core-el-framework)
+- [5. Arquitectura y pipeline HTTP](#5-arquitectura-y-pipeline-http)
+  - [5.1. ASP.NET Core: el framework](#51-aspnet-core-el-framework)
     - [5.1.1. ¿Qué es ASP.NET Core?](#511-qué-es-aspnet-core)
     - [5.1.2. Características principales](#512-características-principales)
-  - [5.2. Arquitectura de una Web API](#52-arquitectura-de-una-web-api)
+  - [5.2. Arquitectura de una web API](#52-arquitectura-de-una-web-api)
     - [5.2.1. Capas de la aplicación](#521-capas-de-la-aplicación)
     - [5.2.2. Controllers](#522-controllers)
     - [5.2.3. Services](#523-services)
@@ -12,22 +12,22 @@
     - [5.3.1. ¿Qué es el pipeline?](#531-qué-es-el-pipeline)
     - [5.3.2. Middlewares](#532-middlewares)
     - [5.3.3. Orden de los middlewares](#533-orden-de-los-middlewares)
-  - [5.4. Kestrel: El servidor web](#54-kestrel-el-servidor-web)
+  - [5.4. Kestrel: el servidor web](#54-kestrel-el-servidor-web)
     - [5.4.1. ¿Qué es Kestrel?](#541-qué-es-kestrel)
-    - [5.4.2. Kestrel con Reverse Proxy](#542-kestrel-con-reverse-proxy)
-  - [5.5. Program.cs: El punto de entrada](#55-programcs-el-punto-de-entrada)
+    - [5.4.2. Kestrel con reverse proxy](#542-kestrel-con-reverse-proxy)
+  - [5.5. Program.cs: el punto de entrada](#55-programcs-el-punto-de-entrada)
     - [5.5.1. Estructura básica](#551-estructura-básica)
     - [5.5.2. Registro de servicios](#552-registro-de-servicios)
     - [5.5.3. Configuración del pipeline](#553-configuración-del-pipeline)
-  - [5.6. Buenas Prácticas](#56-buenas-prácticas)
-  - [5.7. Reto: Traza una petición HTTP](#57-reto-traza-una-petición-http)
+  - [5.6. Buenas prácticas](#56-buenas-prácticas)
+  - [5.7. Reto: traza una petición HTTP](#57-reto-traza-una-petición-http)
     - [5.7.1. Contexto](#571-contexto)
-    - [5.7.2. Ejercicio 1: Dibuja el pipeline](#572-ejercicio-1-dibuja-el-pipeline)
-    - [5.7.3. Ejercicio 2: Identifica las capas](#573-ejercicio-2-identifica-las-capas)
+    - [5.7.2. Ejercicio 1: dibuja el pipeline](#572-ejercicio-1-dibuja-el-pipeline)
+    - [5.7.3. Ejercicio 2: identifica las capas](#573-ejercicio-2-identifica-las-capas)
 
 
 
-# 5. Arquitectura y Pipeline HTTP
+# 5. Arquitectura y pipeline HTTP
 
 > 💡 **Punto de partida:** Cuando envías un mensaje por WhatsApp, ese mensaje pasa por varios pasos: sale de tu móvil, viaja por internet, llega al servidor de Meta, se procesa, y la respuesta vuelve a ti. ASP.NET Core funciona igual: cada petición HTTP recorre un **pipeline** de middlewares antes de llegar al endpoint.
 
@@ -41,7 +41,7 @@ En este punto aprenderás cómo está organizada una aplicación ASP.NET Core y 
 - Saber qué es Kestrel y cómo sirve las peticiones
 - Conocer la estructura de Program.cs
 
-## 5.1. ASP.NET Core: El framework
+## 5.1. ASP.NET Core: el framework
 
 ### 5.1.1. ¿Qué es ASP.NET Core?
 
@@ -56,12 +56,12 @@ flowchart TD
     A --> D["📄 Razor Pages"]
     A --> E["🎮 Blazor"]
     A --> F["📡 Web API"]
-    style A fill:#9C27B0,color:#fff
-    style B fill:#4CAF50,color:#fff
-    style C fill:#4CAF50,color:#fff
-    style D fill:#2196F3,color:#fff
-    style E fill:#2196F3,color:#fff
-    style F fill:#FF9800,color:#fff
+    style A fill:#9C27B,color:#fff0,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#2196F,color:#fff3,color:#fff
+    style E fill:#2196F,color:#fff3,color:#fff
+    style F fill:#FF980,color:#fff0,color:#fff
 ```
 
 📌 **Ejemplo real:** Netflix, Spotify y GitHub usan APIs construidas con tecnologías similares a ASP.NET Core. Cada petición que haces a estos servicios pasa por un pipeline similar al que verás aquí.
@@ -76,7 +76,7 @@ flowchart TD
 | **DI integrada** | Inyección de dependencias de fábrica |
 | **Código abierto** | Desarrollo público en GitHub |
 
-## 5.2. Arquitectura de una Web API
+## 5.2. Arquitectura de una web API
 
 ### 5.2.1. Capas de la aplicación
 
@@ -90,13 +90,13 @@ flowchart TD
     D -->|Accede a| E["📦 Database"]
     C -->|Usa| F["📋 Model"]
     B -->|Devuelve| G["📤 DTO"]
-    style A fill:#2196F3,color:#fff
-    style B fill:#FF9800,color:#fff
-    style C fill:#4CAF50,color:#fff
-    style D fill:#9C27B0,color:#fff
-    style E fill:#607D8B,color:#fff
-    style F fill:#4CAF50,color:#fff
-    style G fill:#FF9800,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#FF980,color:#fff0,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#9C27B,color:#fff0,color:#fff
+    style E fill:#607D8,color:#fffB,color:#fff
+    style F fill:#4CAF5,color:#fff0,color:#fff
+    style G fill:#FF980,color:#fff0,color:#fff
 ```
 
 📌 **Ejemplo real:** En Amazon, cuando buscas un producto: el **Controller** recibe tu petición, el **Service** busca en el catálogo, el **Repository** accede a la base de datos, y el **DTO** te devuelve solo los datos que necesitas (sin passwords ni datos internos).
@@ -145,11 +145,11 @@ flowchart LR
     B -->|"SELECT *"| C["📦 SQL Server"]
     B -->|"find()"| D["🍃 MongoDB"]
     B -->|"Get()"| E["📄 JSON File"]
-    style A fill:#4CAF50,color:#fff
-    style B fill:#9C27B0,color:#fff
-    style C fill:#2196F3,color:#fff
-    style D fill:#4CAF50,color:#fff
-    style E fill:#FF9800,color:#fff
+    style A fill:#4CAF5,color:#fff0,color:#fff
+    style B fill:#9C27B,color:#fff0,color:#fff
+    style C fill:#2196F,color:#fff3,color:#fff
+    style D fill:#4CAF5,color:#fff0,color:#fff
+    style E fill:#FF980,color:#fff0,color:#fff
 ```
 
 > 💡 **Consejo:** El patrón Repository permite cambiar la fuente de datos sin tocar el service. Hoy es SQL Server, mañana puede ser MongoDB. El service no se entera.
@@ -178,14 +178,14 @@ flowchart LR
     E --> F["🗺️ Routing"]
     F --> G["🎯 Endpoint"]
     G --> H["📤 Respuesta"]
-    style A fill:#2196F3,color:#fff
-    style B fill:#f44336,color:#fff
-    style C fill:#607D8B,color:#fff
-    style D fill:#FF9800,color:#fff
-    style E fill:#9C27B0,color:#fff
-    style F fill:#4CAF50,color:#fff
-    style G fill:#4CAF50,color:#fff
-    style H fill:#2196F3,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#f4433,color:#fff6,color:#fff
+    style C fill:#607D8,color:#fffB,color:#fff
+    style D fill:#FF980,color:#fff0,color:#fff
+    style E fill:#9C27B,color:#fff0,color:#fff
+    style F fill:#4CAF5,color:#fff0,color:#fff
+    style G fill:#4CAF5,color:#fff0,color:#fff
+    style H fill:#2196F,color:#fff3,color:#fff
 ```
 
 📌 **Ejemplo real:** Es como una cadena de montaje. Cada estación (middleware) hace su trabajo y pasa el producto a la siguiente. Si alguna estación falla, el producto no llega al final.
@@ -231,7 +231,7 @@ app.UseAuthorization();      // Authentication → Authorization SIEMPRE en ese 
 
 > ⚠️ **Advertencia:** Si `UseAuthentication` va después de `UseAuthorization`, la autorización fallará porque no sabe quién eres. Siempre: Authentication → Authorization.
 
-## 5.4. Kestrel: El servidor web
+## 5.4. Kestrel: el servidor web
 
 ### 5.4.1. ¿Qué es Kestrel?
 
@@ -242,15 +242,15 @@ flowchart LR
     A["🌐 Internet"] --> B["🛡️ Reverse Proxy<br/>(Nginx/IIS)"]
     B -->|HTTP| C["⚡ Kestrel"]
     C -->|Pipeline| D["🎯 Endpoint"]
-    style A fill:#2196F3,color:#fff
-    style B fill:#f44336,color:#fff
-    style C fill:#4CAF50,color:#fff
-    style D fill:#FF9800,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#f4433,color:#fff6,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#FF980,color:#fff0,color:#fff
 ```
 
 📌 **Ejemplo real:** Kestrel es como el portero de un edificio. Recibe a todos los visitantes (peticiones), les pasa al sistema de seguridad (middleware), y los dirige al destino correcto (endpoint).
 
-### 5.4.2. Kestrel con Reverse Proxy
+### 5.4.2. Kestrel con reverse proxy
 
 En producción, Kestrel **nunca** se expone directamente a internet. Se usa detrás de un **reverse proxy** (Nginx, IIS, Apache):
 
@@ -261,7 +261,7 @@ En producción, Kestrel **nunca** se expone directamente a internet. Se usa detr
 
 > 💡 **Consejo:** En desarrollo, Kestrel funciona solo. En producción, siempre detrás de un reverse proxy.
 
-## 5.5. Program.cs: El punto de entrada
+## 5.5. Program.cs: el punto de entrada
 
 ### 5.5.1. Estructura básica
 
@@ -285,11 +285,11 @@ flowchart TD
     B --> C["builder.Build()<br/>Crear la app"]
     C --> D["app.*<br/>Configurar pipeline"]
     D --> E["app.Run()<br/>Arrancar servidor"]
-    style A fill:#9C27B0,color:#fff
-    style B fill:#4CAF50,color:#fff
-    style C fill:#4CAF50,color:#fff
-    style D fill:#FF9800,color:#fff
-    style E fill:#2196F3,color:#fff
+    style A fill:#9C27B,color:#fff0,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#FF980,color:#fff0,color:#fff
+    style E fill:#2196F,color:#fff3,color:#fff
 ```
 
 ### 5.5.2. Registro de servicios
@@ -336,7 +336,7 @@ app.MapControllers();
 app.Run();
 ```
 
-## 5.6. Buenas Prácticas
+## 5.6. Buenas prácticas
 
 - **Separación de responsabilidades:** Cada capa (Controller, Service, Repository) tiene una única responsabilidad. El Controller coordina, el Service aplica lógica de negocio, el Repository accede a datos
 - **Principio de dependencia:** Las dependencias siempre fluyen hacia abajo (Controller → Service → Repository). Nunca al revés
@@ -345,7 +345,7 @@ app.Run();
 - **Pipeline ordenado:** El orden de middlewares importa. Siempre: ExceptionHandler → HTTPS → CORS → Authentication → Authorization → Routing → Endpoints
 - **Config classes para DI:** Organiza el registro de dependencias en clases estáticas (RepositoriesConfig, ServicesConfig) en lugar de llenar Program.cs
 
-## 5.7. Reto: Traza una petición HTTP
+## 5.7. Reto: traza una petición HTTP
 
 > Antes de irte, dibuja el camino completo de una petición.
 
@@ -359,7 +359,7 @@ Host: localhost:5001
 Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 ```
 
-### 5.7.2. Ejercicio 1: Dibuja el pipeline
+### 5.7.2. Ejercicio 1: dibuja el pipeline
 
 Dibuja el camino que sigue esta petición desde que llega al servidor hasta que se devuelve la respuesta. Incluye:
 
@@ -367,7 +367,7 @@ Dibuja el camino que sigue esta petición desde que llega al servidor hasta que 
 - Orden de ejecución
 - Qué middleware hace qué cosa
 
-### 5.7.3. Ejercicio 2: Identifica las capas
+### 5.7.3. Ejercicio 2: identifica las capas
 
 Para esta petición, indica qué componente de cada capa se ejecuta:
 

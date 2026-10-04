@@ -1,17 +1,17 @@
-- [10. Pruebas y Despliegue Básicos](#10-pruebas-y-despliegue-básicos)
+- [10. Pruebas y despliegue básicos](#10-pruebas-y-despliegue-básicos)
   - [10.1. Test unitarios con NUnit](#101-test-unitarios-con-nunit)
-    - [10.1.1. Estructura de un test: Arrange, Act, Assert](#1011-estructura-de-un-test-arrange-act-assert)
+    - [10.1.1. Estructura de un test: arrange, act, assert](#1011-estructura-de-un-test-arrange-act-assert)
     - [10.1.2. Aserciones con FluentAssertions](#1012-aserciones-con-fluentassertions)
     - [10.1.3. Tests parametrizados con TestCase](#1013-tests-parametrizados-con-testcase)
   - [10.2. Mocks con Moq: aislando dependencias](#102-mocks-con-moq-aislando-dependencias)
-    - [10.2.1. ¿Qué es un Mock?](#1021-qué-es-un-mock)
-    - [10.2.2. Configuración con Setup](#1022-configuración-con-setup)
-    - [10.2.3. Verificación con Verify](#1023-verificación-con-verify)
+    - [10.2.1. ¿Qué es un mock?](#1021-qué-es-un-mock)
+    - [10.2.2. Configuración con setup](#1022-configuración-con-setup)
+    - [10.2.3. Verificación con verify](#1023-verificación-con-verify)
   - [10.3. Informes de cobertura](#103-informes-de-cobertura)
   - [10.4. Despliegue con Docker](#104-despliegue-con-docker)
     - [10.4.1. Dockerfile](#1041-dockerfile)
     - [10.4.2. Multi-stage build](#1042-multi-stage-build)
-    - [10.4.3. Docker Compose](#1043-docker-compose)
+    - [10.4.3. Docker compose](#1043-docker-compose)
   - [10.5. Podman: la alternativa a Docker](#105-podman-la-alternativa-a-docker)
   - [10.6. Verificación automatizada del repo](#106-verificación-automatizada-del-repo)
   - [10.7. Buenas prácticas](#107-buenas-prácticas)
@@ -19,7 +19,7 @@
 
 
 
-# 10. Pruebas y Despliegue Básicos
+# 10. Pruebas y despliegue básicos
 
 > 💡 **Punto de partida:** ¿Cómo sabes que tu código funciona? ¿Y cómo lo pasas a producción? En este punto aprendemos a **probar** y **desplegar**.
 
@@ -44,7 +44,7 @@ Un **test unitario** verifica que una pieza de código (un método, una clase) f
 
 Usamos **NUnit** como framework de tests, **FluentAssertions** para aserciones legibles y **Moq** para mocks.
 
-### 10.1.1. Estructura de un test: Arrange, Act, Assert
+### 10.1.1. Estructura de un test: arrange, act, assert
 
 Todo test sigue el patrón **AAA**:
 
@@ -129,7 +129,7 @@ public void CalificacionTexto_DiferentesValores_RetornaCorrecto(double calificac
 
 ## 10.2. Mocks con Moq: aislando dependencias
 
-### 10.2.1. ¿Qué es un Mock?
+### 10.2.1. ¿Qué es un mock?
 
 Un **mock** es un objeto falso que simula el comportamiento de una dependencia real. En vez de conectar a una base de datos real, usamos un mock que devuelve datos de prueba.
 
@@ -145,7 +145,7 @@ repository.Setup(r => r.GetById(1))
 
 📌 Ejemplo real: Cuando testea el **carrito de compra**, Amazon no usa la base de datos real. Usa un mock que devuelve productos de prueba. Así los tests son rápidos y no dependen de servicios externos.
 
-### 10.2.2. Configuración con Setup
+### 10.2.2. Configuración con setup
 
 `Setup` define qué devuelve el mock cuando se le pide algo:
 
@@ -169,7 +169,7 @@ repository.Setup(r => r.Add(It.IsAny<Producto>()))
     .Returns((Producto p) => { p.Id = 1; return p; });
 ```
 
-### 10.2.3. Verificación con Verify
+### 10.2.3. Verificación con verify
 
 `Verify` comprueba que se llamó a un método del mock. Esto es útil para saber si se ejecutó la lógica que debería:
 
@@ -280,15 +280,15 @@ flowchart LR
     B --> C["Fase runtime<br/>Solo ASP.NET (~200MB)"]
     C --> D["Imagen final<br/>~200MB"]
 
-    style A fill:#FF9800,color:#fff
-    style B fill:#2196F3,color:#fff
-    style C fill:#4CAF50,color:#fff
-    style D fill:#9C27B0,color:#fff
+    style A fill:#FF980,color:#fff0,color:#fff
+    style B fill:#2196F,color:#fff3,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#9C27B,color:#fff0,color:#fff
 ```
 
 📌 Ejemplo real: **Spotify** usa multi-stage builds. La fase de build instala dependencias de compilación que no necesitan estar en producción. La imagen final solo contiene lo necesario para ejecutar.
 
-### 10.4.3. Docker Compose
+### 10.4.3. Docker compose
 
 `docker-compose.yml` define cómo ejecutar tu aplicación con sus dependencias:
 
@@ -374,8 +374,8 @@ flowchart TD
         P1["Cliente"] --> P3["Contenedores"]
     end
 
-    style DOCKER fill:#2196F3,color:#fff
-    style PODMAN fill:#4CAF50,color:#fff
+    style DOCKER fill:#2196F,color:#fff3,color:#fff
+    style PODMAN fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 

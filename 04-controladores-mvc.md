@@ -2,7 +2,7 @@
   - [4.1. ¿Qué es MVC?](#41-qué-es-mvc)
     - [4.1.1. Model-View-Controller](#411-model-view-controller)
     - [4.1.2. MVC vs Minimal APIs](#412-mvc-vs-minimal-apis)
-  - [4.2. Estructura de un Controlador](#42-estructura-de-un-controlador)
+  - [4.2. Estructura de un controlador](#42-estructura-de-un-controlador)
     - [4.2.1. El atributo \[ApiController\]](#421-el-atributo-apicontroller)
     - [4.2.2. El atributo \[Route\]](#422-el-atributo-route)
     - [4.2.3. Inyección de dependencias](#423-inyección-de-dependencias)
@@ -19,11 +19,11 @@
     - [4.4.1. IActionResult](#441-iactionresult)
     - [4.4.2. ActionResult\<T\>](#442-actionresultt)
     - [4.4.3. ¿Cuándo usar cada método?](#443-cuándo-usar-cada-método)
-    - [4.4.4. CreatedAtAction() y el header Location](#444-createdataction-y-el-header-location)
+    - [4.4.4. CreatedAtAction() y el header location](#444-createdataction-y-el-header-location)
       - [4.4.4.1. ¿Qué es un header?](#4441-qué-es-un-header)
       - [4.4.4.2. ¿Por qué se usa nameof(GetById)?](#4442-por-qué-se-usa-nameofgetbyid)
     - [4.4.5. Buenas prácticas](#445-buenas-prácticas)
-  - [4.5. Probando con Bruno](#45-probando-con-bruno)
+  - [4.5. Probando con bruno](#45-probando-con-bruno)
     - [4.5.1. Pruebas GET](#451-pruebas-get)
     - [4.5.2. Pruebas POST](#452-pruebas-post)
     - [4.5.3. Pruebas PUT](#453-pruebas-put)
@@ -61,9 +61,9 @@ flowchart LR
     B -->|"recibe petición"| C["📦 Model"]
     C -->|"datos"| B
     B -->|"respuesta"| A
-    style A fill:#2196F3,color:#fff
-    style B fill:#FF9800,color:#fff
-    style C fill:#4CAF50,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#FF980,color:#fff0,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 📌 **Ejemplo real:** La API de Spotify usa controladores. Cuando buscas un artista, el controlador `SearchController` recibe la petición, consulta el modelo (base de datos de artistas), y devuelve la respuesta JSON.
@@ -94,7 +94,7 @@ flowchart LR
 
 > 💡 **Consejo:** Si tu API tiene más de 5-6 endpoints, considera usar controladores. La estructura te ayuda a mantener el código ordenado.
 
-## 4.2. Estructura de un Controlador
+## 4.2. Estructura de un controlador
 
 Un controlador es una **clase** que hereda de `ControllerBase` y contiene los **endpoints** de la API.
 
@@ -272,7 +272,7 @@ flowchart LR
 | **[FromRoute]** | Parámetros de la URL | `/api/productos/{id}` |
 | **[FromForm]** | Formulario HTML | `multipart/form-data` |
 
-#### 4.3.4.1. [FromBody] — El body de la petición
+#### 4.3.4.1. [FromBody] — el body de la petición
 
 `[FromBody]` le dice a ASP.NET Core que **deserialice el JSON del body** en un objeto C#. Es lo que usas cuando el cliente envía datos para crear o actualizar:
 
@@ -291,7 +291,7 @@ public ActionResult<Producto> Create([FromBody] ProductoDto dto)
 
 > 💡 **Consejo:** Con `[ApiController]`, si el content-type es `application/json`, ASP.NET Core aplica `[FromBody]` **automáticamente**. No necesitas escribirlo siempre, pero es buena práctica hacerlo explícito para claridad.
 
-#### 4.3.4.2. [FromQuery] — Los query parameters
+#### 4.3.4.2. [FromQuery] — los query parameters
 
 ```csharp
 [HttpGet]
@@ -303,7 +303,7 @@ public ActionResult<List<Producto>> GetAll(
 }
 ```
 
-#### 4.3.4.3. [FromRoute] — Los parámetros de URL
+#### 4.3.4.3. [FromRoute] — los parámetros de URL
 
 ```csharp
 [HttpGet("{id:int}")]
@@ -315,7 +315,7 @@ public ActionResult<Producto> GetById([FromRoute] int id)
 
 > ⚠️ **Advertencia:** Si el nombre del parámetro coincide con el de la ruta, `[FromRoute]` se aplica automáticamente. Solo necesitas escribirlo explícitamente si hay ambigüedad.
 
-#### 4.3.4.4. [FromForm] — Formularios HTML
+#### 4.3.4.4. [FromForm] — formularios HTML
 
 ```csharp
 [HttpPost("upload")]
@@ -380,16 +380,16 @@ flowchart TD
     E -->|Sí| G{"¿Los datos son válidos?"}
     G -->|No| H["BadRequest()"]
     G -->|Sí| I["Ok()"]
-    style B fill:#4CAF50,color:#fff
-    style D fill:#4CAF50,color:#fff
-    style F fill:#f44336,color:#fff
-    style H fill:#FF9800,color:#fff
-    style I fill:#4CAF50,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#4CAF5,color:#fff0,color:#fff
+    style F fill:#f4433,color:#fff6,color:#fff
+    style H fill:#FF980,color:#fff0,color:#fff
+    style I fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 > 💡 **Consejo:** `CreatedAtAction` es mejor que `Created` porque genera automáticamente la URL del recurso creado con la ruta del método que lo consulta.
 
-### 4.4.4. CreatedAtAction() y el header Location
+### 4.4.4. CreatedAtAction() y el header location
 
 En controladores, `CreatedAtAction()` hace tres cosas a la vez:
 
@@ -445,7 +445,7 @@ Los **headers** son pares de clave-valor que acompañan a la respuesta HTTP. Apo
 - El header `Location` debe apuntar al método GET del recurso
 - El `id` lo genera el servidor, nunca el cliente
 
-## 4.5. Probando con Bruno
+## 4.5. Probando con bruno
 
 **Bruno** es un cliente API open source para probar endpoints. Las mismas pruebas que hiciste en el punto 03 con Minimal APIs funcionan aquí con Controladores MVC.
 

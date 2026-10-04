@@ -1,7 +1,7 @@
-- [8. DTOs, Mapeadores, Validaciones y Consultas Avanzadas](#8-dtos-mapeadores-validaciones-y-consultas-avanzadas)
-  - [8.1. DTOs para Request y Responses](#81-dtos-para-request-y-responses)
+- [8. DTOs, mapeadores, validaciones y consultas avanzadas](#8-dtos-mapeadores-validaciones-y-consultas-avanzadas)
+  - [8.1. DTOs para request y responses](#81-dtos-para-request-y-responses)
     - [8.1.1. ¿Qué es un DTO?](#811-qué-es-un-dto)
-    - [8.1.2. Request DTOs vs Response DTOs](#812-request-dtos-vs-response-dtos)
+    - [8.1.2. Request DTOs vs response DTOs](#812-request-dtos-vs-response-dtos)
     - [8.1.3. DTOs en minimal APIs vs controladores](#813-dtos-en-minimal-apis-vs-controladores)
     - [8.1.4. ¿Cuándo crear un DTO y cuándo usar el modelo directamente?](#814-cuándo-crear-un-dto-y-cuándo-usar-el-modelo-directamente)
   - [8.2. Mapeadores](#82-mapeadores)
@@ -10,7 +10,7 @@
     - [8.2.3. AutoMapper (cuándo usarlo)](#823-automapper-cuándo-usarlo)
     - [8.2.4. Comparación: extensiones vs AutoMapper](#824-comparación-extensiones-vs-automapper)
   - [8.3. Validaciones](#83-validaciones)
-    - [8.3.1. Data Annotations: formato básico](#831-data-annotations-formato-básico)
+    - [8.3.1. Data annotations: formato básico](#831-data-annotations-formato-básico)
       - [8.3.1.1. Ejemplo completo con múltiples atributos](#8311-ejemplo-completo-con-múltiples-atributos)
     - [8.3.2. Crear tu propia etiqueta de validación](#832-crear-tu-propia-etiqueta-de-validación)
       - [8.3.2.1. Otro ejemplo: validación de contraseña fuerte](#8321-otro-ejemplo-validación-de-contraseña-fuerte)
@@ -18,14 +18,14 @@
       - [8.3.3.1. Reglas avanzadas de FluentValidation](#8331-reglas-avanzadas-de-fluentvalidation)
     - [8.3.4. Cuándo usar cada una](#834-cuándo-usar-cada-una)
     - [8.3.5. Integración con ASP.NET Core](#835-integración-con-aspnet-core)
-    - [8.3.6. ¿Qué pasa cuando la validación falla? (Middleware)](#836-qué-pasa-cuando-la-validación-falla-middleware)
+    - [8.3.6. ¿Qué pasa cuando la validación falla? (middleware)](#836-qué-pasa-cuando-la-validación-falla-middleware)
     - [8.3.7. Validación en ASP.NET Core](#837-validación-en-aspnet-core)
   - [8.4. Consultas avanzadas en endpoints](#84-consultas-avanzadas-en-endpoints)
     - [8.4.1. Filtrado múltiple](#841-filtrado-múltiple)
     - [8.4.2. Ordenación](#842-ordenación)
     - [8.4.3. Selección de campos (projection)](#843-selección-de-campos-projection)
     - [8.4.4. Búsqueda con patrones](#844-búsqueda-con-patrones)
-  - [8.5. Parámetros de consulta (Query Parameters)](#85-parámetros-de-consulta-query-parameters)
+  - [8.5. Parámetros de consulta (query parameters)](#85-parámetros-de-consulta-query-parameters)
     - [8.5.1. ¿Qué son los query parameters?](#851-qué-son-los-query-parameters)
     - [8.5.2. \[FromQuery\] en controladores](#852-fromquery-en-controladores)
     - [8.5.3. Query strings en minimal APIs](#853-query-strings-en-minimal-apis)
@@ -40,7 +40,7 @@
     - [8.7.2. Enlaces de paginación en headers](#872-enlaces-de-paginación-en-headers)
     - [8.7.3. Enlaces en el body de la respuesta](#873-enlaces-en-el-body-de-la-respuesta)
     - [8.7.4. Implementación en ASP.NET Core](#874-implementación-en-aspnet-core)
-  - [8.8. Negociación de Contenido](#88-negociación-de-contenido)
+  - [8.8. Negociación de contenido](#88-negociación-de-contenido)
     - [8.8.1. ¿Qué es la negociación de contenido?](#881-qué-es-la-negociación-de-contenido)
     - [8.8.2. Configuración de JSON y XML](#882-configuración-de-json-y-xml)
     - [8.8.3. XmlSerializer vs DataContractSerializer](#883-xmlserializer-vs-datacontractserializer)
@@ -52,7 +52,7 @@
 
 
 
-# 8. DTOs, Mapeadores, Validaciones y Consultas Avanzadas
+# 8. DTOs, mapeadores, validaciones y consultas avanzadas
 
 > 💡 **Punto de partida:** Cuando Netflix te muestra una serie, no te muestra el modelo interno con IDs de bases de datos, fechas de creación del registro, y campos internos. Te muestra un título, una imagen, una descripción... Eso es un DTO: lo que el cliente necesita ver, no lo que el servidor tiene guardado.
 
@@ -67,7 +67,7 @@ En este punto aprenderás a transferir datos entre capas con DTOs, a mapear mode
 - Conocer el nuevo método HTTP QUERY
 - Implementar HATEOAS para APIs navegables
 
-## 8.1. DTOs para Request y Responses
+## 8.1. DTOs para request y responses
 
 ### 8.1.1. ¿Qué es un DTO?
 
@@ -77,7 +77,7 @@ Un **DTO** (Data Transfer Object) es un objeto que transporta datos entre capas 
 
 📌 Ejemplo real: **Netflix** cuando muestra la información de una serie, no envía el modelo interno con IDs de MongoDB, fechas de indexación, campos de recomendación del algoritmo... Envía un DTO con título, imagen, sinopsis, valoración. Eso es exactamente lo que hacemos aquí.
 
-### 8.1.2. Request DTOs vs Response DTOs
+### 8.1.2. Request DTOs vs response DTOs
 
 | Tipo | Propósito | Ejemplo |
 |------|-----------|---------|
@@ -148,12 +148,12 @@ graph TD
     D -->|Resultado| C
     C -->|ToDto| E[ProductoDto]
     E -->|Response| F[Cliente recibe Response]
-    style A fill:#2196F3,color:#fff
-    style B fill:#4CAF50,color:#fff
-    style C fill:#FF9800,color:#fff
-    style D fill:#9C27B0,color:#fff
-    style E fill:#4CAF50,color:#fff
-    style F fill:#2196F3,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#FF980,color:#fff0,color:#fff
+    style D fill:#9C27B,color:#fff0,color:#fff
+    style E fill:#4CAF5,color:#fff0,color:#fff
+    style F fill:#2196F,color:#fff3,color:#fff
 ```
 
 ## 8.2. Mapeadores
@@ -188,9 +188,9 @@ flowchart LR
     M1 --> MAP
     MAP --> D1
 
-    style M1 fill:#2196F3,color:#fff
-    style MAP fill:#FF9800,color:#fff
-    style D1 fill:#4CAF50,color:#fff
+    style M1 fill:#2196F,color:#fff3,color:#fff
+    style MAP fill:#FF980,color:#fff0,color:#fff
+    style D1 fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 📌 Ejemplo real: **Airbnb** tiene modelos internos con cientos de campos (disponibilidad, geolocalización, historial de reservas, puntuaciones...), pero el cliente solo ve una selección de esos campos. El mapeador se encarga de esa transformación de forma consistente.
@@ -318,18 +318,18 @@ flowchart TB
     FV -->|Válido| SVC
     SVC -->|Válido| OK
 
-    style DA fill:#2196F3,color:#fff
-    style FV fill:#FF9800,color:#fff
-    style SVC fill:#9C27B0,color:#fff
-    style OK fill:#4CAF50,color:#fff
-    style DA_ERR fill:#f44336,color:#fff
-    style FV_ERR fill:#f44336,color:#fff
-    style SVC_ERR fill:#f44336,color:#fff
+    style DA fill:#2196F,color:#fff3,color:#fff
+    style FV fill:#FF980,color:#fff0,color:#fff
+    style SVC fill:#9C27B,color:#fff0,color:#fff
+    style OK fill:#4CAF5,color:#fff0,color:#fff
+    style DA_ERR fill:#f4433,color:#fff6,color:#fff
+    style FV_ERR fill:#f4433,color:#fff6,color:#fff
+    style SVC_ERR fill:#f4433,color:#fff6,color:#fff
 ```
 
 📌 Ejemplo real: **Netflix** cuando creas una cuenta valida que el email tenga formato correcto (Data Annotations), que la contraseña tenga al menos 8 caracteres con una mayúscula y un número (FluentValidation), y que el email no esté ya registrado en la base de datos (validación en servicio). Los tres niveles trabajando en conjunto.
 
-### 8.3.1. Data Annotations: formato básico
+### 8.3.1. Data annotations: formato básico
 
 **Data Annotations** son atributos que se ponen en los modelos/DTOs para validar formato básico. ASP.NET Core los valida automáticamente antes de que el controlador reciba la petición. Si algún atributo falla, el framework devuelve un `400 Bad Request` con los errores sin que escribas una sola línea de validación.
 
@@ -492,7 +492,7 @@ public record CreateProductoDto
 }
 ```
 
-> 💡 **Analogía:** Un atributo personalizado es como un detective privado. Los atributos de Microsoft son la policía normal (saben lo básico: si el campo está vacío, si el email es válido...). Pero si necesitas algo más específico — como comprobar que un nombre no esté en una lista negra — contratas a tu propio detective: `NoAdminAttribute`.
+> 💡 **Analogía:** Un atributo personalizado es como un detective privado. Los atributos de Microsoft son la policía normal (saben lo básico: si el campo está vacío, si el email es válido...). Pero si necesitas algo más específico ( como comprobar que un nombre no esté en una lista negra ) contratas a tu propio detective: `NoAdminAttribute`.
 
 📌 Ejemplo real: **Slack** valida que el nombre de un workspace no contenga palabras ofensivas ni nombres de marcas registradas. Eso se hace con un atributo personalizado que compara contra una lista negra, exactamente como nuestro `NoAdmin`.
 
@@ -687,9 +687,9 @@ sequenceDiagram
 
 > ⚠️ **Advertencia:** `AddValidatorsFromAssemblyContaining<Program>()` **solo registra** los validadores en DI: por sí solo **no ejecuta la validación**. Sin la pieza 3 (action filter con `AddFluentValidationAutoValidation()` o una llamada explícita a `IValidator<T>`), tus reglas FluentValidation **nunca se ejecutarán**. Los Data Annotations sí funcionan siempre: los valida el propio framework con `[ApiController]`.
 
-### 8.3.6. ¿Qué pasa cuando la validación falla? (Middleware)
+### 8.3.6. ¿Qué pasa cuando la validación falla? (middleware)
 
-Cuando la validación falla — ya sea por Data Annotations o FluentValidation — ASP.NET Core devuelve automáticamente un `400 Bad Request` con un formato estándar. **No necesitas escribir código de validación en el controlador.**
+Cuando la validación falla ( ya sea por Data Annotations o FluentValidation ) ASP.NET Core devuelve automáticamente un `400 Bad Request` con un formato estándar. **No necesitas escribir código de validación en el controlador.**
 
 ```csharp
 // ❌ MALO: Validación manual en el controller (no hagas esto)
@@ -758,12 +758,12 @@ flowchart TD
     H -->|Pasa| I
     I --> J["Lógica de negocio"]
 
-    style C fill:#2196F3,color:#fff
-    style D fill:#FF9800,color:#fff
-    style E fill:#9C27B0,color:#fff
-    style F fill:#f44336,color:#fff
-    style I fill:#4CAF50,color:#fff
-    style J fill:#4CAF50,color:#fff
+    style C fill:#2196F,color:#fff3,color:#fff
+    style D fill:#FF980,color:#fff0,color:#fff
+    style E fill:#9C27B,color:#fff0,color:#fff
+    style F fill:#f4433,color:#fff6,color:#fff
+    style I fill:#4CAF5,color:#fff0,color:#fff
+    style J fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 ## 8.4. Consultas avanzadas en endpoints
@@ -781,11 +781,11 @@ flowchart TD
     F -->|No| H["Devolver todos"]
     G --> H
 
-    style A fill:#2196F3,color:#fff
-    style C fill:#FF9800,color:#fff
-    style E fill:#FF9800,color:#fff
-    style G fill:#FF9800,color:#fff
-    style H fill:#4CAF50,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style C fill:#FF980,color:#fff0,color:#fff
+    style E fill:#FF980,color:#fff0,color:#fff
+    style G fill:#FF980,color:#fff0,color:#fff
+    style H fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 ### 8.4.1. Filtrado múltiple
@@ -872,7 +872,7 @@ public IActionResult Search([FromQuery] string q)
 
 📌 Ejemplo real: **Mercado Libre** tiene un endpoint de búsqueda que acepta `?q=laptop+gamer` y devuelve productos que contengan esa frase en el título o descripción. El parámetro `q` es el estándar para búsquedas.
 
-## 8.5. Parámetros de consulta (Query Parameters)
+## 8.5. Parámetros de consulta (query parameters)
 
 ### 8.5.1. ¿Qué son los query parameters?
 
@@ -895,13 +895,13 @@ flowchart LR
     I --> J["&"]
     J --> K["pageSize=10"]
 
-    style A fill:#2196F3,color:#fff
-    style B fill:#FF9800,color:#fff
-    style C fill:#4CAF50,color:#fff
-    style E fill:#4CAF50,color:#fff
-    style G fill:#4CAF50,color:#fff
-    style I fill:#4CAF50,color:#fff
-    style K fill:#4CAF50,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#FF980,color:#fff0,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
+    style E fill:#4CAF5,color:#fff0,color:#fff
+    style G fill:#4CAF5,color:#fff0,color:#fff
+    style I fill:#4CAF5,color:#fff0,color:#fff
+    style K fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 📌 Ejemplo real: **Booking.com** cuando buscas hoteles, la URL tiene query parameters: `?destino=Madrid&fechaEntrada=2026-10-01&fechaSalida=2026-10-05&habitaciones=1&adultos=2`. Cada filtro es un query parameter.
@@ -955,7 +955,7 @@ page = Math.Max(page, 1);
 pageSize = Math.Clamp(pageSize, 1, 100);
 ```
 
-> 💡 **Consejo:** el paso 2 **no es redundante**. La validación del DTO solo se dispara si la petición pasa por el pipeline de ASP.NET. Si otro código —GraphQL, un job programado, un test, un consumidor de mensajes— construye el filtro **en código**, ese filtro **no se valida nunca** y te llega `pageSize = 5000000` directo a la consulta.
+> 💡 **Consejo:** el paso 2 **no es redundante**. La validación del DTO solo se dispara si la petición pasa por el pipeline de ASP.NET. Si otro código —GraphQL, un job programado, un test, un consumidor de mensajes; construye el filtro **en código**, ese filtro **no se valida nunca** y te llega `pageSize = 5000000` directo a la consulta.
 
 > ⚠️ **Advertencia:** `page = 0` y `pageSize = 0` **no son valores inocuos**, y no siempre producen un error visible:
 >
@@ -1003,13 +1003,13 @@ flowchart LR
         Q4["✅ Bookmark"]
     end
 
-    style G2 fill:#4CAF50,color:#fff
-    style G3 fill:#4CAF50,color:#fff
-    style G4 fill:#f44336,color:#fff
-    style P3 fill:#f44336,color:#fff
-    style P4 fill:#f44336,color:#fff
-    style Q3 fill:#4CAF50,color:#fff
-    style Q4 fill:#4CAF50,color:#fff
+    style G2 fill:#4CAF5,color:#fff0,color:#fff
+    style G3 fill:#4CAF5,color:#fff0,color:#fff
+    style G4 fill:#f4433,color:#fff6,color:#fff
+    style P3 fill:#f4433,color:#fff6,color:#fff
+    style P4 fill:#f4433,color:#fff6,color:#fff
+    style Q3 fill:#4CAF5,color:#fff0,color:#fff
+    style Q4 fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 ```mermaid
@@ -1017,12 +1017,12 @@ graph LR
     GET[GET] -->|Sin cuerpo| Cacheable[Cacheable + Bookmarkable]
     POST[POST] -->|Con cuerpo| NoCacheable[No cacheable + No bookmarkable]
     QUERY[QUERY] -->|Con cuerpo| Híbrido[Cacheable + Bookmarkable]
-    style GET fill:#4CAF50,color:#fff
-    style POST fill:#f44336,color:#fff
-    style QUERY fill:#2196F3,color:#fff
-    style Cacheable fill:#4CAF50,color:#fff
-    style NoCacheable fill:#f44336,color:#fff
-    style Híbrido fill:#2196F3,color:#fff
+    style GET fill:#4CAF5,color:#fff0,color:#fff
+    style POST fill:#f4433,color:#fff6,color:#fff
+    style QUERY fill:#2196F,color:#fff3,color:#fff
+    style Cacheable fill:#4CAF5,color:#fff0,color:#fff
+    style NoCacheable fill:#f4433,color:#fff6,color:#fff
+    style Híbrido fill:#2196F,color:#fff3,color:#fff
 ```
 
 ### 8.6.3. Ejemplo práctico
@@ -1067,9 +1067,9 @@ flowchart TD
     D --> G["GET /api/productos"]
     D --> H["GET /api/productos/1/historial"]
 
-    style A fill:#2196F3,color:#fff
-    style B fill:#4CAF50,color:#fff
-    style D fill:#FF9800,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#FF980,color:#fff0,color:#fff
 ```
 
 📌 Ejemplo real: **GitHub API** es el ejemplo más famoso de HATEOAS. Cuando obtienes un repositorio, la respuesta incluye enlaces para obtener los issues, los pull requests, los contributors... El cliente no necesita ensamblar las URLs — solo seguir los enlaces.
@@ -1146,7 +1146,7 @@ public IActionResult GetAll([FromQuery] int page = 1, [FromQuery] int pageSize =
 
 > 💡 **Consejo:** Los enlaces en headers son más profesionales (separan datos de metadatos). Los enlaces en el body son más fáciles de consumir para clientes web. Usa el que mejor se adapte a tu caso.
 
-## 8.8. Negociación de Contenido
+## 8.8. Negociación de contenido
 
 ### 8.8.1. ¿Qué es la negociación de contenido?
 

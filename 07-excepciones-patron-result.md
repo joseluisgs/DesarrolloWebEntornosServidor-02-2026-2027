@@ -1,4 +1,4 @@
-- [7. Excepciones y Patrón Result](#7-excepciones-y-patrón-result)
+- [7. Excepciones y patrón result](#7-excepciones-y-patrón-result)
   - [7.1. Modelando el dominio: casos correctos e incorrectos](#71-modelando-el-dominio-casos-correctos-e-incorrectos)
     - [7.1.1. ¿Qué es el dominio?](#711-qué-es-el-dominio)
     - [7.1.2. Casos correctos vs casos incorrectos](#712-casos-correctos-vs-casos-incorrectos)
@@ -13,11 +13,11 @@
     - [7.3.1. Middleware UseExceptionHandler](#731-middleware-useexceptionhandler)
     - [7.3.2. ProblemDetails (RFC 9457)](#732-problemdetails-rfc-9457)
     - [7.3.3. Flujo completo](#733-flujo-completo)
-  - [7.4. El Patrón Result](#74-el-patrón-result)
-    - [7.4.1. Railway Oriented Programming](#741-railway-oriented-programming)
-    - [7.4.2. Result vs Excepciones](#742-result-vs-excepciones)
+  - [7.4. El patrón result](#74-el-patrón-result)
+    - [7.4.1. Railway oriented programming](#741-railway-oriented-programming)
+    - [7.4.2. Result vs excepciones](#742-result-vs-excepciones)
     - [7.4.3. Los errores de dominio SON parte de nuestro problema](#743-los-errores-de-dominio-son-parte-de-nuestro-problema)
-  - [7.5. Opción 1: Union Types (C# 15 / .NET 11)](#75-opción-1-union-types-c-15--net-11)
+  - [7.5. Opción 1: union types (C# 15 / .NET 11)](#75-opción-1-union-types-c-15--net-11)
     - [7.5.1. Sintaxis](#751-sintaxis)
     - [7.5.2. Pattern matching exhaustivo](#752-pattern-matching-exhaustivo)
     - [7.5.3. Ventajas](#753-ventajas)
@@ -26,14 +26,14 @@
     - [7.6.1. Result\<T, TError\> y UnitResult\<TError\>](#761-resultt-terrory-unitresultterror)
     - [7.6.2. Métodos principales](#762-métodos-principales)
     - [7.6.3. DomainError con sealed records](#763-domainerror-con-sealed-records)
-  - [7.7. Errores de Dominio tipados](#77-errores-de-dominio-tipados)
+  - [7.7. Errores de dominio tipados](#77-errores-de-dominio-tipados)
     - [7.7.1. DomainError base](#771-domainerror-base)
     - [7.7.2. Tipos concretos de error](#772-tipos-concretos-de-error)
     - [7.7.3. Errores por dominio](#773-errores-por-dominio)
-  - [7.8. Integración con Controladores](#78-integración-con-controladores)
-    - [7.8.1. Opción A: Match + switch inline](#781-opción-a-match--switch-inline)
-    - [7.8.2. Opción B: Función privada GetHttpResult()](#782-opción-b-función-privada-gethttpresult)
-    - [7.8.3. Opción C: Método de extensión ToHttpResult\<T\>()](#783-opción-c-método-de-extensión-tohttpresultt)
+  - [7.8. Integración con controladores](#78-integración-con-controladores)
+    - [7.8.1. Opción A: match + switch inline](#781-opción-a-match--switch-inline)
+    - [7.8.2. Opción B: función privada GetHttpResult()](#782-opción-b-función-privada-gethttpresult)
+    - [7.8.3. Opción C: método de extensión ToHttpResult\<T\>()](#783-opción-c-método-de-extensión-tohttpresultt)
     - [7.8.4. Endpoints sin payload tipado (204)](#784-endpoints-sin-payload-tipado-204)
     - [7.8.5. Comparación](#785-comparación)
   - [7.9. Buenas prácticas](#79-buenas-prácticas)
@@ -41,7 +41,7 @@
 
 
 
-# 7. Excepciones y Patrón Result
+# 7. Excepciones y patrón result
 
 > 💡 **Punto de partida:** Si diseñas una tienda y solo piensas en que la gente compra... ¿qué pasa cuando no hay stock? ¿Cuando el cliente no paga? ¿Cuando el producto está defectuoso? Si no lo has pensado, tu tienda está a medio hacer. Lo mismo pasa con tu código: si solo modelas el caso correcto, tu aplicación está incompleta.
 
@@ -96,10 +96,10 @@ flowchart LR
         E -->|Sí| H["❌ Nombre duplicado"]
     end
 
-    style G fill:#4CAF50,color:#fff
-    style D fill:#f44336,color:#fff
-    style F fill:#f44336,color:#fff
-    style H fill:#f44336,color:#fff
+    style G fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#f4433,color:#fff6,color:#fff
+    style F fill:#f4433,color:#fff6,color:#fff
+    style H fill:#f4433,color:#fff6,color:#fff
 ```
 
 ### 7.1.4. Ejemplo real
@@ -173,8 +173,8 @@ flowchart TD
     E -->|Sí| F["Stack trace actualizado"]
     E -->|No| G["Continuar ejecución"]
 
-    style B fill:#f44336,color:#fff
-    style C fill:#FF9800,color:#fff
+    style B fill:#f4433,color:#fff6,color:#fff
+    style C fill:#FF980,color:#fff0,color:#fff
 ```
 
 ### 7.2.3. Ejemplo: servicio con excepciones (mal)
@@ -283,9 +283,9 @@ sequenceDiagram
 
 > 💡 **Consejo:** El middleware de excepciones es un **backup de seguridad**. No debes usarlo como mecanismo principal de manejo de errores. Para errores de negocio, usa el patrón Result.
 
-## 7.4. El Patrón Result
+## 7.4. El patrón result
 
-### 7.4.1. Railway Oriented Programming
+### 7.4.1. Railway oriented programming
 
 El patrón Result se basa en **Railway Oriented Programming** (ROP): imagina un tren que puede ir por dos vías — una de éxito y otra de error. En cada estación, el tren puede cambiar de vía.
 
@@ -307,13 +307,13 @@ flowchart LR
     S2 -.->|No encontrado| E2
     S2 -.->|Duplicado| E3
 
-    style S4 fill:#4CAF50,color:#fff
-    style E4 fill:#f44336,color:#fff
-    style E5 fill:#f44336,color:#fff
-    style E6 fill:#f44336,color:#fff
+    style S4 fill:#4CAF5,color:#fff0,color:#fff
+    style E4 fill:#f4433,color:#fff6,color:#fff
+    style E5 fill:#f4433,color:#fff6,color:#fff
+    style E6 fill:#f4433,color:#fff6,color:#fff
 ```
 
-### 7.4.2. Result vs Excepciones
+### 7.4.2. Result vs excepciones
 
 | Aspecto | Excepciones | Result Pattern |
 |---------|-------------|----------------|
@@ -337,7 +337,7 @@ UnitResult<DomainError> Delete(int id);
 
 El llamador **sabe** que puede haber errores y **debe** manejarlos. No hay sorpresas.
 
-## 7.5. Opción 1: Union Types (C# 15 / .NET 11)
+## 7.5. Opción 1: union types (C# 15 / .NET 11)
 
 Los **Union Types** son una nueva característica de C# 15 (con .NET 11) que permite declarar tipos que pueden ser uno de varios casos. Es la forma **nativa** de modelar Result sin dependencias de terceros.
 
@@ -488,7 +488,7 @@ Result<Producto, DomainError> resultado = service.GetById(id);
 // Si es ConflictError, devolver 409
 ```
 
-## 7.7. Errores de Dominio tipados
+## 7.7. Errores de dominio tipados
 
 ### 7.7.1. DomainError base
 
@@ -594,9 +594,9 @@ public Result<Producto, DomainError> Create(ProductoDto dto)
 }
 ```
 
-## 7.8. Integración con Controladores
+## 7.8. Integración con controladores
 
-### 7.8.1. Opción A: Match + switch inline
+### 7.8.1. Opción A: match + switch inline
 
 Cada endpoint tiene su propio switch. Simple pero repetitivo.
 
@@ -639,7 +639,7 @@ public ActionResult<Producto> Create([FromBody] ProductoDto dto)
 
 > 📝 **Nota:** `Match` devuelve el tipo común de los dos lambdas. Aquí `Ok(producto)` es un `OkObjectResult` y el `switch` un `ObjectResult` → el común es `ActionResult`, que C# convierte implícitamente a `ActionResult<Producto>`. Por eso el `return` compila sin cast.
 
-### 7.8.2. Opción B: Función privada GetHttpResult()
+### 7.8.2. Opción B: función privada GetHttpResult()
 
 Un solo switch en una función privada del controlador. Cada endpoint llama a esa función:
 
@@ -694,7 +694,7 @@ public class ProductosController(IProductoService service) : ControllerBase
 
 > ⚠️ **Advertencia:** En `UnitResult<DomainError>` el `onSuccess` de `Match` **no recibe parámetro**: se escribe `() => NoContent()`. Si pones `_ => NoContent()` el compilador no encuentra esa sobrecarga y acaba enganchándose a `Match(Func<TNew>, Func<string, TNew>)`, con lo que `error` se infiere como `string` y obtienes un montón de errores `CS0029`/`CS1503` que no tienen nada que ver con lo que has escrito. En `Result<T, DomainError>` (los Get y el Create) sí hay parámetro, porque hay un valor que devolver.
 
-### 7.8.3. Opción C: Método de extensión ToHttpResult\<T\>()
+### 7.8.3. Opción C: método de extensión ToHttpResult\<T\>()
 
 Un método de extensión **genérico** sobre `DomainError` que se puede usar en cualquier controlador. El genérico `T` es el tipo del payload correcto, de modo que el resultado ya es un `ActionResult<T>` y no hace falta convertir nada:
 

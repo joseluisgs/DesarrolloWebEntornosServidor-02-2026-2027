@@ -5,15 +5,15 @@
     - [13.1.3. BSON vs JSON](#1313-bson-vs-json)
     - [13.1.4. Colecciones y documentos](#1314-colecciones-y-documentos)
   - [13.2. Diseño NoSQL: de SQL a MongoDB](#132-diseño-nosql-de-sql-a-mongodb)
-    - [13.2.1. Tablas a Colecciones, Filas a Documentos](#1321-tablas-a-colecciones-filas-a-documentos)
-    - [13.2.2. Claves foráneas: Referencias o Embebido](#1322-claves-foráneas-referencias-o-embebido)
+    - [13.2.1. Tablas a colecciones, filas a documentos](#1321-tablas-a-colecciones-filas-a-documentos)
+    - [13.2.2. Claves foráneas: referencias o embebido](#1322-claves-foráneas-referencias-o-embebido)
     - [13.2.3. Cuándo embeber vs cuándo referenciar](#1323-cuándo-embeber-vs-cuándo-referenciar)
     - [13.2.4. El límite de 16 MB](#1324-el-límite-de-16-mb)
     - [13.2.5. Patrones de diseño habituales](#1325-patrones-de-diseño-habituales)
-  - [13.3. MongoDB con Driver Nativo](#133-mongodb-con-driver-nativo)
+  - [13.3. MongoDB con driver nativo](#133-mongodb-con-driver-nativo)
     - [13.3.1. Paquete NuGet](#1331-paquete-nuget)
     - [13.3.2. Conexión: MongoClient](#1332-conexión-mongoclient)
-    - [13.3.3. Database y Collection](#1333-database-y-collection)
+    - [13.3.3. Database y collection](#1333-database-y-collection)
     - [13.3.4. Documentos POCO y BsonDocument](#1334-documentos-poco-y-bsondocument)
     - [13.3.5. Insertar documentos](#1335-insertar-documentos)
     - [13.3.6. Consultar documentos](#1336-consultar-documentos)
@@ -21,29 +21,29 @@
     - [13.3.8. Borrar documentos](#1338-borrar-documentos)
     - [13.3.9. Builders de filtros y actualizaciones](#1339-builders-de-filtros-y-actualizaciones)
     - [13.3.10. Índices](#13310-índices)
-    - [13.3.11. Composición y referencias con el Driver](#13311-composición-y-referencias-con-el-driver)
+    - [13.3.11. Composición y referencias con el driver](#13311-composición-y-referencias-con-el-driver)
   - [13.4. EF Core con MongoDB](#134-ef-core-con-mongodb)
     - [13.4.1. Paquete NuGet](#1341-paquete-nuget)
     - [13.4.2. DbContext con UseMongoDB](#1342-dbcontext-con-usemongodb)
-    - [13.4.3. Data Annotations en MongoDB](#1343-data-annotations-en-mongodb)
+    - [13.4.3. Data annotations en MongoDB](#1343-data-annotations-en-mongodb)
     - [13.4.4. Fluent API en MongoDB](#1344-fluent-api-en-mongodb)
-    - [13.4.5. Entidades Owned (documentos embebidos)](#1345-entidades-owned-documentos-embebidos)
+    - [13.4.5. Entidades owned (documentos embebidos)](#1345-entidades-owned-documentos-embebidos)
     - [13.4.6. Referencias manuales](#1346-referencias-manuales)
     - [13.4.7. Consultas LINQ](#1347-consultas-linq)
     - [13.4.8. Limitaciones de EF Core con MongoDB](#1348-limitaciones-de-ef-core-con-mongodb)
-  - [13.5. Driver Nativo vs EF Core: Comparativa](#135-driver-nativo-vs-ef-core-comparativa)
+  - [13.5. Driver nativo vs EF Core: comparativa](#135-driver-nativo-vs-ef-core-comparativa)
   - [13.6. Repositorio CRUD con MongoDB](#136-repositorio-crud-con-mongodb)
     - [13.6.1. Modelo y configuración](#1361-modelo-y-configuración)
     - [13.6.2. Interfaz del repositorio](#1362-interfaz-del-repositorio)
-    - [13.6.3. Implementación con Driver Nativo](#1363-implementación-con-driver-nativo)
+    - [13.6.3. Implementación con driver nativo](#1363-implementación-con-driver-nativo)
     - [13.6.4. Implementación con EF Core](#1364-implementación-con-ef-core)
   - [13.7. Testing con MongoDB](#137-testing-con-mongodb)
     - [13.7.1. Compatibilidad de versiones: EF Core + MongoDB](#1371-compatibilidad-de-versiones-ef-core--mongodb)
     - [13.7.2. TestContainers](#1372-testcontainers)
-    - [13.7.3. Tests con Driver Nativo](#1373-tests-con-driver-nativo)
+    - [13.7.3. Tests con driver nativo](#1373-tests-con-driver-nativo)
     - [13.7.4. Tests con EF Core](#1374-tests-con-ef-core)
-  - [13.8. Semilla de datos (Seed)](#138-semilla-de-datos-seed)
-    - [Con Driver Nativo](#con-driver-nativo)
+  - [13.8. Semilla de datos (seed)](#138-semilla-de-datos-seed)
+    - [Con driver nativo](#con-driver-nativo)
     - [Con EF Core](#con-ef-core)
   - [13.9. Buenas prácticas](#139-buenas-prácticas)
   - [13.10. Reto](#1310-reto)
@@ -96,15 +96,15 @@ graph TD
         M2 --> M3[Documento: 1 producto = 1 JSON completo]
     end
 
-    style SQL fill:#2196F3,color:#fff
-    style NOSQL fill:#4CAF50,color:#fff
-    style S1 fill:#2196F3,color:#fff
-    style S2 fill:#2196F3,color:#fff
-    style S3 fill:#2196F3,color:#fff
-    style S4 fill:#42A5F5,color:#fff
-    style M1 fill:#4CAF50,color:#fff
-    style M2 fill:#4CAF50,color:#fff
-    style M3 fill:#66BB6A,color:#fff
+    style SQL fill:#2196F,color:#fff3,color:#fff
+    style NOSQL fill:#4CAF5,color:#fff0,color:#fff
+    style S1 fill:#2196F,color:#fff3,color:#fff
+    style S2 fill:#2196F,color:#fff3,color:#fff
+    style S3 fill:#2196F,color:#fff3,color:#fff
+    style S4 fill:#42A5F,color:#fff5,color:#fff
+    style M1 fill:#4CAF5,color:#fff0,color:#fff
+    style M2 fill:#4CAF5,color:#fff0,color:#fff
+    style M3 fill:#66BB6,color:#fffA,color:#fff
 ```
 
 ### 13.1.2. Modelo de documentos
@@ -156,7 +156,7 @@ Una **colección** es un conjunto de documentos (equivalente a una tabla). Las c
 
 ## 13.2. Diseño NoSQL: de SQL a MongoDB
 
-### 13.2.1. Tablas a Colecciones, Filas a Documentos
+### 13.2.1. Tablas a colecciones, filas a documentos
 
 El equivalente directo:
 
@@ -168,7 +168,7 @@ El equivalente directo:
 | `UPDATE productos SET precio = 90 WHERE id = 1` | `db.productos.updateOne({_id: 1}, {$set: {precio: 90}})` | Actualizar |
 | `DELETE FROM productos WHERE id = 1` | `db.productos.deleteOne({_id: 1})` | Borrar |
 
-### 13.2.2. Claves foráneas: Referencias o Embebido
+### 13.2.2. Claves foráneas: referencias o embebido
 
 En SQL, las relaciones se hacen con claves foráneas y JOINs. En MongoDB, hay **dos formas**:
 
@@ -290,13 +290,13 @@ graph TD
     REF --> OK2[Dos consultas, datos normalizados]
     SUBSET --> OK3[Lo mejor de ambos mundos]
 
-    style START fill:#FF9800,color:#fff
-    style EMB fill:#4CAF50,color:#fff
-    style REF fill:#2196F3,color:#fff
-    style SUBSET fill:#9C27B0,color:#fff
-    style OK fill:#4CAF50,color:#fff
-    style OK2 fill:#2196F3,color:#fff
-    style OK3 fill:#7B1FA2,color:#fff
+    style START fill:#FF980,color:#fff0,color:#fff
+    style EMB fill:#4CAF5,color:#fff0,color:#fff
+    style REF fill:#2196F,color:#fff3,color:#fff
+    style SUBSET fill:#9C27B,color:#fff0,color:#fff
+    style OK fill:#4CAF5,color:#fff0,color:#fff
+    style OK2 fill:#2196F,color:#fff3,color:#fff
+    style OK3 fill:#7B1FA,color:#fff2,color:#fff
 ```
 
 | Criterio | Embeber | Referenciar |
@@ -344,9 +344,9 @@ graph LR
     P[Producto] -->|"embebido · 1 consulta"| C[Categoria]
     P -->|"referencia · 2 consultas"| PR[Proveedor]
 
-    style P fill:#2196F3,color:#fff
-    style C fill:#4CAF50,color:#fff
-    style PR fill:#FF9800,color:#fff
+    style P fill:#2196F,color:#fff3,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
+    style PR fill:#FF980,color:#fff0,color:#fff
 ```
 
 | Relación | Decisión | ¿Por qué? |
@@ -372,7 +372,7 @@ Solución: **Subset Pattern** — guarda solo los últimos N elementos embebidos
 | **Schema Versioning** | Versiona el esquema para migraciones | v1: nombre, v2: nombre + email |
 | **Computed** | Pre-calcula datos que se leen mucho | Total de ventas pre-calculado |
 
-## 13.3. MongoDB con Driver Nativo
+## 13.3. MongoDB con driver nativo
 
 ### 13.3.1. Paquete NuGet
 
@@ -404,17 +404,17 @@ graph LR
     P2 --> DB
     PN --> DB
 
-    style APP fill:#FF9800,color:#fff
-    style MC fill:#4CAF50,color:#fff
-    style P1 fill:#2196F3,color:#fff
-    style P2 fill:#2196F3,color:#fff
-    style PN fill:#2196F3,color:#fff
-    style DB fill:#f44336,color:#fff
+    style APP fill:#FF980,color:#fff0,color:#fff
+    style MC fill:#4CAF5,color:#fff0,color:#fff
+    style P1 fill:#2196F,color:#fff3,color:#fff
+    style P2 fill:#2196F,color:#fff3,color:#fff
+    style PN fill:#2196F,color:#fff3,color:#fff
+    style DB fill:#f4433,color:#fff6,color:#fff
 ```
 
 `MongoClient` es **thread-safe** y gestiona un pool de conexiones. Debes crear **una sola instancia** y reutilizarla (como `HttpClient`).
 
-### 13.3.3. Database y Collection
+### 13.3.3. Database y collection
 
 ```csharp
 // Obtener la base de datos
@@ -633,7 +633,7 @@ collection.Indexes.CreateOne(new CreateIndexModel<Producto>(
         .Descending(p => p.Precio)));
 ```
 
-### 13.3.11. Composición y referencias con el Driver
+### 13.3.11. Composición y referencias con el driver
 
 Las dos formas conviven en el mismo modelo. La regla de oro: **primero lo referenciado, después lo compuesto**.
 
@@ -740,7 +740,7 @@ services.AddDbContext<TiendaDbContext>(options =>
     options.UseMongoDB(client, "tienda"));
 ```
 
-### 13.4.3. Data Annotations en MongoDB
+### 13.4.3. Data annotations en MongoDB
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
@@ -795,7 +795,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 }
 ```
 
-### 13.4.5. Entidades Owned (documentos embebidos)
+### 13.4.5. Entidades owned (documentos embebidos)
 
 Las entidades **Owned** son el equivalente a los documentos embebidos en MongoDB. Es la forma natural de modelar datos que van siempre juntos.
 
@@ -842,13 +842,13 @@ graph TD
 
     CLASES -->|serializa| MONGO
 
-    style CLASES fill:#2196F3,color:#fff
-    style MONGO fill:#4CAF50,color:#fff
-    style C fill:#2196F3,color:#fff
-    style D fill:#2196F3,color:#fff
-    style M fill:#4CAF50,color:#fff
-    style N fill:#4CAF50,color:#fff
-    style DIR fill:#4CAF50,color:#fff
+    style CLASES fill:#2196F,color:#fff3,color:#fff
+    style MONGO fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#2196F,color:#fff3,color:#fff
+    style D fill:#2196F,color:#fff3,color:#fff
+    style M fill:#4CAF5,color:#fff0,color:#fff
+    style N fill:#4CAF5,color:#fff0,color:#fff
+    style DIR fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 ```csharp
@@ -1080,7 +1080,7 @@ protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 
 > 💡 **Consejo:** una única escritura (`Add` + `SaveChanges` de UN producto) funciona igualmente sin tocar nada. Este ajuste solo hace falta cuando agrupas varios documentos en la misma operación.
 
-## 13.5. Driver Nativo vs EF Core: Comparativa
+## 13.5. Driver nativo vs EF Core: comparativa
 
 ```mermaid
 graph TD
@@ -1102,17 +1102,17 @@ graph TD
     DEC -->|"MongoDB puro, agregaciones"| DRIVER
     DEC -->|"CRUD simple, cambiable"| EF
 
-    style DRIVER fill:#FF9800,color:#fff
-    style EF fill:#9C27B0,color:#fff
-    style D1 fill:#FF9800,color:#fff
-    style D2 fill:#EF6C00,color:#fff
-    style D3 fill:#F57C00,color:#fff
-    style D4 fill:#f44336,color:#fff
-    style E1 fill:#9C27B0,color:#fff
-    style E2 fill:#7B1FA2,color:#fff
-    style E3 fill:#8E24AA,color:#fff
-    style E4 fill:#f44336,color:#fff
-    style DEC fill:#607D8B,color:#fff
+    style DRIVER fill:#FF980,color:#fff0,color:#fff
+    style EF fill:#9C27B,color:#fff0,color:#fff
+    style D1 fill:#FF980,color:#fff0,color:#fff
+    style D2 fill:#EF6C0,color:#fff0,color:#fff
+    style D3 fill:#F57C0,color:#fff0,color:#fff
+    style D4 fill:#f4433,color:#fff6,color:#fff
+    style E1 fill:#9C27B,color:#fff0,color:#fff
+    style E2 fill:#7B1FA,color:#fff2,color:#fff
+    style E3 fill:#8E24A,color:#fffA,color:#fff
+    style E4 fill:#f4433,color:#fff6,color:#fff
+    style DEC fill:#607D8,color:#fffB,color:#fff
 ```
 
 | Criterio | Driver Nativo | EF Core |
@@ -1181,7 +1181,7 @@ public interface IFunkoRepository
 }
 ```
 
-### 13.6.3. Implementación con Driver Nativo
+### 13.6.3. Implementación con driver nativo
 
 ```csharp
 using MongoDB.Driver;
@@ -1257,7 +1257,7 @@ catch (MongoWriteException ex) when (ex.WriteError?.Code == 11000)
 
 📌 **Ejemplo real:** en TiendaAPI (repo CQRS/MediatR) el commit *fix: atrapar E11000 en upsert de MongoDB — version guard omitido a propósito, no es fallo* añadió exactamente ese `catch` con el filtro `when`. Antes, cada sincronización normal entre SQL y Mongo generaba un **log de error y una alerta ruidosa** por algo que estaba funcionando perfectamente.
 
-> 📝 **Nota:** La clave está en el **`when`** (`ex.WriteError?.Code == 11000`). Sin ese filtro, el `catch` se tragaría **todos** los errores de escritura — red caída, permisos insuficientes, documento demasiado grande — y los convertiría en «éxitos». Con el filtro, solo se ignora el `11000` y el resto sigue saltando.
+> 📝 **Nota:** La clave está en el **`when`** (`ex.WriteError?.Code == 11000`). Sin ese filtro, el `catch` se tragaría **todos** los errores de escritura — red caída, permisos insuficientes, documento demasiado grande ; y los convertiría en «éxitos». Con el filtro, solo se ignora el `11000` y el resto sigue saltando.
 
 > ⚠️ **Advertencia:** Antes de dar por bueno un `E11000`, comprueba **qué índice** lo ha provocado. Si **no** tienes guardia de versión y no has tocado el esquema, ese duplicado es un problema real de integridad (dos escrituras simultáneas, ID mal generado…). Ignorar un duplicado sin leer `ex.WriteError` es como cerrar el ojo al humo porque «a veces humea».
 
@@ -1471,7 +1471,7 @@ public abstract class MongoTestBase : IAsyncLifetime
 >
 > 🔧 **Truco:** MongoDB no tiene `TRUNCATE ... RESTART IDENTITY` porque los IDs son `ObjectId` (generados por el driver, no por la BD). La limpieza con `DeleteMany` es suficiente.
 
-### 13.7.3. Tests con Driver Nativo
+### 13.7.3. Tests con driver nativo
 
 ```csharp
 [TestFixture]
@@ -1595,9 +1595,9 @@ public class FunkoEfCoreTests : MongoTestBase
 }
 ```
 
-## 13.8. Semilla de datos (Seed)
+## 13.8. Semilla de datos (seed)
 
-### Con Driver Nativo
+### Con driver nativo
 
 ```csharp
 public class MongoDbSeeder(IMongoDatabase database)
@@ -1835,22 +1835,22 @@ graph TD
 
     TEST --> TC[TestContainers Docker]
 
-    style MONGO fill:#f44336,color:#fff
-    style NOSQL fill:#4CAF50,color:#fff
-    style DESIGN fill:#2196F3,color:#fff
-    style TOOLS fill:#FF9800,color:#fff
-    style TEST fill:#9C27B0,color:#fff
-    style BSON fill:#4CAF50,color:#fff
-    style COL fill:#4CAF50,color:#fff
-    style DOC fill:#4CAF50,color:#fff
-    style EMB fill:#2196F3,color:#fff
-    style REF fill:#2196F3,color:#fff
-    style PAT fill:#2196F3,color:#fff
-    style DRIVER fill:#FF9800,color:#fff
-    style EF fill:#9C27B0,color:#fff
-    style CRUD1 fill:#EF6C00,color:#fff
-    style CRUD2 fill:#7B1FA2,color:#fff
-    style TC fill:#7B1FA2,color:#fff
+    style MONGO fill:#f4433,color:#fff6,color:#fff
+    style NOSQL fill:#4CAF5,color:#fff0,color:#fff
+    style DESIGN fill:#2196F,color:#fff3,color:#fff
+    style TOOLS fill:#FF980,color:#fff0,color:#fff
+    style TEST fill:#9C27B,color:#fff0,color:#fff
+    style BSON fill:#4CAF5,color:#fff0,color:#fff
+    style COL fill:#4CAF5,color:#fff0,color:#fff
+    style DOC fill:#4CAF5,color:#fff0,color:#fff
+    style EMB fill:#2196F,color:#fff3,color:#fff
+    style REF fill:#2196F,color:#fff3,color:#fff
+    style PAT fill:#2196F,color:#fff3,color:#fff
+    style DRIVER fill:#FF980,color:#fff0,color:#fff
+    style EF fill:#9C27B,color:#fff0,color:#fff
+    style CRUD1 fill:#EF6C0,color:#fff0,color:#fff
+    style CRUD2 fill:#7B1FA,color:#fff2,color:#fff
+    style TC fill:#7B1FA,color:#fff2,color:#fff
 ```
 
 ---

@@ -1,30 +1,30 @@
-- [21. Servicios de Email](#21-servicios-de-email)
-  - [21.1. Fundamentos del Sistema de Emails](#211-fundamentos-del-sistema-de-emails)
-    - [21.1.1. ¿Por Qué un Sistema de Emails Robusto?](#2111-por-qué-un-sistema-de-emails-robusto)
-    - [21.1.2. Casos de Uso](#2112-casos-de-uso)
-    - [21.1.3. Desafíos del Sistema de Emails](#2113-desafíos-del-sistema-de-emails)
+- [21. Servicios de email](#21-servicios-de-email)
+  - [21.1. Fundamentos del sistema de emails](#211-fundamentos-del-sistema-de-emails)
+    - [21.1.1. ¿Por qué un sistema de emails robusto?](#2111-por-qué-un-sistema-de-emails-robusto)
+    - [21.1.2. Casos de uso](#2112-casos-de-uso)
+    - [21.1.3. Desafíos del sistema de emails](#2113-desafíos-del-sistema-de-emails)
   - [21.2. Instalación de MailKit](#212-instalación-de-mailkit)
   - [21.3. Interfaz IEmailService](#213-interfaz-iemailservice)
   - [21.4. Implementación con MailKit](#214-implementación-con-mailkit)
     - [21.4.1. MailKitEmailService](#2141-mailkitemailservice)
     - [21.4.2. Configuración SMTP](#2142-configuración-smtp)
-    - [21.4.3. Envío de Adjuntos](#2143-envío-de-adjuntos)
-  - [21.5. Servicio de Desarrollo (MemoryEmailService)](#215-servicio-de-desarrollo-memoryemailservice)
-  - [21.6. Sistema de Plantillas](#216-sistema-de-plantillas)
+    - [21.4.3. Envío de adjuntos](#2143-envío-de-adjuntos)
+  - [21.5. Servicio de desarrollo (MemoryEmailService)](#215-servicio-de-desarrollo-memoryemailservice)
+  - [21.6. Sistema de plantillas](#216-sistema-de-plantillas)
     - [21.6.1. ITemplateService](#2161-itemplateservice)
-    - [21.6.2. Renderizado de Plantillas](#2162-renderizado-de-plantillas)
-  - [21.7. Cola de Emails con BackgroundService](#217-cola-de-emails-con-backgroundservice)
+    - [21.6.2. Renderizado de plantillas](#2162-renderizado-de-plantillas)
+  - [21.7. Cola de emails con BackgroundService](#217-cola-de-emails-con-backgroundservice)
     - [21.7.1. EmailQueueService](#2171-emailqueueservice)
-    - [21.7.2. Procesamiento de Cola](#2172-procesamiento-de-cola)
-  - [21.8. Integración con Productos](#218-integración-con-productos)
+    - [21.7.2. Procesamiento de cola](#2172-procesamiento-de-cola)
+  - [21.8. Integración con productos](#218-integración-con-productos)
   - [21.9. Configuración en appsettings.json](#219-configuración-en-appsettingsjson)
   - [21.10. Testing](#2110-testing)
-  - [21.11. Buenas Prácticas](#2111-buenas-prácticas)
-  - [21.12. Reto: Email en FunkoApp](#2112-reto-email-en-funkoapp)
+  - [21.11. Buenas prácticas](#2111-buenas-prácticas)
+  - [21.12. Reto: email en FunkoApp](#2112-reto-email-en-funkoapp)
 
 
 
-# 21. Servicios de Email
+# 21. Servicios de email
 
 > 💡 **Punto de partida:** Cuando compras en Amazon, recibes un email de confirmación al instante. Cuando alguien comenta tu foto en Instagram, te llega una notificación. El envío de emails es una parte fundamental de cualquier aplicación moderna. ¿Cómo se implementa un sistema de emails robusto, escalable y fácil de probar?
 
@@ -40,9 +40,9 @@ En este punto aprenderás a diseñar e implementar un servicio de envío de emai
 - Usar `BackgroundService` para procesar emails en segundo plano
 - Integrar el envío de emails con servicios de negocio (Productos)
 
-## 21.1. Fundamentos del Sistema de Emails
+## 21.1. Fundamentos del sistema de emails
 
-### 21.1.1. ¿Por Qué un Sistema de Emails Robusto?
+### 21.1.1. ¿Por qué un sistema de emails robusto?
 
 El envío de emails es fundamental para la comunicación con usuarios. Las notificaciones por email incluyen confirmaciones de pedidos, restablecimiento de contraseñas, notificaciones de envío, recibos fiscales y alertas de seguridad.
 
@@ -75,16 +75,16 @@ flowchart LR
     C1 --> C2
     C2 --> C3
 
-    style A2 fill:#4CAF50,color:#fff
-    style B1 fill:#2196F3,color:#fff
-    style C1 fill:#FF9800,color:#fff
+    style A2 fill:#4CAF5,color:#fff0,color:#fff
+    style B1 fill:#2196F,color:#fff3,color:#fff
+    style C1 fill:#FF980,color:#fff0,color:#fff
 ```
 
 > 💡 **Analogía:** El sistema de emails es como el servicio de correo de una empresa. Los empleados (aplicación) entregan las cartas (emails) al departamento de correo (EmailService). El departamento las procesa en batch (BackgroundService) y las entrega al correo (SMTP) para que lleguen a los destinatarios finales.
 
 📌 **Ejemplo real:** Amazon envía emails de confirmación de pedido de forma asíncrona. Cuando haces clic en "Comprar", el pedido se guarda en la BD y se encola un email. El usuario ve la confirmación al instante, y el email llega unos segundos después. No espera al email para mostrar la respuesta.
 
-### 21.1.2. Casos de Uso
+### 21.1.2. Casos de uso
 
 | Caso de Uso | Trigger | Importancia |
 |-------------|---------|-------------|
@@ -95,7 +95,7 @@ flowchart LR
 | **Alerta de seguridad** | Login sospechoso | Alta |
 | **Recibo fiscal** | Pago completado | Alta |
 
-### 21.1.3. Desafíos del Sistema de Emails
+### 21.1.3. Desafíos del sistema de emails
 
 | Desafío | Solución |
 |---------|----------|
@@ -294,7 +294,7 @@ private static SecureSocketOptions GetSecureSocket(string security)
 }
 ```
 
-### 21.4.3. Envío de Adjuntos
+### 21.4.3. Envío de adjuntos
 
 ```csharp
 foreach (var attachment in message.Attachments)
@@ -311,7 +311,7 @@ foreach (var attachment in message.Attachments)
 
 📌 **Ejemplo real:** Gmail permite adjuntos de hasta 25 MB. Tu sistema de emails debe validar el tamaño antes de enviar para evitar rechazos del servidor SMTP.
 
-## 21.5. Servicio de Desarrollo (MemoryEmailService)
+## 21.5. Servicio de desarrollo (MemoryEmailService)
 
 Durante el desarrollo y los tests, **no queremos enviar emails reales**. `MemoryEmailService` almacena los emails en memoria para poder verificarlos sin configurar SMTP.
 
@@ -389,7 +389,7 @@ public class MemoryEmailService : IEmailService
 
 ✅ **BUENO:** Usar `MemoryEmailService` → instantáneo, sin red, verificable con assertions.
 
-## 21.6. Sistema de Plantillas
+## 21.6. Sistema de plantillas
 
 ### 21.6.1. ITemplateService
 
@@ -452,7 +452,7 @@ public class TemplateService(IWebHostEnvironment environment, ILogger<TemplateSe
 }
 ```
 
-### 21.6.2. Renderizado de Plantillas
+### 21.6.2. Renderizado de plantillas
 
 Las plantillas se almacenan en archivos separados dentro del proyecto:
 
@@ -491,7 +491,7 @@ Añade al `.csproj` el contenido de plantillas (misma familia que el XML de Swag
 
 > 💡 **Consejo:** Usa marcadores como `{{ variable }}` en las plantillas. Es simple, no depende de librerías externas y es fácil de entender.
 
-## 21.7. Cola de Emails con BackgroundService
+## 21.7. Cola de emails con BackgroundService
 
 ### 21.7.1. EmailQueueService
 
@@ -521,7 +521,7 @@ public class EmailQueueService
 }
 ```
 
-### 21.7.2. Procesamiento de Cola
+### 21.7.2. Procesamiento de cola
 
 ```csharp
 public class EmailBackgroundWorker(
@@ -588,7 +588,7 @@ builder.Services.Configure<SmtpSettings>(
 builder.Services.AddHostedService<EmailBackgroundWorker>();
 ```
 
-## 21.8. Integración con Productos
+## 21.8. Integración con productos
 
 Veamos cómo integrar el envío de emails con un servicio de negocio real. Cuando se crea o elimina un producto, se envía una notificación por email:
 
@@ -853,7 +853,7 @@ public class EmailQueueServiceTests
 
 > 💡 **Consejo:** Usa el patrón **Arrange-Act-Assert** en todos tus tests. Comenta cada sección para que el código sea legible.
 
-## 21.11. Buenas Prácticas
+## 21.11. Buenas prácticas
 
 | Categoría | Buena Práctica | Por qué |
 |-----------|----------------|---------|
@@ -870,7 +870,7 @@ public class EmailQueueServiceTests
 
 📌 **Ejemplo real:** Netflix no te envía el email de "Tu resumen anual está listo" inmediatamente. Lo encola y lo procesa en background mientras tú sigues usando la app.
 
-## 21.12. Reto: Email en FunkoApp
+## 21.12. Reto: email en FunkoApp
 
 > Antes de irte, implementa un sistema de emails para tu FunkoApp. No necesitas SMTP real: usa `MemoryEmailService`.
 
@@ -891,7 +891,7 @@ Un Funko tiene estas propiedades:
 | `imagen` | string | No |
 | `creadoEn` | DateTime | Sí (autogenerado) |
 
-### Ejercicio: Completa la implementación
+### Ejercicio: completa la implementación
 
 **Parte 1: Interfaz y modelo**
 

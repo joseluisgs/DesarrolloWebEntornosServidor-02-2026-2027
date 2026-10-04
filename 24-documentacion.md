@@ -1,5 +1,5 @@
 - [24. Documentación con Swagger/OpenAPI](#24-documentación-con-swaggeropenapi)
-  - [24.1. CORS (Cross-Origin Resource Sharing)](#241-cors-cross-origin-resource-sharing)
+  - [24.1. CORS (Cross-Origin resource sharing)](#241-cors-cross-origin-resource-sharing)
     - [24.1.1. Qué es CORS](#2411-qué-es-cors)
     - [24.1.2. Configuración de CORS en ASP.NET Core](#2412-configuración-de-cors-en-aspnet-core)
   - [24.2. Swagger y OpenAPI](#242-swagger-y-openapi)
@@ -7,18 +7,18 @@
     - [24.2.2. Qué es Swagger](#2422-qué-es-swagger)
     - [24.2.3. Configuración básica](#2423-configuración-básica)
     - [24.2.4. Configuración avanzada](#2424-configuración-avanzada)
-  - [24.3. Documentar Endpoints](#243-documentar-endpoints)
+  - [24.3. Documentar endpoints](#243-documentar-endpoints)
     - [24.3.1. Atributos de documentación](#2431-atributos-de-documentación)
     - [24.3.2. Ejemplo completo de endpoint documentado](#2432-ejemplo-completo-de-endpoint-documentado)
-    - [24.3.3. Respuesta 201 Created en POST](#2433-respuesta-201-created-en-post)
-  - [24.4. Documentar Modelos y DTOs](#244-documentar-modelos-y-dtos)
-  - [24.5. Documentar Autenticación JWT](#245-documentar-autenticación-jwt)
-  - [24.6. Documentar Respuestas de Error](#246-documentar-respuestas-de-error)
+    - [24.3.3. Respuesta 201 created en POST](#2433-respuesta-201-created-en-post)
+  - [24.4. Documentar modelos y DTOs](#244-documentar-modelos-y-dtos)
+  - [24.5. Documentar autenticación JWT](#245-documentar-autenticación-jwt)
+  - [24.6. Documentar respuestas de error](#246-documentar-respuestas-de-error)
   - [24.7. Versionado de API](#247-versionado-de-api)
-  - [24.8. Ejemplos de Solicitudes](#248-ejemplos-de-solicitudes)
-  - [24.9. Filtros Personalizados](#249-filtros-personalizados)
-  - [24.10. Buenas Prácticas](#2410-buenas-prácticas)
-  - [24.11. Reto: Documenta la API de FunkoApp](#2411-reto-documenta-la-api-de-funkoapp)
+  - [24.8. Ejemplos de solicitudes](#248-ejemplos-de-solicitudes)
+  - [24.9. Filtros personalizados](#249-filtros-personalizados)
+  - [24.10. Buenas prácticas](#2410-buenas-prácticas)
+  - [24.11. Reto: documenta la API de FunkoApp](#2411-reto-documenta-la-api-de-funkoapp)
 
 
 
@@ -36,7 +36,7 @@ En este punto aprenderás a configurar CORS, integrar Swagger/OpenAPI en ASP.NET
 - Implementar versionado de API
 - Usar filtros personalizados para personalizar la documentación
 
-## 24.1. CORS (Cross-Origin Resource Sharing)
+## 24.1. CORS (Cross-Origin resource sharing)
 
 ### 24.1.1. Qué es CORS
 
@@ -46,14 +46,14 @@ En este punto aprenderás a configurar CORS, integrar Swagger/OpenAPI en ASP.NET
 flowchart LR
     subgraph "Sin CORS"
         A[Frontend: https://mi-app.com] -->|Bloqueado| B[API: https://mi-api.com]
-        style A fill:#f44336,color:#fff
-        style B fill:#f44336,color:#fff
+        style A fill:#f4433,color:#fff6,color:#fff
+        style B fill:#f4433,color:#fff6,color:#fff
     end
 
     subgraph "Con CORS"
         C[Frontend: https://mi-app.com] -->|Permitido| D[API: https://mi-api.com]
-        style C fill:#4CAF50,color:#fff
-        style D fill:#4CAF50,color:#fff
+        style C fill:#4CAF5,color:#fff0,color:#fff
+        style D fill:#4CAF5,color:#fff0,color:#fff
     end
 ```
 
@@ -214,7 +214,7 @@ Habilitar comentarios XML en `.csproj` (si no, no se genera el `.xml` y el `if (
 </PropertyGroup>
 ```
 
-## 24.3. Documentar Endpoints
+## 24.3. Documentar endpoints
 
 ### 24.3.1. Atributos de documentación
 
@@ -288,7 +288,7 @@ public async Task<ActionResult<FunkoResponseDto>> Update(
 
 📌 **Ejemplo real:** Netflix documenta cada endpoint de su API interna con atributos similares. Cuando un desarrollador necesita consumir un servicio, abre Swagger y ve exactamente qué datos enviar y qué respuestas esperar.
 
-### 24.3.3. Respuesta 201 Created en POST
+### 24.3.3. Respuesta 201 created en POST
 
 Cuando un `POST` **crea** un recurso, la respuesta correcta es **201 Created** con header `Location`, no un `200 OK`. Swagger lo documenta con `SwaggerResponse(201, ...)`:
 
@@ -321,7 +321,7 @@ public async Task<ActionResult<FunkoResponseDto>> Create(
 
 > 📝 **Nota (201 vs 200):** **201 Created** = el `POST` creó un recurso nuevo (aquí, con `CreatedAtAction` que añade el header `Location`). **200 OK** = operación correcta sin recurso nuevo (por ejemplo, `PUT` que actualiza, o un login). Documentar bien los códigos en Swagger evita clientes que esperen `200` y rompan con `201`.
 
-## 24.4. Documentar Modelos y DTOs
+## 24.4. Documentar modelos y DTOs
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
@@ -371,7 +371,7 @@ public record CreateFunkoDto
 
 > 💡 **Consejo:** Usa el tag `<example>` para mostrar valores de ejemplo en Swagger. Esto ayuda mucho a los desarrolladores que consumen tu API.
 
-## 24.5. Documentar Autenticación JWT
+## 24.5. Documentar autenticación JWT
 
 ```csharp
 builder.Services.AddSwaggerGen(options =>
@@ -412,7 +412,7 @@ Pasos para usar autenticación en Swagger UI:
 2. Ingresar token: `Bearer eyJhbGciOiJIUzI1NiIs...`
 3. Probar endpoints protegidos
 
-## 24.6. Documentar Respuestas de Error
+## 24.6. Documentar respuestas de error
 
 Prioriza **`ProblemDetails`** (estándar **RFC 9457**, que sustituye al antiguo RFC 7807): es el formato de error por defecto de ASP.NET Core, así que Swagger ya lo conoce y los clientes pueden tratarlo de forma genérica.
 
@@ -512,7 +512,7 @@ public class FunkosV2Controller : ControllerBase
 
 📌 **Ejemplo real:** La API de GitHub usa versionado en la URL (`/api/v3/`). Cuando lanzan cambios breaking, crean una nueva versión sin romper las aplicaciones existentes.
 
-## 24.8. Ejemplos de Solicitudes
+## 24.8. Ejemplos de solicitudes
 
 `SwaggerRequestExample` e `IExamplesProvider<T>` **no existen en Swashbuckle base**: vienen del paquete **`Swashbuckle.AspNetCore.Filters`**:
 
@@ -556,7 +556,7 @@ public class CreateFunkoExample : IExamplesProvider<CreateFunkoDto>
 }
 ```
 
-## 24.9. Filtros Personalizados
+## 24.9. Filtros personalizados
 
 Los filtros permiten personalizar la documentación que genera Swagger automáticamente.
 
@@ -590,7 +590,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 ```
 
-## 24.10. Buenas Prácticas
+## 24.10. Buenas prácticas
 
 | Practica | Descripcion |
 |----------|-------------|
@@ -607,7 +607,7 @@ builder.Services.AddSwaggerGen(options =>
 
 > ⚠️ **Advertencia:** La documentacion desactualizada es peor que ninguna documentacion. Manten siempre sincronizada la documentacion con el codigo.
 
-## 24.11. Reto: Documenta la API de FunkoApp
+## 24.11. Reto: documenta la API de FunkoApp
 
 > Antes de irte, documenta completamente la API de Funkos. No escribas codigo: diseña la documentacion.
 

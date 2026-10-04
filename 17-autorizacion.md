@@ -1,28 +1,28 @@
 - [17. Autorización](#17-autorización)
   - [17.1. Introducción](#171-introducción)
-    - [17.1.1. ¿Qué es la Autorización?](#1711-qué-es-la-autorización)
-    - [17.1.2. Autenticación vs Autorización](#1712-autenticación-vs-autorización)
-    - [17.1.3. Flujo Completo: Autenticar, Autorizar, Acceder](#1713-flujo-completo-autenticar-autorizar-acceder)
-  - [17.2. Conceptos Fundamentales](#172-conceptos-fundamentales)
+    - [17.1.1. ¿Qué es la autorización?](#1711-qué-es-la-autorización)
+    - [17.1.2. Autenticación vs autorización](#1712-autenticación-vs-autorización)
+    - [17.1.3. Flujo completo: autenticar, autorizar, acceder](#1713-flujo-completo-autenticar-autorizar-acceder)
+  - [17.2. Conceptos fundamentales](#172-conceptos-fundamentales)
     - [17.2.1. Roles](#1721-roles)
     - [17.2.2. Claims](#1722-claims)
     - [17.2.3. Policies](#1723-policies)
-    - [17.2.4. Requirements y Handlers](#1724-requirements-y-handlers)
-  - [17.3. Autorización con Roles](#173-autorización-con-roles)
-    - [17.3.1. Enfoque Manual](#1731-enfoque-manual)
+    - [17.2.4. Requirements y handlers](#1724-requirements-y-handlers)
+  - [17.3. Autorización con roles](#173-autorización-con-roles)
+    - [17.3.1. Enfoque manual](#1731-enfoque-manual)
     - [17.3.2. Enfoque Identity](#1732-enfoque-identity)
-  - [17.4. Autorización con Claims](#174-autorización-con-claims)
-    - [17.4.1. Enfoque Manual](#1741-enfoque-manual)
+  - [17.4. Autorización con claims](#174-autorización-con-claims)
+    - [17.4.1. Enfoque manual](#1741-enfoque-manual)
     - [17.4.2. Enfoque Identity](#1742-enfoque-identity)
-  - [17.5. Políticas de Autorización](#175-políticas-de-autorización)
-    - [17.5.1. Enfoque Manual](#1751-enfoque-manual)
+  - [17.5. Políticas de autorización](#175-políticas-de-autorización)
+    - [17.5.1. Enfoque manual](#1751-enfoque-manual)
     - [17.5.2. Enfoque Identity](#1752-enfoque-identity)
-  - [17.6. Requirements y Handlers Personalizados](#176-requirements-y-handlers-personalizados)
-    - [17.6.1. Enfoque Manual](#1761-enfoque-manual)
+  - [17.6. Requirements y handlers personalizados](#176-requirements-y-handlers-personalizados)
+    - [17.6.1. Enfoque manual](#1761-enfoque-manual)
     - [17.6.2. Enfoque Identity](#1762-enfoque-identity)
-  - [17.7. Autorización Basada en Recursos](#177-autorización-basada-en-recursos)
-  - [17.8. Comparación de Enfoques](#178-comparación-de-enfoques)
-  - [17.9. Buenas Prácticas](#179-buenas-prácticas)
+  - [17.7. Autorización basada en recursos](#177-autorización-basada-en-recursos)
+  - [17.8. Comparación de enfoques](#178-comparación-de-enfoques)
+  - [17.9. Buenas prácticas](#179-buenas-prácticas)
   - [17.10. Reto](#1710-reto)
 
 
@@ -39,7 +39,7 @@
 
 ## 17.1. Introducción
 
-### 17.1.1. ¿Qué es la Autorización?
+### 17.1.1. ¿Qué es la autorización?
 
 La **autorización** es el proceso de determinar **qué recursos puede acceder** un usuario autenticado y **qué operaciones** puede realizar sobre ellos. Es la segunda puerta del proceso de seguridad: primero demuestras quién eres (autenticación), luego el sistema decide qué permisos tienes (autorización).
 
@@ -47,7 +47,7 @@ La **autorización** es el proceso de determinar **qué recursos puede acceder**
 
 📌 Ejemplo real: En **Netflix**, una vez que te autenticas (login), la autorización determina qué puedes ver. Si tienes una suscripción básica, no puedes ver en 4K. Si tienes perfil de niño, no puedes acceder a contenido para adultos. Los perfiles familiares no pueden cambiar la tarjeta de pago. Todo eso es autorización.
 
-### 17.1.2. Autenticación vs Autorización
+### 17.1.2. Autenticación vs autorización
 
 Para entender la diferencia, piensa en la metáfora de una discoteca. La **autenticación** es cuando sacas tu DNI en la puerta: el portero verifica que eres quien dices ser. La **autorización** es cuando el portero comprueba si tu entrada es VIP, si tienes la pulsera de zona premium o si solo puedes acceder a la zona general. Ya saben quién eres, pero ahora necesitan saber **qué puedes hacer** dentro.
 
@@ -69,12 +69,12 @@ flowchart LR
 
     A1 --> A2 --> A3 --> B1 --> B2 --> B3
 
-    style A1 fill:#9C27B0,color:#fff
-    style A2 fill:#9C27B0,color:#fff
-    style A3 fill:#9C27B0,color:#fff
-    style B1 fill:#2196F3,color:#fff
-    style B2 fill:#2196F3,color:#fff
-    style B3 fill:#2196F3,color:#fff
+    style A1 fill:#9C27B,color:#fff0,color:#fff
+    style A2 fill:#9C27B,color:#fff0,color:#fff
+    style A3 fill:#9C27B,color:#fff0,color:#fff
+    style B1 fill:#2196F,color:#fff3,color:#fff
+    style B2 fill:#2196F,color:#fff3,color:#fff
+    style B3 fill:#2196F,color:#fff3,color:#fff
 ```
 
 | Aspecto | Autenticación | Autorización |
@@ -90,7 +90,7 @@ flowchart LR
 
 📌 Ejemplo real: En **Spotify**, la autenticación es tu login con email/contraseña o Google. La autorización determina si puedes escuchar música sin anuncios (Premium), si puedes descargar canciones offline o si puedes crear playlists colaborativas.
 
-### 17.1.3. Flujo Completo: Autenticar, Autorizar, Acceder
+### 17.1.3. Flujo completo: autenticar, autorizar, acceder
 
 Cuando una petición llega a tu API, el middleware de ASP.NET Core procesa la seguridad en dos fases. Primero `UseAuthentication()` valida el token JWT y extrae los claims del usuario. Si el token es inválido, la petición se rechaza con 401. Si es válido, se crea un `ClaimsPrincipal` con toda la información del usuario. Después, `UseAuthorization()` evalúa si ese usuario tiene permisos para acceder al endpoint solicitado. Si no tiene permisos, devuelve 403. Si todo está correcto, ejecuta la acción del controller.
 
@@ -104,11 +104,11 @@ flowchart TD
     E -->|Permiso concedido| G["Ejecutar endpoint"]
     G --> H["200 OK + datos"]
 
-    style A fill:#607D8B,color:#fff
-    style C fill:#f44336,color:#fff
-    style D fill:#4CAF50,color:#fff
-    style F fill:#f44336,color:#fff
-    style H fill:#4CAF50,color:#fff
+    style A fill:#607D8,color:#fffB,color:#fff
+    style C fill:#f4433,color:#fff6,color:#fff
+    style D fill:#4CAF5,color:#fff0,color:#fff
+    style F fill:#f4433,color:#fff6,color:#fff
+    style H fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 En el `Program.cs`, la configuración de estos middlewares debe seguir un orden estricto. La autenticación siempre va primero porque la autorización necesita saber quién es el usuario antes de evaluar sus permisos:
@@ -126,7 +126,7 @@ app.Run();
 
 > ⚠️ **Advertencia:** El orden de `UseAuthentication()` y `UseAuthorization()` es **crítico**. Si los inviertes, la autorización fallará porque no habrá identidad que verificar. **Siempre** autenticación primero, autorización segundo.
 
-#### Flujo positivo: Autorizacion con roles
+#### Flujo positivo: autorizacion con roles
 
 ```mermaid
 sequenceDiagram
@@ -145,7 +145,7 @@ sequenceDiagram
     S-->>C: 200 OK
 ```
 
-#### Flujo negativo: Usuario sin permisos
+#### Flujo negativo: usuario sin permisos
 
 ```mermaid
 sequenceDiagram
@@ -163,7 +163,7 @@ sequenceDiagram
     S-->>C: 403 Forbidden
 ```
 
-#### Flujo negativo: Sin token
+#### Flujo negativo: sin token
 
 ```mermaid
 sequenceDiagram
@@ -178,7 +178,7 @@ sequenceDiagram
     S-->>C: 401 Unauthorized
 ```
 
-#### Flujo positivo: Policy RequireAdmin
+#### Flujo positivo: policy RequireAdmin
 
 ```mermaid
 sequenceDiagram
@@ -196,7 +196,7 @@ sequenceDiagram
     S-->>C: 200 OK
 ```
 
-## 17.2. Conceptos Fundamentales
+## 17.2. Conceptos fundamentales
 
 Antes de meternos en código, necesitas entender los cinco pilares sobre los que se construye todo el sistema de autorización en ASP.NET Core: roles, claims, policies, requirements y handlers. Piensa en ello como las piezas de un mecanismo de seguridad: cada pieza tiene una función concreta y todas trabajan juntas.
 
@@ -229,9 +229,9 @@ flowchart TD
     MOD --> P3
     MOD --> P4
 
-    style ADMIN fill:#f44336,color:#fff
-    style USER fill:#4CAF50,color:#fff
-    style MOD fill:#FF9800,color:#fff
+    style ADMIN fill:#f4433,color:#fff6,color:#fff
+    style USER fill:#4CAF5,color:#fff0,color:#fff
+    style MOD fill:#FF980,color:#fff0,color:#fff
 ```
 
 | Rol | Descripción | Ejemplo de uso |
@@ -308,11 +308,11 @@ flowchart LR
     C4 --> A2
     C5 --> A3
 
-    style C1 fill:#2196F3,color:#fff
-    style C2 fill:#2196F3,color:#fff
-    style C3 fill:#2196F3,color:#fff
-    style C4 fill:#2196F3,color:#fff
-    style C5 fill:#2196F3,color:#fff
+    style C1 fill:#2196F,color:#fff3,color:#fff
+    style C2 fill:#2196F,color:#fff3,color:#fff
+    style C3 fill:#2196F,color:#fff3,color:#fff
+    style C4 fill:#2196F,color:#fff3,color:#fff
+    style C5 fill:#2196F,color:#fff3,color:#fff
 ```
 
 | Tipo de claim | Ejemplo | Uso |
@@ -368,17 +368,17 @@ flowchart TD
     R1 --> C1
     R4 --> C2
 
-    style R1 fill:#4CAF50,color:#fff
-    style R2 fill:#4CAF50,color:#fff
-    style R3 fill:#FF9800,color:#fff
-    style R4 fill:#FF9800,color:#fff
+    style R1 fill:#4CAF5,color:#fff0,color:#fff
+    style R2 fill:#4CAF5,color:#fff0,color:#fff
+    style R3 fill:#FF980,color:#fff0,color:#fff
+    style R4 fill:#FF980,color:#fff0,color:#fff
 ```
 
 Una política puede ser tan simple como requerir un rol, o tan compleja como combinar múltiples requisitos con lógica personalizada. La clave es que defines la política una vez en `Program.cs` y la reutilizas con el atributo `[Authorize(Policy = "...")]` en cualquier endpoint.
 
 > 💡 **Analogía:** Las Policies son como las **reglas de un club VIP**. Cada sala del club tiene sus propias reglas: la sala de karaoke requiere que seas mayor de 18, la terraza VIP requiere pulsera premium, y la sala de eventos requiere ser socio Y estar bien vestido. Tú defines las reglas una vez en la puerta del club (Program.cs) y cada sala las aplica (controllers). Si mañana cambias la regla de la terraza, solo actualizas la definición en la puerta, no tienes que ir sala por sala.
 
-### 17.2.4. Requirements y Handlers
+### 17.2.4. Requirements y handlers
 
 Un **Requirement** es una interfaz que define una condición de autorización. Un **Handler** es la clase que implementa la lógica para verificar esa condición. Juntos forman el patrón más flexible del sistema de autorización.
 
@@ -391,19 +391,19 @@ flowchart LR
     EVALUAR -->|Cumple| SUCEED["context.Succeed"]
     EVALUAR -->|No cumple| FAIL["Denegar acceso"]
 
-    style REQ fill:#9C27B0,color:#fff
-    style HANDLER fill:#2196F3,color:#fff
-    style SUCEED fill:#4CAF50,color:#fff
-    style FAIL fill:#f44336,color:#fff
+    style REQ fill:#9C27B,color:#fff0,color:#fff
+    style HANDLER fill:#2196F,color:#fff3,color:#fff
+    style SUCEED fill:#4CAF5,color:#fff0,color:#fff
+    style FAIL fill:#f4433,color:#fff6,color:#fff
 ```
 
 > 💡 **Consejo:** Usa Requirements y Handlers cuando la lógica de autorización es demasiado compleja para una política simple o cuando necesitas acceder a recursos de la base de datos para tomar la decisión.
 
-## 17.3. Autorización con Roles
+## 17.3. Autorización con roles
 
 Los roles son el mecanismo de autorización más directo. Un usuario tiene un rol o no lo tiene, y eso determina si puede acceder a un endpoint. Veamos cómo implementar esta mecánica con ambos enfoques.
 
-### 17.3.1. Enfoque Manual
+### 17.3.1. Enfoque manual
 
 Sin Identity, gestionas los roles en tu propio modelo de usuario y los incluyes en el JWT como claims. El primer paso es configurar las políticas de autorización en el contenedor de dependencias, indicando qué roles requiere cada política:
 
@@ -537,11 +537,11 @@ flowchart TD
     AUTHZ -->|Tiene rol o policy| OK[Endpoint ejecutado]
     AUTHZ -->|No tiene permiso| R403[403 Forbidden]
 
-    style AUTH fill:#4CAF50,color:#fff
-    style AUTHZ fill:#2196F3,color:#fff
-    style R401 fill:#f44336,color:#fff
-    style R403 fill:#f44336,color:#fff
-    style OK fill:#4CAF50,color:#fff
+    style AUTH fill:#4CAF5,color:#fff0,color:#fff
+    style AUTHZ fill:#2196F,color:#fff3,color:#fff
+    style R401 fill:#f4433,color:#fff6,color:#fff
+    style R403 fill:#f4433,color:#fff6,color:#fff
+    style OK fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 **Verificación programática de roles en código:**
@@ -689,11 +689,11 @@ bool isAdmin = await userManager.IsInRoleAsync(user, "ADMIN");
 
 > 📝 **Nota:** La configuración de políticas con `AddAuthorizationBuilder()` es **idéntica** en ambos enfoques. Solo cambia cómo se crean y asignan los roles (RoleManager vs tu propia lógica).
 
-## 17.4. Autorización con Claims
+## 17.4. Autorización con claims
 
 Los claims van un paso más allá de los roles. Mientras que un rol te dice "este usuario es ADMIN", un claim te dice "este usuario pertenece al departamento IT y tiene nivel senior". Los claims permiten condiciones de autorización mucho más granulares.
 
-### 17.4.1. Enfoque Manual
+### 17.4.1. Enfoque manual
 
 Con el enfoque manual, añades claims personalizados directamente al JWT en el JwtService. Estos claims viajan dentro del token y se extraen cuando el middleware de autenticación lo valida.
 
@@ -804,11 +804,11 @@ public IActionResult GetProfile()
 
 > 💡 **Consejo:** Con Identity, los claims se almacenan en la tabla `AspNetUserClaims` y se cargan automáticamente en el `ClaimsPrincipal` durante la autenticación. Con el enfoque manual, los claims viajan dentro del JWT y se extraen al validar el token.
 
-## 17.5. Políticas de Autorización
+## 17.5. Políticas de autorización
 
 Las políticas son la forma más potente de definir reglas de autorización. En lugar de escribir condiciones sueltas por toda la aplicación, defines una política una vez y la reutilizas. Esto hace tu código más limpio y más fácil de mantener.
 
-### 17.5.1. Enfoque Manual
+### 17.5.1. Enfoque manual
 
 Las políticas se registran en el contenedor de dependencias con `AddAuthorizationBuilder()`. Cada política es una combinación de requisitos que el framework evalúa cuando alguien accede a un endpoint protegido.
 
@@ -907,11 +907,11 @@ services.AddAuthorizationBuilder()
 
 > 📝 **Nota:** Las políticas de autorización son **independientes** del sistema de autenticación. Funcionan exactamente igual con JWT manual, Identity, cookies o cualquier otro esquema. Solo necesitan un `ClaimsPrincipal` válido, que viene del middleware de autenticación.
 
-## 17.6. Requirements y Handlers Personalizados
+## 17.6. Requirements y handlers personalizados
 
 Cuando las políticas integradas (`RequireRole`, `RequireClaim`, `RequireAssertion`) no son suficientes, puedes crear requirements y handlers personalizados. Esto te permite implementar lógica de autorización arbitraria: consultar la base de datos, llamar a servicios externos o combinar múltiples condiciones de negocio.
 
-### 17.6.1. Enfoque Manual
+### 17.6.1. Enfoque manual
 
 El patrón consta de tres partes: un **requirement** (define qué quieres verificar), un **handler** (implementa cómo lo verificas) y un **registro** en el contenedor de dependencias.
 
@@ -1088,7 +1088,7 @@ services.AddScoped<IAuthorizationHandler, ResourceOwnerHandler>();
 
 > 💡 **Consejo:** Los handlers son la pieza más flexible del sistema de autorización. Pueden acceder a la base de datos, servicios externos o cualquier lógica de negocio para tomar la decisión. **Registra los handlers como `AddScoped` cuando tengan dependencias** (repositorios, `IHttpContextAccessor`, EF Core): cada request resuelve sus propios servicios y evitas el error clásico de capturar un servicio Scoped dentro de un `Singleton`. Usa `AddSingleton` solo si el handler no tiene dependencias ni estado por request.
 
-## 17.7. Autorización Basada en Recursos
+## 17.7. Autorización basada en recursos
 
 La autorización basada en recursos verifica permisos sobre un **objeto concreto**, no sobre una acción genérica. Por ejemplo: "solo el dueño de un producto puede editarlo". Esto va más allá de los roles y claims porque necesita acceder al recurso real para tomar la decisión.
 
@@ -1106,9 +1106,9 @@ flowchart TD
     H -->|Si| G
     H -->|No| I["403 Forbidden"]
 
-    style E fill:#f44336,color:#fff
-    style G fill:#4CAF50,color:#fff
-    style I fill:#f44336,color:#fff
+    style E fill:#f4433,color:#fff6,color:#fff
+    style G fill:#4CAF5,color:#fff0,color:#fff
+    style I fill:#f4433,color:#fff6,color:#fff
 ```
 
 Para implementar esta verificación, puedes usar `IAuthorizationService` que ASP.NET Core te inyecta automáticamente. Este servicio te permite evaluar políticas sobre recursos concretos en tiempo de ejecución:
@@ -1195,7 +1195,7 @@ public class AuthzService(
 
 > ⚠️ **Advertencia:** La autorización basada en recursos requiere acceso al objeto real desde la base de datos. Esto implica una consulta adicional por cada request protegido. Úsala solo cuando sea estrictamente necesario y considera cachear los resultados.
 
-## 17.8. Comparación de Enfoques
+## 17.8. Comparación de enfoques
 
 Hemos visto dos caminos para implementar autorización: el enfoque manual (tú gestionas todo) y el enfoque Identity (el framework te ayuda). La siguiente tabla resume las diferencias clave para que puedas decidir cuál se adapta mejor a tu proyecto:
 
@@ -1225,17 +1225,17 @@ flowchart TD
     D --> G["7+ tablas, scaffolding"]
     E --> H["Ambos funcionan igual para autorizacion"]
 
-    style B fill:#4CAF50,color:#fff
-    style D fill:#FF9800,color:#fff
-    style E fill:#2196F3,color:#fff
-    style F fill:#4CAF50,color:#fff
-    style G fill:#FF9800,color:#fff
-    style H fill:#2196F3,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#FF980,color:#fff0,color:#fff
+    style E fill:#2196F,color:#fff3,color:#fff
+    style F fill:#4CAF5,color:#fff0,color:#fff
+    style G fill:#FF980,color:#fff0,color:#fff
+    style H fill:#2196F,color:#fff3,color:#fff
 ```
 
 > 💡 **Consejo:** La autorización (roles, claims, policies, handlers) funciona **exactamente igual** en ambos enfoques. La única diferencia es cómo gestionas la identidad del usuario. Elige el enfoque de autenticación que mejor se adapte a tu proyecto y la autorización será la misma.
 
-## 17.9. Buenas Prácticas
+## 17.9. Buenas prácticas
 
 Antes de pasar al reto, es fundamental que interiorices estas buenas prácticas. La autorización es una de las áreas donde los errores tienen consecuencias directas en la seguridad de tu aplicación.
 
@@ -1263,15 +1263,15 @@ flowchart TB
     S1 --> S2 --> S3
     M1 --> M2 --> M3
 
-    style P1 fill:#4CAF50,color:#fff
-    style P2 fill:#4CAF50,color:#fff
-    style P3 fill:#4CAF50,color:#fff
-    style S1 fill:#f44336,color:#fff
-    style S2 fill:#f44336,color:#fff
-    style S3 fill:#f44336,color:#fff
-    style M1 fill:#2196F3,color:#fff
-    style M2 fill:#2196F3,color:#fff
-    style M3 fill:#2196F3,color:#fff
+    style P1 fill:#4CAF5,color:#fff0,color:#fff
+    style P2 fill:#4CAF5,color:#fff0,color:#fff
+    style P3 fill:#4CAF5,color:#fff0,color:#fff
+    style S1 fill:#f4433,color:#fff6,color:#fff
+    style S2 fill:#f4433,color:#fff6,color:#fff
+    style S3 fill:#f4433,color:#fff6,color:#fff
+    style M1 fill:#2196F,color:#fff3,color:#fff
+    style M2 fill:#2196F,color:#fff3,color:#fff
+    style M3 fill:#2196F,color:#fff3,color:#fff
 ```
 
 | Práctica | Descripción |

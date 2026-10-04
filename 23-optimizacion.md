@@ -1,41 +1,41 @@
-- [23. Optimización de Servicios Web](#23-optimización-de-servicios-web)
-  - [23.1. Conceptos Fundamentales](#231-conceptos-fundamentales)
+- [23. Optimización de servicios web](#23-optimización-de-servicios-web)
+  - [23.1. Conceptos fundamentales](#231-conceptos-fundamentales)
     - [23.1.1. Áreas de optimización](#2311-áreas-de-optimización)
     - [23.1.2. Principios de optimización](#2312-principios-de-optimización)
-  - [23.2. Optimización de Consultas a BD](#232-optimización-de-consultas-a-bd)
+  - [23.2. Optimización de consultas a BD](#232-optimización-de-consultas-a-bd)
     - [23.2.1. Selects optimizados](#2321-selects-optimizados)
     - [23.2.2. Include eficiente](#2322-include-eficiente)
     - [23.2.3. Índices en EF Core](#2323-índices-en-ef-core)
-    - [23.2.4. Split Queries](#2324-split-queries)
+    - [23.2.4. Split queries](#2324-split-queries)
     - [23.2.5. Paginación](#2325-paginación)
   - [23.3. Caching](#233-caching)
-    - [23.3.1. Memory Cache](#2331-memory-cache)
-    - [23.3.2. Distributed Cache con Redis](#2332-distributed-cache-con-redis)
-    - [23.3.3. Cache-Aside Pattern](#2333-cache-aside-pattern)
-    - [23.3.4. Response Caching](#2334-response-caching)
+    - [23.3.1. Memory cache](#2331-memory-cache)
+    - [23.3.2. Distributed cache con Redis](#2332-distributed-cache-con-redis)
+    - [23.3.3. Cache-Aside pattern](#2333-cache-aside-pattern)
+    - [23.3.4. Response caching](#2334-response-caching)
     - [23.3.5. Invalidación de caché](#2335-invalidación-de-caché)
     - [23.3.6. ETag y peticiones condicionales](#2336-etag-y-peticiones-condicionales)
   - [23.4. Optimización de API](#234-optimización-de-api)
     - [23.4.1. Compresión de respuestas](#2341-compresión-de-respuestas)
     - [23.4.2. Mínimo de peticiones HTTP](#2342-mínimo-de-peticiones-http)
-    - [23.4.3. Query Tracking](#2343-query-tracking)
+    - [23.4.3. Query tracking](#2343-query-tracking)
     - [23.4.4. Serialización JSON source-generated](#2344-serialización-json-source-generated)
   - [23.5. Rate Limiting](#235-rate-limiting)
     - [23.5.1. Rate Limiting con ASP.NET Core](#2351-rate-limiting-con-aspnet-core)
     - [23.5.2. Middleware propio con headers RateLimit-*](#2352-middleware-propio-con-headers-ratelimit)
-    - [23.5.3. Token Bucket Algorithm](#2353-token-bucket-algorithm)
-  - [23.6. Monitoring y Profiling](#236-monitoring-y-profiling)
+    - [23.5.3. Token bucket algorithm](#2353-token-bucket-algorithm)
+  - [23.6. Monitoring y profiling](#236-monitoring-y-profiling)
     - [23.6.1. Health Checks](#2361-health-checks)
-    - [23.6.2. Application Metrics](#2362-application-metrics)
-    - [23.6.3. Performance Profiling](#2363-performance-profiling)
+    - [23.6.2. Application metrics](#2362-application-metrics)
+    - [23.6.3. Performance profiling](#2363-performance-profiling)
   - [23.7. Resiliencia con Polly](#237-resiliencia-con-polly)
-  - [23.8. Buenas Prácticas](#238-buenas-prácticas)
-  - [23.9. Testing de Rendimiento](#239-testing-de-rendimiento)
-  - [23.10. Reto: Optimiza tu FunkoApp](#2310-reto-optimiza-tu-funkoapp)
+  - [23.8. Buenas prácticas](#238-buenas-prácticas)
+  - [23.9. Testing de rendimiento](#239-testing-de-rendimiento)
+  - [23.10. Reto: optimiza tu FunkoApp](#2310-reto-optimiza-tu-funkoapp)
 
 
 
-# 23. Optimización de Servicios Web
+# 23. Optimización de servicios web
 
 > 💡 **Punto de partida:** ¿Alguna vez has esperado más de 3 segundos a que una web cargue y has pulsado "Atrás"? Según Google, si una página tarda más de 3 segundos en cargar, el 53% de los usuarios la abandonan. La optimización no es un lujo: es una necesidad para cualquier API que quiera ser usada por millones de personas.
 
@@ -50,7 +50,7 @@ En este punto aprenderás a optimizar APIs en ASP.NET Core: desde la consulta a 
 - Aplicar rate limiting para proteger la API
 - Monitorizar el rendimiento con health checks y métricas
 
-## 23.1. Conceptos Fundamentales
+## 23.1. Conceptos fundamentales
 
 La **optimización de rendimiento** es el proceso de mejorar la velocidad, eficiencia y escalabilidad de una aplicación. En APIs de alto tráfico, cada milisegundo cuenta. Una optimización bien aplicada puede reducir el tiempo de respuesta de 500ms a 50ms, mejorando la experiencia de usuario y reduciendo costes de infraestructura.
 
@@ -80,12 +80,12 @@ graph TD
     F --> F1["Transacciones"]
     F --> F2["Locks"]
     F --> F3["Async"]
-    style A fill:#2196F3,color:#fff
-    style B fill:#4CAF50,color:#fff
-    style C fill:#FF9800,color:#fff
-    style D fill:#9C27B0,color:#fff
-    style E fill:#607D8B,color:#fff
-    style F fill:#f44336,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#FF980,color:#fff0,color:#fff
+    style D fill:#9C27B,color:#fff0,color:#fff
+    style E fill:#607D8,color:#fffB,color:#fff
+    style F fill:#f4433,color:#fff6,color:#fff
 ```
 
 📌 **Ejemplo real:** Netflix optimiza cada capa de su API. Usa Redis para caché de perfiles, compresión Brotli para respuestas JSON, y paginación para listados de series. Cada capa contribuye a que tu feed cargue en menos de 200ms.
@@ -102,7 +102,7 @@ graph TD
 
 > ⚠️ **Advertencia:** No optimices prematuramente. Primero haz que funcione correctamente, luego mide dónde está el cuello de botella, y solo optimiza lo que realmente sea lento.
 
-## 23.2. Optimización de Consultas a BD
+## 23.2. Optimización de consultas a BD
 
 Las consultas a la base de datos suelen ser el cuello de botella más común en APIs. Optimizarlas puede reducir tiempos de respuesta de segundos a milisegundos.
 
@@ -192,7 +192,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
 > 💡 **Consejo:** Usa un índice compuesto en `(CategoriaId, Activo)` si frecuentemente filtras por categoría y solo muestras productos activos. Esto es mucho más rápido que dos índices separados.
 
-### 23.2.4. Split Queries
+### 23.2.4. Split queries
 
 Cuando usas múltiples `Include`, EF Core genera una sola consulta SQL que puede causar una explosión cartesiana. `AsSplitQuery` ejecuta consultas separadas para cada relación.
 
@@ -249,7 +249,7 @@ El caching es una de las optimizaciones más efectivas. Almacenar datos frecuent
 
 📌 **Ejemplo real:** Twitter usa Redis para cachear los timelines de los usuarios. Cuando abres la app, no consulta la base de datos: sirve datos cacheados que se actualizan en segundo plano.
 
-### 23.3.1. Memory Cache
+### 23.3.1. Memory cache
 
 `IMemoryCache` almacena datos en la memoria del proceso. Es ideal para datos que no cambian frecuentemente y que son accesados muchas veces.
 
@@ -291,7 +291,7 @@ public class ProductoService(
 
 > ⚠️ **Advertencia:** `IMemoryCache` es por instancia de servidor. Si tienes múltiples instancias, cada una tiene su propio caché. Para datos compartidos, usa Redis.
 
-### 23.3.2. Distributed Cache con Redis
+### 23.3.2. Distributed cache con Redis
 
 Redis es un almacén de datos en memoria que funciona como caché distribuido. Todas las instancias de tu aplicación comparten el mismo caché.
 
@@ -340,7 +340,7 @@ public class ProductoCacheService(
 }
 ```
 
-### 23.3.3. Cache-Aside Pattern
+### 23.3.3. Cache-Aside pattern
 
 El patrón Cache-Aside es el más común: primero consultar el caché, si no está, cargar de la base de datos y guardar en caché.
 
@@ -353,15 +353,15 @@ graph TD
     E --> F["Store in Cache"]
     F --> D
     D --> G["Response"]
-    style A fill:#2196F3,color:#fff
-    style B fill:#607D8B,color:#fff
-    style C fill:#FF9800,color:#fff
-    style D fill:#4CAF50,color:#fff
-    style E fill:#f44336,color:#fff
-    style F fill:#9C27B0,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#607D8,color:#fffB,color:#fff
+    style C fill:#FF980,color:#fff0,color:#fff
+    style D fill:#4CAF5,color:#fff0,color:#fff
+    style E fill:#f4433,color:#fff6,color:#fff
+    style F fill:#9C27B,color:#fff0,color:#fff
 ```
 
-### 23.3.4. Response Caching
+### 23.3.4. Response caching
 
 `ResponseCaching` almacena la respuesta HTTP completa en el servidor. El cliente recibe un header `Cache-Control` que le indica si puede usar una versión cacheada.
 
@@ -545,7 +545,7 @@ var dashboard = await httpClient.GetAsync(
     "/api/dashboard?secciones=productos,categorias,carrito");
 ```
 
-### 23.4.3. Query Tracking
+### 23.4.3. Query tracking
 
 EF Core rastrea por defecto todas las entidades que carga, lo cual consume memoria. Para operaciones de solo lectura, desactiva el tracking.
 
@@ -712,9 +712,9 @@ flowchart TD
     F -->|"No supera"| E
     F -->|"Superada"| D
 
-    style A fill:#2196F3,color:#fff
-    style D fill:#f44336,color:#fff
-    style E fill:#4CAF50,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style D fill:#f4433,color:#fff6,color:#fff
+    style E fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 **El estado: particiones por IP + verbo + ruta**
@@ -832,7 +832,7 @@ Y en el rechazo, **429 con cuerpo JSON**:
 
 > 💡 **Truco:** Para tests del middleware, inyecta un `FakeTimeProvider` (paquete `Microsoft.Extensions.TimeProvider.Testing`) y avanza el reloj manualmente: tests deterministas, sin `Thread.Sleep`. Los tests deben cubrir: permitido con headers, 429 en el límite, `Retry-After` positivo, contadores independientes por IP y que el 429 no ejecuta el siguiente middleware.
 
-### 23.5.3. Token Bucket Algorithm
+### 23.5.3. Token bucket algorithm
 
 El algoritmo Token Bucket es una implementación popular de rate limiting. Cada cliente tiene un "cubo" de tokens que se rellena periódicamente. Cada petición consume un token.
 
@@ -886,7 +886,7 @@ public class TokenBucketRateLimiter(
 
 > 💡 **Truco:** En los tests de esta clase, inyecta un `FakeTimeProvider` y avanza el reloj para forzar el relleno del cubo sin esperar el tiempo real: asserts instantáneos y deterministas.
 
-## 23.6. Monitoring y Profiling
+## 23.6. Monitoring y profiling
 
 No puedes optimizar lo que no mides. El monitoring te permite detectar problemas de rendimiento antes de que afecten a los usuarios.
 
@@ -1047,11 +1047,11 @@ checks = report.Entries.Select(e => new
 })
 ```
 
-📌 **Ejemplo real:** en TiendaAPI, `CacheMetrics` es un singleton registrado en `CacheConfig.AddCache`, se alimenta desde `RedisCacheService` y se lee en `RedisHealthCheck`. Commits: *feat: CacheMetrics — métricas de errores de caché expuestas en /health*, *fix: añadir using CacheMetrics en HealthChecksConfig* y *fix: CacheMetrics — cast explícito `DateTime?` en ToSummary*. La idea es poder prescindir de Prometheus/OpenTelemetry en un proyecto de aula: **`GET /health` basta** para notar que la caché anda mal.
+📌 **Ejemplo real:** en TiendaAPI, `CacheMetrics` es un singleton registrado en `CacheConfig.AddCache`, se alimenta desde `RedisCacheService` y se lee en `RedisHealthCheck`. Commits: *feat: CacheMetrics — métricas de errores de caché expuestas en /health*, *fix: añadir using CacheMetrics en HealthChecksConfig* y *fix: CacheMetrics ; cast explícito `DateTime?` en ToSummary*. La idea es poder prescindir de Prometheus/OpenTelemetry en un proyecto de aula: **`GET /health` basta** para notar que la caché anda mal.
 
 > 💡 **Consejo:** Un health check que solo hace `ping` te dice *«Redis contesta»*. Las métricas te dicen **«Redis contesta, pero falla el 0,12 % de las operaciones»** — que es lo que de verdad duele en producción. Y `lastErrorMessage` te ahorra veinte minutos de log-diving: el mensaje ya está ahí.
 
-### 23.6.2. Application Metrics
+### 23.6.2. Application metrics
 
 Las métricas personalizadas te permiten rastrear el comportamiento específico de tu aplicación.
 
@@ -1086,7 +1086,7 @@ public async Task<IActionResult> GetProductos()
 }
 ```
 
-### 23.6.3. Performance Profiling
+### 23.6.3. Performance profiling
 
 MiniProfiler muestra en tiempo real las consultas SQL, el tiempo de ejecución y los problemas de rendimiento.
 
@@ -1135,7 +1135,7 @@ dotnet add package Microsoft.Extensions.Http.Polly
 dotnet add package Polly
 ```
 
-### Retry Policy
+### Retry policy
 
 Reintenta una operación cuando falla por un fallo transitorio (timeout de red, servicio temporalmente no disponible):
 
@@ -1163,7 +1163,7 @@ var resultado = await retryPolicy.ExecuteAsync(async () =>
 });
 ```
 
-### Circuit Breaker
+### Circuit breaker
 
 Corta las llamadas a un servicio cuando detecta fallos repetidos, evitando sobrecargar un servicio caído:
 
@@ -1236,7 +1236,7 @@ builder.Services.AddHttpClient("Externo")
 
 > 💡 **Consejo:** Empieza con Retry + Timeout. Si tu API depende de servicios críticos (pagos, notificaciones), añade Circuit Breaker.
 
-## 23.8. Buenas Prácticas
+## 23.8. Buenas prácticas
 
 Aplica estas prácticas para mantener tu API optimizada:
 
@@ -1251,7 +1251,7 @@ Aplica estas prácticas para mantener tu API optimizada:
 - **Parallel execution:** Usa `Task.WhenAll` para ejecutar operaciones independientes en paralelo
 - **Transacciones cortas:** Mantén las transacciones de base de datos lo más breves posible
 
-## 23.9. Testing de Rendimiento
+## 23.9. Testing de rendimiento
 
 Optimizar sin testear es como correr sin medir tiempos. Necesitas verificar que tus optimizaciones realmente mejoran el rendimiento.
 
@@ -1334,7 +1334,7 @@ public class ProductoPerformanceTests
 
 > 💡 **Consejo:** Usa `BenchmarkDotNet` para benchmarks precisos. Los tests de rendimiento con `Stopwatch` son útiles para comparaciones rápidas, pero BenchmarkDotNet genera estadísticas completas.
 
-## 23.10. Reto: Optimiza tu FunkoApp
+## 23.10. Reto: optimiza tu FunkoApp
 
 > Antes de irte, aplica las optimizaciones a tu FunkoApp. No todo a la vez: prioriza según el impacto.
 

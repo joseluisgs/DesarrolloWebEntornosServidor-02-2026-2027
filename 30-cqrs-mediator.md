@@ -1,54 +1,54 @@
 - [30. CQRS y MediatR](#30-cqrs-y-mediatr)
   - [30.1. ¿Qué es CQRS?](#301-qué-es-cqrs)
-    - [30.1.1. Nuestro dominio: Productos, Categorías y Proveedores](#3011-nuestro-dominio-productos-categorías-y-proveedores)
+    - [30.1.1. Nuestro dominio: productos, categorías y proveedores](#3011-nuestro-dominio-productos-categorías-y-proveedores)
     - [30.1.2. El problema tradicional](#3012-el-problema-tradicional)
     - [30.1.3. La solución CQRS](#3013-la-solución-cqrs)
     - [30.1.4. ¿Por qué separar escrituras y lecturas?](#3014-por-qué-separar-escrituras-y-lecturas)
-  - [30.2. Commands y Queries](#302-commands-y-queries)
-    - [30.2.1. Commands (Escrituras)](#3021-commands-escrituras)
-    - [30.2.2. Queries (Lecturas)](#3022-queries-lecturas)
-  - [30.3. SQL para Escrituras](#303-sql-para-escrituras)
+  - [30.2. Commands y queries](#302-commands-y-queries)
+    - [30.2.1. Commands (escrituras)](#3021-commands-escrituras)
+    - [30.2.2. Queries (lecturas)](#3022-queries-lecturas)
+  - [30.3. SQL para escrituras](#303-sql-para-escrituras)
     - [30.3.1. Modelo normalizado](#3031-modelo-normalizado)
-    - [30.3.2. Producto con Categoria y Proveedor](#3032-producto-con-categoria-y-proveedor)
-  - [30.4. MongoDB para Lecturas](#304-mongodb-para-lecturas)
+    - [30.3.2. Producto con categoria y proveedor](#3032-producto-con-categoria-y-proveedor)
+  - [30.4. MongoDB para lecturas](#304-mongodb-para-lecturas)
     - [30.4.1. Documentos denormalizados](#3041-documentos-denormalizados)
     - [30.4.2. Producto con relaciones embebidas](#3042-producto-con-relaciones-embebidas)
     - [30.4.3. Otras opciones para lecturas](#3043-otras-opciones-para-lecturas)
-  - [30.5. Consistencia Eventual](#305-consistencia-eventual)
+  - [30.5. Consistencia eventual](#305-consistencia-eventual)
     - [30.5.1. Qué es la consistencia eventual](#3051-qué-es-la-consistencia-eventual)
     - [30.5.2. Ventana de inconsistencia](#3052-ventana-de-inconsistencia)
     - [30.5.3. Cómo manejarla](#3053-cómo-manejarla)
-    - [30.5.4. Diagrama: Ciclo completo con timestamps](#3054-diagrama-ciclo-completo-con-timestamps)
-    - [30.5.5. Diagrama: Lectura durante la ventana de inconsistencia](#3055-diagrama-lectura-durante-la-ventana-de-inconsistencia)
-    - [30.5.6. Diagrama: Polling vs Domain Events](#3056-diagrama-polling-vs-domain-events)
-    - [30.5.7. Diagrama: Manejo de errores en sincronización](#3057-diagrama-manejo-de-errores-en-sincronización)
+    - [30.5.4. Diagrama: ciclo completo con timestamps](#3054-diagrama-ciclo-completo-con-timestamps)
+    - [30.5.5. Diagrama: lectura durante la ventana de inconsistencia](#3055-diagrama-lectura-durante-la-ventana-de-inconsistencia)
+    - [30.5.6. Diagrama: polling vs domain events](#3056-diagrama-polling-vs-domain-events)
+    - [30.5.7. Diagrama: manejo de errores en sincronización](#3057-diagrama-manejo-de-errores-en-sincronización)
   - [30.6. Sincronización SQL a MongoDB](#306-sincronización-sql-a-mongodb)
-    - [30.6.1. El problema: ¿Qué pasa si sincronizamos TODO?](#3061-el-problema-qué-pasa-si-sincronizamos-todo)
-    - [30.6.2. Enfoque 1: Sync Completo (NO recomendado)](#3062-enfoque-1-sync-completo-no-recomendado)
-    - [30.6.3. Enfoque 2: Sync Incremental](#3063-enfoque-2-sync-incremental)
-    - [30.6.4. Enfoque 3: Domain Events (Ideal)](#3064-enfoque-3-domain-events-ideal)
-    - [30.6.5. Enfoque 4: CDC (Profesional)](#3065-enfoque-4-cdc-profesional)
-    - [30.6.6. Enfoque 5: RX.NET con Observables](#3066-enfoque-5-rxnet-con-observables)
+    - [30.6.1. El problema: ¿qué pasa si sincronizamos TODO?](#3061-el-problema-qué-pasa-si-sincronizamos-todo)
+    - [30.6.2. Enfoque 1: sync completo (NO recomendado)](#3062-enfoque-1-sync-completo-no-recomendado)
+    - [30.6.3. Enfoque 2: sync incremental](#3063-enfoque-2-sync-incremental)
+    - [30.6.4. Enfoque 3: domain events (ideal)](#3064-enfoque-3-domain-events-ideal)
+    - [30.6.5. Enfoque 4: CDC (profesional)](#3065-enfoque-4-cdc-profesional)
+    - [30.6.6. Enfoque 5: RX.NET con observables](#3066-enfoque-5-rxnet-con-observables)
     - [30.6.7. Comparativa](#3067-comparativa)
-  - [30.7. Ventajas y Desventajas](#307-ventajas-y-desventajas)
+  - [30.7. Ventajas y desventajas](#307-ventajas-y-desventajas)
   - [30.8. Kafka: la opcion profesional](#308-kafka-la-opcion-profesional)
-    - [30.8.1. ¿Qué es Kafka?](#3081-qué-es-kafka)
-    - [30.8.2. ¿Qué es Debezium (CDC)?](#3082-qué-es-debezium-cdc)
-    - [30.8.3. Flujo completo: PostgreSQL a Kafka a MongoDB](#3083-flujo-completo-postgresql-a-kafka-a-mongodb)
-    - [30.8.4. Ventajas y desventajas de Kafka](#3084-ventajas-y-desventajas-de-kafka)
-  - [30.9. MediatR: Implementando CQRS](#309-mediatr-implementando-cqrs)
+    - [30.8.1. ¿Qué es kafka?](#3081-qué-es-kafka)
+    - [30.8.2. ¿Qué es debezium (CDC)?](#3082-qué-es-debezium-cdc)
+    - [30.8.3. Flujo completo: PostgreSQL a kafka a MongoDB](#3083-flujo-completo-postgresql-a-kafka-a-mongodb)
+    - [30.8.4. Ventajas y desventajas de kafka](#3084-ventajas-y-desventajas-de-kafka)
+  - [30.9. MediatR: implementando CQRS](#309-mediatr-implementando-cqrs)
     - [30.9.1. ¿Qué es MediatR?](#3091-qué-es-mediatr)
     - [30.9.2. Commands con MediatR](#3092-commands-con-mediatr)
     - [30.9.3. Queries con MediatR](#3093-queries-con-mediatr)
-    - [30.9.4. Pipeline Behaviors](#3094-pipeline-behaviors)
-    - [30.9.5. Diagrama: Flujo completo de Commands y Queries](#3095-diagrama-flujo-completo-de-commands-y-queries)
+    - [30.9.4. Pipeline behaviors](#3094-pipeline-behaviors)
+    - [30.9.5. Diagrama: flujo completo de commands y queries](#3095-diagrama-flujo-completo-de-commands-y-queries)
     - [30.9.6. GraphQL también pasa por MediatR](#3096-graphql-también-pasa-por-mediatr)
-  - [30.10. Sincronización con Domain Events y MediatR](#3010-sincronización-con-domain-events-y-mediatr)
+  - [30.10. Sincronización con domain events y MediatR](#3010-sincronización-con-domain-events-y-mediatr)
     - [30.10.1. La idea clave: ya tienes los datos en memoria](#30101-la-idea-clave-ya-tienes-los-datos-en-memoria)
     - [30.10.2. Código de ejemplo](#30102-código-de-ejemplo)
     - [30.10.3. Ventajas de este enfoque](#30103-ventajas-de-este-enfoque)
   - [30.11. Testing de CQRS](#3011-testing-de-cqrs)
-  - [30.12. Buenas Prácticas](#3012-buenas-prácticas)
+  - [30.12. Buenas prácticas](#3012-buenas-prácticas)
   - [30.13. Reto](#3013-reto)
 
 
@@ -72,7 +72,7 @@ En este punto aprenderás a separar Commands de Queries, usar PostgreSQL para es
 
 📌 Ejemplo real: **Amazon** usa CQRS. Las escrituras van a una base de datos relacional optimizada para transacciones, pero las lecturas (búsqueda de productos, catálogos) van a un sistema optimizado para búsquedas rápidas como Elasticsearch. Cada una tiene su propia base de datos.
 
-### 30.1.1. Nuestro dominio: Productos, Categorías y Proveedores
+### 30.1.1. Nuestro dominio: productos, categorías y proveedores
 
 Vamos a usar un ejemplo concreto para entender CQRS. Imagina una tienda online con estos datos:
 
@@ -244,8 +244,8 @@ flowchart TD
 
     TRADICIONAL --> PROBLEMAS
 
-    style TRADICIONAL fill:#f44336,color:#fff
-    style PROBLEMAS fill:#f44336,color:#fff
+    style TRADICIONAL fill:#f4433,color:#fff6,color:#fff
+    style PROBLEMAS fill:#f4433,color:#fff6,color:#fff
 ```
 
 📌 Ejemplo real: **Netflix** tenía este problema. Sus consultas de catálogo (millones de series) eran lentas porque la misma BD manejaba escrituras de configuración. Al separar CQRS, las lecturas se volvieron 10x más rápidas.
@@ -276,8 +276,8 @@ flowchart TD
 
     CQRS --> VENTAJAS
 
-    style CQRS fill:#4CAF50,color:#fff
-    style VENTAJAS fill:#2196F3,color:#fff
+    style CQRS fill:#4CAF5,color:#fff0,color:#fff
+    style VENTAJAS fill:#2196F,color:#fff3,color:#fff
 ```
 
 📌 Ejemplo real: **LinkedIn** usa CQRS. Cuando actualizas tu perfil (escritura), va a PostgreSQL. Cuando alguien busca tu perfil (lectura), va a un sistema optimizado para búsquedas rápidas.
@@ -355,15 +355,15 @@ flowchart TD
 
     SOLO_SQL -->|"Problema: lento con muchos datos"| CQRS
 
-    style SOLO_SQL fill:#f44336,color:#fff
-    style CQRS fill:#4CAF50,color:#fff
+    style SOLO_SQL fill:#f4433,color:#fff6,color:#fff
+    style CQRS fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 > 📝 **Nota:** CQRS no es la solución para todo. Si tu API tiene 100 usuarios y 50 productos, la complejidad adicional no compensa. CQRS brilla cuando tienes **miles de lecturas por escritura** y necesitas **escalar las lecturas** independientemente.
 
-## 30.2. Commands y Queries
+## 30.2. Commands y queries
 
-### 30.2.1. Commands (Escrituras)
+### 30.2.1. Commands (escrituras)
 
 Un **Command** es una operación que modifica el estado del sistema. Siempre devuelve `true/false` o el objeto creado.
 
@@ -383,7 +383,7 @@ public record CreateProductoCommand(
 );
 ```
 
-### 30.2.2. Queries (Lecturas)
+### 30.2.2. Queries (lecturas)
 
 Una **Query** es una operación que lee datos sin modificarlos. Devuelve el objeto o una lista.
 
@@ -398,7 +398,7 @@ Una **Query** es una operación que lee datos sin modificarlos. Devuelve el obje
 public record SearchProductosQuery(string Termino);
 ```
 
-## 30.3. SQL para Escrituras
+## 30.3. SQL para escrituras
 
 ### 30.3.1. Modelo normalizado
 
@@ -427,7 +427,7 @@ erDiagram
 
 📌 Ejemplo real: **Amazon** almacena productos, categorías y proveedores en tablas separadas normalizadas. Cuando un proveedor cambia de nombre, solo se actualiza una fila en la tabla `Proveedores`.
 
-### 30.3.2. Producto con Categoria y Proveedor
+### 30.3.2. Producto con categoria y proveedor
 
 ```csharp
 // Modelo normalizado en PostgreSQL
@@ -475,7 +475,7 @@ public class Producto
 }
 ```
 
-## 30.4. MongoDB para Lecturas
+## 30.4. MongoDB para lecturas
 
 ### 30.4.1. Documentos denormalizados
 
@@ -563,7 +563,7 @@ MongoDB es solo **una opción**. También puedes usar:
 
 📌 Ejemplo real: **Netflix** usa MongoDB para el catálogo de contenido (documentos anidados con temporadas, episodios, actores) pero Elasticsearch para las búsquedas de texto.
 
-## 30.5. Consistencia Eventual
+## 30.5. Consistencia eventual
 
 ### 30.5.1. Qué es la consistencia eventual
 
@@ -637,7 +637,7 @@ return Ok(new {
 });
 ```
 
-### 30.5.4. Diagrama: Ciclo completo con timestamps
+### 30.5.4. Diagrama: ciclo completo con timestamps
 
 Este diagrama muestra el **ciclo de vida completo** de una operación CQRS con consistencia eventual, marcando cada instante de tiempo para que veas exactamente **dónde** ocurre la latencia:
 
@@ -689,7 +689,7 @@ sequenceDiagram
 | **Latencia de red** | Baja (mismos servidores) | Alta (servidores lejanos) |
 | ** Complejidad** | Media-Alta | Baja |
 
-### 30.5.5. Diagrama: Lectura durante la ventana de inconsistencia
+### 30.5.5. Diagrama: lectura durante la ventana de inconsistencia
 
 Este diagrama muestra **qué pasa exactamente** cuando un cliente lee datos **dentro** de la ventana de inconsistencia, y cómo el sistema maneja esa situación:
 
@@ -748,7 +748,7 @@ public record ProductoReadDto(
 //  respecto a las escrituras"
 ```
 
-### 30.5.6. Diagrama: Polling vs Domain Events
+### 30.5.6. Diagrama: polling vs domain events
 
 Compara visualmente **cuánto tiempo** tarda cada enfoque en sincronizar. La diferencia es abismal:
 
@@ -799,7 +799,7 @@ sequenceDiagram
 
 📌 Ejemplo real: **Twitter/X** usa Domain Events. Cuando publicas un tweet, aparece en el timeline de tus seguidores en menos de 1 segundo. Con polling, tardaría minutos.
 
-### 30.5.7. Diagrama: Manejo de errores en sincronización
+### 30.5.7. Diagrama: manejo de errores en sincronización
 
 ¿Qué pasa si la sincronización **falla**? Este diagrama muestra el flujo de reintentos y cómo se recupera el sistema:
 
@@ -893,7 +893,7 @@ El objetivo de la sincronización es **reducir la latencia** de la consistencia 
 
 La sincronización es el corazón de CQRS. Sin ella, las lecturas mostrarían datos obsoletos.
 
-### 30.6.1. El problema: ¿Qué pasa si sincronizamos TODO?
+### 30.6.1. El problema: ¿qué pasa si sincronizamos TODO?
 
 Si cada minuto leemos **todos** los productos de PostgreSQL, hacemos JOINs con Categorías y Proveedores, y reescribimos todo en MongoDB...
 
@@ -913,8 +913,8 @@ flowchart TD
 
     PROBLEMA --> CONSECUENCIAS
 
-    style PROBLEMA fill:#f44336,color:#fff
-    style CONSECUENCIAS fill:#f44336,color:#fff
+    style PROBLEMA fill:#f4433,color:#fff6,color:#fff
+    style CONSECUENCIAS fill:#f4433,color:#fff6,color:#fff
 ```
 
 📌 Ejemplo real: Si **Amazon** sincronizara todos sus millones de productos cada minuto, sus servidores de BD colapsarían en segundos.
@@ -927,7 +927,7 @@ flowchart TD
 | **Red** | Tráfico masivo entre servidores |
 | **Latencia** | La API se ralentiza durante la sync |
 
-### 30.6.2. Enfoque 1: Sync Completo (NO recomendado)
+### 30.6.2. Enfoque 1: sync completo (NO recomendado)
 
 Lee **todos** los registros, los transforma y los reescribe en MongoDB.
 
@@ -948,8 +948,8 @@ flowchart LR
     A["PostgreSQL\n10M registros"] -->|"Lee TODO"| B["Transformar"]
     B -->|"10M operaciones"| C["MongoDB"]
 
-    style A fill:#f44336,color:#fff
-    style C fill:#f44336,color:#fff
+    style A fill:#f4433,color:#fff6,color:#fff
+    style C fill:#f4433,color:#fff6,color:#fff
 ```
 
 | Pros | Contras |
@@ -958,7 +958,7 @@ flowchart LR
 | Siempre consistente | No escala con millones de registros |
 | Sin código adicional | Latencia de 1-5 minutos |
 
-### 30.6.3. Enfoque 2: Sync Incremental
+### 30.6.3. Enfoque 2: sync incremental
 
 Solo sincroniza los registros que **cambiaron** desde la última sync. Usa el campo `UpdatedAt` como marca de agua.
 
@@ -977,9 +977,9 @@ flowchart LR
     A["PostgreSQL\n10M registros"] -->|"Lee SOLO los que\ncambiaron"| B["3 registros"]
     B -->|"3 operaciones"| C["MongoDB"]
 
-    style A fill:#4CAF50,color:#fff
-    style B fill:#4CAF50,color:#fff
-    style C fill:#4CAF50,color:#fff
+    style A fill:#4CAF5,color:#fff0,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 | Pros | Contras |
@@ -988,7 +988,7 @@ flowchart LR
 | Eficiente en recursos | Latencia de 1 minuto |
 | Escala con millones de registros | Si nadie cambia nada, desperdicia una consulta |
 
-### 30.6.4. Enfoque 3: Domain Events (Ideal)
+### 30.6.4. Enfoque 3: domain events (ideal)
 
 Cuando se crea/modifica/borra, se publica un evento. No hay polling.
 
@@ -1008,10 +1008,10 @@ flowchart LR
     B -->|"Escucha"| C["SyncHandler"]
     C -->|"1 operación"| D["MongoDB"]
 
-    style A fill:#2196F3,color:#fff
-    style B fill:#FF9800,color:#fff
-    style C fill:#9C27B0,color:#fff
-    style D fill:#4CAF50,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#FF980,color:#fff0,color:#fff
+    style C fill:#9C27B,color:#fff0,color:#fff
+    style D fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 | Pros | Contras |
@@ -1020,7 +1020,7 @@ flowchart LR
 | No desperdicia recursos | Necesita patrón de eventos |
 | Escala perfectamente | Complejidad adicional |
 
-### 30.6.5. Enfoque 4: CDC (Profesional)
+### 30.6.5. Enfoque 4: CDC (profesional)
 
 Change Data Capture captura cambios a nivel de base de datos con Kafka + Debezium.
 
@@ -1060,7 +1060,7 @@ sequenceDiagram
 | Escalable | Complejo de configurar |
 | No necesita código | Coste de infraestructura |
 
-### 30.6.6. Enfoque 5: RX.NET con Observables
+### 30.6.6. Enfoque 5: RX.NET con observables
 
 Usa programación reactiva para escuchar cambios en tiempo real. Cuando se produce un cambio, se notifica inmediatamente.
 
@@ -1082,11 +1082,11 @@ flowchart LR
     C -->|"Lee 1 producto"| D["PostgreSQL"]
     D -->|"1 operación"| E["MongoDB"]
 
-    style A fill:#2196F3,color:#fff
-    style B fill:#FF9800,color:#fff
-    style C fill:#9C27B0,color:#fff
-    style D fill:#f44336,color:#fff
-    style E fill:#4CAF50,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#FF980,color:#fff0,color:#fff
+    style C fill:#9C27B,color:#fff0,color:#fff
+    style D fill:#f4433,color:#fff6,color:#fff
+    style E fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 | Pros | Contras |
@@ -1107,7 +1107,7 @@ flowchart LR
 
 > 📝 **Nota:** Cada enfoque tiene sus ventajas y desventajas. Elige según la escala y complejidad de tu aplicación.
 
-## 30.7. Ventajas y Desventajas
+## 30.7. Ventajas y desventajas
 
 | Ventaja | Desventaja |
 |---------|------------|
@@ -1120,7 +1120,7 @@ flowchart LR
 
 **Apache Kafka** es un sistema de streaming de eventos usado en producción para sincronizar datos entre sistemas. En lugar de polling, Kafka recibe eventos de cambios y los propaga a los consumidores.
 
-### 30.8.1. ¿Qué es Kafka?
+### 30.8.1. ¿Qué es kafka?
 
 Kafka es como una **cola de mensajes distribuida**. Cuando algo cambia en PostgreSQL, Kafka recibe un mensaje y lo propaga a todos los sistemas que estén escuchando.
 
@@ -1143,14 +1143,14 @@ flowchart LR
         D --> I[Cache Redis]
     end
 
-    style PRODUCIDOR fill:#2196F3,color:#fff
-    style KAFKA fill:#FF9800,color:#fff
-    style CONSUMIDORES fill:#4CAF50,color:#fff
+    style PRODUCIDOR fill:#2196F,color:#fff3,color:#fff
+    style KAFKA fill:#FF980,color:#fff0,color:#fff
+    style CONSUMIDORES fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 📌 Ejemplo real: **LinkedIn** usa Kafka para sincronizar datos entre cientos de microservicios. Cuando actualizas tu perfil, el evento viaja por Kafka y actualiza ElasticSearch, caches y sistemas de recomendación.
 
-### 30.8.2. ¿Qué es Debezium (CDC)?
+### 30.8.2. ¿Qué es debezium (CDC)?
 
 **Debezium** es una herramienta de **Change Data Capture** que lee el **WAL** (Write-Ahead Log) de PostgreSQL en tiempo real.
 
@@ -1173,7 +1173,7 @@ sequenceDiagram
 
 📌 Ejemplo real: **Amazon** usa Debezium para capturar cambios en sus bases de datos de productos. Cada vez que un vendedor actualiza un precio, Debezium lo detecta y propaga el cambio a sistemas de búsqueda y caché.
 
-### 30.8.3. Flujo completo: PostgreSQL a Kafka a MongoDB
+### 30.8.3. Flujo completo: PostgreSQL a kafka a MongoDB
 
 ```mermaid
 flowchart LR
@@ -1192,12 +1192,12 @@ flowchart LR
         F -->|Transforma| G[(MongoDB)]
     end
 
-    style ORIGEN fill:#2196F3,color:#fff
-    style CAPTURA fill:#FF9800,color:#fff
-    style DESTINO fill:#4CAF50,color:#fff
+    style ORIGEN fill:#2196F,color:#fff3,color:#fff
+    style CAPTURA fill:#FF980,color:#fff0,color:#fff
+    style DESTINO fill:#4CAF5,color:#fff0,color:#fff
 ```
 
-### 30.8.4. Ventajas y desventajas de Kafka
+### 30.8.4. Ventajas y desventajas de kafka
 
 | Ventaja | Desventaja |
 |---------|------------|
@@ -1209,7 +1209,7 @@ flowchart LR
 
 > 📝 **Nota:** Kafka es una herramienta profesional. Para aprender, primero domina los conceptos de CQRS con las opciones más simples.
 
-## 30.9. MediatR: Implementando CQRS
+## 30.9. MediatR: implementando CQRS
 
 ### 30.9.1. ¿Qué es MediatR?
 
@@ -1230,8 +1230,8 @@ flowchart LR
         F -->|accede| G[Repository]
     end
 
-    style TRADICIONAL fill:#f44336,color:#fff
-    style CON_MEDIATR fill:#4CAF50,color:#fff
+    style TRADICIONAL fill:#f4433,color:#fff6,color:#fff
+    style CON_MEDIATR fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 **Instalación:**
@@ -1388,7 +1388,7 @@ public class SearchProductosHandler(
 }
 ```
 
-### 30.9.4. Pipeline Behaviors
+### 30.9.4. Pipeline behaviors
 
 Los **Behaviors** son middleware que se ejecutan antes/después de cada handler. Útiles para logging, validación, caching, etc.
 
@@ -1414,7 +1414,7 @@ public class LoggingBehavior<TRequest, TResponse>(
 
 📌 Ejemplo real: **Uber** usa behaviors para validar que el conductor tenga licencia antes de procesar un viaje. El behavior se ejecuta antes del handler y verifica los permisos.
 
-### 30.9.5. Diagrama: Flujo completo de Commands y Queries
+### 30.9.5. Diagrama: flujo completo de commands y queries
 
 Este diagrama muestra **todos los dominios** fluyendo a través de MediatR: Commands (Create, Update, Delete), Queries (GetAll, GetById) y la sincronización a MongoDB vía Domain Events. Observa cómo cada uno recorre el **pipeline completo** con Behaviors intercalados:
 
@@ -1562,13 +1562,13 @@ public class TiendaQuery
 | Cambias la regla de negocio en un sitio y GraphQL no se entera | Un único sitio que cambiar |
 | Los tests de GraphQL prueban otra cosa | Los tests de GraphQL prueban el mismo handler |
 
-> 📝 **Nota:** Fíjate en el `[Service] IMediator mediator` de la firma: HotChocolate inyecta el mediator **por resolver**, sin necesidad de constructor. Y el patrón de errores —`if (result.IsFailure) throw ...`— es el puente entre el `Result` funcional que devuelven los Handlers y el modelo de excepciones que GraphQL entiende.
+> 📝 **Nota:** Fíjate en el `[Service] IMediator mediator` de la firma: HotChocolate inyecta el mediator **por resolver**, sin necesidad de constructor. Y el patrón de errores (`if (result.IsFailure) throw ...`) es el puente entre el `Result` funcional que devuelven los Handlers y el modelo de excepciones que GraphQL entiende.
 
 📌 **Ejemplo real:** en TiendaAPI (repo CQRS/MediatR) el commit *feat: GraphQL queries pasan por MediatR (CQRS consistente con REST)* creó `GetAllProductosListQuery` y `GetAllCategoriasListQuery` y reescribió `TiendaQuery` para que todo pasara por `IMediator.Send`; los tests se adaptaron en el commit siguiente (*fix: tests GraphQL actualizados para usar IMediator*). CQRS es una **disciplina, no un detalle de transporte**: REST y GraphQL son dos ventanas a la misma caja.
 
 > 💡 **Consejo:** Si tu GraphQL llama directamente a los servicios (`[Service] IProductoService service`), tienes **dos arquitecturas viviendo en el mismo proyecto**. Pasa las queries por MediatR **antes** de que el esquema crezca: una vez que los resolvers cuelgan de los Handlers, no hay vuelta atrás sin reescribir.
 
-## 30.10. Sincronización con Domain Events y MediatR
+## 30.10. Sincronización con domain events y MediatR
 
 En la sección 30.6 vimos que los Domain Events son una opción para sincronizar. Ahora veamos cómo implementarlos con MediatR, que ya usamos para CQRS.
 
@@ -1770,7 +1770,7 @@ public class ProductoCqrsTests
 }
 ```
 
-## 30.12. Buenas Prácticas
+## 30.12. Buenas prácticas
 
 > ⚠️ **Advertencia — CQRS no es la solución para todo**
 

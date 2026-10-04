@@ -1,6 +1,6 @@
-- [9. Configuración y Logging](#9-configuración-y-logging)
+- [9. Configuración y logging](#9-configuración-y-logging)
   - [9.1. Configuración en ASP.NET Core](#91-configuración-en-aspnet-core)
-    - [9.1.1. appsettings.json](#911-appsettingsjson)
+    - [9.1.1. Appsettings.json](#911-appsettingsjson)
     - [9.1.2. Perfiles de entorno (Development vs Production)](#912-perfiles-de-entorno-development-vs-production)
     - [9.1.3. Variables de entorno](#913-variables-de-entorno)
     - [9.1.4. Leyendo configuración en código](#914-leyendo-configuración-en-código)
@@ -18,7 +18,7 @@
 
 
 
-# 9. Configuración y Logging
+# 9. Configuración y logging
 
 > 💡 **Punto de partida:** ¿Qué pasaría si cada vez que cambias la contraseña de la base de datos tuvieras que recompilar toda la aplicación? ¿Y si pudieras ver en tiempo real qué está haciendo tu servidor? La configuración y el logging son los dos pilares que hacen que una aplicación sea flexible y observable.
 
@@ -32,7 +32,7 @@ En este punto aprenderás a configurar tu aplicación para distintos entornos (d
 
 ## 9.1. Configuración en ASP.NET Core
 
-### 9.1.1. appsettings.json
+### 9.1.1. Appsettings.json
 
 ASP.NET Core usa ficheros JSON para la configuración. El fichero principal es `appsettings.json`:
 
@@ -160,7 +160,7 @@ if (string.IsNullOrEmpty(connectionString))
 
 📌 **Ejemplo real:** en TiendaAPI el commit *fix: fail-fast en producción — credenciales BD/Mongo/Redis obligatorias (fallback solo en dev)* reescribió `AddDatabases` y `AddCache` con este mismo patrón: **tres** excepciones `InvalidOperationException` (PostgreSQL, MongoDB y Redis) que saltan al arrancar si falta la configuración.
 
-> 📝 **Nota:** Se llama *fail-fast* («fallar rápido») porque el error aparece en el **primer segundo** de vida de la aplicación, justo cuando el orquestador puede verlo y reiniciar con la configuración corregida. La alternativa —el `??` silencioso— produce una app que **arranca en verde** y empieza a escupir `Connection refused` con la primera petición real, a las 3 de la mañana, con nadie mirando.
+> 📝 **Nota:** Se llama *fail-fast* («fallar rápido») porque el error aparece en el **primer segundo** de vida de la aplicación, justo cuando el orquestador puede verlo y reiniciar con la configuración corregida. La alternativa (el `??` silencioso) produce una app que **arranca en verde** y empieza a escupir `Connection refused` con la primera petición real, a las 3 de la mañana, con nadie mirando.
 
 > 💡 **Analogía:** Es como revisar las llaves antes de salir de casa. Si te das cuenta en la puerta, vuelves y las coges (2 segundos). Si no te das cuenta hasta llegar al coche y arrancar, descubrirás el problema en el barrio de destino... o peor: el coche arranca igualmente (llega a intentar conectar) y el fallo real aparece cuando ya no puedes volver.
 
@@ -229,12 +229,12 @@ flowchart TD
     E --> H["Valor tipado"]
     F --> I["Objeto/Array"]
 
-    style A fill:#2196F3,color:#fff
-    style B fill:#FF9800,color:#fff
-    style C fill:#4CAF50,color:#fff
-    style D fill:#4CAF50,color:#fff
-    style E fill:#4CAF50,color:#fff
-    style F fill:#4CAF50,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#FF980,color:#fff0,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#4CAF5,color:#fff0,color:#fff
+    style E fill:#4CAF5,color:#fff0,color:#fff
+    style F fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 ## 9.2. Logging en ASP.NET Core
@@ -286,12 +286,12 @@ flowchart LR
     I --> W["Warning"]
     W --> E["Error"]
     E --> F["Critical"]
-    style T fill:#607D8B,color:#fff
-    style D fill:#2196F3,color:#fff
-    style I fill:#4CAF50,color:#fff
-    style W fill:#FF9800,color:#fff
-    style E fill:#f44336,color:#fff
-    style F fill:#9C27B0,color:#fff
+    style T fill:#607D8,color:#fffB,color:#fff
+    style D fill:#2196F,color:#fff3,color:#fff
+    style I fill:#4CAF5,color:#fff0,color:#fff
+    style W fill:#FF980,color:#fff0,color:#fff
+    style E fill:#f4433,color:#fff6,color:#fff
+    style F fill:#9C27B,color:#fff0,color:#fff
 ```
 
 ### 9.2.3. Configuración de niveles por categoría

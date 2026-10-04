@@ -1,38 +1,38 @@
-- [28. Testing de Servicios Web](#28-testing-de-servicios-web)
-  - [28.1. Conceptos Fundamentales](#281-conceptos-fundamentales)
-  - [28.2. Tipos de Tests](#282-tipos-de-tests)
-    - [28.2.1. Piramide de Testing](#2821-piramide-de-testing)
-    - [28.2.2. Test Unitario](#2822-test-unitario)
-    - [28.2.3. Test de Integracion](#2823-test-de-integracion)
+- [28. Testing de servicios web](#28-testing-de-servicios-web)
+  - [28.1. Conceptos fundamentales](#281-conceptos-fundamentales)
+  - [28.2. Tipos de tests](#282-tipos-de-tests)
+    - [28.2.1. Piramide de testing](#2821-piramide-de-testing)
+    - [28.2.2. Test unitario](#2822-test-unitario)
+    - [28.2.3. Test de integracion](#2823-test-de-integracion)
     - [28.2.4. Test E2E](#2824-test-e2e)
-  - [28.3. Frameworks de Testing en .NET](#283-frameworks-de-testing-en-net)
-  - [28.4. Estructura del Proyecto de Tests](#284-estructura-del-proyecto-de-tests)
+  - [28.3. Frameworks de testing en .NET](#283-frameworks-de-testing-en-net)
+  - [28.4. Estructura del proyecto de tests](#284-estructura-del-proyecto-de-tests)
   - [28.5. Patron AAA (Arrange-Act-Assert)](#285-patron-aaa-arrange-act-assert)
-  - [28.6. NUnit Basics](#286-nunit-basics)
-    - [28.6.1. Atributos Principales](#2861-atributos-principales)
-    - [28.6.2. Ejemplo Completo](#2862-ejemplo-completo)
-    - [28.6.3. Organización con Inner Classes](#2863-organización-con-inner-classes)
+  - [28.6. NUnit basics](#286-nunit-basics)
+    - [28.6.1. Atributos principales](#2861-atributos-principales)
+    - [28.6.2. Ejemplo completo](#2862-ejemplo-completo)
+    - [28.6.3. Organización con inner classes](#2863-organización-con-inner-classes)
   - [28.7. FluentAssertions](#287-fluentassertions)
-  - [28.8. Moq - Creando Mocks](#288-moq---creando-mocks)
-    - [28.8.1. Configurar Comportamiento con Setup](#2881-configurar-comportamiento-con-setup)
-    - [28.8.2. Tipos de Setup](#2882-tipos-de-setup)
-    - [28.8.3. Verify - Verificar Interacciones](#2883-verify---verificar-interacciones)
+  - [28.8. Moq - creando mocks](#288-moq---creando-mocks)
+    - [28.8.1. Configurar comportamiento con setup](#2881-configurar-comportamiento-con-setup)
+    - [28.8.2. Tipos de setup](#2882-tipos-de-setup)
+    - [28.8.3. Verify - verificar interacciones](#2883-verify---verificar-interacciones)
   - [28.9. Testcontainers](#289-testcontainers)
     - [28.9.1. Optimización: un contenedor por assembly](#2891-optimización-un-contenedor-por-assembly)
-  - [28.10. Tests de Controladores con WebApplicationFactory](#2810-tests-de-controladores-con-webapplicationfactory)
+  - [28.10. Tests de controladores con WebApplicationFactory](#2810-tests-de-controladores-con-webapplicationfactory)
     - [28.10.1. Tests de la forma de los errores](#28101-tests-de-la-forma-de-los-errores)
   - [28.11. Tests de contrato: OpenAPI](#2811-tests-de-contrato-openapi)
     - [28.11.1. Cambios que rompen el contrato](#28111-cambios-que-rompen-el-contrato)
     - [28.11.2. Tu primer test de contrato](#28112-tu-primer-test-de-contrato)
     - [28.11.3. ¿Dónde encaja en la pirámide?](#28113-dónde-encaja-en-la-pirámide)
-  - [28.12. Tests en Paralelo vs Secuenciales](#2812-tests-en-paralelo-vs-secuenciales)
-  - [28.13. Comandos Utiles](#2813-comandos-utiles)
-  - [28.14. Buenas Practicas](#2814-buenas-practicas)
-  - [28.15. Reto: Tests para FunkoApp](#2815-reto-tests-para-funkoapp)
+  - [28.12. Tests en paralelo vs secuenciales](#2812-tests-en-paralelo-vs-secuenciales)
+  - [28.13. Comandos utiles](#2813-comandos-utiles)
+  - [28.14. Buenas practicas](#2814-buenas-practicas)
+  - [28.15. Reto: tests para FunkoApp](#2815-reto-tests-para-funkoapp)
 
 
 
-# 28. Testing de Servicios Web
+# 28. Testing de servicios web
 
 > 💡 **Punto de partida:** ¿Cómo sabes que tu código funciona correctamente? ¿Y cómo verificas que los cambios no rompen funcionalidades existentes? Los tests automatizados son la respuesta: ejecutan tu código de forma controlada y detectan errores antes de que lleguen a producción.
 
@@ -44,7 +44,7 @@ En este punto aprenderás a escribir tests unitarios con NUnit, usar FluentAsser
 - Implementar tests de integracion con Testcontainers y WebApplicationFactory
 - Configurar paralelismo y medir cobertura de codigo
 
-## 28.1. Conceptos Fundamentales
+## 28.1. Conceptos fundamentales
 
 **Testing** es el proceso de verificar que el codigo funciona correctamente. En lugar de esperar que los usuarios encuentren errores, los tests automatizados detectan problemas antes de llegar a produccion.
 
@@ -57,18 +57,18 @@ En este punto aprenderás a escribir tests unitarios con NUnit, usar FluentAsser
 | Regresiones no detectadas | Tests regresivos automaticos |
 | Deploys arriesgados | Confianza en el codigo |
 
-## 28.2. Tipos de Tests
+## 28.2. Tipos de tests
 
-### 28.2.1. Piramide de Testing
+### 28.2.1. Piramide de testing
 
 ```mermaid
 flowchart TD
     A["E2E Tests (Punta - Pocos)"] --> B["Integration Tests (Medio)"]
     B --> C["Unit Tests (Base - Muchos)"]
 
-    style A fill:#9C27B0,color:#fff
-    style B fill:#FF9800,color:#fff
-    style C fill:#4CAF50,color:#fff
+    style A fill:#9C27B,color:#fff0,color:#fff
+    style B fill:#FF980,color:#fff0,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 | Tipo | Que testea | Velocidad | Aislamiento | Cantidad |
@@ -77,11 +77,11 @@ flowchart TD
 | **Integration** | Multiples componentes juntos | Medio (~s) | Medio | Medio |
 | **E2E** | Flujo completo de usuario | Lento (~min) | Bajo | Pocos |
 
-### 28.2.2. Test Unitario
+### 28.2.2. Test unitario
 
 Un test unitario verifica que una **unica unidad** de codigo funciona correctamente. Un buen test unitario es rapido, aislado, determinista e independiente.
 
-### 28.2.3. Test de Integracion
+### 28.2.3. Test de integracion
 
 Los tests de integracion prueban multiples componentes trabajando juntos, generalmente con bases de datos reales o servicios externos en contenedores Docker.
 
@@ -89,7 +89,7 @@ Los tests de integracion prueban multiples componentes trabajando juntos, genera
 
 Los tests End-to-End simulan un usuario real, probando la aplicacion completa desde la interfaz hasta la base de datos.
 
-## 28.3. Frameworks de Testing en .NET
+## 28.3. Frameworks de testing en .NET
 
 | Framework | Caracteristicas |
 |-----------|-----------------|
@@ -107,7 +107,7 @@ En este proyecto usamos **NUnit** por su sintaxis clara y atributos descriptivos
 | **Testcontainers** | Contenedores Docker para tests de integracion |
 | **coverlet** | Medir cobertura de codigo |
 
-## 28.4. Estructura del Proyecto de Tests
+## 28.4. Estructura del proyecto de tests
 
 ```
 FunkoApp.Tests/
@@ -202,9 +202,9 @@ public class FunkoServiceTests
 }
 ```
 
-## 28.6. NUnit Basics
+## 28.6. NUnit basics
 
-### 28.6.1. Atributos Principales
+### 28.6.1. Atributos principales
 
 | Atributo | Proposito | Ejemplo |
 |----------|-----------|---------|
@@ -215,7 +215,7 @@ public class FunkoServiceTests
 | `[OneTimeSetUp]` | Una vez antes de todos | `OneTimeSetUp() {}` |
 | `[Category]` | Categorizar tests | `[Category("Slow")]` |
 
-### 28.6.2. Ejemplo Completo
+### 28.6.2. Ejemplo completo
 
 ```csharp
 [TestFixture]
@@ -264,7 +264,7 @@ public class FunkoServiceTests
 }
 ```
 
-### 28.6.3. Organización con Inner Classes
+### 28.6.3. Organización con inner classes
 
 Separa los casos válidos e inválidos con **inner classes** para que la suite sea más legible:
 
@@ -354,11 +354,11 @@ public class FluentAssertionsExamples
 
 📌 **Ejemplo real:** FluentAssertions es como hablar en espanol en vez de un lenguaje tecnico cryptico. `resultado.Should().Be(42)` es mucho mas legible que `Assert.AreEqual(42, resultado)`.
 
-## 28.8. Moq - Creando Mocks
+## 28.8. Moq - creando mocks
 
 **Moq** permite crear objetos falsos (mocks) para aislar el codigo bajo test.
 
-### 28.8.1. Configurar Comportamiento con Setup
+### 28.8.1. Configurar comportamiento con setup
 
 ```csharp
 [TestFixture]
@@ -434,7 +434,7 @@ public class FunkoServiceMockTests
 }
 ```
 
-### 28.8.2. Tipos de Setup
+### 28.8.2. Tipos de setup
 
 ```csharp
 // Setup con valor fijo
@@ -458,7 +458,7 @@ _repositoryMock
     .ReturnsAsync(2);
 ```
 
-### 28.8.3. Verify - Verificar Interacciones
+### 28.8.3. Verify - verificar interacciones
 
 ```csharp
 // Verificar que se llamo una vez
@@ -670,7 +670,7 @@ public class ProductoServiceIntegrationTests
 
 > 💡 **Truco:** `DROP DATABASE ... WITH (FORCE)` (PostgreSQL 13+) es la clave: elimina las conexiones que un test anterior haya dejado abiertas, que si no bloquearían la creación de la siguiente BD. En MongoDB basta con `new MongoClient(cs).DropDatabase(nombre)`.
 
-## 28.10. Tests de Controladores con WebApplicationFactory
+## 28.10. Tests de controladores con WebApplicationFactory
 
 `WebApplicationFactory` crea un servidor en memoria para probar endpoints HTTP sin necesidad de un servidor real.
 
@@ -928,7 +928,7 @@ La pieza clave es el `process.exit(1)`: un test de contrato **solo sirve si su f
 | **Test de contrato** | Diff profundo entre dos `swagger.json` (o contra el versionado) |
 | **Gate real** | El script debe terminar con código ≠ 0 para fallar el CI |
 
-## 28.12. Tests en Paralelo vs Secuenciales
+## 28.12. Tests en paralelo vs secuenciales
 
 NUnit puede ejecutar tests en paralelo para acelerar el tiempo de ejecucion.
 
@@ -950,7 +950,7 @@ public class FunkoIntegrationTests { }
 | Tests que comparten base de datos | **Secuencial** | Evitar conflictos |
 | **Tests con Testcontainers** | **Limitado** | Cada contenedor es pesado |
 
-## 28.13. Comandos Utiles
+## 28.13. Comandos utiles
 
 ```bash
 # Ejecutar todos los tests
@@ -969,7 +969,7 @@ dotnet test --filter "FullyQualifiedName~FunkoServiceTests"
 dotnet test --filter "Category=Integration"
 ```
 
-## 28.14. Buenas Practicas
+## 28.14. Buenas practicas
 
 | Practica | Descripcion |
 |----------|-------------|
@@ -986,7 +986,7 @@ dotnet test --filter "Category=Integration"
 
 > ⚠️ **Advertencia:** No sobre-testear. Tests que testean el framework o la implementacion interna son fragiles y se rompen con cambios de refactorizacion. Testea el comportamiento, no la implementacion.
 
-## 28.15. Reto: Tests para FunkoApp
+## 28.15. Reto: tests para FunkoApp
 
 > Antes de irte, implementa una suite completa de tests para tu API de Funkos.
 

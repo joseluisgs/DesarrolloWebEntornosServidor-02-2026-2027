@@ -1,39 +1,39 @@
 - [18. WebSockets y SignalR](#18-websockets-y-signalr)
   - [18.1. Introducción](#181-introducción)
-    - [18.1.1. Qué es la Comunicación en Tiempo Real](#1811-qué-es-la-comunicación-en-tiempo-real)
+    - [18.1.1. Qué es la comunicación en tiempo real](#1811-qué-es-la-comunicación-en-tiempo-real)
     - [18.1.2. HTTP vs WebSocket](#1812-http-vs-websocket)
-    - [18.1.3. Casos de Uso](#1813-casos-de-uso)
-    - [18.1.4. El Handshake WebSocket](#1814-el-handshake-websocket)
+    - [18.1.3. Casos de uso](#1813-casos-de-uso)
+    - [18.1.4. El handshake WebSocket](#1814-el-handshake-websocket)
   - [18.2. WebSocket vs SignalR](#182-websocket-vs-signalr)
     - [18.2.1. Qué es SignalR](#1821-qué-es-signalr)
-    - [18.2.2. Cuándo Usar Cada Uno](#1822-cuándo-usar-cada-uno)
-  - [18.3. WebSocket Nativo en ASP.NET Core](#183-websocket-nativo-en-aspnet-core)
+    - [18.2.2. Cuándo usar cada uno](#1822-cuándo-usar-cada-uno)
+  - [18.3. WebSocket nativo en ASP.NET Core](#183-websocket-nativo-en-aspnet-core)
     - [18.3.1. Configuración](#1831-configuración)
     - [18.3.2. WebSocketConnectionManager](#1832-websocketconnectionmanager)
     - [18.3.3. WebSocketHandler](#1833-websockethandler)
-    - [18.3.4. Endpoint de Conexión](#1834-endpoint-de-conexión)
+    - [18.3.4. Endpoint de conexión](#1834-endpoint-de-conexión)
   - [18.4. SignalR en ASP.NET Core](#184-signalr-en-aspnet-core)
     - [18.4.1. Configuración](#1841-configuración)
-    - [18.4.2. Hub Básico](#1842-hub-básico)
-    - [18.4.3. Ciclo de Vida: OnConnectedAsync / OnDisconnectedAsync](#1843-ciclo-de-vida-onconnectedasync--ondisconnectedasync)
+    - [18.4.2. Hub básico](#1842-hub-básico)
+    - [18.4.3. Ciclo de vida: OnConnectedAsync / OnDisconnectedAsync](#1843-ciclo-de-vida-onconnectedasync--ondisconnectedasync)
   - [18.5. SignalR con Identity y JWT](#185-signalr-con-identity-y-jwt)
-    - [18.5.1. Protección de Hubs](#1851-protección-de-hubs)
-    - [18.5.2. Claims en el Hub](#1852-claims-en-el-hub)
+    - [18.5.1. Protección de hubs](#1851-protección-de-hubs)
+    - [18.5.2. Claims en el hub](#1852-claims-en-el-hub)
     - [18.5.3. Configuración JWT en SignalR](#1853-configuración-jwt-en-signalr)
-  - [18.6. Sistema de Grupos](#186-sistema-de-grupos)
-    - [18.6.1. Grupos por Usuario](#1861-grupos-por-usuario)
-    - [18.6.2. Grupos por Rol](#1862-grupos-por-rol)
-    - [18.6.3. Grupos Personalizados](#1863-grupos-personalizados)
-  - [18.7. IHubContext: Notificaciones desde Servicios](#187-ihubcontext-notificaciones-desde-servicios)
-    - [18.7.1. Patrón de Inyección](#1871-patrón-de-inyección)
-    - [18.7.2. Notificaciones Privadas vs Públicas](#1872-notificaciones-privadas-vs-públicas)
+  - [18.6. Sistema de grupos](#186-sistema-de-grupos)
+    - [18.6.1. Grupos por usuario](#1861-grupos-por-usuario)
+    - [18.6.2. Grupos por rol](#1862-grupos-por-rol)
+    - [18.6.3. Grupos personalizados](#1863-grupos-personalizados)
+  - [18.7. IHubContext: notificaciones desde servicios](#187-ihubcontext-notificaciones-desde-servicios)
+    - [18.7.1. Patrón de inyección](#1871-patrón-de-inyección)
+    - [18.7.2. Notificaciones privadas vs públicas](#1872-notificaciones-privadas-vs-públicas)
   - [18.8. Cliente JavaScript](#188-cliente-javascript)
-    - [18.8.1. Cliente SignalR Básico](#1881-cliente-signalr-básico)
+    - [18.8.1. Cliente SignalR básico](#1881-cliente-signalr-básico)
     - [18.8.2. Autenticación con JWT](#1882-autenticación-con-jwt)
-    - [18.8.3. Reconexión Automática](#1883-reconexión-automática)
+    - [18.8.3. Reconexión automática](#1883-reconexión-automática)
   - [18.9. Escalabilidad con Redis](#189-escalabilidad-con-redis)
   - [18.10. Seguridad](#1810-seguridad)
-  - [18.11. Buenas Prácticas](#1811-buenas-prácticas)
+  - [18.11. Buenas prácticas](#1811-buenas-prácticas)
   - [18.12. Testing](#1812-testing)
   - [18.13. Reto](#1813-reto)
 
@@ -51,7 +51,7 @@
 
 ## 18.1. Introducción
 
-### 18.1.1. Qué es la Comunicación en Tiempo Real
+### 18.1.1. Qué es la comunicación en tiempo real
 
 La **comunicacion en tiempo real** permite que el servidor envie datos a los clientes sin que estos lo soliciten. Elimina el patron request-response donde el cliente siempre inicia la comunicacion. Es fundamental para chat en vivo, dashboards de metricas, notificaciones push y aplicaciones colaborativas como Google Docs.
 
@@ -96,15 +96,15 @@ flowchart LR
         B2 -->|Push: nuevo dato| B1
     end
 
-    style A1 fill:#9C27B0,color:#fff
-    style A2 fill:#2196F3,color:#fff
-    style B1 fill:#9C27B0,color:#fff
-    style B2 fill:#4CAF50,color:#fff
+    style A1 fill:#9C27B,color:#fff0,color:#fff
+    style A2 fill:#2196F,color:#fff3,color:#fff
+    style B1 fill:#9C27B,color:#fff0,color:#fff
+    style B2 fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 > 💡 **Analogía:** HTTP es como llamar a un amigo cada vez que quieres saber algo. WebSocket es como tener una llamada telefonica abierta permanente: cualquiera de los dos puede hablar cuando quiera.
 
-### 18.1.3. Casos de Uso
+### 18.1.3. Casos de uso
 
 | Caso de uso | Ejemplo real | Tecnologia recomendada |
 |-------------|-------------|----------------------|
@@ -119,7 +119,7 @@ flowchart LR
 
 > 📝 **Nota:** Para la mayoria de casos de uso en aplicaciones web empresariales, **SignalR es la mejor eleccion**. WebSocket nativo solo es necesario en escenarios de rendimiento extremo (gaming, streaming de video en tiempo real).
 
-### 18.1.4. El Handshake WebSocket
+### 18.1.4. El handshake WebSocket
 
 La conexion WebSocket comienza con un **handshake** que parece una peticion HTTP normal pero incluye headers especiales para actualizar la conexion al protocolo WebSocket.
 
@@ -188,7 +188,7 @@ Una vez completado el handshake, la conexion queda abierta y ambos lados pueden 
 
 > 💡 **Analogía:** WebSocket nativo es como construir un coche desde cero: tienes control total sobre cada pieza pero necesitas saber mucho. SignalR es como comprar un coche ya hecho: funciona perfecto para la mayoria de usos y solo necesitas conducir.
 
-### 18.2.2. Cuándo Usar Cada Uno
+### 18.2.2. Cuándo usar cada uno
 
 | Escenario | Eleccion | Razon |
 |-----------|----------|-------|
@@ -200,7 +200,7 @@ Una vez completado el handshake, la conexion queda abierta y ambos lados pueden 
 
 > 💡 **Consejo:** Si no sabes cual elegir, usa **SignalR**. Solo considera WebSocket nativo si tienes requisitos de rendimiento extremo o necesitas control total sobre el protocolo.
 
-## 18.3. WebSocket Nativo en ASP.NET Core
+## 18.3. WebSocket nativo en ASP.NET Core
 
 > 📝 **Nota:** Esta seccion es informativa. En la practica, usa SignalR (seccion 18.4). La incluimos para que entiendas que hay detras de la abstraccion.
 
@@ -362,7 +362,7 @@ public class WebSocketHandler
 }
 ```
 
-### 18.3.4. Endpoint de Conexión
+### 18.3.4. Endpoint de conexión
 
 ```csharp
 app.Map("/ws", async (HttpContext context) =>
@@ -411,7 +411,7 @@ app.MapHub<ProductosHub>("/hubs/productos");
 app.Run();
 ```
 
-### 18.4.2. Hub Básico
+### 18.4.2. Hub básico
 
 Un **Hub** es la clase central de SignalR. Representa una conexion entre el cliente y el servidor. Los clientes llaman metodos del Hub, y el Hub puede enviar mensajes a clientes.
 
@@ -453,7 +453,7 @@ public class ProductosHub : Hub
 }
 ```
 
-### 18.4.3. Ciclo de Vida: OnConnectedAsync / OnDisconnectedAsync
+### 18.4.3. Ciclo de vida: OnConnectedAsync / OnDisconnectedAsync
 
 SignalR ejecuta automaticamente estos metodos cuando un cliente se conecta o desconecta. Es el lugar ideal para gestionar grupos:
 
@@ -506,7 +506,7 @@ public class ProductosHub : Hub
 
 ## 18.5. SignalR con Identity y JWT
 
-### 18.5.1. Protección de Hubs
+### 18.5.1. Protección de hubs
 
 Para que solo usuarios autenticados puedan conectarse al Hub, usa el atributo `[Authorize]`:
 
@@ -539,7 +539,7 @@ public class AdminHub : Hub
 }
 ```
 
-### 18.5.2. Claims en el Hub
+### 18.5.2. Claims en el hub
 
 Dentro del Hub, puedes acceder a los Claims del usuario a traves de `Context.User`:
 
@@ -639,11 +639,11 @@ app.MapHub<ProductosHub>("/hubs/productos");
 
 En el cliente JavaScript, el token se pasa via `accessTokenFactory` (lo veremos en la seccion 18.8).
 
-## 18.6. Sistema de Grupos
+## 18.6. Sistema de grupos
 
 Los **grupos** son la forma de enviar mensajes a subconjuntos de clientes conectados. En lugar de enviar a todos (`Clients.All`), puedes enviar solo a los que estan en un grupo concreto.
 
-### 18.6.1. Grupos por Usuario
+### 18.6.1. Grupos por usuario
 
 El patron mas comun: cada usuario tiene su grupo privado `user-{id}`.
 
@@ -680,7 +680,7 @@ public class PedidoService(IHubContext<NotificacionesHub> hubContext)
 }
 ```
 
-### 18.6.2. Grupos por Rol
+### 18.6.2. Grupos por rol
 
 ```csharp
 public override async Task OnConnectedAsync()
@@ -707,7 +707,7 @@ await hubContext.Clients
     .SendAsync("NuevoPedidoPendiente", new { pedido.Id });
 ```
 
-### 18.6.3. Grupos Personalizados
+### 18.6.3. Grupos personalizados
 
 Puedes crear grupos con cualquier nombre para escenarios especificos:
 
@@ -726,9 +726,9 @@ await Groups.AddToGroupAsync(Context.ConnectionId, "zona-madrid");
 | **Por recurso** | `producto-{id}` | Actualizaciones de un producto concreto |
 | **Por zona** | `zona-{nombre}` | Notificaciones geolocalizadas |
 
-## 18.7. IHubContext: Notificaciones desde Servicios
+## 18.7. IHubContext: notificaciones desde servicios
 
-### 18.7.1. Patrón de Inyección
+### 18.7.1. Patrón de inyección
 
 El Hub solo se ejecuta cuando un cliente llama a un metodo. Pero los servicios de negocio necesitan enviar notificaciones sin que haya una llamada del cliente. Para eso se usa `IHubContext<T>`:
 
@@ -763,7 +763,7 @@ public class PedidoService(
 
 > 📌 **Ejemplo real:** En **Amazon**, cuando un vendedor actualiza el stock de un producto, los clientes que tienen ese producto en su carrito reciben una notificacion instantanea. Eso es `IHubContext` en accion: el servicio de inventario notifica a traves del Hub sin que el cliente haya pedido nada.
 
-### 18.7.2. Notificaciones Privadas vs Públicas
+### 18.7.2. Notificaciones privadas vs públicas
 
 ```csharp
 // Privada: solo un usuario
@@ -789,7 +789,7 @@ await hubContext.Clients
 
 ## 18.8. Cliente JavaScript
 
-### 18.8.1. Cliente SignalR Básico
+### 18.8.1. Cliente SignalR básico
 
 SignalR proporciona una libreria de JavaScript para conectarse al Hub:
 
@@ -848,7 +848,7 @@ connection.start()
 </script>
 ```
 
-### 18.8.3. Reconexión Automática
+### 18.8.3. Reconexión automática
 
 SignalR reconecta automaticamente si la conexion se pierde. Configura los intervalos de reintento:
 
@@ -922,11 +922,11 @@ flowchart TB
     A2 <--> R1
     B2 <--> R1
 
-    style A1 fill:#9C27B0,color:#fff
-    style A2 fill:#2196F3,color:#fff
-    style B1 fill:#9C27B0,color:#fff
-    style B2 fill:#2196F3,color:#fff
-    style R1 fill:#f44336,color:#fff
+    style A1 fill:#9C27B,color:#fff0,color:#fff
+    style A2 fill:#2196F,color:#fff3,color:#fff
+    style B1 fill:#9C27B,color:#fff0,color:#fff
+    style B2 fill:#2196F,color:#fff3,color:#fff
+    style R1 fill:#f4433,color:#fff6,color:#fff
 ```
 
 Sin Redis, si el Cliente A esta en la Instancia 1 y el Cliente B en la Instancia 2, un mensaje enviado desde la Instancia 1 no llega al Cliente B. Redis actua como canal de comunicacion entre instancias.
@@ -1035,7 +1035,7 @@ public class ProductosWebSocketHandler(ILogger<ProductosWebSocketHandler> logger
 
 > ⚠️ **Advertencia:** Nunca confies en que el cliente envia datos validos. Siempre valida en el Hub, igual que lo harias en un Controller. Un usuario malicioso puede enviar cualquier cosa al Hub usando herramientas como la consola del navegador.
 
-## 18.11. Buenas Prácticas
+## 18.11. Buenas prácticas
 
 ```mermaid
 flowchart TB
@@ -1061,15 +1061,15 @@ flowchart TB
     S1 --> S2 --> S3
     E1 --> E2 --> E3
 
-    style A1 fill:#4CAF50,color:#fff
-    style A2 fill:#4CAF50,color:#fff
-    style A3 fill:#4CAF50,color:#fff
-    style S1 fill:#f44336,color:#fff
-    style S2 fill:#f44336,color:#fff
-    style S3 fill:#f44336,color:#fff
-    style E1 fill:#2196F3,color:#fff
-    style E2 fill:#2196F3,color:#fff
-    style E3 fill:#2196F3,color:#fff
+    style A1 fill:#4CAF5,color:#fff0,color:#fff
+    style A2 fill:#4CAF5,color:#fff0,color:#fff
+    style A3 fill:#4CAF5,color:#fff0,color:#fff
+    style S1 fill:#f4433,color:#fff6,color:#fff
+    style S2 fill:#f4433,color:#fff6,color:#fff
+    style S3 fill:#f4433,color:#fff6,color:#fff
+    style E1 fill:#2196F,color:#fff3,color:#fff
+    style E2 fill:#2196F,color:#fff3,color:#fff
+    style E3 fill:#2196F,color:#fff3,color:#fff
 ```
 
 | Practica | Descripcion |

@@ -4,13 +4,13 @@
     - [12.1.2. DbContext](#1212-dbcontext)
     - [12.1.3. Componentes del DbContext](#1213-componentes-del-dbcontext)
     - [12.1.4. Ventajas de EF Core](#1214-ventajas-de-ef-core)
-    - [12.1.5. Change Tracker](#1215-change-tracker)
-  - [12.2. Configuración Inicial](#122-configuración-inicial)
+    - [12.1.5. Change tracker](#1215-change-tracker)
+  - [12.2. Configuración inicial](#122-configuración-inicial)
     - [12.2.1. Paquetes NuGet](#1221-paquetes-nuget)
     - [12.2.2. Conexión](#1222-conexión)
     - [12.2.3. Registro del DbContext](#1223-registro-del-dbcontext)
-    - [12.2.4. EnsureCreated vs Migrate](#1224-ensurecreated-vs-migrate)
-  - [12.3. Data Annotations](#123-data-annotations)
+    - [12.2.4. EnsureCreated vs migrate](#1224-ensurecreated-vs-migrate)
+  - [12.3. Data annotations](#123-data-annotations)
     - [12.3.1. Atributos de columna](#1231-atributos-de-columna)
     - [12.3.2. Atributos de clave](#1232-atributos-de-clave)
     - [12.3.3. Atributos de tabla](#1233-atributos-de-tabla)
@@ -23,21 +23,21 @@
     - [12.4.3. Tablas y vistas](#1243-tablas-y-vistas)
     - [12.4.4. Relaciones](#1244-relaciones)
     - [12.4.5. IEntityTypeConfiguration](#1245-ientitytypeconfiguration)
-    - [12.4.6. Data Annotations vs Fluent API](#1246-data-annotations-vs-fluent-api)
+    - [12.4.6. Data annotations vs fluent API](#1246-data-annotations-vs-fluent-api)
   - [12.5. Relaciones](#125-relaciones)
-    - [12.5.1. Uno a Uno](#1251-uno-a-uno)
-    - [12.5.2. Uno a Muchos](#1252-uno-a-muchos)
-    - [12.5.3. Muchos a Muchos](#1253-muchos-a-muchos)
+    - [12.5.1. Uno a uno](#1251-uno-a-uno)
+    - [12.5.2. Uno a muchos](#1252-uno-a-muchos)
+    - [12.5.3. Muchos a muchos](#1253-muchos-a-muchos)
     - [12.5.4. Navegabilidad](#1254-navegabilidad)
     - [12.5.5. Cascada (DeleteBehavior)](#1255-cascada-deletebehavior)
-  - [12.6. Owned Types](#126-owned-types)
-  - [12.7. Value Converters](#127-value-converters)
-  - [12.8. Shadow Properties](#128-shadow-properties)
-  - [12.9. NotMapped y Propiedades Calculadas](#129-notmapped-y-propiedades-calculadas)
-  - [12.10. Carga de Datos](#1210-carga-de-datos)
-    - [12.10.1. Eager Loading](#12101-eager-loading)
-    - [12.10.2. Lazy Loading](#12102-lazy-loading)
-    - [12.10.3. Explicit Loading](#12103-explicit-loading)
+  - [12.6. Owned types](#126-owned-types)
+  - [12.7. Value converters](#127-value-converters)
+  - [12.8. Shadow properties](#128-shadow-properties)
+  - [12.9. NotMapped y propiedades calculadas](#129-notmapped-y-propiedades-calculadas)
+  - [12.10. Carga de datos](#1210-carga-de-datos)
+    - [12.10.1. Eager loading](#12101-eager-loading)
+    - [12.10.2. Lazy loading](#12102-lazy-loading)
+    - [12.10.3. Explicit loading](#12103-explicit-loading)
     - [12.10.4. AsSplitQuery](#12104-assplitquery)
   - [12.11. Consultas con LINQ](#1211-consultas-con-linq)
     - [12.11.1. Básicas](#12111-básicas)
@@ -53,21 +53,21 @@
   - [12.13. Repositorio CRUD](#1213-repositorio-crud)
     - [12.13.1. Entidad y configuración](#12131-entidad-y-configuración)
     - [12.13.2. Interfaz del repositorio](#12132-interfaz-del-repositorio)
-    - [12.13.3. Create, GetById, GetAll, Update](#12133-create-getbyid-getall-update)
+    - [12.13.3. Create, GetById, GetAll, update](#12133-create-getbyid-getall-update)
     - [12.13.4. Borrado físico](#12134-borrado-físico)
     - [12.13.5. Borrado lógico](#12135-borrado-lógico)
     - [12.13.6. Consultas típicas](#12136-consultas-típicas)
   - [12.14. Migraciones](#1214-migraciones)
     - [12.14.1. Migraciones sobre una BD existente (baseline)](#12141-migraciones-sobre-una-bd-existente-baseline)
-  - [12.15. Seed Data](#1215-seed-data)
+  - [12.15. Seed data](#1215-seed-data)
   - [12.16. Logging](#1216-logging)
-  - [12.17. Control de Concurrencia](#1217-control-de-concurrencia)
+  - [12.17. Control de concurrencia](#1217-control-de-concurrencia)
   - [12.18. Testing con EF Core](#1218-testing-con-ef-core)
-    - [12.18.1. InMemory Database](#12181-inmemory-database)
+    - [12.18.1. InMemory database](#12181-inmemory-database)
     - [12.18.2. TestContainers](#12182-testcontainers)
     - [12.18.3. Buenas prácticas con TestContainers](#12183-buenas-prácticas-con-testcontainers)
     - [12.18.4. Patrón AAA](#12184-patrón-aaa)
-  - [12.19. Buenas Prácticas](#1219-buenas-prácticas)
+  - [12.19. Buenas prácticas](#1219-buenas-prácticas)
   - [12.20. Reto](#1220-reto)
 
 
@@ -130,8 +130,8 @@ flowchart LR
         D --> E[(Base de Datos)]
     end
 
-    style A fill:#2196F3,color:#fff
-    style E fill:#4CAF50,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style E fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 ### 12.1.2. DbContext
@@ -174,7 +174,7 @@ public class AppDbContext : DbContext
 | **Change Tracking** | Detecta automáticamente qué cambió |
 | **Provider** | PostgreSQL, SQL Server, SQLite, MongoDB... |
 
-### 12.1.5. Change Tracker
+### 12.1.5. Change tracker
 
 El **Change Tracker** monitoriza todas las entidades cargadas en el contexto. Cuando llamas a `SaveChanges()`, EF Core compara el estado actual con el original y genera las sentencias SQL correspondientes.
 
@@ -198,7 +198,7 @@ var producto = todos.First(p => p.Id == 1); // Solo necesitas uno
 var producto = await context.Productos.AsNoTracking().FirstAsync(p => p.Id == 1);
 ```
 
-## 12.2. Configuración Inicial
+## 12.2. Configuración inicial
 
 ### 12.2.1. Paquetes NuGet
 
@@ -238,7 +238,7 @@ builder.Services.AddDbContext<AppDbContext>();
 builder.Services.AddDbContextFactory<AppDbContext>(ServiceLifetime.Scoped);
 ```
 
-### 12.2.4. EnsureCreated vs Migrate
+### 12.2.4. EnsureCreated vs migrate
 
 | Método | Uso | Cuándo usar |
 |--------|-----|-------------|
@@ -257,7 +257,7 @@ await context.Database.EnsureCreated(); // No aplica migraciones, solo crea si n
 await context.Database.MigrateAsync(); // Aplica todas las migraciones pendientes
 ```
 
-## 12.3. Data Annotations
+## 12.3. Data annotations
 
 Las **Data Annotations** son atributos C# que configuran el modelo directamente en las entidades.
 
@@ -401,7 +401,7 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
 modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 ```
 
-### 12.4.6. Data Annotations vs Fluent API
+### 12.4.6. Data annotations vs fluent API
 
 | Criterio | Data Annotations | Fluent API |
 |----------|-----------------|------------|
@@ -412,7 +412,7 @@ modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
 ## 12.5. Relaciones
 
-### 12.5.1. Uno a Uno
+### 12.5.1. Uno a uno
 
 ```csharp
 public class UsuarioPerfil
@@ -424,7 +424,7 @@ public class UsuarioPerfil
 }
 ```
 
-### 12.5.2. Uno a Muchos
+### 12.5.2. Uno a muchos
 
 ```csharp
 public class Categoria
@@ -443,7 +443,7 @@ public class Producto
 }
 ```
 
-### 12.5.3. Muchos a Muchos
+### 12.5.3. Muchos a muchos
 
 ```csharp
 // Con tabla intermedia explícita
@@ -487,7 +487,7 @@ public ICollection<Producto> Productos { get; set; } = [];
 .OnDelete(DeleteBehavior.Restrict); // No permite borrar categoría si tiene productos
 ```
 
-## 12.6. Owned Types
+## 12.6. Owned types
 
 Los **Owned Types** permiten embeber un tipo dentro de otro (como documentos embebidos en MongoDB).
 
@@ -509,7 +509,7 @@ public class Cliente
 
 📌 Ejemplo real: **Netflix** usa un patrón similar para almacenar preferencias de usuario. Cada usuario tiene un objeto `Preferencias` embebido dentro de su documento, no como una tabla separada.
 
-## 12.7. Value Converters
+## 12.7. Value converters
 
 Los **Value Converters** transforman tipos de datos entre C# y la base de datos.
 
@@ -519,7 +519,7 @@ modelBuilder.Entity<Producto>()
     .HasConversion<string>(); // Enum → string en la BD
 ```
 
-## 12.8. Shadow Properties
+## 12.8. Shadow properties
 
 Las **Shadow Properties** son propiedades que existen solo en el modelo de EF Core, no en la entidad C#.
 
@@ -532,7 +532,7 @@ modelBuilder.Entity<Producto>()
 var fecha = context.Entry(producto).Property("CreatedAt").CurrentValue;
 ```
 
-## 12.9. NotMapped y Propiedades Calculadas
+## 12.9. NotMapped y propiedades calculadas
 
 ```csharp
 public class Producto
@@ -549,9 +549,9 @@ public class Producto
 }
 ```
 
-## 12.10. Carga de Datos
+## 12.10. Carga de datos
 
-### 12.10.1. Eager Loading
+### 12.10.1. Eager loading
 
 ```csharp
 // Include: carga la relación junto con la entidad principal
@@ -566,7 +566,7 @@ var productos = await context.Productos
     .ToListAsync();
 ```
 
-### 12.10.2. Lazy Loading
+### 12.10.2. Lazy loading
 
 ```csharp
 // La relación se carga automáticamente al acceder
@@ -583,7 +583,7 @@ foreach (var producto in productos)
 }
 ```
 
-### 12.10.3. Explicit Loading
+### 12.10.3. Explicit loading
 
 ```csharp
 await context.Entry(producto)
@@ -744,7 +744,7 @@ public interface IProductoRepository
 }
 ```
 
-### 12.13.3. Create, GetById, GetAll, Update
+### 12.13.3. Create, GetById, GetAll, update
 
 ```csharp
 public class ProductoRepository(AppDbContext db) : IProductoRepository
@@ -885,7 +885,7 @@ context.Database.Migrate();
 
 > 💡 **Truco:** si al ejecutar `dotnet ef` se ejecuta tu `Program.cs` en design-time y eso borra la BD (por tu código de arranque), define un `IDesignTimeDbContextFactory<TContext>`: las herramientas EF usarán esa fábrica y no arrancarán la aplicación.
 
-## 12.15. Seed Data
+## 12.15. Seed data
 
 ```csharp
 // En OnModelCreating
@@ -914,7 +914,7 @@ if (env.IsDevelopment())
 }
 ```
 
-## 12.17. Control de Concurrencia
+## 12.17. Control de concurrencia
 
 La **concurrencia optimista** no bloquea filas: cada actualización comprueba que nadie ha modificado el registro entre que lo leíste y lo guardas.
 
@@ -939,7 +939,7 @@ catch (DbUpdateConcurrencyException)
 
 ## 12.18. Testing con EF Core
 
-### 12.18.1. InMemory Database
+### 12.18.1. InMemory database
 
 ```csharp
 var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -1012,7 +1012,7 @@ public async Task Create_ProductoValido_RetornaProductoConId()
 
 > 💡 **Consejo:** Si el cuerpo del test usa `await`, la firma debe ser `public async Task ...`. Un `public void` con `await` dentro **no compila**.
 
-## 12.19. Buenas Prácticas
+## 12.19. Buenas prácticas
 
 - **Usa Fluent API** sobre Data Annotations para configuración avanzada
 - **Separa configuraciones** con `IEntityTypeConfiguration<T>`

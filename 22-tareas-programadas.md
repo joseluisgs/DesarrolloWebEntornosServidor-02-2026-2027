@@ -1,4 +1,4 @@
-- [22. Tareas Programadas en ASP.NET Core](#22-tareas-programadas-en-aspnet-core)
+- [22. Tareas programadas en ASP.NET Core](#22-tareas-programadas-en-aspnet-core)
   - [22.1. Introducción](#221-introducción)
     - [22.1.1. Qué son las tareas programadas](#2211-qué-son-las-tareas-programadas)
     - [22.1.2. Casos de uso comunes](#2212-casos-de-uso-comunes)
@@ -6,31 +6,31 @@
   - [22.3. Implementación con BackgroundService](#223-implementación-con-backgroundservice)
     - [22.3.1. Tarea simple con intervalo fijo](#2231-tarea-simple-con-intervalo-fijo)
     - [22.3.2. Tarea con intervalo configurable](#2232-tarea-con-intervalo-configurable)
-    - [22.3.3. Tarea con expresión Cron](#2233-tarea-con-expresión-cron)
+    - [22.3.3. Tarea con expresión cron](#2233-tarea-con-expresión-cron)
     - [22.3.4. PeriodicTimer y TimeProvider](#2234-periodictimer-y-timeprovider)
   - [22.4. Implementación con NCrontab](#224-implementación-con-ncrontab)
     - [22.4.1. Instalación](#2241-instalación)
-    - [22.4.2. Servicio base con Cron](#2242-servicio-base-con-cron)
-    - [22.4.3. Ejemplo: Limpieza diaria de caché](#2243-ejemplo-limpieza-diaria-de-caché)
-    - [22.4.4. Expresiones Cron comunes](#2244-expresiones-cron-comunes)
-  - [22.5. Implementación con Hangfire (Producción)](#225-implementación-con-hangfire-producción)
+    - [22.4.2. Servicio base con cron](#2242-servicio-base-con-cron)
+    - [22.4.3. Ejemplo: limpieza diaria de caché](#2243-ejemplo-limpieza-diaria-de-caché)
+    - [22.4.4. Expresiones cron comunes](#2244-expresiones-cron-comunes)
+  - [22.5. Implementación con Hangfire (producción)](#225-implementación-con-hangfire-producción)
     - [22.5.1. Instalación](#2251-instalación)
     - [22.5.2. Configuración](#2252-configuración)
     - [22.5.3. Crear tareas recurrentes](#2253-crear-tareas-recurrentes)
     - [22.5.4. Dashboard de monitoreo](#2254-dashboard-de-monitoreo)
-  - [22.6. Ejemplo avanzado: Servicio de novedades por email](#226-ejemplo-avanzado-servicio-de-novedades-por-email)
+  - [22.6. Ejemplo avanzado: servicio de novedades por email](#226-ejemplo-avanzado-servicio-de-novedades-por-email)
     - [22.6.1. Con BackgroundService](#2261-con-backgroundservice)
     - [22.6.2. Con Hangfire](#2262-con-hangfire)
-  - [22.7. Monitoreo y Logging](#227-monitoreo-y-logging)
+  - [22.7. Monitoreo y logging](#227-monitoreo-y-logging)
   - [22.8. Testing de tareas programadas](#228-testing-de-tareas-programadas)
   - [22.9. Buenas prácticas](#229-buenas-prácticas)
     - [22.9.1. Endurecer el fire-and-forget](#2291-endurecer-el-fire-and-forget)
   - [22.10. Comparación de opciones](#2210-comparación-de-opciones)
-  - [22.11. Reto: Sistema de Tareas para FunkoApp](#2211-reto-sistema-de-tareas-para-funkoapp)
+  - [22.11. Reto: sistema de tareas para FunkoApp](#2211-reto-sistema-de-tareas-para-funkoapp)
 
 
 
-# 22. Tareas Programadas en ASP.NET Core
+# 22. Tareas programadas en ASP.NET Core
 
 > 💡 **Punto de partida:** ¿Has pensado alguna vez cómo Netflix te envía notificaciones de "hay novedades para ti" cada mañana a las 8:00? O cómo Glovo limpia los pedidos cancelados cada noche sin que nadie lo pulse. Detrás de todo eso hay tareas programadas: código que se ejecuta solo, en el momento justo, sin intervención humana.
 
@@ -59,10 +59,10 @@ flowchart LR
     A["Servidor ASP.NET Core"] -->|Programa| B["Tarea A: Cada 5 min"]
     A -->|Programa| C["Tarea B: Diaria 2AM"]
     A -->|Programa| D["Tarea C: Semanal"]
-    style A fill:#2196F3,color:#fff
-    style B fill:#4CAF50,color:#fff
-    style C fill:#FF9800,color:#fff
-    style D fill:#9C27B0,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#FF980,color:#fff0,color:#fff
+    style D fill:#9C27B,color:#fff0,color:#fff
 ```
 
 ### 22.1.2. Casos de uso comunes
@@ -109,10 +109,10 @@ flowchart TB
     BS["BackgroundService"] -->|"Intervalo fijo"| NC["NCrontab"]
     NC -->|"Persistencia + Dashboard"| HB["Hangfire"]
     HB -->|"Alta complejidad"| QZ["Quartz.NET"]
-    style BS fill:#4CAF50,color:#fff
-    style NC fill:#2196F3,color:#fff
-    style HB fill:#FF9800,color:#fff
-    style QZ fill:#f44336,color:#fff
+    style BS fill:#4CAF5,color:#fff0,color:#fff
+    style NC fill:#2196F,color:#fff3,color:#fff
+    style HB fill:#FF980,color:#fff0,color:#fff
+    style QZ fill:#f4433,color:#fff6,color:#fff
 ```
 
 > 📝 **Nota:** Para este curso nos centraremos en **BackgroundService** para desarrollo (simple y efectivo) y **Hangfire** para producción (robusto con monitoreo).
@@ -246,7 +246,7 @@ public class ConfigurableScheduledTask(
 }
 ```
 
-### 22.3.3. Tarea con expresión Cron
+### 22.3.3. Tarea con expresión cron
 
 Para tareas que necesitan ejecutarse en horarios específicos (como "a las 2:00 AM cada día"), puedes combinar BackgroundService con expresiones Cron.
 
@@ -390,7 +390,7 @@ dotnet add package NCrontab
 
 > 📝 **Nota:** El paquete se llama **`NCrontab`** (no "NCronTab"): es el repositorio [atifaziz/NCrontab](https://github.com/atifaziz/NCrontab) y su namespace es `NCrontab`.
 
-### 22.4.2. Servicio base con Cron
+### 22.4.2. Servicio base con cron
 
 ```csharp
 using NCrontab;
@@ -446,7 +446,7 @@ public abstract class CronScheduledService(ILogger logger) : BackgroundService
 }
 ```
 
-### 22.4.3. Ejemplo: Limpieza diaria de caché
+### 22.4.3. Ejemplo: limpieza diaria de caché
 
 ```csharp
 public class DailyCacheCleanupTask(
@@ -467,7 +467,7 @@ public class DailyCacheCleanupTask(
 }
 ```
 
-### 22.4.4. Expresiones Cron comunes
+### 22.4.4. Expresiones cron comunes
 
 | Expresión | Descripción | Ejemplo práctico |
 |:----------|:------------|:-----------------|
@@ -490,13 +490,13 @@ flowchart LR
     C["0 2 * * *"] --> D["2:00 AM diario"]
     E["0 9 * * 1"] --> F["9:00 AM lunes"]
     G["0 0 1 * *"] --> H["1 de cada mes"]
-    style A fill:#4CAF50,color:#fff
-    style C fill:#2196F3,color:#fff
-    style E fill:#FF9800,color:#fff
-    style G fill:#9C27B0,color:#fff
+    style A fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#2196F,color:#fff3,color:#fff
+    style E fill:#FF980,color:#fff0,color:#fff
+    style G fill:#9C27B,color:#fff0,color:#fff
 ```
 
-## 22.5. Implementación con Hangfire (Producción)
+## 22.5. Implementación con Hangfire (producción)
 
 ### 22.5.1. Instalación
 
@@ -607,16 +607,16 @@ flowchart TB
     DB --> MJ["Monitor de Jobs"]
     DB --> FJ["Jobs Fallidos"]
     DB --> RJ["Jobs Recurrentes"]
-    style HJ fill:#4CAF50,color:#fff
-    style DB fill:#2196F3,color:#fff
-    style MJ fill:#FF9800,color:#fff
-    style FJ fill:#f44336,color:#fff
-    style RJ fill:#9C27B0,color:#fff
+    style HJ fill:#4CAF5,color:#fff0,color:#fff
+    style DB fill:#2196F,color:#fff3,color:#fff
+    style MJ fill:#FF980,color:#fff0,color:#fff
+    style FJ fill:#f4433,color:#fff6,color:#fff
+    style RJ fill:#9C27B,color:#fff0,color:#fff
 ```
 
 > 📝 **Nota:** El dashboard de Hangfire muestra tareas recurrentes programadas, historial de ejecuciones, tareas fallidas con reintentos automáticos, colas de procesamiento y métricas de rendimiento.
 
-## 22.6. Ejemplo avanzado: Servicio de novedades por email
+## 22.6. Ejemplo avanzado: servicio de novedades por email
 
 ### 22.6.1. Con BackgroundService
 
@@ -764,7 +764,7 @@ RecurringJob.AddOrUpdate<NovedadesEmailService>(
 
 > 💡 **Consejo:** Hangfire maneja automáticamente los reintentos. Si un email falla, Hangfire lo reintentará según la configuración. Con BackgroundService, tú solo controlas eso con tu propio try-catch.
 
-## 22.7. Monitoreo y Logging
+## 22.7. Monitoreo y logging
 
 ```csharp
 public class MonitoredScheduledTask(ILogger<MonitoredScheduledTask> logger) : BackgroundService
@@ -1017,7 +1017,7 @@ _ = Task.Run(() =>
 
 > 📝 **Nota:** Para la mayoría de proyectos académicos y aplicaciones de pequeño/mediano tamaño, **BackgroundService** es suficiente. Usa **Hangfire** cuando necesites dashboard, persistencia o alta disponibilidad.
 
-## 22.11. Reto: Sistema de Tareas para FunkoApp
+## 22.11. Reto: sistema de tareas para FunkoApp
 
 > Antes de irte, implementa un sistema completo de tareas programadas para FunkoApp. Piensa primero en el diseño antes de escribir código.
 

@@ -1,58 +1,58 @@
-- [32. Resumen y Conclusiones](#32-resumen-y-conclusiones)
-  - [32.1. Mapa Conceptual de la Unidad](#321-mapa-conceptual-de-la-unidad)
-  - [32.2. Conceptos Clave](#322-conceptos-clave)
-    - [Parte 1: Fundamentos de Servicios Web en .NET](#parte-1-fundamentos-de-servicios-web-en-net)
-      - [Tema 01: Conceptos de Servicios Web](#tema-01-conceptos-de-servicios-web)
+- [32. Resumen y conclusiones](#32-resumen-y-conclusiones)
+  - [32.1. Mapa conceptual de la unidad](#321-mapa-conceptual-de-la-unidad)
+  - [32.2. Conceptos clave](#322-conceptos-clave)
+    - [Parte 1: fundamentos de servicios web en .NET](#parte-1-fundamentos-de-servicios-web-en-net)
+      - [Tema 01: conceptos de servicios web](#tema-01-conceptos-de-servicios-web)
       - [Tema 02: REST API](#tema-02-rest-api)
       - [Tema 03: Minimal APIs](#tema-03-minimal-apis)
-      - [Tema 04: Controladores MVC](#tema-04-controladores-mvc)
-      - [Tema 05: Arquitectura y Pipeline](#tema-05-arquitectura-y-pipeline)
-      - [Tema 06: Inyección de Dependencias](#tema-06-inyección-de-dependencias)
-      - [Tema 07: Excepciones y Patrón Result](#tema-07-excepciones-y-patrón-result)
-      - [Tema 08: DTOs, Mapeadores y Validaciones](#tema-08-dtos-mapeadores-y-validaciones)
-      - [Tema 09: Configuración y Logging](#tema-09-configuración-y-logging)
-      - [Tema 10: Pruebas y Despliegue](#tema-10-pruebas-y-despliegue)
-    - [Parte 2: Persistencia y Seguridad](#parte-2-persistencia-y-seguridad)
+      - [Tema 04: controladores MVC](#tema-04-controladores-mvc)
+      - [Tema 05: arquitectura y pipeline](#tema-05-arquitectura-y-pipeline)
+      - [Tema 06: inyección de dependencias](#tema-06-inyección-de-dependencias)
+      - [Tema 07: excepciones y patrón result](#tema-07-excepciones-y-patrón-result)
+      - [Tema 08: DTOs, mapeadores y validaciones](#tema-08-dtos-mapeadores-y-validaciones)
+      - [Tema 09: configuración y logging](#tema-09-configuración-y-logging)
+      - [Tema 10: pruebas y despliegue](#tema-10-pruebas-y-despliegue)
+    - [Parte 2: persistencia y seguridad](#parte-2-persistencia-y-seguridad)
       - [Tema 11: Clean Architecture](#tema-11-clean-architecture)
       - [Tema 12: Entity Framework Core](#tema-12-entity-framework-core)
       - [Tema 13: MongoDB](#tema-13-mongodb)
-      - [Tema 14: Cache Redis](#tema-14-cache-redis)
-      - [Tema 15: Transacciones e Identificadores](#tema-15-transacciones-e-identificadores)
-      - [Tema 16: Autenticación](#tema-16-autenticación)
-      - [Tema 17: Autorización](#tema-17-autorización)
-    - [Parte 3: APIs Especializadas](#parte-3-apis-especializadas)
+      - [Tema 14: cache Redis](#tema-14-cache-redis)
+      - [Tema 15: transacciones e identificadores](#tema-15-transacciones-e-identificadores)
+      - [Tema 16: autenticación](#tema-16-autenticación)
+      - [Tema 17: autorización](#tema-17-autorización)
+    - [Parte 3: APIs especializadas](#parte-3-apis-especializadas)
       - [Tema 18: WebSockets y SignalR](#tema-18-websockets-y-signalr)
       - [Tema 19: GraphQL](#tema-19-graphql)
-      - [Tema 20: File Storage](#tema-20-file-storage)
-      - [Tema 21: Email Services](#tema-21-email-services)
-      - [Tema 22: Tareas Programadas](#tema-22-tareas-programadas)
-    - [Parte 4: Arquitectura y Operaciones](#parte-4-arquitectura-y-operaciones)
-      - [Tema 23: Optimización](#tema-23-optimización)
-      - [Tema 24: Documentación con Swagger/OpenAPI](#tema-24-documentación-con-swaggeropenapi)
-      - [Tema 25: Perfiles y Configuración](#tema-25-perfiles-y-configuración)
-      - [Tema 26: Organización de Program.cs](#tema-26-organización-de-programcs)
-      - [Tema 27: Logging Avanzado con Serilog](#tema-27-logging-avanzado-con-serilog)
-      - [Tema 28: Testing Profesional](#tema-28-testing-profesional)
-      - [Tema 29: Docker y Contenedores](#tema-29-docker-y-contenedores)
+      - [Tema 20: file storage](#tema-20-file-storage)
+      - [Tema 21: email services](#tema-21-email-services)
+      - [Tema 22: tareas programadas](#tema-22-tareas-programadas)
+    - [Parte 4: arquitectura y operaciones](#parte-4-arquitectura-y-operaciones)
+      - [Tema 23: optimización](#tema-23-optimización)
+      - [Tema 24: documentación con Swagger/OpenAPI](#tema-24-documentación-con-swaggeropenapi)
+      - [Tema 25: perfiles y configuración](#tema-25-perfiles-y-configuración)
+      - [Tema 26: organización de Program.cs](#tema-26-organización-de-programcs)
+      - [Tema 27: logging avanzado con Serilog](#tema-27-logging-avanzado-con-serilog)
+      - [Tema 28: testing profesional](#tema-28-testing-profesional)
+      - [Tema 29: Docker y contenedores](#tema-29-docker-y-contenedores)
       - [Tema 30: CQRS y Mediator](#tema-30-cqrs-y-mediator)
       - [Tema 31: API Gateway](#tema-31-api-gateway)
-  - [32.3. Herramientas y Perfiles](#323-herramientas-y-perfiles)
+  - [32.3. Herramientas y perfiles](#323-herramientas-y-perfiles)
     - [SDK y CLI](#sdk-y-cli)
     - [NuGet (paquetes habituales)](#nuget-paquetes-habituales)
     - [IDE](#ide)
-  - [32.4. Errores Comunes a Evitar](#324-errores-comunes-a-evitar)
-  - [32.5. Checklist de Supervivencia](#325-checklist-de-supervivencia)
-    - [Parte 1: Fundamentos](#parte-1-fundamentos)
-    - [Parte 2: Persistencia y Seguridad](#parte-2-persistencia-y-seguridad)
-    - [Parte 3: APIs Especializadas](#parte-3-apis-especializadas)
-    - [Parte 4: Arquitectura y Operaciones](#parte-4-arquitectura-y-operaciones)
-  - [32.6. Glosario de Términos](#326-glosario-de-términos)
-  - [32.7. Ejercicios de Repaso](#327-ejercicios-de-repaso)
+  - [32.4. Errores comunes a evitar](#324-errores-comunes-a-evitar)
+  - [32.5. Checklist de supervivencia](#325-checklist-de-supervivencia)
+    - [Parte 1: fundamentos](#parte-1-fundamentos)
+    - [Parte 2: persistencia y seguridad](#parte-2-persistencia-y-seguridad)
+    - [Parte 3: APIs especializadas](#parte-3-apis-especializadas)
+    - [Parte 4: arquitectura y operaciones](#parte-4-arquitectura-y-operaciones)
+  - [32.6. Glosario de términos](#326-glosario-de-términos)
+  - [32.7. Ejercicios de repaso](#327-ejercicios-de-repaso)
   - [32.8. ¿Qué viene después?](#328-qué-viene-después)
-  - [32.9. Mapa de Conexiones entre Temas](#329-mapa-de-conexiones-entre-temas)
+  - [32.9. Mapa de conexiones entre temas](#329-mapa-de-conexiones-entre-temas)
 
 
-# 32. Resumen y Conclusiones
+# 32. Resumen y conclusiones
 
 > 💡 **Punto de partida:** Has completado la Unidad 02, que consta de cuatro partes fundamentales. La Parte 1 te dio los cimientos de ASP.NET Core y las APIs REST. La Parte 2 te enseñó a persistir datos y proteger la app. La Parte 3 te abrió las puertas a APIs especializadas (GraphQL, SignalR, email). La Parte 4 te dio las herramientas de arquitectura, testing y despliegue profesional. Este resumen consolida todo en una sola mirada.
 
@@ -64,7 +64,7 @@ Hemos visto el desarrollo completo de servicios web con ASP.NET Core. Este punto
 - Consolidar el vocabulario técnico
 - Tener una referencia rápida para el examen
 
-## 32.1. Mapa Conceptual de la Unidad
+## 32.1. Mapa conceptual de la unidad
 
 ```mermaid
 graph TD
@@ -190,49 +190,49 @@ graph TD
     GW --> GW2[Rate Limiting]
     GW --> GW3[Carga y Seguridad]
 
-    style UD02 fill:#2196F3,color:#fff
-    style P1 fill:#7c3aed,color:#fff
-    style P2 fill:#4CAF50,color:#fff
-    style P3 fill:#FF9800,color:#fff
-    style P4 fill:#f44336,color:#fff
-    style CON fill:#FF9800,color:#fff
-    style REST fill:#FF9800,color:#fff
-    style MIN fill:#FF9800,color:#fff
-    style MVC fill:#FF9800,color:#fff
-    style PIPE fill:#FF9800,color:#fff
-    style DI fill:#FF9800,color:#fff
-    style RES fill:#FF9800,color:#fff
-    style DTO fill:#FF9800,color:#fff
-    style CONF fill:#FF9800,color:#fff
-    style TEST1 fill:#FF9800,color:#fff
-    style ARCH fill:#2196F3,color:#fff
-    style EF fill:#2196F3,color:#fff
-    style MONGO fill:#2196F3,color:#fff
-    style REDIS fill:#2196F3,color:#fff
-    style TRANS fill:#2196F3,color:#fff
-    style AUTH fill:#2196F3,color:#fff
-    style AUTHZ fill:#2196F3,color:#fff
-    style WS fill:#4CAF50,color:#fff
-    style GQL fill:#4CAF50,color:#fff
-    style FILE fill:#4CAF50,color:#fff
-    style EMAIL fill:#4CAF50,color:#fff
-    style CRON fill:#4CAF50,color:#fff
-    style OPT fill:#f44336,color:#fff
-    style SWAG fill:#f44336,color:#fff
-    style PROF fill:#f44336,color:#fff
-    style PROG fill:#f44336,color:#fff
-    style SLOG fill:#f44336,color:#fff
-    style TESTP fill:#f44336,color:#fff
-    style DOCKER fill:#f44336,color:#fff
-    style CQRS fill:#f44336,color:#fff
-    style GW fill:#f44336,color:#fff
+    style UD02 fill:#2196F,color:#fff3,color:#fff
+    style P1 fill:#7c3ae,color:#fffd,color:#fff
+    style P2 fill:#4CAF5,color:#fff0,color:#fff
+    style P3 fill:#FF980,color:#fff0,color:#fff
+    style P4 fill:#f4433,color:#fff6,color:#fff
+    style CON fill:#FF980,color:#fff0,color:#fff
+    style REST fill:#FF980,color:#fff0,color:#fff
+    style MIN fill:#FF980,color:#fff0,color:#fff
+    style MVC fill:#FF980,color:#fff0,color:#fff
+    style PIPE fill:#FF980,color:#fff0,color:#fff
+    style DI fill:#FF980,color:#fff0,color:#fff
+    style RES fill:#FF980,color:#fff0,color:#fff
+    style DTO fill:#FF980,color:#fff0,color:#fff
+    style CONF fill:#FF980,color:#fff0,color:#fff
+    style TEST1 fill:#FF980,color:#fff0,color:#fff
+    style ARCH fill:#2196F,color:#fff3,color:#fff
+    style EF fill:#2196F,color:#fff3,color:#fff
+    style MONGO fill:#2196F,color:#fff3,color:#fff
+    style REDIS fill:#2196F,color:#fff3,color:#fff
+    style TRANS fill:#2196F,color:#fff3,color:#fff
+    style AUTH fill:#2196F,color:#fff3,color:#fff
+    style AUTHZ fill:#2196F,color:#fff3,color:#fff
+    style WS fill:#4CAF5,color:#fff0,color:#fff
+    style GQL fill:#4CAF5,color:#fff0,color:#fff
+    style FILE fill:#4CAF5,color:#fff0,color:#fff
+    style EMAIL fill:#4CAF5,color:#fff0,color:#fff
+    style CRON fill:#4CAF5,color:#fff0,color:#fff
+    style OPT fill:#f4433,color:#fff6,color:#fff
+    style SWAG fill:#f4433,color:#fff6,color:#fff
+    style PROF fill:#f4433,color:#fff6,color:#fff
+    style PROG fill:#f4433,color:#fff6,color:#fff
+    style SLOG fill:#f4433,color:#fff6,color:#fff
+    style TESTP fill:#f4433,color:#fff6,color:#fff
+    style DOCKER fill:#f4433,color:#fff6,color:#fff
+    style CQRS fill:#f4433,color:#fff6,color:#fff
+    style GW fill:#f4433,color:#fff6,color:#fff
 ```
 
-## 32.2. Conceptos Clave
+## 32.2. Conceptos clave
 
-### Parte 1: Fundamentos de Servicios Web en .NET
+### Parte 1: fundamentos de servicios web en .NET
 
-#### Tema 01: Conceptos de Servicios Web
+#### Tema 01: conceptos de servicios web
 - **Servicio web:** Aplicación que se expone vía HTTP para que otros sistemas la consuman. Acción remota sobre recursos
 - **SOAP vs REST:** SOAP = XML rígido, contratos WSDL. REST = JSON flexible, arquitectura ligera. REST domina hoy
 - **HTTP como base:** Todo servicio web se apoya en el protocolo HTTP: verbos, códigos de estado, headers
@@ -255,7 +255,7 @@ graph TD
 - **Ventaja:** Menos boilerplate, arranque rápido. **Desventaja:** Menos estructura para APIs grandes
 - 📌 Un microservicio de health check usa Minimal API: 3 líneas de código, sin controller
 
-#### Tema 04: Controladores MVC
+#### Tema 04: controladores MVC
 - **Controller:** Clase que agrupa endpoints relacionados. Hereda de `ControllerBase`
 - **[ApiController]:** Añade validación automática, respuestas 400, binding automático
 - **Routing:** `[Route("api/[controller]")]` a nivel de clase, `[HttpGet]`, `[HttpPost]` a nivel de método
@@ -264,7 +264,7 @@ graph TD
 - **ActionResult<T>:** Respuesta tipada con soporte para status codes (Ok, NotFound, BadRequest)
 - 📌 Un e-commerce usa controllers: `ProductosController` (CRUD), `PedidosController` (crear, listar), `AuthController` (login, registro)
 
-#### Tema 05: Arquitectura y Pipeline
+#### Tema 05: arquitectura y pipeline
 - **Pipeline de middleware:** Cada request pasa por una cadena de componentes. El orden importa
 - **Use vs Map vs Run:** `Use` pasa al siguiente, `Map` bifurca por path, `Run` terminal
 - **ExceptionHandler:** Captura errores globalmente. Siempre el primero en el pipeline
@@ -272,7 +272,7 @@ graph TD
 - **Order Matters:** `UseRouting` → `UseCors` → `UseAuthentication` → `UseAuthorization` → `UseEndpoints`
 - 📌 ASP.NET Core usa un pipeline de middleware como una cebolla: cada capa procesa antes de pasar al siguiente
 
-#### Tema 06: Inyección de Dependencias
+#### Tema 06: inyección de dependencias
 - **DI:** No crees dependencias, recíbelas. El contenedor las crea y te las inyecta
 - **Ciclos de vida:** Transient (nueva cada vez), Scoped (una por petición), Singleton (una global)
 - **Scrutor:** Auto-registro de dependencias sin escribir cada `AddSingleton`/`AddScoped`
@@ -280,7 +280,7 @@ graph TD
 - **Ventaja:** Código desacoplado, testeable, mantenible
 - 📌 ASP.NET Core usa DI por defecto. Cada controller recibe sus servicios por constructor
 
-#### Tema 07: Excepciones y Patrón Result
+#### Tema 07: excepciones y patrón result
 - **Result<T, TError>:** Tipo funcional que encapsula éxito o error. Sin excepciones
 - **Railway Oriented Programming:** Dos vías: happy path (Success) y error path (Failure)
 - **Bind:** Encadena operaciones que retornan Result. Si una falla, salta al error
@@ -289,7 +289,7 @@ graph TD
 - **DomainErrors:** Errores personalizados y tipados (`DomainErrors.NotFound`, `DomainErrors.InvalidState`)
 - 📌 Un login usa Result: credenciales correctas → Success, usuario no existe → Failure, contraseña mala → Failure
 
-#### Tema 08: DTOs, Mapeadores y Validaciones
+#### Tema 08: DTOs, mapeadores y validaciones
 - **DTOs:** Data Transfer Objects. Objetos que transportan datos entre capas sin exponer entidades
 - **Request DTOs:** Lo que el cliente envía (`CreateFunkoDto`, `UpdateFunkoDto`)
 - **Response DTOs:** Lo que el servidor devuelve (`FunkoResponseDto`, `FunkoListDto`)
@@ -298,7 +298,7 @@ graph TD
 - **[ApiController] + `[Validate]`:** Validación automática. Si falla, devuelve 400 Bad Request
 - 📌 Un endpoint de crear funko: `CreateFunkoDto` (request) → AutoMapper → Entidad → AutoMapper → `FunkoResponseDto` (response)
 
-#### Tema 09: Configuración y Logging
+#### Tema 09: configuración y logging
 - **appsettings.json:** Fichero de configuración. Valores por defecto + valores por entorno
 - **IOptions<T>:** Configuración tipada. Accedes a valores como propiedades
 - **Secciones:** ConnectionStrings, Jwt, Logging, Cors, AppState
@@ -307,7 +307,7 @@ graph TD
 - **Logger<T>:** Logger inyectado por DI. Escríbelo en logs con `LogInformation`, `LogError`
 - 📌 Un banco registra cada transacción con Serilog para auditoría y depuración
 
-#### Tema 10: Pruebas y Despliegue
+#### Tema 10: pruebas y despliegue
 - **NUnit:** Framework de tests. [TestFixture], [Test], [SetUp], [TestCase]
 - **Moq:** Mocking de interfaces. Simula dependencias para aislar lo que se testea
 - **FluentAssertions:** Aserciones legibles. `resultado.Should().Be(esperado)`
@@ -316,7 +316,7 @@ graph TD
 - **Cobertura:** `dotnet test --collect:"XPlat Code Coverage"`. Objetivo: >80%
 - 📌 Un equipo usa TestContainers para testear la BD real sin contaminar datos de desarrollo
 
-### Parte 2: Persistencia y Seguridad
+### Parte 2: persistencia y seguridad
 
 #### Tema 11: Clean Architecture
 - **Onion Architecture:** El dominio está en el centro. Las demás capas dependen hacia adentro
@@ -344,7 +344,7 @@ graph TD
 - **Ventaja:** Flexibilidad de esquema. **Desventaja:** No hay joins como en SQL
 - 📌 Un catálogo de productos usa MongoDB para almacenar fichas con campos variables (tallas, colores, especificaciones)
 
-#### Tema 14: Cache Redis
+#### Tema 14: cache Redis
 - **Redis:** BD en memoria. Caché clave-valor con expiración TTL
 - **Cache-Aside Pattern:** Primero cache, si no está → BD → guardar en cache
 - **IDistributedCache:** Interfaz de .NET para caché (Memory, Redis, SQL Server)
@@ -352,7 +352,7 @@ graph TD
 - **Escritura:** SetAsync con TimeSpan para expiración automática
 - 📌 Toyota usa Redis para cachear catálogos de productos (consulta frecuente, datos que cambian poco)
 
-#### Tema 15: Transacciones e Identificadores
+#### Tema 15: transacciones e identificadores
 - **Transacciones:** Operaciones que se ejecutan como unidad atómica. Todo o nada
 - **BeginTransactionAsync:** Inicia la transacción
 - **CommitAsync:** Confirma los cambios si todo va bien
@@ -360,7 +360,7 @@ graph TD
 - **Identificadores:** GUID (global único), Identity (autoincremental), Snowflake (escalable)
 - 📌 Un banco usa transacciones para transferir dinero: si la resta falla, la suma se revierte
 
-#### Tema 16: Autenticación
+#### Tema 16: autenticación
 - **JWT:** Token firmado. Header (algoritmo), Payload (datos), Firma (secreto)
 - **Token Validation:** ValidateIssuer, ValidateAudience, ValidateLifetime, ValidateIssuerSigningKey
 - **AddAuthentication + AddJwtBearer:** Configurar esquema de autenticación JWT
@@ -368,7 +368,7 @@ graph TD
 - **Expiración:** Tokens de corta duración. Refresh tokens para renovar
 - 📌 Spotify usa JWT para autenticar cada petición de la app móvil al API
 
-#### Tema 17: Autorización
+#### Tema 17: autorización
 - **Roles:** Agrupaciones de permisos. `[Authorize(Roles = "Admin")]`
 - **Claims:** Atributos del usuario (nombre, email, permisos específicos)
 - **Policies:** Reglas personalizadas. `policy.RequireRole("Admin")` o `policy.RequireAssertion(...)`
@@ -376,7 +376,7 @@ graph TD
 - **Política combinada:** Un usuario puede tener role Admin Y claim CanDelete
 - 📌 Un panel de administración: Admin ve todo, Editor edita posts, Viewer solo lee
 
-### Parte 3: APIs Especializadas
+### Parte 3: APIs especializadas
 
 #### Tema 18: WebSockets y SignalR
 - **WebSocket:** Protocolo de comunicación bidireccional en tiempo real
@@ -395,7 +395,7 @@ graph TD
 - **Projections, Filtering, Sorting:** Funcionalidades incluidas con atributos
 - 📌 Instagram usa GraphQL para que cada pantalla pida solo los datos que necesita, reduciendo tráfico
 
-#### Tema 20: File Storage
+#### Tema 20: file storage
 - **IStorageService:** Interfaz para almacenar y eliminar ficheros
 - **LocalStorageService:** Almacena en disco local. `wwwroot/uploads/`
 - **AzureBlobStorageService:** Almacena en la nube. Escalable y persistente
@@ -403,7 +403,7 @@ graph TD
 - **Nombre único:** `Guid.NewGuid()` para evitar colisiones de nombre
 - 📌 Un e-commerce almacena fotos de productos: local en desarrollo, Azure Blob en producción
 
-#### Tema 21: Email Services
+#### Tema 21: email services
 - **IEmailService:** Interfaz para enviar emails
 - **MailKit:** Librería para enviar emails via SMTP
 - **MimeMessage:** Construir el email: From, To, Subject, Body (HTML)
@@ -411,7 +411,7 @@ graph TD
 - **Configuración:** SMTP server, puerto, credenciales en appsettings.json
 - 📌 Un e-commerce envía emails de confirmación de pedido con HTML y logo de la empresa
 
-#### Tema 22: Tareas Programadas
+#### Tema 22: tareas programadas
 - **BackgroundService:** Clase que ejecuta tareas en segundo plano
 - **ExecuteAsync:** Método principal. Ejecuta la lógica periódicamente
 - **CancellationToken:** Señal para detener la tarea de forma elegante
@@ -419,9 +419,9 @@ graph TD
 - **Ciclo:** while (!stoppingToken.IsCancellationRequested) { ... Task.Delay(...) }
 - 📌 Un sistema de monitoreo ejecuta un health check cada 5 minutos con BackgroundService
 
-### Parte 4: Arquitectura y Operaciones
+### Parte 4: arquitectura y operaciones
 
-#### Tema 23: Optimización
+#### Tema 23: optimización
 - **ResponseCompression:** Comprimir respuestas HTTP (gzip, brotli). Reduce tamaño de payload
 - **ResponseCaching:** Caché a nivel de respuesta HTTP. Evita recalcular lo mismo
 - **Rate Limiting:** Limitar peticiones por IP. Evita abusos y DDoS
@@ -429,7 +429,7 @@ graph TD
 - **Select proyectado:** Seleccionar solo las propiedades necesarias, no toda la entidad
 - 📌 Netflix optimiza cada petición: compresión, caché y rate limiting para millones de usuarios
 
-#### Tema 24: Documentación con Swagger/OpenAPI
+#### Tema 24: documentación con Swagger/OpenAPI
 - **Swagger/OpenAPI:** Estándar para documentar APIs REST automáticamente
 - **AddSwaggerGen:** Configurar Swagger en Program.cs
 - **SwaggerDoc:** Definir versión, título, descripción de la API
@@ -437,7 +437,7 @@ graph TD
 - **Swagger UI:** Interfaz web para probar la API interactivamente
 - 📌 Cada API profesional tiene Swagger para que otros desarrolladores la consuman
 
-#### Tema 25: Perfiles y Configuración
+#### Tema 25: perfiles y configuración
 - **Perfiles de entorno:** Development, Staging, Production. Cada uno con su configuración
 - **appsettings.{Environment}.json:** Configuración específica por entorno
 - **User Secrets:** Secretos fuera del código. `dotnet user-secrets set`
@@ -445,7 +445,7 @@ graph TD
 - **IConfiguration:** Acceder a cualquier valor de configuración de forma tipada
 - 📌 Un equipo usa Development en local, Staging para QA, Production para clientes
 
-#### Tema 26: Organización de Program.cs
+#### Tema 26: organización de Program.cs
 - **Extension Methods:** `builder.Services.AddRepositories()`, `AddServices()`, `AddAuthentication()`
 - **Config Classes:** Clases estáticas por concern: RepositoriesConfig, ServicesConfig, CacheConfig
 - **Separación:** Cada grupo de registros en su propia clase estática
@@ -453,7 +453,7 @@ graph TD
 - **Escalabilidad:** Añadir nuevos servicios es añadir una línea en Program.cs
 - 📌 Un proyecto grande tiene 20+ líneas de registro. Con extension methods, Program.cs tiene 10 líneas
 
-#### Tema 27: Logging Avanzado con Serilog
+#### Tema 27: logging avanzado con Serilog
 - **Serilog:** Logging estructurado. Alternativa al logging nativo de .NET
 - **Sinks:** Console (desarrollo), File (producción), Seq (análisis), ElasticSearch (búsqueda)
 - **Enrichers:** Añadir contexto: Environment, Thread, Exception, TenantId
@@ -461,7 +461,7 @@ graph TD
 - **Rotación:** Archivos que rotan por día/tamaño. Evita llenar el disco
 - 📌 Un banco usa Serilog con Seq para buscar transacciones por usuario, fecha o tipo
 
-#### Tema 28: Testing Profesional
+#### Tema 28: testing profesional
 - **NUnit:** Framework de tests. [TestFixture], [Test], [SetUp], [TestCase]
 - **Moq:** Mocking de interfaces. Simula dependencias para aislar lo que se testea
 - **FluentAssertions:** Aserciones fluidas y legibles. `resultado.Should().Be(esperado)`
@@ -470,7 +470,7 @@ graph TD
 - **Cobertura:** `dotnet test --collect:"XPlat Code Coverage"`. Objetivo: >80%
 - 📌 Un equipo usa TestContainers para testear PostgreSQL real sin contaminar datos de desarrollo
 
-#### Tema 29: Docker y Contenedores
+#### Tema 29: Docker y contenedores
 - **Dockerfile:** Receta multi-etapa: build → test → runtime. Mismo formato para Docker y Podman
 - **docker-compose.yml:** Define servicios: app, BD, caché, etc. Compatible con Podman Compose
 - **.dockerignore:** Excluir bin/, obj/, .git/ del contexto de build
@@ -497,7 +497,7 @@ graph TD
 - **Ocelot:** Librería popular de API Gateway para .NET
 - 📌 Netflix usa un API Gateway para que los clientes solo hablen con un punto, y el gateway distribuya internamente
 
-## 32.3. Herramientas y Perfiles
+## 32.3. Herramientas y perfiles
 
 ### SDK y CLI
 - **`dotnet new webapi`**: Crea un proyecto de API REST con ASP.NET Core
@@ -532,7 +532,7 @@ graph TD
 - **Visual Studio Code:** Editor ligero, multiplataforma, gratuito
 - **Visual Studio:** IDE completo de Microsoft (versión Community gratuita)
 
-## 32.4. Errores Comunes a Evitar
+## 32.4. Errores comunes a evitar
 
 | Error | Por qué está mal | Cómo evitarlo |
 |-------|------------------|---------------|
@@ -555,11 +555,11 @@ graph TD
 | Exponer entidades directamente | Acoplamiento fuerte entre capas | Usar DTOs intermedios |
 | Olvidar `AsNoTracking` en queries de solo lectura | Rastreo innecesario, más lento | Añadir `.AsNoTracking()` |
 
-## 32.5. Checklist de Supervivencia
+## 32.5. Checklist de supervivencia
 
 Antes de dar por cerrado el tema, asegúrate de poder responder **SÍ** a estas preguntas:
 
-### Parte 1: Fundamentos
+### Parte 1: fundamentos
 - [ ] ¿Puedo diseñar una API REST con los verbos y códigos correctos?
 - [ ] ¿Sé crear endpoints con Minimal APIs y con Controladores MVC?
 - [ ] ¿Entiendo el pipeline de middleware y el orden de los componentes?
@@ -569,7 +569,7 @@ Antes de dar por cerrado el tema, asegúrate de poder responder **SÍ** a estas 
 - [ ] ¿Valido entradas con FluentValidation y `[ApiController]`?
 - [ ] ¿Configuro `IOptions<T>` y Serilog para configuración y logging?
 
-### Parte 2: Persistencia y Seguridad
+### Parte 2: persistencia y seguridad
 - [ ] ¿Organizo el proyecto con Clean Architecture (capas e invertidas)?
 - [ ] ¿Creo un DbContext con EF Core y hago migraciones?
 - [ ] ¿Uso Fluent API para relaciones y configuración avanzada?
@@ -579,14 +579,14 @@ Antes de dar por cerrado el tema, asegúrate de poder responder **SÍ** a estas 
 - [ ] ¿Implemento autenticación JWT con Token Validation?
 - [ ] ¿Configuro autorización con Roles, Claims y Policies?
 
-### Parte 3: APIs Especializadas
+### Parte 3: APIs especializadas
 - [ ] ¿Creo un Hub de SignalR para comunicación en tiempo real?
 - [ ] ¿Implemento GraphQL con HotChocolate (Queries, Mutations, DataLoaders)?
 - [ ] ¿Almaceno ficheros con IStorageService (local y cloud)?
 - [ ] ¿Envío emails con MailKit y plantillas HTML?
 - [ ] ¿Creo BackgroundServices para tareas programadas?
 
-### Parte 4: Arquitectura y Operaciones
+### Parte 4: arquitectura y operaciones
 - [ ] ¿Optimizo con ResponseCompression, Rate Limiting y AsNoTracking?
 - [ ] ¿Documento la API con Swagger/OpenAPI y security definitions?
 - [ ] ¿Uso perfiles de entorno (Development, Production) y User Secrets?
@@ -599,7 +599,7 @@ Antes de dar por cerrado el tema, asegúrate de poder responder **SÍ** a estas 
 
 > 🔧 **Truco:** La mejor forma de aprender es practicando. No leas solo los apuntes: abre el IDE y prueba cada ejemplo. Modifícalos, rompelos, arreglalos. Eso es como se aprende.
 
-## 32.6. Glosario de Términos
+## 32.6. Glosario de términos
 
 | Término | Definición |
 |---------|------------|
@@ -662,7 +662,7 @@ Antes de dar por cerrado el tema, asegúrate de poder responder **SÍ** a estas 
 | **Docker** | Plataforma de contenedores. Empaqueta la app con todo lo que necesita |
 | **Podman** | Alternativa a Docker, sin daemon, compatible con Dockerfile |
 
-## 32.7. Ejercicios de Repaso
+## 32.7. Ejercicios de repaso
 
 1. **REST API:** Diseña una API para gestionar una biblioteca. Indica: URLs, verbos HTTP, códigos de estado, y DTOs de cada endpoint.
 
@@ -711,7 +711,7 @@ En la **UD03: Desarrollo de Páginas Web Dinámicas en .NET** aprenderás a crea
 
 📌 **Ejemplo real:** En la UD03 crearás páginas web dinámicas que consumen la APIREST de la UD02. Usarás Razor Pages o MVC Views para renderizar datos de EF Core en el navegador, con formularios validados y autenticación de usuarios.
 
-## 32.9. Mapa de Conexiones entre Temas
+## 32.9. Mapa de conexiones entre temas
 
 ```mermaid
 graph LR
@@ -725,9 +725,9 @@ graph LR
     UD03 -.->|Razor, Blazor, MVC en .NET| UD04
     UD04 -.->|Componentes, Híbridos, JavaScript| UD05
 
-    style UD01 fill:#4CAF50,color:#fff
-    style UD02 fill:#2196F3,color:#fff
-    style UD03 fill:#FF9800,color:#fff
-    style UD04 fill:#9C27B0,color:#fff
-    style UD05 fill:#f44336,color:#fff
+    style UD01 fill:#4CAF5,color:#fff0,color:#fff
+    style UD02 fill:#2196F,color:#fff3,color:#fff
+    style UD03 fill:#FF980,color:#fff0,color:#fff
+    style UD04 fill:#9C27B,color:#fff0,color:#fff
+    style UD05 fill:#f4433,color:#fff6,color:#fff
 ```

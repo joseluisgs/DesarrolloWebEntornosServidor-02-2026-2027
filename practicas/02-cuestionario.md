@@ -1,8 +1,8 @@
-# Cuestionario de Investigación y Desarrollo (I+D): Desarrollo de Servicios Web en .NET
+# Cuestionario de investigación y desarrollo (I+D): desarrollo de servicios web en .NET
 
 **Instrucciones:** Responde cada pregunta de forma clara y concisa. Puedes usar ejemplos de código si es necesario.
 
-## PARTE 1 (Temas 01-16)
+## PARTE 1 (temas 01-16)
 
 1.  **Diseño REST de una API de Funkos:** A partir del recurso `Funko` (`Id`, `Nombre`, `Precio`, `Stock`, `Categoria`), diseña los endpoints de su API REST indicando verbo HTTP, ruta y código de estado de respuesta. ¿Por qué usas sustantivos en plural (`/api/funkos`) y qué restricción de REST respeta cada elección?
 
@@ -24,7 +24,7 @@
 
 10. **Transacciones y concurrencia:** Explica las propiedades ACID con un ejemplo de compra de un funko con stock limitado. Si dos clientes compran el último ejemplar al mismo tiempo, ¿cómo lo resolverías con concurrencia optimista (`RowVersion`)? ¿Qué respuesta HTTP devolverías al segundo cliente?
 
-## PARTE 2 (Temas 17-32)
+## PARTE 2 (temas 17-32)
 
 11. **JWT: escalabilidad y riesgos:** Un JWT es *stateless* y por eso escala bien. Explica cómo valida el servidor el token en cada petición sin consultar la base de datos de sesiones. ¿Qué problema de "revocación" surge si un token se filtra antes de caducar y qué mitigaciones existen?
 

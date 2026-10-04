@@ -1,5 +1,5 @@
-- [6. Inyección de Dependencias](#6-inyección-de-dependencias)
-  - [6.1. ¿Qué es la Inyección de Dependencias?](#61-qué-es-la-inyección-de-dependencias)
+- [6. Inyección de dependencias](#6-inyección-de-dependencias)
+  - [6.1. ¿Qué es la inyección de dependencias?](#61-qué-es-la-inyección-de-dependencias)
     - [6.1.1. El problema sin DI](#611-el-problema-sin-di)
     - [6.1.2. La solución con DI](#612-la-solución-con-di)
     - [6.1.3. Beneficios](#613-beneficios)
@@ -24,15 +24,15 @@
   - [6.6. Scrutor: registro automático](#66-scrutor-registro-automático)
     - [6.6.1. Instalación](#661-instalación)
     - [6.6.2. Requisito: las clases DEBEN tener interfaces](#662-requisito-las-clases-deben-tener-interfaces)
-    - [6.6.3. Enfoque 1: Convention-based (por nombre de clase)](#663-enfoque-1-convention-based-por-nombre-de-clase)
-    - [6.6.4. Enfoque 2: Marker interfaces (por ciclo de vida)](#664-enfoque-2-marker-interfaces-por-ciclo-de-vida)
+    - [6.6.3. Enfoque 1: convention-based (por nombre de clase)](#663-enfoque-1-convention-based-por-nombre-de-clase)
+    - [6.6.4. Enfoque 2: marker interfaces (por ciclo de vida)](#664-enfoque-2-marker-interfaces-por-ciclo-de-vida)
     - [6.6.5. ¿Cuándo usar cada enfoque?](#665-cuándo-usar-cada-enfoque)
     - [6.6.6. Ejemplo completo con ambos enfoques](#666-ejemplo-completo-con-ambos-enfoques)
     - [6.6.7. DI condicional: elegir implementación según configuración](#667-di-condicional-elegir-implementación-según-configuración)
   - [6.7. DI en Minimal APIs](#67-di-en-minimal-apis)
     - [6.7.1. Inyectar servicios directamente](#671-inyectar-servicios-directamente)
     - [6.7.2. Ejemplo completo](#672-ejemplo-completo)
-  - [6.8. DI en Controladores MVC](#68-di-en-controladores-mvc)
+  - [6.8. DI en controladores MVC](#68-di-en-controladores-mvc)
     - [6.8.1. Constructor primario en controllers](#681-constructor-primario-en-controllers)
     - [6.8.2. Ejemplo completo](#682-ejemplo-completo)
   - [6.9. Patrón Infrastructure](#69-patrón-infrastructure)
@@ -44,7 +44,7 @@
 
 
 
-# 6. Inyección de Dependencias
+# 6. Inyección de dependencias
 
 > 💡 **Punto de partida:** Cuando llevas tu coche al mecánico, él no fabrica las herramientas. Se las dan. Eso es Inyección de Dependencias: quien usa algo, no lo crea.
 
@@ -59,7 +59,7 @@ En este punto aprenderás a desacoplar tu código usando Inyección de Dependenc
 - Aplicar DI en Minimal APIs y Controladores MVC
 - Entender el patrón Infrastructure para proyectos grandes
 
-## 6.1. ¿Qué es la Inyección de Dependencias?
+## 6.1. ¿Qué es la inyección de dependencias?
 
 La **inyección de dependencias (DI)** es un patrón de diseño donde un objeto **no crea sus propias dependencias**, sino que las recibe desde el exterior. ASP.NET Core tiene un contenedor DI integrado que gestiona la creación y el ciclo de vida de todos los servicios.
 
@@ -182,12 +182,12 @@ flowchart TB
         S2["Scoped: instancia B"]
         G2["Singleton: misma instancia X"]
     end
-    style T1 fill:#FF9800,color:#fff
-    style T2 fill:#FF9800,color:#fff
-    style S1 fill:#2196F3,color:#fff
-    style S2 fill:#2196F3,color:#fff
-    style G1 fill:#4CAF50,color:#fff
-    style G2 fill:#4CAF50,color:#fff
+    style T1 fill:#FF980,color:#fff0,color:#fff
+    style T2 fill:#FF980,color:#fff0,color:#fff
+    style S1 fill:#2196F,color:#fff3,color:#fff
+    style S2 fill:#2196F,color:#fff3,color:#fff
+    style G1 fill:#4CAF5,color:#fff0,color:#fff
+    style G2 fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 ### 6.2.5. Flujo de una petición con DI
@@ -203,10 +203,10 @@ flowchart LR
     Service -->|"Retorna"| Controller
     Controller -->|"HTTP Response"| Client
 
-    style Controller fill:#4CAF50,color:#fff
-    style Service fill:#2196F3,color:#fff
-    style Repository fill:#FF9800,color:#fff
-    style DB fill:#9C27B0,color:#fff
+    style Controller fill:#4CAF5,color:#fff0,color:#fff
+    style Service fill:#2196F,color:#fff3,color:#fff
+    style Repository fill:#FF980,color:#fff0,color:#fff
+    style DB fill:#9C27B,color:#fff0,color:#fff
 ```
 
 ### 6.2.6. Errores comunes
@@ -465,10 +465,10 @@ flowchart TD
     Match1 --> Reg1["Registra como Scoped"]
     Match2 --> Reg2["Registra como Scoped"]
 
-    style Program fill:#4CAF50,color:#fff
-    style Scan fill:#2196F3,color:#fff
-    style Match1 fill:#FF9800,color:#fff
-    style Match2 fill:#FF9800,color:#fff
+    style Program fill:#4CAF5,color:#fff0,color:#fff
+    style Scan fill:#2196F,color:#fff3,color:#fff
+    style Match1 fill:#FF980,color:#fff0,color:#fff
+    style Match2 fill:#FF980,color:#fff0,color:#fff
 ```
 
 ### 6.6.1. Instalación
@@ -496,7 +496,7 @@ public class ProductoService(IProductoRepository repo) : IProductoService { ... 
 public class ProductoHelper { ... }
 ```
 
-### 6.6.3. Enfoque 1: Convention-based (por nombre de clase)
+### 6.6.3. Enfoque 1: convention-based (por nombre de clase)
 
 Registra servicios según el **nombre** de la clase (termina en "Service", "Repository", etc.):
 
@@ -526,7 +526,7 @@ builder.Services.Scan(scan => scan
 
 📌 Ejemplo real: **TiendaAPI** usa este enfoque. Sus clases se llaman `ProductoService`, `UserService`, `CategoriaService`, etc. Scrutor las detecta por el sufijo "Service".
 
-### 6.6.4. Enfoque 2: Marker interfaces (por ciclo de vida)
+### 6.6.4. Enfoque 2: marker interfaces (por ciclo de vida)
 
 Registra servicios según **qué interfaz de marcador implementen**:
 
@@ -655,12 +655,12 @@ flowchart TD
     D --> E
     E --> F["Servicios que usan IPedidosRepository"]
 
-    style A fill:#2196F3,color:#fff
-    style B fill:#FF9800,color:#fff
-    style C fill:#4CAF50,color:#fff
-    style D fill:#4CAF50,color:#fff
-    style E fill:#9C27B0,color:#fff
-    style F fill:#607D8B,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#FF980,color:#fff0,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#4CAF5,color:#fff0,color:#fff
+    style E fill:#9C27B,color:#fff0,color:#fff
+    style F fill:#607D8,color:#fffB,color:#fff
 ```
 
 ## 6.7. DI en Minimal APIs
@@ -744,7 +744,7 @@ app.Run();
 
 > 💡 **Consejo:** En Minimal APIs, el orden de los parámetros del delegate no importa. ASP.NET Core resuelve las dependencias automáticamente por tipo.
 
-## 6.8. DI en Controladores MVC
+## 6.8. DI en controladores MVC
 
 ### 6.8.1. Constructor primario en controllers
 
@@ -836,10 +836,10 @@ flowchart TD
     Config2 --> S2["ICategoriaService"]
     Config3 --> C1["ICacheService"]
 
-    style Program fill:#4CAF50,color:#fff
-    style Config1 fill:#2196F3,color:#fff
-    style Config2 fill:#2196F3,color:#fff
-    style Config3 fill:#2196F3,color:#fff
+    style Program fill:#4CAF5,color:#fff0,color:#fff
+    style Config1 fill:#2196F,color:#fff3,color:#fff
+    style Config2 fill:#2196F,color:#fff3,color:#fff
+    style Config3 fill:#2196F,color:#fff3,color:#fff
 ```
 
 ### 6.9.1. ¿Cuándo usarlo?

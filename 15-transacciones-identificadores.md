@@ -1,26 +1,26 @@
-- [15. Transacciones, Concurrencia e Identificadores](#15-transacciones-concurrencia-e-identificadores)
-  - [15.1. El Problema de la Concurrencia](#151-el-problema-de-la-concurrencia)
+- [15. Transacciones, concurrencia e identificadores](#15-transacciones-concurrencia-e-identificadores)
+  - [15.1. El problema de la concurrencia](#151-el-problema-de-la-concurrencia)
   - [15.2. Transacciones](#152-transacciones)
-    - [15.2.1. Qué es una Transacción](#1521-qué-es-una-transacción)
+    - [15.2.1. Qué es una transacción](#1521-qué-es-una-transacción)
     - [15.2.2. Propiedades ACID](#1522-propiedades-acid)
     - [15.2.3. Transacciones en EF Core](#1523-transacciones-en-ef-core)
-  - [15.3. Control de Concurrencia](#153-control-de-concurrencia)
-    - [15.3.1. Enfoque Optimista](#1531-enfoque-optimista)
-    - [15.3.2. Enfoque Pesimista](#1532-enfoque-pesimista)
-    - [15.3.3. Enfoque Mixto](#1533-enfoque-mixto)
-    - [15.3.4. Comparativa de Enfoques](#1534-comparativa-de-enfoques)
-  - [15.4. Identificadores: Claves Primarias](#154-identificadores-claves-primarias)
+  - [15.3. Control de concurrencia](#153-control-de-concurrencia)
+    - [15.3.1. Enfoque optimista](#1531-enfoque-optimista)
+    - [15.3.2. Enfoque pesimista](#1532-enfoque-pesimista)
+    - [15.3.3. Enfoque mixto](#1533-enfoque-mixto)
+    - [15.3.4. Comparativa de enfoques](#1534-comparativa-de-enfoques)
+  - [15.4. Identificadores: claves primarias](#154-identificadores-claves-primarias)
     - [15.4.1. Autoincrementales (INT/BIGINT)](#1541-autoincrementales-intbigint)
     - [15.4.2. UUID/GUID](#1542-uuidguid)
-    - [15.4.3. El ID de YouTube: Base64 de 11 caracteres](#1543-el-id-de-youtube-base64-de-11-caracteres)
-    - [15.4.4. Generador de IDs Personalizado con Atributo](#1544-generador-de-ids-personalizado-con-atributo)
-    - [15.4.5. Comparativa de Identificadores](#1545-comparativa-de-identificadores)
-  - [15.5. Buenas Prácticas](#155-buenas-prácticas)
+    - [15.4.3. El ID de YouTube: base64 de 11 caracteres](#1543-el-id-de-youtube-base64-de-11-caracteres)
+    - [15.4.4. Generador de IDs personalizado con atributo](#1544-generador-de-ids-personalizado-con-atributo)
+    - [15.4.5. Comparativa de identificadores](#1545-comparativa-de-identificadores)
+  - [15.5. Buenas prácticas](#155-buenas-prácticas)
   - [15.6. Reto](#156-reto)
 
 
 
-# 15. Transacciones, Concurrencia e Identificadores
+# 15. Transacciones, concurrencia e identificadores
 
 > 💡 **Punto de partida:** Si dos personas intentan comprar el último billete de avión al mismo tiempo, ¿quién se lo lleva? La base de datos debe tener un mecanismo para decidirlo sin perder datos ni vender el mismo billete dos veces.
 
@@ -30,7 +30,7 @@
 - Aplicar control de concurrencia optimista y pesimista
 - Conocer diferentes estrategias de generación de identificadores (UUID, ULID, Base64)
 
-## 15.1. El Problema de la Concurrencia
+## 15.1. El problema de la concurrencia
 
 Cuando múltiples usuarios intentan modificar el mismo dato simultáneamente, surgen problemas de concurrencia que pueden llevar a inconsistencias en los datos.
 
@@ -46,8 +46,8 @@ flowchart TD
         API1 --> D1["Stock 1-1=0"]
         API2 --> D2["Stock 0-1=-1"]
     end
-    style D1 fill:#4CAF50,color:#fff
-    style D2 fill:#F44336,color:#fff
+    style D1 fill:#4CAF5,color:#fff0,color:#fff
+    style D2 fill:#F4433,color:#fff6,color:#fff
 ```
 
 **Timeline del problema:**
@@ -67,7 +67,7 @@ Vendemos 2 productos cuando solo teníamos 1 en stock. Esto se llama **race cond
 
 ## 15.2. Transacciones
 
-### 15.2.1. Qué es una Transacción
+### 15.2.1. Qué es una transacción
 
 Una **transacción** es un conjunto de operaciones que se ejecutan como una unidad indivisible. Todas se completan exitosamente o ninguna se aplica.
 
@@ -80,10 +80,10 @@ flowchart LR
     A["Atomicidad"] --> C["Consistencia"]
     C --> I["Aislamiento"]
     I --> D["Durabilidad"]
-    style A fill:#4CAF50,color:#fff
-    style C fill:#4CAF50,color:#fff
-    style I fill:#2196F3,color:#fff
-    style D fill:#FF9800,color:#fff
+    style A fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
+    style I fill:#2196F,color:#fff3,color:#fff
+    style D fill:#FF980,color:#fff0,color:#fff
 ```
 
 | Propiedad | Descripción | Ejemplo |
@@ -102,8 +102,8 @@ flowchart TD
     C --> D{"¿Todo OK?"}
     D -->|Sí| E["COMMIT"]
     D -->|No| F["ROLLBACK"]
-    style E fill:#4CAF50,color:#fff
-    style F fill:#F44336,color:#fff
+    style E fill:#4CAF5,color:#fff0,color:#fff
+    style F fill:#F4433,color:#fff6,color:#fff
 ```
 
 **Transacción implícita** (cada `SaveChanges` es una transacción):
@@ -136,9 +136,9 @@ catch
 
 > ⚠️ **Advertencia:** Siempre haz `RollbackAsync()` en el bloque `catch`, incluso si el error es esperado. Una transacción abandonada puede bloquear recursos en la BD.
 
-## 15.3. Control de Concurrencia
+## 15.3. Control de concurrencia
 
-### 15.3.1. Enfoque Optimista
+### 15.3.1. Enfoque optimista
 
 El enfoque **optimista** asume que los conflictos son raros. Permite que las transacciones procedan sin bloqueos. Los cambios se validan al final: si otro proceso modificó los datos, se rechaza la transacción.
 
@@ -149,8 +149,8 @@ flowchart TD
     C --> D{"¿Sin conflictos?"}
     D -->|Sí| E["Escribir cambios"]
     D -->|No| F["Rechazar / Reintentar"]
-    style E fill:#4CAF50,color:#fff
-    style F fill:#F44336,color:#fff
+    style E fill:#4CAF5,color:#fff0,color:#fff
+    style F fill:#F4433,color:#fff6,color:#fff
 ```
 
 **Implementación con `[Timestamp]`:**
@@ -202,7 +202,7 @@ catch (DbUpdateConcurrencyException ex)
 
 > 💡 **Consejo:** Para reintentos automáticos con el enfoque optimista, usa **Polly**: `Policy.Handle<DbUpdateConcurrencyException>().WaitAndRetryAsync(3, ...)`. Esto reintenta la operación 3 veces con espera exponencial.
 
-### 15.3.2. Enfoque Pesimista
+### 15.3.2. Enfoque pesimista
 
 El enfoque **pesimista** bloquea los datos antes de modificarlos, impidiendo que otros usuarios accedan hasta que termine la transacción.
 
@@ -215,9 +215,9 @@ flowchart TD
     H["Otros usuarios"] --> I{"¿Bloqueado?"}
     I -->|Sí| J["Esperar..."]
     I -->|No| K["Acceder"]
-    style B fill:#FF9800,color:#fff
-    style E fill:#4CAF50,color:#fff
-    style J fill:#F44336,color:#fff
+    style B fill:#FF980,color:#fff0,color:#fff
+    style E fill:#4CAF5,color:#fff0,color:#fff
+    style J fill:#F4433,color:#fff6,color:#fff
 ```
 
 **Implementación con `SELECT FOR UPDATE`:**
@@ -261,7 +261,7 @@ catch
 | **Repeatable Read** | Protegido | Protegido | Permitido | Filas |
 | **Serializable** | Protegido | Protegido | Protegido | Tabla completa |
 
-### 15.3.3. Enfoque Mixto
+### 15.3.3. Enfoque mixto
 
 El **enfoque mixto** combina lo mejor de ambos: validación optimista para lectura rápida, y `UPDATE` atómico para la escritura crítica.
 
@@ -279,10 +279,10 @@ flowchart TD
     end
     A2 --> B1 --> B2 -->|Sí| C1
     B2 -->|No| D["Rollback: stock insuficiente"]
-    style A1 fill:#2196F3,color:#fff
-    style B1 fill:#FF9800,color:#fff
-    style C1 fill:#4CAF50,color:#fff
-    style D fill:#F44336,color:#fff
+    style A1 fill:#2196F,color:#fff3,color:#fff
+    style B1 fill:#FF980,color:#fff0,color:#fff
+    style C1 fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#F4433,color:#fff6,color:#fff
 ```
 
 **Fase 1 — Validación optimista:**
@@ -320,7 +320,7 @@ await context.SaveChangesAsync();
 await transaction.CommitAsync();
 ```
 
-### 15.3.4. Comparativa de Enfoques
+### 15.3.4. Comparativa de enfoques
 
 | Criterio | Optimista | Pesimista | Mixto |
 |----------|-----------|-----------|-------|
@@ -339,14 +339,14 @@ flowchart TD
     D -->|Sí| E["Pesimista"]
     D -->|No| F["Mixto"]
     C --> G["Optimista con retry"]
-    style E fill:#F44336,color:#fff
-    style F fill:#FF9800,color:#fff
-    style G fill:#4CAF50,color:#fff
+    style E fill:#F4433,color:#fff6,color:#fff
+    style F fill:#FF980,color:#fff0,color:#fff
+    style G fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 > 📝 **Nota:** El enfoque **mixto** es el más recomendado para la mayoría de aplicaciones web. Combina la rapidez de la validación optimista con la seguridad del `UPDATE` atómico.
 
-## 15.4. Identificadores: Claves Primarias
+## 15.4. Identificadores: claves primarias
 
 ### 15.4.1. Autoincrementales (INT/BIGINT)
 
@@ -419,7 +419,7 @@ if (producto.Id.Equals(otroProducto.Id)) { ... } // Comparación optimizada
 
 > 💡 **Consejo:** Usa `Guid.NewGuid()` para generar GUIDs. En PostgreSQL, puedes usar `gen_random_uuid()` como valor por defecto de la columna.
 
-### 15.4.3. El ID de YouTube: Base64 de 11 caracteres
+### 15.4.3. El ID de YouTube: base64 de 11 caracteres
 
 El identificador de un video de YouTube es una cadena de **exactamente 11 caracteres** que se usa en la URL (por ejemplo, `dQw4w9WgXcQ` en `youtube.com/watch?v=dQw4w9WgXcQ`).
 
@@ -442,7 +442,7 @@ El identificador de un video de YouTube es una cadena de **exactamente 11 caract
 
 📌 Ejemplo real: El video más visto de YouTube ("Baby Shark") tiene el ID `XqZsoesa55w`. Si intentases adivinar videos vecinos (`XqZsoesa55v`, `XqZsoesa55x`), no encontrarías nada porque los IDs son pseudoaleatorios, no secuenciales.
 
-### 15.4.4. Generador de IDs Personalizado con Atributo
+### 15.4.4. Generador de IDs personalizado con atributo
 
 Podemos crear nuestro propio generador de IDs estilo YouTube usando un **atributo personalizado** y un **ValueGenerator** en EF Core.
 
@@ -541,7 +541,7 @@ public class Proveedor
 >
 > También elimina `ValueGeneratedOnAdd()` del Fluent API si generas el ID manualmente en el override.
 
-### 15.4.5. Comparativa de Identificadores
+### 15.4.5. Comparativa de identificadores
 
 | Tipo | Espacio | Único | Ordenable | Distribuible | Legible |
 |------|---------|-------|-----------|--------------|---------|
@@ -559,15 +559,15 @@ flowchart TD
     B -->|No| E["GUID o YouTube-style"]
     C -->|Sí| F["YouTube-style (11 chars)"]
     C -->|No| G["GUID"]
-    style D fill:#2196F3,color:#fff
-    style E fill:#4CAF50,color:#fff
-    style F fill:#FF9800,color:#fff
-    style G fill:#9C27B0,color:#fff
+    style D fill:#2196F,color:#fff3,color:#fff
+    style E fill:#4CAF5,color:#fff0,color:#fff
+    style F fill:#FF980,color:#fff0,color:#fff
+    style G fill:#9C27B,color:#fff0,color:#fff
 ```
 
 > 📝 **Nota:** En la práctica, el 90% de las aplicaciones usan BIGINT autoincremental o GUID. Los IDs estilo YouTube son útiles cuando necesitas IDs cortos y legibles en URLs (como YouTube, Bitly, o IDs de invite).
 
-## 15.5. Buenas Prácticas
+## 15.5. Buenas prácticas
 
 ```csharp
 // ❌ MALO: Olvidar el rollback en catch — transacción abandonada bloquea recursos

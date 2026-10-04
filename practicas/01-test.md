@@ -1,12 +1,12 @@
-**Test: Desarrollo de Servicios Web en .NET**
+**Test: desarrollo de servicios web en .NET**
 
 **Instrucciones:** Lee cada pregunta cuidadosamente y selecciona la opción que consideres correcta.
 
 ---
 
-## PARTE 1 (Temas 01-16)
+## PARTE 1 (temas 01-16)
 
-**Tema 01: Servicios Web**
+**Tema 01: Servicios web**
 
 1.  ¿Qué es un servicio web en el contexto de una aplicación moderna?
     A) Una página web con diseño responsivo
@@ -98,7 +98,7 @@
     C) `ActionResult<T>` solo puede devolver XML
     D) `IActionResult` no puede devolver 404
 
-**Tema 05: Arquitectura y Pipeline**
+**Tema 05: Arquitectura y pipeline**
 
 15. En el pipeline de middleware de ASP.NET Core, ¿por qué importa el orden en que se registran?
     A) Porque solo se puede registrar un middleware por aplicación
@@ -118,7 +118,7 @@
     C) Añadiéndolo a un fichero `web.config`
     D) Con el atributo `[Middleware]` sobre el controlador
 
-**Tema 06: Inyección de Dependencias**
+**Tema 06: Inyección de dependencias**
 
 18. ¿Cuál es el ciclo de vida de un servicio registrado con `AddScoped`?
     A) Una única instancia para toda la aplicación
@@ -138,7 +138,7 @@
     C) Para compilar los controladores del proyecto
     D) Para crear los ficheros de log de la aplicación
 
-**Tema 07: Excepciones y Patrón Result**
+**Tema 07: Excepciones y patrón result**
 
 21. ¿Cuál es la función de un manejador global de excepciones (`GlobalExceptionHandler` / `UseExceptionHandler`)?
     A) Evitar que se lanzen excepciones en la aplicación
@@ -158,7 +158,7 @@
     C) 500 Internal Server Error
     D) 301 Moved Permanently
 
-**Tema 08: DTOs, Mapeadores, Validaciones y Consultas**
+**Tema 08: DTOs, mapeadores, validaciones y consultas**
 
 24. ¿Por qué se usan DTOs en lugar de devolver las entidades de EF Core directamente?
     A) Porque las entidades no se pueden serializar a JSON
@@ -178,7 +178,7 @@
     C) Validar los permisos del usuario
     D) Firmar los tokens JWT
 
-**Tema 09: Configuración y Logging**
+**Tema 09: Configuración y logging**
 
 27. ¿Qué fichero se usa para la configuración específica del entorno de producción?
     A) `appsettings.Development.json`
@@ -198,7 +198,7 @@
     C) Guardar los logs en ficheros Markdown
     D) Un tipo de base de datos de eventos
 
-**Tema 10: Pruebas y Despliegue Básicos**
+**Tema 10: Pruebas y despliegue básicos**
 
 30. ¿Qué significa el patrón AAA en los tests?
     A) Arrange (preparar), Act (ejecutar), Assert (verificar)
@@ -218,7 +218,7 @@
     C) `dotnet clean`
     D) `dotnet restore`
 
-**Tema 11: Arquitecturas para Servicios**
+**Tema 11: Arquitecturas para servicios**
 
 33. En Clean Architecture, ¿qué depende de qué?
     A) El dominio depende de la infraestructura
@@ -278,7 +278,7 @@
     C) Cuando la colección embebida supera los 16 MB
     D) Solo si además se usa SQL Server
 
-**Tema 14: Sistemas de Caché: Redis y Memcached**
+**Tema 14: Sistemas de caché: Redis y memcached**
 
 42. ¿Qué es Redis?
     A) Un ORM para SQL Server
@@ -298,7 +298,7 @@
     C) Porque la caché ocupa disco duro indefinidamente
     D) Porque invalidar borra también la base de datos
 
-**Tema 15: Transacciones, Concurrencia e Identificadores**
+**Tema 15: Transacciones, concurrencia e identificadores**
 
 45. ¿Qué propiedades garantiza el acrónimo ACID en una transacción?
     A) Atomicidad, Consistencia, Aislamiento y Durabilidad
@@ -340,9 +340,9 @@
 
 ---
 
-## PARTE 2 (Temas 17-32)
+## PARTE 2 (temas 17-32)
 
-**Tema 17: Autorización: Roles, Claims y Políticas**
+**Tema 17: Autorización: roles, claims y políticas**
 
 51. ¿Qué hace `[Authorize(Roles = "Admin")]`?
     A) Permite el acceso solo a usuarios autenticados que tengan el rol `Admin`
@@ -362,7 +362,7 @@
     C) Cookies de sesión
     D) Cabeceras CORS
 
-**Tema 18: Tiempo Real con WebSockets y SignalR**
+**Tema 18: Tiempo real con WebSockets y SignalR**
 
 54. ¿Qué aporta SignalR respecto a usar WebSockets "a pelo"?
     A) Reimplementa TCP desde cero
@@ -408,7 +408,7 @@
     C) Un tipo de índice de base de datos
     D) Cabeceras HTTP de caché
 
-**Tema 20: Almacenamiento de Ficheros**
+**Tema 20: Almacenamiento de ficheros**
 
 61. ¿Qué tipo se usa en ASP.NET Core para recibir un fichero subido en una petición?
     A) `string`
@@ -428,7 +428,7 @@
     C) En el fichero `Program.cs`
     D) En la memoria RAM de forma indefinida
 
-**Tema 21: Email Services**
+**Tema 21: Email services**
 
 64. ¿Qué protocolo se usa para enviar correos electrónicos desde la API?
     A) SMTP
@@ -448,7 +448,7 @@
     C) Sustituyen a los controladores de la API
     D) Encriptan el contenido del correo
 
-**Tema 22: Tareas Programadas**
+**Tema 22: Tareas programadas**
 
 67. ¿Qué clase se usa en ASP.NET Core para ejecutar trabajo en segundo plano mientras la aplicación está viva?
     A) `BackgroundService` (o `IHostedService`)
@@ -468,7 +468,7 @@
     C) Compilar el proyecto C#
     D) Traducir el HTML al idioma del usuario
 
-**Tema 23: Optimización de Servicios Web**
+**Tema 23: Optimización de servicios web**
 
 70. ¿Por qué paginar las listas largas en vez de devolver todos los registros?
     A) Para reducir el tamaño de la respuesta y el trabajo del servidor, mejorando los tiempos de respuesta
@@ -514,7 +514,7 @@
     C) "Deploy"
     D) "Commit"
 
-**Tema 25: Perfiles y Configuración**
+**Tema 25: Perfiles y configuración**
 
 77. ¿Qué contiene `launchSettings.json`?
     A) Perfiles de ejecución con URLs, puertos y variables de entorno para desarrollo
@@ -534,7 +534,7 @@
     C) Renombrando el fichero `.exe`
     D) Con la cabecera HTTP `X-Environment`
 
-**Tema 26: Organización e Infraestructuras de Program.cs**
+**Tema 26: Organización e infraestructuras de Program.cs**
 
 80. ¿Qué patrón se recomienda para no alargar `Program.cs`?
     A) Métodos de extensión en clases estáticas (p. ej. `AddRepositories()`, `UseMiMiddleware()`) agrupados por concernimiento
@@ -554,7 +554,7 @@
     C) `InitXxx()` para servicios y `RunXxx()` para endpoints
     D) No existe ninguna convención
 
-**Tema 27: Logging y Monitoreo**
+**Tema 27: Logging y monitoreo**
 
 83. ¿Cuál es el orden correcto de niveles de log de menor a mayor severidad?
     A) Trace → Debug → Information → Warning → Error → Critical
@@ -574,7 +574,7 @@
     C) Un middleware del pipeline
     D) Un formato obligatorio de exportación CSV
 
-**Tema 28: Testing de Servicios Web**
+**Tema 28: Testing de servicios web**
 
 86. En Moq, ¿qué comprueba `mock.Verify(s => s.Crear(It.IsAny<Funko>()), Times.Once)`?
     A) Que el método se llamó exactamente una vez
@@ -600,7 +600,7 @@
     C) Cubrir los ficheros de log con permisos
     D) Documentar la API con Swagger
 
-**Tema 29: Docker y Despliegue**
+**Tema 29: Docker y despliegue**
 
 90. ¿Cuál es la diferencia entre imagen y contenedor?
     A) La imagen es la plantilla de solo lectura; el contenedor es una instancia en ejecución de esa imagen
@@ -620,7 +620,7 @@
     C) Para reemplazar a GitHub Actions
     D) Para compilar imágenes más rápido
 
-**Tema 30: CQRS: Command Query Responsibility Segregation**
+**Tema 30: CQRS: command query responsibility segregation**
 
 93. ¿Qué significa CQRS?
     A) Separar el modelo de lectura (*queries*) del modelo de escritura (*commands*)
@@ -640,7 +640,7 @@
     C) Solo en aplicaciones de una sola página
     D) Cuando no hay base de datos
 
-**Tema 31: API Gateway y Microservicios**
+**Tema 31: API Gateway y microservicios**
 
 96. ¿Qué es un API Gateway?
     A) Un punto único de entrada que enruta, agrega y aplica preocupaciones transversales (auth, límites) a los microservicios

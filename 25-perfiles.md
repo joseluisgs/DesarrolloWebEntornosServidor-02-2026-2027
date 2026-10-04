@@ -1,27 +1,27 @@
-- [25. Configuracion de Entornos](#25-configuracion-de-entornos)
-  - [25.1. Que son los Entornos](#251-que-son-los-entornos)
+- [25. Configuracion de entornos](#25-configuracion-de-entornos)
+  - [25.1. Que son los entornos](#251-que-son-los-entornos)
     - [25.1.1. Entornos predefinidos](#2511-entornos-predefinidos)
     - [25.1.2. Prioridad de configuracion](#2512-prioridad-de-configuracion)
-  - [25.2. Configuracion por Entorno](#252-configuracion-por-entorno)
+  - [25.2. Configuracion por entorno](#252-configuracion-por-entorno)
     - [25.2.1. Estructura de archivos](#2521-estructura-de-archivos)
     - [25.2.2. Configuracion base](#2522-configuracion-base)
     - [25.2.3. Configuracion de desarrollo](#2523-configuracion-de-desarrollo)
     - [25.2.4. Configuracion de produccion](#2524-configuracion-de-produccion)
-  - [25.3. Configuracion de Base de Datos por Entorno](#253-configuracion-de-base-de-datos-por-entorno)
-  - [25.4. Variables de Entorno](#254-variables-de-entorno)
+  - [25.3. Configuracion de base de datos por entorno](#253-configuracion-de-base-de-datos-por-entorno)
+  - [25.4. Variables de entorno](#254-variables-de-entorno)
   - [25.5. Uso de IWebHostEnvironment](#255-uso-de-iwebhostenvironment)
-  - [25.6. Configuracion de Swagger por Entorno](#256-configuracion-de-swagger-por-entorno)
-  - [25.7. Configuracion de Logging por Entorno](#257-configuracion-de-logging-por-entorno)
-  - [25.8. Secretos de Usuario (User Secrets)](#258-secretos-de-usuario-user-secrets)
-  - [25.9. Configuracion Avanzada](#259-configuracion-avanzada)
-    - [25.9.1. Clases de Configuracion Tipadas](#2591-clases-de-configuracion-tipadas)
-  - [25.10. Azure App Configuration](#2510-azure-app-configuration)
-  - [25.11. Buenas Practicas](#2511-buenas-practicas)
-  - [25.12. Reto: Configura Entornos para FunkoApp](#2512-reto-configura-entornos-para-funkoapp)
+  - [25.6. Configuracion de Swagger por entorno](#256-configuracion-de-swagger-por-entorno)
+  - [25.7. Configuracion de logging por entorno](#257-configuracion-de-logging-por-entorno)
+  - [25.8. Secretos de usuario (User Secrets)](#258-secretos-de-usuario-user-secrets)
+  - [25.9. Configuracion avanzada](#259-configuracion-avanzada)
+    - [25.9.1. Clases de configuracion tipadas](#2591-clases-de-configuracion-tipadas)
+  - [25.10. Azure app configuration](#2510-azure-app-configuration)
+  - [25.11. Buenas practicas](#2511-buenas-practicas)
+  - [25.12. Reto: configura entornos para FunkoApp](#2512-reto-configura-entornos-para-funkoapp)
 
 
 
-# 25. Configuracion de Entornos
+# 25. Configuracion de entornos
 
 > 💡 **Punto de partida:** Cuando abres Instagram en tu móvil, la app se conecta a un servidor de desarrollo para probar funcionalidades nuevas. Cuando la versión final sale a producción, usa configuración diferente: base de datos real, logs mínimos y seguridad estricta. Eso es lo que hacen los entornos: permitir que la misma aplicación se comporte de forma diferente según dónde se ejecute.
 
@@ -34,7 +34,7 @@ En este punto aprenderás a configurar diferentes entornos en ASP.NET Core, usar
 - Configurar IWebHostEnvironment para comportamiento condicional
 - Gestionar secretos de forma segura
 
-## 25.1. Que son los Entornos
+## 25.1. Que son los entornos
 
 Los **entornos** (environments) en ASP.NET Core permiten configurar la aplicación de manera diferente según dónde se ejecute. Esto es esencial para mantener la seguridad en producción mientras se facilita el desarrollo.
 
@@ -52,14 +52,14 @@ flowchart LR
         B3 --> B4[Logs minimos]
     end
 
-    style A1 fill:#2196F3,color:#fff
-    style A2 fill:#2196F3,color:#fff
-    style A3 fill:#2196F3,color:#fff
-    style A4 fill:#2196F3,color:#fff
-    style B1 fill:#f44336,color:#fff
-    style B2 fill:#f44336,color:#fff
-    style B3 fill:#f44336,color:#fff
-    style B4 fill:#f44336,color:#fff
+    style A1 fill:#2196F,color:#fff3,color:#fff
+    style A2 fill:#2196F,color:#fff3,color:#fff
+    style A3 fill:#2196F,color:#fff3,color:#fff
+    style A4 fill:#2196F,color:#fff3,color:#fff
+    style B1 fill:#f4433,color:#fff6,color:#fff
+    style B2 fill:#f4433,color:#fff6,color:#fff
+    style B3 fill:#f4433,color:#fff6,color:#fff
+    style B4 fill:#f4433,color:#fff6,color:#fff
 ```
 
 📌 **Ejemplo real:** Cuando usas Netflix, la aplicación en tu móvil (producción) se conecta a servidores optimizados. Pero los desarrolladores de Netflix prueban nuevas funcionalidades en su propio entorno de desarrollo con datos ficticios.
@@ -93,11 +93,11 @@ flowchart TD
     C --> D["Variables de Entorno"]
     D --> E["Argumentos de linea de comandos"]
 
-    style A fill:#2196F3,color:#fff
-    style B fill:#4CAF50,color:#fff
-    style C fill:#FF9800,color:#fff
-    style D fill:#9C27B0,color:#fff
-    style E fill:#607D8B,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#FF980,color:#fff0,color:#fff
+    style D fill:#9C27B,color:#fff0,color:#fff
+    style E fill:#607D8,color:#fffB,color:#fff
 ```
 
 **Orden de carga (de menor a mayor prioridad):**
@@ -110,7 +110,7 @@ flowchart TD
 
 > 📝 **Nota:** Los valores cargados **más arriba** en la lista (mayor prioridad) **sobrescriben** a los que aparecen más abajo. Por ejemplo, una variable de entorno sobrescribe el mismo valor en appsettings.json, y un argumento de línea de comandos gana sobre todo lo demás.
 
-## 25.2. Configuracion por Entorno
+## 25.2. Configuracion por entorno
 
 ### 25.2.1. Estructura de archivos
 
@@ -209,7 +209,7 @@ ENV ConnectionStrings__DefaultConnection=""
 
 En desarrollo, la contraseña (si hace falta) se guarda con User Secrets, nunca en el JSON.
 
-## 25.3. Configuracion de Base de Datos por Entorno
+## 25.3. Configuracion de base de datos por entorno
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -241,7 +241,7 @@ else
 
 📌 **Ejemplo real:** En desarrollo usas SQLite (rapido, sin instalacion). En produccion usas SQL Server o PostgreSQL (escalable, con replicas). Es como usar un coche de practicas en el parking y el coche de carrera en la pista.
 
-## 25.4. Variables de Entorno
+## 25.4. Variables de entorno
 
 Las variables de entorno son la forma mas segura de configurar secretos en produccion.
 
@@ -349,7 +349,7 @@ public class EmailService(IWebHostEnvironment environment, ILogger<EmailService>
 }
 ```
 
-## 25.6. Configuracion de Swagger por Entorno
+## 25.6. Configuracion de Swagger por entorno
 
 ```csharp
 // Configurar Swagger solo en Development
@@ -377,7 +377,7 @@ if (app.Environment.IsDevelopment())
 
 > ⚠️ **Advertencia:** Nunca expongas Swagger en produccion. Swagger revela la estructura completa de tu API, lo cual es un riesgo de seguridad.
 
-## 25.7. Configuracion de Logging por Entorno
+## 25.7. Configuracion de logging por entorno
 
 **appsettings.Development.json:**
 
@@ -405,7 +405,7 @@ if (app.Environment.IsDevelopment())
 }
 ```
 
-## 25.8. Secretos de Usuario (User Secrets)
+## 25.8. Secretos de usuario (User Secrets)
 
 User Secrets almacenan datos sensibles de forma segura en desarrollo. Los secretos se guardan en un archivo JSON separado en el perfil del usuario, nunca en el repositorio.
 
@@ -437,9 +437,9 @@ var jwtSecret = builder.Configuration["Jwt:Secret"];
 
 > 📝 **Nota:** User Secrets solo funciona en desarrollo y los secretos se almacenan en un archivo JSON separado en el perfil del usuario. Nunca se commitea al repositorio.
 
-## 25.9. Configuracion Avanzada
+## 25.9. Configuracion avanzada
 
-### 25.9.1. Clases de Configuracion Tipadas
+### 25.9.1. Clases de configuracion tipadas
 
 ```csharp
 // ❌ MALO: Acceder a configuracion con strings mágicos
@@ -471,7 +471,7 @@ var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>();
 jwtSettings?.Validate();
 ```
 
-## 25.10. Azure App Configuration
+## 25.10. Azure app configuration
 
 Azure App Configuration ofrece configuracion centralizada para multiples aplicaciones en la nube.
 
@@ -490,7 +490,7 @@ builder.Configuration.AddAzureAppConfiguration(options =>
 
 📌 **Ejemplo real:** Las empresas como IKEA usan Azure App Configuration para gestionar la configuracion de miles de tiendas online desde un solo lugar. Si cambian un precio promocional, todas las aplicaciones se actualizan automaticamente.
 
-## 25.11. Buenas Practicas
+## 25.11. Buenas practicas
 
 | Practica | Descripcion |
 |----------|-------------|
@@ -505,7 +505,7 @@ builder.Configuration.AddAzureAppConfiguration(options =>
 | **Usar IWebHostEnvironment** | Para comportamiento condicional segun el entorno |
 | **No exponer detalles de error** | En produccion, oculta los detalles de excepciones al cliente |
 
-## 25.12. Reto: Configura Entornos para FunkoApp
+## 25.12. Reto: configura entornos para FunkoApp
 
 > Antes de irte, configura los entornos de desarrollo y produccion para tu API de Funkos.
 

@@ -1,45 +1,45 @@
-- [20. File Storage: Almacenamiento de Archivos](#20-file-storage-almacenamiento-de-archivos)
-  - [20.1. Conceptos Fundamentales](#201-conceptos-fundamentales)
-    - [20.1.1. Arquitectura de Almacenamiento](#2011-arquitectura-de-almacenamiento)
-    - [20.1.2. Tipos de Archivos Comunes](#2012-tipos-de-archivos-comunes)
-    - [20.1.3. Enfoques de Almacenamiento](#2013-enfoques-de-almacenamiento)
-  - [20.2. wwwroot y Archivos Estáticos](#202-wwwroot-y-archivos-estáticos)
+- [20. File storage: almacenamiento de archivos](#20-file-storage-almacenamiento-de-archivos)
+  - [20.1. Conceptos fundamentales](#201-conceptos-fundamentales)
+    - [20.1.1. Arquitectura de almacenamiento](#2011-arquitectura-de-almacenamiento)
+    - [20.1.2. Tipos de archivos comunes](#2012-tipos-de-archivos-comunes)
+    - [20.1.3. Enfoques de almacenamiento](#2013-enfoques-de-almacenamiento)
+  - [20.2. Wwwroot y archivos estáticos](#202-wwwroot-y-archivos-estáticos)
     - [20.2.1. Qué es wwwroot](#2021-qué-es-wwwroot)
-    - [20.2.2. Configuración de Límites](#2022-configuración-de-límites)
-    - [20.2.3. Clase de Configuración](#2023-clase-de-configuración)
+    - [20.2.2. Configuración de límites](#2022-configuración-de-límites)
+    - [20.2.3. Clase de configuración](#2023-clase-de-configuración)
   - [20.3. UseStaticFiles](#203-usestaticfiles)
-    - [20.3.1. Configuración Básica](#2031-configuración-básica)
-    - [20.3.2. Configuración Avanzada](#2032-configuración-avanzada)
-    - [20.3.3. Servir Archivos de Uploads](#2033-servir-archivos-de-uploads)
+    - [20.3.1. Configuración básica](#2031-configuración-básica)
+    - [20.3.2. Configuración avanzada](#2032-configuración-avanzada)
+    - [20.3.3. Servir archivos de uploads](#2033-servir-archivos-de-uploads)
     - [20.3.4. WebRootPath vs ContentRootPath](#2034-webrootpath-vs-contentrootpath)
   - [20.4. IStorageService](#204-istorageservice)
-    - [20.4.1. Interfaz Completa](#2041-interfaz-completa)
+    - [20.4.1. Interfaz completa](#2041-interfaz-completa)
   - [20.5. FileSystemStorageService](#205-filesystemstorageservice)
-    - [20.5.1. Implementación Completa](#2051-implementación-completa)
-    - [20.5.2. Excepciones Personalizadas](#2052-excepciones-personalizadas)
+    - [20.5.1. Implementación completa](#2051-implementación-completa)
+    - [20.5.2. Excepciones personalizadas](#2052-excepciones-personalizadas)
     - [20.5.3. Registro en DI](#2053-registro-en-di)
-  - [20.6. Controlador de Archivos](#206-controlador-de-archivos)
+  - [20.6. Controlador de archivos](#206-controlador-de-archivos)
     - [20.6.1. FilesController](#2061-filescontroller)
-    - [20.6.2. DTOs de Respuesta](#2062-dtos-de-respuesta)
-  - [20.7. Validaciones de Seguridad](#207-validaciones-de-seguridad)
-    - [20.7.1. Validar Extensión y Tipo MIME](#2071-validar-extensión-y-tipo-mime)
-    - [20.7.2. Validar Tamaño](#2072-validar-tamaño)
-    - [20.7.3. Protección contra Path Traversal](#2073-protección-contra-path-traversal)
-    - [20.7.4. Validar Nombre de Archivo](#2074-validar-nombre-de-archivo)
-  - [20.8. Integración con Entidades](#208-integración-con-entidades)
-    - [20.8.1. Endpoint para Actualizar Imagen de Producto](#2081-endpoint-para-actualizar-imagen-de-producto)
-  - [20.9. Azure Blob Storage](#209-azure-blob-storage)
+    - [20.6.2. DTOs de respuesta](#2062-dtos-de-respuesta)
+  - [20.7. Validaciones de seguridad](#207-validaciones-de-seguridad)
+    - [20.7.1. Validar extensión y tipo MIME](#2071-validar-extensión-y-tipo-mime)
+    - [20.7.2. Validar tamaño](#2072-validar-tamaño)
+    - [20.7.3. Protección contra path traversal](#2073-protección-contra-path-traversal)
+    - [20.7.4. Validar nombre de archivo](#2074-validar-nombre-de-archivo)
+  - [20.8. Integración con entidades](#208-integración-con-entidades)
+    - [20.8.1. Endpoint para actualizar imagen de producto](#2081-endpoint-para-actualizar-imagen-de-producto)
+  - [20.9. Azure blob storage](#209-azure-blob-storage)
     - [20.9.1. AzureBlobStorageService](#2091-azureblobstorageservice)
-    - [20.9.2. Configuración y Cambio entre Proveedores](#2092-configuración-y-cambio-entre-proveedores)
+    - [20.9.2. Configuración y cambio entre proveedores](#2092-configuración-y-cambio-entre-proveedores)
   - [20.10. Testing](#2010-testing)
-    - [20.10.1. Test del Servicio](#20101-test-del-servicio)
-    - [20.10.2. Test del Controlador](#20102-test-del-controlador)
-  - [20.11. Buenas Prácticas](#2011-buenas-prácticas)
-  - [20.12. Reto: Sube Imágenes de Funkos](#2012-reto-sube-imágenes-de-funkos)
+    - [20.10.1. Test del servicio](#20101-test-del-servicio)
+    - [20.10.2. Test del controlador](#20102-test-del-controlador)
+  - [20.11. Buenas prácticas](#2011-buenas-prácticas)
+  - [20.12. Reto: sube imágenes de Funkos](#2012-reto-sube-imágenes-de-funkos)
 
 
 
-# 20. File Storage: Almacenamiento de Archivos
+# 20. File storage: almacenamiento de archivos
 
 > 💡 **Punto de partida:** Cuando subes una foto de perfil en Instagram, la app recibe tu imagen, la guarda en sus servidores, la redimensiona y te devuelve una URL. Cuando otro usuario visita tu perfil, simplemente carga esa URL. Detrás de esa operación aparentemente simple hay todo un sistema de almacenamiento de archivos. En este tema aprenderemos a construir ese sistema en ASP.NET Core.
 
@@ -55,9 +55,9 @@ El almacenamiento de archivos es una funcionalidad común en aplicaciones web mo
 - Conocer Azure Blob Storage como alternativa en producción
 - Escribir tests unitarios para el servicio de almacenamiento
 
-## 20.1. Conceptos Fundamentales
+## 20.1. Conceptos fundamentales
 
-### 20.1.1. Arquitectura de Almacenamiento
+### 20.1.1. Arquitectura de almacenamiento
 
 ```mermaid
 graph TD
@@ -85,16 +85,16 @@ graph TD
     D -->|4. FileStream| B
     B -->|5. 200 OK| A
     
-    style B fill:#4CAF50,color:#fff
-    style C fill:#2196F3,color:#fff
-    style D fill:#FF9800,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#2196F,color:#fff3,color:#fff
+    style D fill:#FF980,color:#fff0,color:#fff
 ```
 
 > 💡 **Analogía:** El almacenamiento de archivos es como el almacén de un restaurante. Cuando un cliente pide un plato especial, el mesero va al almacén, busca el ingrediente y lo trae a la cocina. El almacén puede ser físico (disco local) o externo (nube).
 
 📌 **Ejemplo real:** Netflix almacena millones de miniaturas de películas y series. Cuando navegas por el catálogo, cada imagen viene de Azure Blob Storage. No está en la base de datos: está en un almacén de archivos optimizado para entrega rápida.
 
-### 20.1.2. Tipos de Archivos Comunes
+### 20.1.2. Tipos de archivos comunes
 
 | Tipo | Extensiones | Uso Típico |
 |------|-------------|------------|
@@ -103,7 +103,7 @@ graph TD
 | **Videos** | .mp4, .mov, .avi | Contenido multimedia |
 | **Audio** | .mp3, .wav, .flac | Podcasts, música |
 
-### 20.1.3. Enfoques de Almacenamiento
+### 20.1.3. Enfoques de almacenamiento
 
 | Enfoque | Ventajas | Desventajas | Cuándo Usar |
 |---------|----------|-------------|-------------|
@@ -125,7 +125,7 @@ graph TD
 }
 ```
 
-### Estructura de Directorios
+### Estructura de directorios
 
 ```
 TuProyecto/
@@ -158,7 +158,7 @@ TuProyecto/
 
 En el siguiente punto veremos **wwwroot y UseStaticFiles**: cómo configurar ASP.NET Core para servir archivos estáticos al cliente.
 
-## 20.2. wwwroot y Archivos Estáticos
+## 20.2. Wwwroot y archivos estáticos
 
 El directorio **wwwroot** es el directorio especial de ASP.NET Core para servir archivos estáticos directamente al cliente.
 
@@ -184,15 +184,15 @@ graph TD
         I[GET /api/productos/1] --> C
     end
     
-    style B fill:#4CAF50,color:#fff
-    style G fill:#2196F3,color:#fff
-    style H fill:#2196F3,color:#fff
-    style I fill:#FF9800,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style G fill:#2196F,color:#fff3,color:#fff
+    style H fill:#2196F,color:#fff3,color:#fff
+    style I fill:#FF980,color:#fff0,color:#fff
 ```
 
 📌 **Ejemplo real:** Cuando un navegador carga una página web, pide el HTML, luego el CSS, luego las imágenes. Todos esos archivos estáticos están en wwwroot. Si intentas acceder a `Controllers/`, recibirás un 404: esos archivos no están en wwwroot.
 
-### 20.2.2. Configuración de Límites
+### 20.2.2. Configuración de límites
 
 Por defecto, ASP.NET Core limita el tamaño de las peticiones. Para permitir uploads de archivos, debemos configurar los límites.
 
@@ -214,7 +214,7 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 ```
 
-### 20.2.3. Clase de Configuración
+### 20.2.3. Clase de configuración
 
 ```csharp
 namespace TiendaApi.Apis.Configuration;
@@ -274,7 +274,7 @@ En el siguiente punto veremos **UseStaticFiles**: el middleware que habilita el 
 
 El middleware `UseStaticFiles` permite servir archivos desde wwwroot y otros directorios.
 
-### 20.3.1. Configuración Básica
+### 20.3.1. Configuración básica
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -289,7 +289,7 @@ app.Run();
 
 📌 **Ejemplo real:** Spotify Web usa archivos estáticos para servir sus iconos, fuentes y hojas de estilo. Cuando abres open.spotify.com, el navegador carga decenas de archivos estáticos desde el directorio raíz del servidor.
 
-### 20.3.2. Configuración Avanzada
+### 20.3.2. Configuración avanzada
 
 ```csharp
 using Microsoft.AspNetCore.StaticFiles;
@@ -315,7 +315,7 @@ app.UseStaticFiles(new StaticFileOptions
 });
 ```
 
-### 20.3.3. Servir Archivos de Uploads
+### 20.3.3. Servir archivos de uploads
 
 ```csharp
 // WebRootPath puede ser null si no existe wwwroot (ej. carpeta vacía no commiteada)
@@ -375,7 +375,7 @@ En el siguiente punto veremos **IStorageService**: la interfaz que abstrae las o
 
 La interfaz `IStorageService` define el contrato para operaciones de almacenamiento, permitiendo diferentes implementaciones (local, nube, etc.) sin cambiar el código que la usa.
 
-### 20.4.1. Interfaz Completa
+### 20.4.1. Interfaz completa
 
 ```csharp
 using Microsoft.AspNetCore.Http;
@@ -467,7 +467,7 @@ En el siguiente punto veremos **FileSystemStorageService**: la implementación c
 
 Implementación de `IStorageService` que almacena archivos en el sistema de archivos local.
 
-### 20.5.1. Implementación Completa
+### 20.5.1. Implementación completa
 
 ```csharp
 using Microsoft.AspNetCore.Hosting;
@@ -674,7 +674,7 @@ var fileName = GenerateFileName(file.FileName);
 // Resultado: 20240115143022_a1b2c3d4e5f6g7h8.jpg
 ```
 
-### 20.5.2. Excepciones Personalizadas
+### 20.5.2. Excepciones personalizadas
 
 ```csharp
 namespace TiendaApi.Apis.Models.Exceptions;
@@ -728,7 +728,7 @@ builder.Services.Configure<StorageSettings>(
 
 En el siguiente punto veremos **Controlador de Archivos**: cómo exponer endpoints REST para subir, descargar y eliminar archivos.
 
-## 20.6. Controlador de Archivos
+## 20.6. Controlador de archivos
 
 El controlador expone endpoints REST para las operaciones de almacenamiento.
 
@@ -921,7 +921,7 @@ public class FilesController : ControllerBase
 }
 ```
 
-### 20.6.2. DTOs de Respuesta
+### 20.6.2. DTOs de respuesta
 
 > 📝 **Nota:** Un `POST` que **crea** un recurso debe devolver **201 Created** con un header `Location` que apunta al recurso recién creado (aquí, `CreatedAtAction`), no un `200 OK`. El `200 OK` se reserva para operaciones que no crean recursos nuevos: por ejemplo, `PUT` o el `POST {id}/imagen` de actualizar la imagen de un producto existente. Swagger reflejará el `201` gracias al `ProducesResponseType`.
 
@@ -974,11 +974,11 @@ public class FileInfoDto
 
 En el siguiente punto veremos **Validaciones de Seguridad**: cómo proteger el sistema contra archivos maliciosos y ataques comunes.
 
-## 20.7. Validaciones de Seguridad
+## 20.7. Validaciones de seguridad
 
 La seguridad en uploads es crítica. Un atacante podría subir un archivo `.exe` disfrazado de `.jpg`, o usar `../` para acceder a archivos fuera del directorio permitido.
 
-### 20.7.1. Validar Extensión y Tipo MIME
+### 20.7.1. Validar extensión y tipo MIME
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
@@ -1026,7 +1026,7 @@ public class AllowedExtensionsAttribute : ValidationAttribute
 }
 ```
 
-### 20.7.2. Validar Tamaño
+### 20.7.2. Validar tamaño
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
@@ -1062,7 +1062,7 @@ public class MaxFileSizeAttribute : ValidationAttribute
 }
 ```
 
-### 20.7.3. Protección contra Path Traversal
+### 20.7.3. Protección contra path traversal
 
 El ataque **Path Traversal** intenta acceder a archivos fuera del directorio permitido usando `../` en el nombre del archivo.
 
@@ -1072,8 +1072,8 @@ graph TD
     B --> C{"¿Contiene '..' o rutas absolutas?"}
     C -->|Sí| D[Bloquear - 400 Bad Request]
     C -->|No| E[Procesar normalmente]
-    style D fill:#f44336,color:#fff
-    style E fill:#4CAF50,color:#fff
+    style D fill:#f4433,color:#fff6,color:#fff
+    style E fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 ```csharp
@@ -1086,7 +1086,7 @@ if (safeName.Contains("..") || Path.IsPathRooted(safeName))
     throw new InvalidFileTypeException("Nombre de archivo inválido");
 ```
 
-### 20.7.4. Validar Nombre de Archivo
+### 20.7.4. Validar nombre de archivo
 
 ```csharp
 using System.Text.RegularExpressions;
@@ -1155,11 +1155,11 @@ public static class FileNameValidator
 
 En el siguiente punto veremos **Integración con Entidades**: cómo conectar el almacenamiento de archivos con modelos de negocio como Productos.
 
-## 20.8. Integración con Entidades
+## 20.8. Integración con entidades
 
 El almacenamiento de archivos cobra sentido cuando lo conectamos con entidades de negocio: un producto tiene una imagen, un usuario tiene un avatar, un documento tiene un archivo adjunto.
 
-### Modelo con Campo de Imagen
+### Modelo con campo de imagen
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
@@ -1193,7 +1193,7 @@ public class Producto
 }
 ```
 
-### 20.8.1. Endpoint para Actualizar Imagen de Producto
+### 20.8.1. Endpoint para actualizar imagen de producto
 
 ```csharp
 /// <summary>
@@ -1259,7 +1259,7 @@ public string? Imagen { get; set; }  // Referencia al archivo en el almacén
 
 En el siguiente punto veremos **Azure Blob Storage**: cómo escalar el almacenamiento a la nube para producción.
 
-## 20.9. Azure Blob Storage
+## 20.9. Azure blob storage
 
 Para producción, Azure Blob Storage ofrece seguridad, redundancia y escalabilidad automáticas. Es el equivalente a un almacén profesional: escalable, con backup automático y acceso desde cualquier parte del mundo.
 
@@ -1352,7 +1352,7 @@ public class AzureBlobStorageService : IStorageService
 }
 ```
 
-### 20.9.2. Configuración y Cambio entre Proveedores
+### 20.9.2. Configuración y cambio entre proveedores
 
 ```json
 {
@@ -1396,7 +1396,7 @@ En el siguiente punto veremos **Testing**: cómo testear el servicio de almacena
 
 ## 20.10. Testing
 
-### 20.10.1. Test del Servicio
+### 20.10.1. Test del servicio
 
 ```csharp
 using Microsoft.AspNetCore.Hosting;
@@ -1522,7 +1522,7 @@ public class FileSystemStorageServiceTests
 }
 ```
 
-### 20.10.2. Test del Controlador
+### 20.10.2. Test del controlador
 
 ```csharp
 using Microsoft.AspNetCore.Http;
@@ -1637,7 +1637,7 @@ public class FilesControllerTests
 
 En el siguiente punto veremos **Buenas Prácticas**: recomendaciones para implementar almacenamiento de archivos de forma segura y mantenible.
 
-## 20.11. Buenas Prácticas
+## 20.11. Buenas prácticas
 
 - **Siempre validar en el servidor:** Nunca confíes en la validación del cliente (JavaScript). Un atacante puede saltarse cualquier validación del navegador
 - **Generar nombres únicos:** Usar GUID + timestamp para evitar colisiones y ataques de filename
@@ -1669,7 +1669,7 @@ En el siguiente punto veremos **Buenas Prácticas**: recomendaciones para implem
 
 En el siguiente punto encontrarás un **Reto** para aplicar todo lo aprendido en un caso práctico con Funkos.
 
-## 20.12. Reto: Sube Imágenes de Funkos
+## 20.12. Reto: sube imágenes de Funkos
 
 > Antes de irte, pon en práctica lo aprendido. Diseña e implementa el sistema de almacenamiento para tu API de Funkos.
 

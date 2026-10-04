@@ -1,24 +1,24 @@
 - [26. Organización de Program.cs](#26-organización-de-programcs)
-  - [26.1. El Problema del Program.cs Monolítico](#261-el-problema-del-programcs-monolítico)
-    - [26.1.1. Ejemplo de Program.cs Monolítico](#2611-ejemplo-de-programcs-monolítico)
-  - [26.2. Patrón de Extension Methods para Configuración](#262-patrón-de-extension-methods-para-configuración)
+  - [26.1. El problema del Program.cs monolítico](#261-el-problema-del-programcs-monolítico)
+    - [26.1.1. Ejemplo de Program.cs monolítico](#2611-ejemplo-de-programcs-monolítico)
+  - [26.2. Patrón de extension methods para configuración](#262-patrón-de-extension-methods-para-configuración)
     - [26.2.1. Concepto fundamental](#2621-concepto-fundamental)
     - [26.2.2. Beneficios del patrón](#2622-beneficios-del-patrón)
     - [26.2.3. Organización por módulos funcionales](#2623-organización-por-módulos-funcionales)
-  - [26.3. Estructura de Carpetas: Infrastructures](#263-estructura-de-carpetas-infrastructures)
-  - [26.4. Ejemplos de Implementación](#264-ejemplos-de-implementación)
-    - [26.4.1. Configuración de Base de Datos](#2641-configuración-de-base-de-datos)
-    - [26.4.2. Configuración de Autenticación JWT](#2642-configuración-de-autenticación-jwt)
-  - [26.5. Program.cs Refactorizado](#265-programcs-refactorizado)
-    - [26.5.1. Comparación de Métricas](#2651-comparación-de-métricas)
-  - [26.6. Otras Formas de Estructurar el Startup](#266-otras-formas-de-estructurar-el-startup)
-  - [26.7. Buenas Prácticas](#267-buenas-prácticas)
+  - [26.3. Estructura de carpetas: infrastructures](#263-estructura-de-carpetas-infrastructures)
+  - [26.4. Ejemplos de implementación](#264-ejemplos-de-implementación)
+    - [26.4.1. Configuración de base de datos](#2641-configuración-de-base-de-datos)
+    - [26.4.2. Configuración de autenticación JWT](#2642-configuración-de-autenticación-jwt)
+  - [26.5. Program.cs refactorizado](#265-programcs-refactorizado)
+    - [26.5.1. Comparación de métricas](#2651-comparación-de-métricas)
+  - [26.6. Otras formas de estructurar el startup](#266-otras-formas-de-estructurar-el-startup)
+  - [26.7. Buenas prácticas](#267-buenas-prácticas)
   - [26.8. Ficheros de organización del repo](#268-ficheros-de-organización-del-repo)
     - [26.8.1. El fichero .editorconfig](#2681-el-fichero-editorconfig)
     - [26.8.2. Directory.Build.props](#2682-directorybuildprops)
     - [26.8.3. Directory.Packages.props (CPM)](#2683-directorypackagesprops-cpm)
-    - [26.8.4. global.json](#2684-globaljson)
-  - [26.9. Reto: Refactoriza el Program.cs de FunkoApp](#269-reto-refactoriza-el-programcs-de-funkoapp)
+    - [26.8.4. Global.json](#2684-globaljson)
+  - [26.9. Reto: refactoriza el Program.cs de FunkoApp](#269-reto-refactoriza-el-programcs-de-funkoapp)
 
 
 
@@ -34,7 +34,7 @@ En este punto aprenderás a refactorizar un Program.cs monolítico usando extens
 - Organizar configuraciones en carpetas Infrastructures
 - Implementar configuraciones reutilizables para bases de datos, autenticación y más
 
-## 26.1. El Problema del Program.cs Monolítico
+## 26.1. El problema del Program.cs monolítico
 
 Cuando una aplicación ASP.NET Core crece, el archivo `Program.cs` puede volverse monolítico y difícil de mantener. Los problemas principales son:
 
@@ -43,7 +43,7 @@ Cuando una aplicación ASP.NET Core crece, el archivo `Program.cs` puede volvers
 - **Dificultad de testing**: Imposible probar una configuración de forma aislada
 - **Falta de cohesión**: Configuraciones de naturaleza completamente diferente mezcladas
 
-### 26.1.1. Ejemplo de Program.cs Monolítico
+### 26.1.1. Ejemplo de Program.cs monolítico
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -137,7 +137,7 @@ app.Run();
 
 📌 **Ejemplo real:** Cuando un proyecto como Spotify Backend crece, tener todo en un solo archivo hace que 5 desarrolladores trabajando en el mismo archivo se pisen constantemente. La organización modular evita esto.
 
-## 26.2. Patrón de Extension Methods para Configuración
+## 26.2. Patrón de extension methods para configuración
 
 El patrón de extension methods consiste en crear métodos de extension para `IServiceCollection` (servicios) y `WebApplication` (middlewares), agrupando configuraciones relacionadas en archivos separados.
 
@@ -197,7 +197,7 @@ public static class DatabaseConfig
 | **Auth** | Autenticación JWT, autorización por roles |
 | **Business** | Servicios de negocio específicos |
 
-## 26.3. Estructura de Carpetas: Infrastructures
+## 26.3. Estructura de carpetas: infrastructures
 
 La carpeta `Infrastructures/` es el lugar recomendado para almacenar todos los métodos de extension de configuración.
 
@@ -224,9 +224,9 @@ FunkoApp/
 | `*Config.cs` | Configuraciones de servicios (registro en DI) | `DatabaseConfig.cs` |
 | `*Extensions.cs` | Configuraciones del pipeline de middlewares | `CorsExtensions.cs` |
 
-## 26.4. Ejemplos de Implementación
+## 26.4. Ejemplos de implementación
 
-### 26.4.1. Configuración de Base de Datos
+### 26.4.1. Configuración de base de datos
 
 ```csharp
 using Microsoft.EntityFrameworkCore;
@@ -257,7 +257,7 @@ public static class DatabaseConfig
 }
 ```
 
-### 26.4.2. Configuración de Autenticación JWT
+### 26.4.2. Configuración de autenticación JWT
 
 ```csharp
 using System.Text;
@@ -305,7 +305,7 @@ public static class AuthenticationConfig
 }
 ```
 
-## 26.5. Program.cs Refactorizado
+## 26.5. Program.cs refactorizado
 
 Después de aplicar el patrón, el Program.cs queda limpio y legible:
 
@@ -361,7 +361,7 @@ app.Run();
 
 📌 **Ejemplo real:** El proyecto TiendaApi usa este patrón exactamente. Cada configuración está en su propio archivo dentro de `Infrastructures/`, y Program.cs tiene menos de 120 líneas.
 
-### 26.5.1. Comparación de Métricas
+### 26.5.1. Comparación de métricas
 
 | Métrica | Antes | Después |
 |---------|-------|---------|
@@ -371,7 +371,7 @@ app.Run();
 | Reutilización entre proyectos | Difícil | Fácil |
 | Testing de configuración | Prácticamente imposible | Aislado y sencillo |
 
-## 26.6. Otras Formas de Estructurar el Startup
+## 26.6. Otras formas de estructurar el startup
 
 | Enfoque | Pros | Contras |
 |---------|------|---------|
@@ -380,7 +380,7 @@ app.Run();
 | **Directorios por módulo** | Muy organizado para proyectos grandes | Mayor complejidad inicial |
 | **Registros fluidos** | Sintaxis muy legible | Puede ser confuso para principiantes |
 
-## 26.7. Buenas Prácticas
+## 26.7. Buenas prácticas
 
 | Práctica | Descripción |
 |----------|-------------|
@@ -534,7 +534,7 @@ Y los `.csproj` **ya no llevan `Version=`**:
 
 > 💡 **Truco:** Para desactivarlo puntualmente en un proyecto heredado, añade en su `.csproj`: `<ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>`.
 
-### 26.8.4. global.json
+### 26.8.4. Global.json
 
 Fija **qué versión del SDK de .NET** se espera para compilar el repo:
 
@@ -578,7 +578,7 @@ dotnet --list-sdks
 | `Directory.Packages.props` | Versiones sin drift | "En mi máquina funciona" por paquete |
 | `global.json` | Mismo SDK | "A mí me compila, a ti no" |
 
-## 26.9. Reto: Refactoriza el Program.cs de FunkoApp
+## 26.9. Reto: refactoriza el Program.cs de FunkoApp
 
 > Antes de irte, refactoriza un Program.cs monolítico utilizando el patrón de extension methods.
 

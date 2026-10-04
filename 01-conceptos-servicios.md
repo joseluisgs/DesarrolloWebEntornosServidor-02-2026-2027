@@ -1,30 +1,30 @@
-- [1. Conceptos de Servicios Web y Configuración de Proyectos .NET](#1-conceptos-de-servicios-web-y-configuración-de-proyectos-net)
+- [1. Conceptos de servicios web y configuración de proyectos .NET](#1-conceptos-de-servicios-web-y-configuración-de-proyectos-net)
   - [1.1. ¿Qué es un servicio web?](#11-qué-es-un-servicio-web)
     - [1.1.1. Servicios orientados a la conexión vs sin conexión](#111-servicios-orientados-a-la-conexión-vs-sin-conexión)
     - [1.1.2. Arquitecturas de servicios web](#112-arquitecturas-de-servicios-web)
-  - [1.2. HTTP: El protocolo de la Web](#12-http-el-protocolo-de-la-web)
-    - [1.2.1. Request (Solicitud)](#121-request-solicitud)
-    - [1.2.2. Response (Respuesta)](#122-response-respuesta)
+  - [1.2. HTTP: el protocolo de la web](#12-http-el-protocolo-de-la-web)
+    - [1.2.1. Request (solicitud)](#121-request-solicitud)
+    - [1.2.2. Response (respuesta)](#122-response-respuesta)
     - [1.2.3. Métodos HTTP](#123-métodos-http)
     - [1.2.4. Códigos de estado](#124-códigos-de-estado)
   - [1.3. Estructura de un proyecto .NET](#13-estructura-de-un-proyecto-net)
     - [1.3.1. Soluciones y proyectos](#131-soluciones-y-proyectos)
     - [1.3.2. Crear la estructura desde cero](#132-crear-la-estructura-desde-cero)
     - [1.3.3. Estructura de carpetas resultante](#133-estructura-de-carpetas-resultante)
-  - [1.4. NuGet: Gestión de paquetes](#14-nuget-gestión-de-paquetes)
+  - [1.4. NuGet: gestión de paquetes](#14-nuget-gestión-de-paquetes)
     - [1.4.1. ¿Qué son los paquetes NuGet?](#141-qué-son-los-paquetes-nuget)
     - [1.4.2. Comandos útiles](#142-comandos-útiles)
   - [1.5. Configuración en ASP.NET Core](#15-configuración-en-aspnet-core)
-    - [1.5.1. appsettings.json](#151-appsettingsjson)
+    - [1.5.1. Appsettings.json](#151-appsettingsjson)
     - [1.5.2. Variables de entorno y User Secrets](#152-variables-de-entorno-y-user-secrets)
-    - [1.5.3. Patrón de Opciones (IOptions)](#153-patrón-de-opciones-ioptions)
-  - [1.6. Hot Reload y dotnet watch](#16-hot-reload-y-dotnet-watch)
+    - [1.5.3. Patrón de opciones (IOptions)](#153-patrón-de-opciones-ioptions)
+  - [1.6. Hot reload y dotnet watch](#16-hot-reload-y-dotnet-watch)
   - [1.7. Buenas prácticas](#17-buenas-prácticas)
-  - [1.8. Reto: Piensa en tu API de Funkos](#18-reto-piensa-en-tu-api-de-funkos)
+  - [1.8. Reto: piensa en tu API de Funkos](#18-reto-piensa-en-tu-api-de-funkos)
 
 
 
-# 1. Conceptos de Servicios Web y Configuración de Proyectos .NET
+# 1. Conceptos de servicios web y configuración de proyectos .NET
 
 > 💡 **Punto de partida:** Cuando abres Netflix y le das a "Reproducir", tu navegador envía una petición a un servidor en algún lugar del mundo. Ese servidor busca la película, comprueba tu suscripción, y te devuelve el vídeo en milisegundos. Todo eso es un **servicio web**. En esta unidad aprenderás a construir exactamente eso.
 
@@ -48,8 +48,8 @@ Un **servicio web** es una funcionalidad que se ofrece a través de una API y qu
 flowchart LR
     A["🌐 Cliente"] -->|HTTP Request| B["📡 Servicio Web"]
     B -->|HTTP Response| A
-    style A fill:#2196F3,color:#fff
-    style B fill:#4CAF50,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 📌 **Ejemplo real:** Cuando compras en Amazon, tu navegador envía una petición al servicio web. El servidor busca productos, calcula precios y devuelve una respuesta JSON que se renderiza en tu pantalla.
@@ -83,8 +83,8 @@ flowchart TD
         A2["📱 Cliente"] -->|Mensaje 1| B2["🖥️ Servidor"]
         A2 -->|Mensaje 2| B2
     end
-    style CONEXION fill:#FF9800,color:#fff
-    style SINCONEXION fill:#2196F3,color:#fff
+    style CONEXION fill:#FF980,color:#fff0,color:#fff
+    style SINCONEXION fill:#2196F,color:#fff3,color:#fff
 ```
 
 ### 1.1.2. Arquitecturas de servicios web
@@ -96,12 +96,12 @@ flowchart TD
     A --> D["🔍 GraphQL"]
     A --> E["⚡ gRPC"]
     A --> F["🔌 WebSockets"]
-    style A fill:#9C27B0,color:#fff
-    style B fill:#4CAF50,color:#fff
-    style C fill:#f44336,color:#fff
-    style D fill:#FF9800,color:#fff
-    style E fill:#2196F3,color:#fff
-    style F fill:#607D8B,color:#fff
+    style A fill:#9C27B,color:#fff0,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#f4433,color:#fff6,color:#fff
+    style D fill:#FF980,color:#fff0,color:#fff
+    style E fill:#2196F,color:#fff3,color:#fff
+    style F fill:#607D8,color:#fffB,color:#fff
 ```
 
 | Arquitectura | Formato | Uso principal |
@@ -116,7 +116,7 @@ flowchart TD
 
 > 💡 **Consejo:** Para este curso nos centramos en **REST** con ASP.NET Core, que es el estándar más utilizado.
 
-## 1.2. HTTP: El protocolo de la Web
+## 1.2. HTTP: el protocolo de la web
 
 **HTTP (Hypertext Transfer Protocol)** es la base de cualquier intercambio de datos en la Web. Es **sin estado** (stateless): cada petición es independiente.
 
@@ -130,7 +130,7 @@ sequenceDiagram
     S->>C: 200 OK { "nombre": "Grogu" }
 ```
 
-### 1.2.1. Request (Solicitud)
+### 1.2.1. Request (solicitud)
 
 Una petición HTTP tiene cuatro componentes:
 
@@ -164,7 +164,7 @@ Content-Type: application/json
 }
 ```
 
-### 1.2.2. Response (Respuesta)
+### 1.2.2. Response (respuesta)
 
 **1. Código de estado** — El resultado (ver 1.2.4)
 
@@ -291,14 +291,14 @@ flowchart LR
     B --> C["⚙️ Service"]
     C --> D["🗄️ Repository"]
     D --> E["💾 Base de datos"]
-    style A fill:#2196F3,color:#fff
-    style B fill:#4CAF50,color:#fff
-    style C fill:#FF9800,color:#fff
-    style D fill:#9C27B0,color:#fff
-    style E fill:#607D8B,color:#fff
+    style A fill:#2196F,color:#fff3,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#FF980,color:#fff0,color:#fff
+    style D fill:#9C27B,color:#fff0,color:#fff
+    style E fill:#607D8,color:#fffB,color:#fff
 ```
 
-## 1.4. NuGet: Gestión de paquetes
+## 1.4. NuGet: gestión de paquetes
 
 NuGet es el gestor de paquetes de .NET. Cuando necesitas una funcionalidad que no viene incluida, buscas el paquete y lo instalas.
 
@@ -327,7 +327,7 @@ dotnet list package
 
 ## 1.5. Configuración en ASP.NET Core
 
-### 1.5.1. appsettings.json
+### 1.5.1. Appsettings.json
 
 Es el archivo principal de configuración. Se carga en orden jerárquico, donde los valores más específicos sobrescriben los generales:
 
@@ -335,9 +335,9 @@ Es el archivo principal de configuración. Se carga en orden jerárquico, donde 
 flowchart TB
     A["📄 appsettings.json"] --> B["🔄 appsettings.Development.json"]
     B --> C["🔒 Variables de entorno"]
-    style A fill:#607D8B,color:#fff
-    style B fill:#FF9800,color:#fff
-    style C fill:#4CAF50,color:#fff
+    style A fill:#607D8,color:#fffB,color:#fff
+    style B fill:#FF980,color:#fff0,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 **Ejemplo básico:**
@@ -374,7 +374,7 @@ dotnet user-secrets set "MiClave" "MiValorSecreto"
 dotnet user-secrets list
 ```
 
-### 1.5.3. Patrón de Opciones (IOptions)
+### 1.5.3. Patrón de opciones (IOptions)
 
 Permite acceder a la configuración de forma **tipada**. En lugar de leer strings, defines clases:
 
@@ -393,7 +393,7 @@ builder.Services.Configure<MiConfiguracion>(
 
 > 💡 **Consejo:** El patrón de opciones te da seguridad de tipos y validación automática. Lo veremos en detalle más adelante.
 
-## 1.6. Hot Reload y dotnet watch
+## 1.6. Hot reload y dotnet watch
 
 Hot Reload permite ver los cambios en el código reflejados **inmediatamente** sin reiniciar el servidor:
 
@@ -413,8 +413,8 @@ flowchart LR
         B1["✏️ Escribir"] --> B2["💾 Guardar"]
         B2 --> B3["👀 Ver resultado"]
     end
-    style SIN fill:#f44336,color:#fff
-    style CON fill:#4CAF50,color:#fff
+    style SIN fill:#f4433,color:#fff6,color:#fff
+    style CON fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 | Archivo | ¿Recarga? |
@@ -436,13 +436,13 @@ flowchart LR
 - **Un servicio = Una responsabilidad:** Cada clase de servicio debe hacer solo una cosa bien
 - **NuGet siempre:** Antes de escribir código que ya existe, busca un paquete NuGet
 
-## 1.8. Reto: Piensa en tu API de Funkos
+## 1.8. Reto: piensa en tu API de Funkos
 
 > Antes de irte, reflexiona sobre el proyecto que construiremos a lo largo de la unidad.
 
 **Contexto:** Vas a construir una API REST para gestionar una **colección de Funkos** (figuras de vinilo coleccionables).
 
-### Ejercicio 1: Piensa en los datos
+### Ejercicio 1: piensa en los datos
 
 **¿Qué datos tiene un Funko?** Enumera las propiedades que necesitarías:
 
@@ -454,7 +454,7 @@ flowchart LR
 
 **Tu trabajo:** ¿Cuáles son obligatorias? ¿Cuáles opcionales? ¿Qué tipos de datos usarías?
 
-### Ejercicio 2: Piensa en el servicio
+### Ejercicio 2: piensa en el servicio
 
 Si abres Netflix y buscas "Star Wars", ¿qué petición HTTP se envía? Si añades un Funko al carrito, ¿qué método HTTP usarías? Si eliminas un Funko, ¿qué devuelve el servidor?
 

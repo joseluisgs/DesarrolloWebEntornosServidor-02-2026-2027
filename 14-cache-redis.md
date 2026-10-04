@@ -1,31 +1,31 @@
 - [14. Caché y Redis](#14-caché-y-redis)
-  - [14.1. Fundamentos de Caché](#141-fundamentos-de-caché)
-    - [14.1.1. Qué es un Caché](#1411-qué-es-un-caché)
-    - [14.1.2. Por qué usar Caché](#1412-por-qué-usar-caché)
-    - [14.1.3. Arquitectura con Caché](#1413-arquitectura-con-caché)
-  - [14.2. Tipos de Caché](#142-tipos-de-caché)
-    - [14.2.1. Caché en Memoria (Local)](#1421-caché-en-memoria-local)
-    - [14.2.2. Caché Distribuido](#1422-caché-distribuido)
+  - [14.1. Fundamentos de caché](#141-fundamentos-de-caché)
+    - [14.1.1. Qué es un caché](#1411-qué-es-un-caché)
+    - [14.1.2. Por qué usar caché](#1412-por-qué-usar-caché)
+    - [14.1.3. Arquitectura con caché](#1413-arquitectura-con-caché)
+  - [14.2. Tipos de caché](#142-tipos-de-caché)
+    - [14.2.1. Caché en memoria (local)](#1421-caché-en-memoria-local)
+    - [14.2.2. Caché distribuido](#1422-caché-distribuido)
     - [14.2.3. Comparativa MemoryCache vs IDistributedCache](#1423-comparativa-memorycache-vs-idistributedcache)
     - [14.2.4. Cuándo usar cada uno](#1424-cuándo-usar-cada-uno)
-  - [14.3. Algoritmos de Caché](#143-algoritmos-de-caché)
-    - [14.3.1. LRU - Least Recently Used](#1431-lru---least-recently-used)
-    - [14.3.2. LFU - Least Frequently Used](#1432-lfu---least-frequently-used)
-    - [14.3.3. FIFO - First In First Out](#1433-fifo---first-in-first-out)
-    - [14.3.4. TTL - Time To Live](#1434-ttl---time-to-live)
-    - [14.3.5. Comparativa de Algoritmos](#1435-comparativa-de-algoritmos)
-  - [14.4. Estrategias de Acceso a Caché](#144-estrategias-de-acceso-a-caché)
-    - [14.4.1. Cache-Aside (Lazy Loading)](#1441-cache-aside-lazy-loading)
+  - [14.3. Algoritmos de caché](#143-algoritmos-de-caché)
+    - [14.3.1. LRU - least recently used](#1431-lru---least-recently-used)
+    - [14.3.2. LFU - least frequently used](#1432-lfu---least-frequently-used)
+    - [14.3.3. FIFO - first in first out](#1433-fifo---first-in-first-out)
+    - [14.3.4. TTL - time to live](#1434-ttl---time-to-live)
+    - [14.3.5. Comparativa de algoritmos](#1435-comparativa-de-algoritmos)
+  - [14.4. Estrategias de acceso a caché](#144-estrategias-de-acceso-a-caché)
+    - [14.4.1. Cache-Aside (lazy loading)](#1441-cache-aside-lazy-loading)
     - [14.4.2. Write-Through](#1442-write-through)
     - [14.4.3. Write-Behind (Write-Back)](#1443-write-behind-write-back)
     - [14.4.4. Refresh-Ahead](#1444-refresh-ahead)
     - [14.4.5. Cuál elegir](#1445-cuál-elegir)
   - [14.5. Memcached](#145-memcached)
-    - [14.5.1. Qué es Memcached](#1451-qué-es-memcached)
+    - [14.5.1. Qué es memcached](#1451-qué-es-memcached)
     - [14.5.2. Memcached vs Redis](#1452-memcached-vs-redis)
-  - [14.6. Redis: Fundamentos](#146-redis-fundamentos)
+  - [14.6. Redis: fundamentos](#146-redis-fundamentos)
     - [14.6.1. Qué es Redis](#1461-qué-es-redis)
-    - [14.6.2. Estructuras de Datos](#1462-estructuras-de-datos)
+    - [14.6.2. Estructuras de datos](#1462-estructuras-de-datos)
     - [14.6.3. Persistencia](#1463-persistencia)
     - [14.6.4. Configuración con Docker](#1464-configuración-con-docker)
   - [14.7. Caché en ASP.NET Core](#147-caché-en-aspnet-core)
@@ -36,17 +36,17 @@
     - [14.7.5. RedisCacheService](#1475-rediscacheservice)
     - [14.7.6. Configuración en DI](#1476-configuración-en-di)
   - [14.8. Qué y qué no cachear](#148-qué-y-qué-no-cachear)
-  - [14.9. Invalidación de Caché](#149-invalidación-de-caché)
+  - [14.9. Invalidación de caché](#149-invalidación-de-caché)
     - [14.9.1. Invalidación por TTL](#1491-invalidación-por-ttl)
-    - [14.9.2. Invalidación por Operación CRUD](#1492-invalidación-por-operación-crud)
-    - [14.9.3. Invalidación en Cascada](#1493-invalidación-en-cascada)
-    - [14.9.4. Regla de Oro](#1494-regla-de-oro)
-  - [14.10. CRUD con Caché: Diagrama Completo](#1410-crud-con-caché-diagrama-completo)
-  - [14.11. Decorator Pattern para Caché](#1411-decorator-pattern-para-caché)
-  - [14.12. Testing con Caché](#1412-testing-con-caché)
-    - [14.12.1. Unit Testing con Mocks](#14121-unit-testing-con-mocks)
-    - [14.12.2. Integration Testing con TestContainers](#14122-integration-testing-con-testcontainers)
-  - [14.13. Buenas Prácticas](#1413-buenas-prácticas)
+    - [14.9.2. Invalidación por operación CRUD](#1492-invalidación-por-operación-crud)
+    - [14.9.3. Invalidación en cascada](#1493-invalidación-en-cascada)
+    - [14.9.4. Regla de oro](#1494-regla-de-oro)
+  - [14.10. CRUD con caché: diagrama completo](#1410-crud-con-caché-diagrama-completo)
+  - [14.11. Decorator pattern para caché](#1411-decorator-pattern-para-caché)
+  - [14.12. Testing con caché](#1412-testing-con-caché)
+    - [14.12.1. Unit testing con mocks](#14121-unit-testing-con-mocks)
+    - [14.12.2. Integration testing con TestContainers](#14122-integration-testing-con-testcontainers)
+  - [14.13. Buenas prácticas](#1413-buenas-prácticas)
   - [14.14. Reto](#1414-reto)
 
 
@@ -61,15 +61,15 @@
 - Conocer algoritmos de caché (LRU, LFU, FIFO, TTL) y estrategias de acceso
 - Implementar caché en ASP.NET Core con ICacheService y Redis
 
-## 14.1. Fundamentos de Caché
+## 14.1. Fundamentos de caché
 
-### 14.1.1. Qué es un Caché
+### 14.1.1. Qué es un caché
 
 Un **caché** es una capa de almacenamiento temporal de alta velocidad que guarda copias de datos frecuentemente accedidos. Su objetivo es reducir la latencia y la carga en sistemas más lentos (como bases de datos) almacenando temporalmente datos que son costosos de obtener pero que se accede con frecuencia.
 
 📌 Ejemplo real: **Netflix** almacena en caché las portadas de películas y los primeros minutos de cada título en servidores CDN distribuidos por el mundo. Cuando abres Netflix, no descarga las imágenes desde un servidor central en California, las obtiene del CDN más cercano a tu ubicación.
 
-### 14.1.2. Por qué usar Caché
+### 14.1.2. Por qué usar caché
 
 El caché resuelve la **brecha de velocidad** entre la memoria (RAM) y el almacenamiento persistente (base de datos):
 
@@ -81,11 +81,11 @@ flowchart LR
         C --> D["HDD<br/>~5-10 ms"]
         D --> E["BD en Red<br/>~10-100 ms"]
     end
-    style A fill:#4CAF50,color:#fff
-    style B fill:#4CAF50,color:#fff
-    style C fill:#4CAF50,color:#fff
-    style D fill:#FF9800,color:#fff
-    style E fill:#F44336,color:#fff
+    style A fill:#4CAF5,color:#fff0,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#FF980,color:#fff0,color:#fff
+    style E fill:#F4433,color:#fff6,color:#fff
 ```
 
 | Nivel | Tecnología | Latencia Típica | Throughput |
@@ -100,7 +100,7 @@ flowchart LR
 
 📌 Ejemplo real: **Amazon** usa caché agresivamente. Cada producto que ves en amazon.com está cacheado. Cuando buscas "auriculares Bluetooth", los resultados vienen de caché, no de una consulta SQL en tiempo real. Solo cuando compras algo se actualiza la BD.
 
-### 14.1.3. Arquitectura con Caché
+### 14.1.3. Arquitectura con caché
 
 ```mermaid
 flowchart TB
@@ -120,17 +120,17 @@ flowchart TB
     Cache -->|HIT| C2
     Cache -->|MISS| BD
     BD --> Cache
-    style Cache fill:#4CAF50,color:#fff
-    style BD fill:#2196F3,color:#fff
+    style Cache fill:#4CAF5,color:#fff0,color:#fff
+    style BD fill:#2196F,color:#fff3,color:#fff
 ```
 
 > 💡 **Consejo:** Piensa en el caché como los estantes del supermercado. Los productos más vendidos están al frente (caché). Solo cuando se agota el estante, bajan al almacén (base de datos).
 
 > 💡 **Analogía:** Un caché es como la estantería de tu despacho donde guardas los libros que más consultas. En vez de ir a la biblioteca (base de datos) cada vez que necesitas información, miras primero en tu estantería (caché). Si está, lo tienes en segundos; si no, vas a la biblioteca y traes una copia para la próxima vez.
 
-## 14.2. Tipos de Caché
+## 14.2. Tipos de caché
 
-### 14.2.1. Caché en Memoria (Local)
+### 14.2.1. Caché en memoria (local)
 
 El caché en memoria (local) almacena datos en la RAM del propio proceso de la aplicación. Es el tipo de caché más rápido porque no requiere comunicación de red.
 
@@ -140,8 +140,8 @@ flowchart LR
         P1["Proceso 1"] --> R1["RAM Proceso 1"]
         P2["Proceso 2"] --> R2["RAM Proceso 2"]
     end
-    style R1 fill:#4CAF50,color:#fff
-    style R2 fill:#4CAF50,color:#fff
+    style R1 fill:#4CAF5,color:#fff0,color:#fff
+    style R2 fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 | Aspecto | Descripción |
@@ -152,7 +152,7 @@ flowchart LR
 | **Persistencia** | Se pierde al reiniciar |
 | **Memoria** | Limitada al proceso |
 
-### 14.2.2. Caché Distribuido
+### 14.2.2. Caché distribuido
 
 Un caché distribuido es un servicio independiente que múltiples instancias de aplicación pueden compartir. Redis es el ejemplo más popular.
 
@@ -163,7 +163,7 @@ flowchart LR
         P2["Proceso 2"] --> RS
         P3["Proceso 3"] --> RS
     end
-    style RS fill:#4CAF50,color:#fff
+    style RS fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 | Aspecto | Descripción |
@@ -184,10 +184,10 @@ flowchart TD
     B -->|No| E["Redis Standalone"]
     C -->|Sí| F["MemoryCache con límites"]
     C -->|No| G["MemoryCache sin límites"]
-    style D fill:#4CAF50,color:#fff
-    style E fill:#4CAF50,color:#fff
-    style F fill:#FF9800,color:#fff
-    style G fill:#2196F3,color:#fff
+    style D fill:#4CAF5,color:#fff0,color:#fff
+    style E fill:#4CAF5,color:#fff0,color:#fff
+    style F fill:#FF980,color:#fff0,color:#fff
+    style G fill:#2196F,color:#fff3,color:#fff
 ```
 
 | Característica | MemoryCache (Local) | IDistributedCache (Redis) |
@@ -213,9 +213,9 @@ flowchart TD
 
 > 💡 **Consejo:** Para la mayoría de aplicaciones web, usa **MemoryCache en desarrollo** (más rápido para debug) y **Redis en producción** (compartido, persistente). Es el patrón que usaremos en los ejemplos.
 
-## 14.3. Algoritmos de Caché
+## 14.3. Algoritmos de caché
 
-### 14.3.1. LRU - Least Recently Used
+### 14.3.1. LRU - least recently used
 
 **LRU** elimina primero los elementos que no han sido usados durante más tiempo. Es el algoritmo más común y funciona bien cuando los patrones de acceso tienen localidad temporal.
 
@@ -229,9 +229,9 @@ flowchart TD
         S --> LFU["LFU: [A, B, C]<br/>Hit rate: 4/8 = 50%"]
         S --> FIFO["FIFO: [C, D, A]<br/>Hit rate: 2/8 = 25%"]
     end
-    style LRU fill:#4CAF50,color:#fff
-    style LFU fill:#2196F3,color:#fff
-    style FIFO fill:#F44336,color:#fff
+    style LRU fill:#4CAF5,color:#fff0,color:#fff
+    style LFU fill:#2196F,color:#fff3,color:#fff
+    style FIFO fill:#F4433,color:#fff6,color:#fff
 ```
 
 **Cómo funciona:**
@@ -240,7 +240,7 @@ flowchart TD
 3. Se elimina el elemento con el timestamp más antiguo
 4. Al acceder a un elemento, se actualiza su timestamp
 
-### 14.3.2. LFU - Least Frequently Used
+### 14.3.2. LFU - least frequently used
 
 **LFU** elimina primero los elementos menos frecuentemente accedidos. Funciona mejor cuando la frecuencia de acceso es predecible.
 
@@ -254,15 +254,15 @@ flowchart LR
         A2["A: 100"] --> B2["B: 50"]
         B2 --> D2["D: 1"]
     end
-    style A fill:#4CAF50,color:#fff
-    style C fill:#F44336,color:#fff
+    style A fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#F4433,color:#fff6,color:#fff
 ```
 
-### 14.3.3. FIFO - First In First Out
+### 14.3.3. FIFO - first in first out
 
 **FIFO** elimina los elementos en el orden en que fueron añadidos, independientemente de cómo se acceda a ellos.
 
-### 14.3.4. TTL - Time To Live
+### 14.3.4. TTL - time to live
 
 **TTL** no es un algoritmo de evicción sino una política complementaria. Cada entrada tiene un tiempo de vida después del cual se elimina automáticamente.
 
@@ -280,7 +280,7 @@ var options = new MemoryCacheEntryOptions
 };
 ```
 
-### 14.3.5. Comparativa de Algoritmos
+### 14.3.5. Comparativa de algoritmos
 
 | Algoritmo | Mejor Caso | Peor Caso | Complejidad | Uso Típico |
 |-----------|------------|-----------|-------------|------------|
@@ -291,9 +291,9 @@ var options = new MemoryCacheEntryOptions
 
 > 📝 **Nota:** En Redis, el algoritmo por defecto es **allkeys-lru** (LRU entre todas las claves). Se configura con `maxmemory-policy allkeys-lru` en redis.conf.
 
-## 14.4. Estrategias de Acceso a Caché
+## 14.4. Estrategias de acceso a caché
 
-### 14.4.1. Cache-Aside (Lazy Loading)
+### 14.4.1. Cache-Aside (lazy loading)
 
 El patrón **Cache-Aside** carga datos en el caché solo cuando se necesitan por primera vez. Es la estrategia más utilizada.
 
@@ -304,9 +304,9 @@ flowchart TD
     B -->|No| D["Consultar BD"]
     D --> E["Guardar en caché"]
     E --> C
-    style C fill:#4CAF50,color:#fff
-    style D fill:#f44336,color:#fff
-    style E fill:#FF9800,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#f4433,color:#fff6,color:#fff
+    style E fill:#FF980,color:#fff0,color:#fff
 ```
 
 **Implementación:**
@@ -343,9 +343,9 @@ flowchart TD
     A["PUT /productos/1"] --> B["Actualizar en BD"]
     B --> C["Actualizar en caché"]
     C --> D["Respuesta OK"]
-    style B fill:#2196F3,color:#fff
-    style C fill:#FF9800,color:#fff
-    style D fill:#4CAF50,color:#fff
+    style B fill:#2196F,color:#fff3,color:#fff
+    style C fill:#FF980,color:#fff0,color:#fff
+    style D fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 **Ventajas:** Caché siempre sincronizado, lecturas siempre devuelven datos actualizados.
@@ -360,9 +360,9 @@ flowchart TD
     A["PUT /productos/1"] --> B["Escribir en caché"]
     B --> C["Respuesta inmediata"]
     C --> D["Flush asíncrono a BD"]
-    style B fill:#FF9800,color:#fff
-    style C fill:#4CAF50,color:#fff
-    style D fill:#2196F3,color:#fff
+    style B fill:#FF980,color:#fff0,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#2196F,color:#fff3,color:#fff
 ```
 
 **Ventajas:** Writes muy rápidos, reduce carga en BD.
@@ -378,8 +378,8 @@ flowchart TD
     B -->|Sí| C["Refrescar en segundo plano"]
     B -->|No| D["Devolver dato"]
     C --> D
-    style C fill:#FF9800,color:#fff
-    style D fill:#4CAF50,color:#fff
+    style C fill:#FF980,color:#fff0,color:#fff
+    style D fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 ### 14.4.5. Cuál elegir
@@ -395,7 +395,7 @@ flowchart TD
 
 ## 14.5. Memcached
 
-### 14.5.1. Qué es Memcached
+### 14.5.1. Qué es memcached
 
 **Memcached** es un sistema de caché en memoria distribuido, de código abierto, diseñado para ser rápido y sencillo. A diferencia de Redis, solo almacena cadenas de texto (strings) y no soporta estructuras de datos complejas.
 
@@ -416,7 +416,7 @@ flowchart TD
 
 > 📝 **Nota:** Memcached es como una estantería simple: solo guarda cajas (strings). Redis es como un almacén inteligente: tiene cajones, estantes, listas y hasta un tablero de anuncios. Para caché básica, ambos funcionan. Para algo más complejo, Redis gana.
 
-## 14.6. Redis: Fundamentos
+## 14.6. Redis: fundamentos
 
 ### 14.6.1. Qué es Redis
 
@@ -426,7 +426,7 @@ flowchart TD
 
 📌 Ejemplo real: **Twitter** usa Redis para almacenar los timelines de los usuarios. Cuando abres tu timeline, los tweets más recientes vienen de Redis, no de una consulta a la base de datos principal. Esto permite servir millones de peticiones por segundo.
 
-### 14.6.2. Estructuras de Datos
+### 14.6.2. Estructuras de datos
 
 ```mermaid
 flowchart TD
@@ -442,13 +442,13 @@ flowchart TD
     E --> E1["Conjuntos únicos"]
     F --> F1["Conjuntos ordenados"]
     G --> G1["Logs estructurados"]
-    style A fill:#F44336,color:#fff
-    style B fill:#2196F3,color:#fff
-    style C fill:#4CAF50,color:#fff
-    style D fill:#FF9800,color:#fff
-    style E fill:#9C27B0,color:#fff
-    style F fill:#2196F3,color:#fff
-    style G fill:#607D8B,color:#fff
+    style A fill:#F4433,color:#fff6,color:#fff
+    style B fill:#2196F,color:#fff3,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#FF980,color:#fff0,color:#fff
+    style E fill:#9C27B,color:#fff0,color:#fff
+    style F fill:#2196F,color:#fff3,color:#fff
+    style G fill:#607D8,color:#fffB,color:#fff
 ```
 
 | Estructura | Uso | Ejemplo |
@@ -471,9 +471,9 @@ flowchart TB
     B1 --> B2["Archivo: dump.rdb"]
     C --> C1["Cada operación al log"]
     C1 --> C2["Archivo: appendonly.aof"]
-    style B fill:#4CAF50,color:#fff
-    style C fill:#2196F3,color:#fff
-    style D fill:#F44336,color:#fff
+    style B fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#2196F,color:#fff3,color:#fff
+    style D fill:#F4433,color:#fff6,color:#fff
 ```
 
 **Configuración recomendada para producción:**
@@ -770,10 +770,10 @@ flowchart TD
     C -->|Sí| F{"¿Es crítico?"}
     F -->|Sí| G["Cachear con TTL corto"]
     F -->|No| H["No cachear"]
-    style E fill:#4CAF50,color:#fff
-    style G fill:#FF9800,color:#fff
-    style D fill:#F44336,color:#fff
-    style H fill:#F44336,color:#fff
+    style E fill:#4CAF5,color:#fff0,color:#fff
+    style G fill:#FF980,color:#fff0,color:#fff
+    style D fill:#F4433,color:#fff6,color:#fff
+    style H fill:#F4433,color:#fff6,color:#fff
 ```
 
 ```csharp
@@ -809,7 +809,7 @@ await _cache.RemoveAsync("productos:all");              // Invalidar listado
 | Datos de sesión | Datos personales (GDPR) |
 | Consultas con JOINs costosos | Datos que cambian cada segundo |
 
-## 14.9. Invalidación de Caché
+## 14.9. Invalidación de caché
 
 ### 14.9.1. Invalidación por TTL
 
@@ -820,7 +820,7 @@ await _cache.SetAsync(key, value, TimeSpan.FromMinutes(30));
 // El dato se elimina automáticamente después de 30 minutos
 ```
 
-### 14.9.2. Invalidación por Operación CRUD
+### 14.9.2. Invalidación por operación CRUD
 
 ```mermaid
 flowchart TD
@@ -839,11 +839,11 @@ flowchart TD
         D1["Eliminar BD"] --> D2["Invalidar elemento"]
         D2 --> D3["Invalidar listas"]
     end
-    style A2 fill:#FF9800,color:#fff
-    style B2 fill:#4CAF50,color:#fff
-    style B4 fill:#4CAF50,color:#fff
-    style C2 fill:#FF9800,color:#fff
-    style D2 fill:#FF9800,color:#fff
+    style A2 fill:#FF980,color:#fff0,color:#fff
+    style B2 fill:#4CAF5,color:#fff0,color:#fff
+    style B4 fill:#4CAF5,color:#fff0,color:#fff
+    style C2 fill:#FF980,color:#fff0,color:#fff
+    style D2 fill:#FF980,color:#fff0,color:#fff
 ```
 
 ```csharp
@@ -863,7 +863,7 @@ await cache.RemoveAsync($"productos:cat:{producto.CategoriaId}"); // lista por c
 >
 > 📌 Ejemplo real: en TiendaAPI eliminaron las claves `productos:all`, `categorias:all`, `usuarios:all` y `pedidos:all` de la invalidación porque tenían **0 lectores** (las listas se servían por `OutputCache` con tags). Commit `fix: eliminar claves muertas :all de invalidación`.
 
-### 14.9.3. Invalidación en Cascada
+### 14.9.3. Invalidación en cascada
 
 Cuando un dato relacionado cambia, todas las cachés derivadas deben invalidarse:
 
@@ -873,12 +873,12 @@ flowchart TD
     CM -->|Invalidar| F2["funko:2"]
     CM -->|Invalidar| L1["funkos:all"]
     CM -->|Invalidar| L2["funkos:cat:1"]
-    style CM fill:#F44336,color:#fff
-    style L1 fill:#FF9800,color:#fff
-    style L2 fill:#FF9800,color:#fff
+    style CM fill:#F4433,color:#fff6,color:#fff
+    style L1 fill:#FF980,color:#fff0,color:#fff
+    style L2 fill:#FF980,color:#fff0,color:#fff
 ```
 
-### 14.9.4. Regla de Oro
+### 14.9.4. Regla de oro
 
 | Operación | Elemento Individual | Listas/Colecciones |
 |-----------|---------------------|-------------------|
@@ -893,7 +893,7 @@ flowchart TD
 
 > 💡 **Analogía:** Piensa en las etiquetas de un armario de un almacén. Si mueves una caja y borras la etiqueta de una balda que nadie usa, solo pierdes tiempo. Pero si dejas la etiqueta vieja en la balda donde sí mira la gente, acabarán llevándose la caja equivocada.
 
-## 14.10. CRUD con Caché: Diagrama Completo
+## 14.10. CRUD con caché: diagrama completo
 
 ```mermaid
 flowchart TD
@@ -918,14 +918,14 @@ flowchart TD
         D2 --> D3["Invalidar elemento"]
         D3 --> D4["Invalidar listas"]
     end
-    style B3 fill:#4CAF50,color:#fff
-    style B5 fill:#4CAF50,color:#fff
-    style A3 fill:#FF9800,color:#fff
-    style C3 fill:#FF9800,color:#fff
-    style D3 fill:#FF9800,color:#fff
+    style B3 fill:#4CAF5,color:#fff0,color:#fff
+    style B5 fill:#4CAF5,color:#fff0,color:#fff
+    style A3 fill:#FF980,color:#fff0,color:#fff
+    style C3 fill:#FF980,color:#fff0,color:#fff
+    style D3 fill:#FF980,color:#fff0,color:#fff
 ```
 
-## 14.11. Decorator Pattern para Caché
+## 14.11. Decorator pattern para caché
 
 El patrón **Decorator** permite añadir caché a un servicio sin modificar su código original:
 
@@ -977,9 +977,9 @@ builder.Services.AddScoped<IProductoService, ProductoService>();
 builder.Services.Decorate<IProductoService, CachedProductoService>();
 ```
 
-## 14.12. Testing con Caché
+## 14.12. Testing con caché
 
-### 14.12.1. Unit Testing con Mocks
+### 14.12.1. Unit testing con mocks
 
 ```csharp
 using NUnit.Framework;
@@ -1037,7 +1037,7 @@ public class CachedProductoServiceTests
 }
 ```
 
-### 14.12.2. Integration Testing con TestContainers
+### 14.12.2. Integration testing con TestContainers
 
 ```csharp
 using Testcontainers.Redis;
@@ -1101,7 +1101,7 @@ public class RedisCacheServiceTests : IAsyncLifetime
 
 > 💡 **Consejo:** `_cache` debe construirse **después** de `StartAsync()` del contenedor, porque necesita la cadena de conexión real que TestContainers asigna al arrancar Redis.
 
-## 14.13. Buenas Prácticas
+## 14.13. Buenas prácticas
 
 ```csharp
 // ❌ MALO: Usar IMemoryCache directamente en el servicio — acoplamiento total

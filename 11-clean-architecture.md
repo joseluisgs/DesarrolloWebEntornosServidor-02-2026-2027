@@ -1,29 +1,29 @@
-- [11. Arquitecturas en Capas y Clean Architecture](#11-arquitecturas-en-capas-y-clean-architecture)
+- [11. Arquitecturas en capas y Clean Architecture](#11-arquitecturas-en-capas-y-clean-architecture)
   - [11.1. ¿Por qué necesitamos una arquitectura?](#111-por-qué-necesitamos-una-arquitectura)
     - [11.1.1. El problema del "spaghetti code"](#1111-el-problema-del-spaghetti-code)
     - [11.1.2. Separación de responsabilidades](#1112-separación-de-responsabilidades)
-  - [11.2. Arquitectura en Capas](#112-arquitectura-en-capas)
+  - [11.2. Arquitectura en capas](#112-arquitectura-en-capas)
     - [11.2.1. Conceptos fundamentales](#1121-conceptos-fundamentales)
     - [11.2.2. Capas típicas y responsabilidades](#1122-capas-típicas-y-responsabilidades)
     - [11.2.3. Diagrama de capas](#1123-diagrama-de-capas)
     - [11.2.4. Flujo de dependencias](#1124-flujo-de-dependencias)
     - [11.2.5. Ventajas y desventajas](#1125-ventajas-y-desventajas)
-  - [11.3. Arquitectura Onion](#113-arquitectura-onion)
+  - [11.3. Arquitectura onion](#113-arquitectura-onion)
     - [11.3.1. Principios: dependencias hacia el centro](#1131-principios-dependencias-hacia-el-centro)
     - [11.3.2. Estructura concéntrica](#1132-estructura-concéntrica)
-    - [11.3.3. Comparación Capas vs Onion](#1133-comparación-capas-vs-onion)
+    - [11.3.3. Comparación capas vs onion](#1133-comparación-capas-vs-onion)
   - [11.4. Clean Architecture](#114-clean-architecture)
     - [11.4.1. Los 4 anillos](#1141-los-4-anillos)
-    - [11.4.2. La Regla de Dependencia](#1142-la-regla-de-dependencia)
+    - [11.4.2. La regla de dependencia](#1142-la-regla-de-dependencia)
     - [11.4.3. Diagrama Clean Architecture](#1143-diagrama-clean-architecture)
     - [11.4.4. Ejemplo práctico en .NET](#1144-ejemplo-práctico-en-net)
-  - [11.5. CQRS: Command Query Responsibility Segregation](#115-cqrs-command-query-responsibility-segregation)
+  - [11.5. CQRS: command query responsibility segregation](#115-cqrs-command-query-responsibility-segregation)
     - [11.5.1. El problema: lecturas y escrituras son distintas](#1151-el-problema-lecturas-y-escrituras-son-distintas)
-    - [11.5.2. Separar Commands de Queries](#1152-separar-commands-de-queries)
+    - [11.5.2. Separar commands de queries](#1152-separar-commands-de-queries)
     - [11.5.3. CQRS con MediatR (introducción)](#1153-cqrs-con-mediatr-introducción)
     - [11.5.4. ¿Cuándo usar CQRS?](#1154-cuándo-usar-cqrs)
-    - [11.5.5. Nuestra arquitectura: Config Classes](#1155-nuestra-arquitectura-config-classes)
-  - [11.6. Estructura del Proyecto](#116-estructura-del-proyecto)
+    - [11.5.5. Nuestra arquitectura: config classes](#1155-nuestra-arquitectura-config-classes)
+  - [11.6. Estructura del proyecto](#116-estructura-del-proyecto)
     - [11.6.1. Organización de carpetas](#1161-organización-de-carpetas)
     - [11.6.2. Capas y sus contenidos](#1162-capas-y-sus-contenidos)
   - [11.7. Buenas prácticas](#117-buenas-prácticas)
@@ -36,7 +36,7 @@
 
 
 
-# 11. Arquitecturas en Capas y Clean Architecture
+# 11. Arquitecturas en capas y Clean Architecture
 
 > 💡 **Punto de partida:** Si construyes una casa, no empiezas a poner ladrillos sin un plano. Lo mismo ocurre con el software: necesitas una **arquitectura**, un plan que determine cómo se organizan las piezas, cómo se comunican y cómo escalará en el futuro.
 
@@ -65,7 +65,7 @@ flowchart TD
         A1 -->|"logica negocio"| E1["Validaciones en 5 sitios"]
     end
 
-    style MAL fill:#f44336,color:#fff
+    style MAL fill:#f4433,color:#fff6,color:#fff
 ```
 
 | Síntoma | Consecuencia |
@@ -86,7 +86,7 @@ La **separación de responsabilidades** es el principio más básico: cada pieza
 📌 Ejemplo real: **Toyota** usa arquitectura en su proceso de fabricación. Cada estación de la línea de montaje tiene una responsabilidad clara. Si una estación falla, la línea se para, pero no afecta a la estación anterior ni a la siguiente.
 
 
-## 11.2. Arquitectura en Capas
+## 11.2. Arquitectura en capas
 
 ### 11.2.1. Conceptos fundamentales
 
@@ -133,10 +133,10 @@ flowchart TB
     A1 --> D1
     I1 -.implements.-> D1
 
-    style PRESENTACIÓN fill:#9C27B0,color:#fff
-    style APLICACIÓN fill:#2196F3,color:#fff
-    style DOMINIO fill:#4CAF50,color:#fff
-    style INFRAESTRUCTURA fill:#FF9800,color:#fff
+    style PRESENTACIÓN fill:#9C27B,color:#fff0,color:#fff
+    style APLICACIÓN fill:#2196F,color:#fff3,color:#fff
+    style DOMINIO fill:#4CAF5,color:#fff0,color:#fff
+    style INFRAESTRUCTURA fill:#FF980,color:#fff0,color:#fff
 ```
 
 ### 11.2.4. Flujo de dependencias
@@ -181,7 +181,7 @@ public class ProductoRepository(AppDbContext db) : IProductoRepository
 | Patrón bien conocido | Puede degenerar en "big ball of mud" |
 
 
-## 11.3. Arquitectura Onion
+## 11.3. Arquitectura onion
 
 ### 11.3.1. Principios: dependencias hacia el centro
 
@@ -203,7 +203,7 @@ En Capas, el dominio depende de la infraestructura. En Onion, el dominio **defin
 | **Infrastructure** | Repositories, DbContext | Domain Services |
 | **Presentation** | Controllers, Middleware | Application |
 
-### 11.3.3. Comparación Capas vs Onion
+### 11.3.3. Comparación capas vs onion
 
 | Aspecto | Capas Tradicional | Onion Architecture |
 |---------|-------------------|-------------------|
@@ -230,7 +230,7 @@ En Capas, el dominio depende de la infraestructura. En Onion, el dominio **defin
 
 📌 Ejemplo real: **Spotify** usa Clean Architecture. Su algoritmo de recomendaciones (Entities + Use Cases) no depende de si la interfaz es web, móvil o smart TV. Los adapters traducen las peticiones de cada plataforma.
 
-### 11.4.2. La Regla de Dependencia
+### 11.4.2. La regla de dependencia
 
 > **"Las dependencias de código solo pueden apuntar hacia adentro."**
 
@@ -269,10 +269,10 @@ flowchart TB
     GW --> ENT1
     DB --> GW
 
-    style ENTITIES fill:#4CAF50,color:#fff
-    style USECASES fill:#2196F3,color:#fff
-    style ADAPTERS fill:#FF9800,color:#fff
-    style EXTERIOR fill:#9C27B0,color:#fff
+    style ENTITIES fill:#4CAF5,color:#fff0,color:#fff
+    style USECASES fill:#2196F,color:#fff3,color:#fff
+    style ADAPTERS fill:#FF980,color:#fff0,color:#fff
+    style EXTERIOR fill:#9C27B,color:#fff0,color:#fff
 ```
 
 ### 11.4.4. Ejemplo práctico en .NET
@@ -336,7 +336,7 @@ public class ProductoRepository(AppDbContext db) : IProductoRepository
 ```
 
 
-## 11.5. CQRS: Command Query Responsibility Segregation
+## 11.5. CQRS: command query responsibility segregation
 
 > 💡 **Punto de partida:** ¿Por qué una misma función hace `GET /productos` (lectura) y `POST /productos` (escritura) de la misma forma? Leer y escribir son operaciones fundamentalmente distintas. CQRS las separa.
 
@@ -352,7 +352,7 @@ flowchart LR
         S1 --> U1["Update (escritura)"]
     end
 
-    style MIXTO fill:#f44336,color:#fff
+    style MIXTO fill:#f4433,color:#fff6,color:#fff
 ```
 
 **Problemas:**
@@ -360,7 +360,7 @@ flowchart LR
 - La **escalabilidad** es distinta (más lecturas que escrituras en la mayoría de apps)
 - La **complejidad** se mezcla (validaciones de escritura contaminan la lectura)
 
-### 11.5.2. Separar Commands de Queries
+### 11.5.2. Separar commands de queries
 
 **CQRS** separa explícitamente:
 - **Commands** (escrituras): CrearProducto, ActualizarProducto, EliminarProducto
@@ -380,8 +380,8 @@ flowchart LR
         Q3["Search"]
     end
 
-    style COMMANDS fill:#f44336,color:#fff
-    style QUERIES fill:#4CAF50,color:#fff
+    style COMMANDS fill:#f4433,color:#fff6,color:#fff
+    style QUERIES fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 ```csharp
@@ -462,7 +462,7 @@ public class ProductosController(IMediator mediator) : ControllerBase
 
 > 📝 **Nota:** CQRS es un patrón, no una arquitectura. Se puede usar solo o combinado con Clean Architecture. Lo veremos en profundidad en UD03/UD04 con bases de datos.
 
-### 11.5.5. Nuestra arquitectura: Config Classes
+### 11.5.5. Nuestra arquitectura: config classes
 
 En el curso y en **TiendaAPI** usamos una variante práctica de Clean Architecture adaptada a educación. No separamos en proyectos distintos (Domain, Application, Infrastructure), sino que **organizamos por carpetas dentro de un solo proyecto** con **Config classes** en `Infrastructure/` para el registro de DI.
 
@@ -485,7 +485,7 @@ flowchart TB
     SVC --> REPO
     REPO --> MDL
 
-    style PROYECTO fill:#2196F3,color:#fff
+    style PROYECTO fill:#2196F,color:#fff3,color:#fff
 ```
 
 **Estructura de TiendaAPI:**
@@ -581,7 +581,7 @@ services.AddStorage();
 > ⚠️ **Advertencia:** Cuando el proyecto tenga más de 3 desarrolladores o más de 20 endpoints, considera migrar a Clean Architecture con proyectos separados. La arquitectura plana funciona bien en educación y proyectos pequeños, pero escala limitada en equipos grandes.
 
 
-## 11.6. Estructura del Proyecto
+## 11.6. Estructura del proyecto
 
 ### 11.6.1. Organización de carpetas
 

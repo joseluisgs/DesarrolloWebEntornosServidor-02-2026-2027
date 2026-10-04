@@ -1,21 +1,21 @@
-- [00. Guía de Supervivencia: Comandos .NET CLI](#00-guía-de-supervivencia-comandos-net-cli)
-  - [1. Crear Proyectos y Soluciones](#1-crear-proyectos-y-soluciones)
-  - [2. Scaffolding: Generar Código Automáticamente](#2-scaffolding-generar-código-automáticamente)
-  - [3. Hot Reload: Desarrollo en Vivo](#3-hot-reload-desarrollo-en-vivo)
-  - [4. Compilar y Ejecutar](#4-compilar-y-ejecutar)
+- [00. Guía de supervivencia: comandos .NET CLI](#00-guía-de-supervivencia-comandos-net-cli)
+  - [1. Crear proyectos y soluciones](#1-crear-proyectos-y-soluciones)
+  - [2. Scaffolding: generar código automáticamente](#2-scaffolding-generar-código-automáticamente)
+  - [3. Hot reload: desarrollo en vivo](#3-hot-reload-desarrollo-en-vivo)
+  - [4. Compilar y ejecutar](#4-compilar-y-ejecutar)
   - [5. Paquetes NuGet](#5-paquetes-nuget)
-  - [6. .NET Tools: Herramientas Globales](#6-net-tools-herramientas-globales)
+  - [6. .NET tools: herramientas globales](#6-net-tools-herramientas-globales)
   - [7. Entity Framework Core](#7-entity-framework-core)
   - [8. Tests](#8-tests)
-  - [9. Formateo de Código](#9-formateo-de-código)
-  - [10. User Secrets (Secretos de Desarrollo)](#10-user-secrets-secretos-de-desarrollo)
-  - [11. Certificados de Desarrollo](#11-certificados-de-desarrollo)
+  - [9. Formateo de código](#9-formateo-de-código)
+  - [10. User Secrets (secretos de desarrollo)](#10-user-secrets-secretos-de-desarrollo)
+  - [11. Certificados de desarrollo](#11-certificados-de-desarrollo)
   - [12. Docker](#12-docker)
   - [13. Git](#13-git)
 
 
 
-# 00. Guía de Supervivencia: Comandos .NET CLI
+# 00. Guía de supervivencia: comandos .NET CLI
 
 > 💡 **Punto de partida:** Esta guía recopila todos los comandos de `dotnet` que necesitas para crear, compilar, ejecutar, scaffoldear, testear y desplegar APIs en .NET 10. Guárdala como referencia rápida.
 
@@ -27,7 +27,7 @@
 
 📌 Ejemplo real: Cuando un compañero pregunta "¿cómo creo el proyecto de la práctica?", la respuesta es `dotnet new webapi -n MiApi -f net10.0`. Esta guía recopila todos esos comandos en un solo lugar.
 
-## 1. Crear Proyectos y Soluciones
+## 1. Crear proyectos y soluciones
 
 ### Templates disponibles
 
@@ -105,7 +105,7 @@ dotnet sln migrate
 
 
 
-## 2. Scaffolding: Generar Código Automáticamente
+## 2. Scaffolding: generar código automáticamente
 
 El scaffolding genera código boilerplate (controladores, vistas, etc.) a partir de tus modelos y DbContext.
 
@@ -122,7 +122,7 @@ dotnet tool update -g dotnet-aspnet-codegenerator
 dotnet add package Microsoft.VisualStudio.Web.CodeGeneration.Design
 ```
 
-### Generar un Controller API completo (CRUD)
+### Generar un controller API completo (CRUD)
 
 ```bash
 # API Controller con CRUD automático para un modelo
@@ -146,7 +146,7 @@ dotnet aspnet-codegenerator controller \
     --referenceScriptLibraries
 ```
 
-### Generar Minimal API con CRUD
+### Generar minimal API con CRUD
 
 ```bash
 dotnet aspnet-codegenerator minimalapi \
@@ -192,7 +192,7 @@ dotnet scaffold
 
 
 
-## 3. Hot Reload: Desarrollo en Vivo
+## 3. Hot reload: desarrollo en vivo
 
 ```bash
 # Ejecutar con hot reload (recompila al guardar)
@@ -223,7 +223,7 @@ dotnet watch run --urls "http://localhost:5000"
 
 
 
-## 4. Compilar y Ejecutar
+## 4. Compilar y ejecutar
 
 ```bash
 # Compilar (verificar errores)
@@ -335,7 +335,7 @@ dotnet add package Microsoft.VisualStudio.Web.CodeGeneration.Design
 
 
 
-## 6. .NET Tools: Herramientas Globales
+## 6. .NET tools: herramientas globales
 
 ```bash
 # Listar herramientas instaladas globalmente
@@ -434,7 +434,7 @@ dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
 
 
 
-## 9. Formateo de Código
+## 9. Formateo de código
 
 ```bash
 # Formatear según .editorconfig
@@ -458,7 +458,7 @@ dotnet format style --diagnostics IDE0005 --severity info
 
 
 
-## 10. User Secrets (Secretos de Desarrollo)
+## 10. User Secrets (secretos de desarrollo)
 
 ```bash
 # Inicializar user secrets en un proyecto
@@ -482,7 +482,7 @@ dotnet user-secrets clear
 
 
 
-## 11. Certificados de Desarrollo
+## 11. Certificados de desarrollo
 
 ```bash
 # Crear certificado de desarrollo (HTTPS)

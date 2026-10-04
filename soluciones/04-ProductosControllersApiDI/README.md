@@ -38,7 +38,7 @@ Prefijo: `http://localhost:5000/api/productos`
 
 | Método | Ruta | Parámetros | Cuerpo de petición | Respuesta exitosa | Errores |
 |--------|------|------------|--------------------|-------------------|---------|
-| GET | `/api/productos` | — | — | `200` `Producto[]` (5 seed) | — |
+| GET | `/api/productos` | ( | ) | `200` `Producto[]` (5 seed) | — |
 | GET | `/api/productos/{id}` | `id` (long) | — | `200` `Producto` | `404` |
 | POST | `/api/productos` | — | `{ "nombre", "precio", "categoria", "imagen"? }` | `201` + `Location` | `400` `{"error"}`, binding |
 | PUT | `/api/productos/{id}` | `id` (long) | `Producto` completo | `200` | `400` (valida antes), `404` |
@@ -46,10 +46,10 @@ Prefijo: `http://localhost:5000/api/productos`
 | DELETE | `/api/productos/{id}` | `id` (long) | — | `204` | `404` |
 | GET | `/api/productos/search` | Query `termino` **obligatorio** | — | `200` `Producto[]` | `400` si falta |
 | GET | `/api/productos/filter/categoria` | Query `categoria` **obligatorio** | — | `200` `Producto[]` | `400` si falta |
-| GET | `/api/productos/filter/precio` | Query `min`, `max` (default `0`/`MaxValue`) | — | `200` `Producto[]` | — |
-| GET | `/api/productos/order/precio` | Query `descendente` (default `false`) | — | `200` `Producto[]` | — |
-| GET | `/api/productos/group/categoria` | — | — | `200` **array** `[{categoria, productos}]` | — |
-| GET | `/api/productos/stats` | — | — | `200` `{totalProductos, precioMedio, precioMinimo, precioMaximo, categorias}` | — |
+| GET | `/api/productos/filter/precio` | Query `min`, `max` (default `0`/`MaxValue`) | ( | `200` `Producto[]` | ) |
+| GET | `/api/productos/order/precio` | Query `descendente` (default `false`) | ( | `200` `Producto[]` | ) |
+| GET | `/api/productos/group/categoria` | ( | ) | `200` **array** `[{categoria, productos}]` | — |
+| GET | `/api/productos/stats` | ( | ) | `200` `{totalProductos, precioMedio, precioMinimo, precioMaximo, categorias}` | — |
 
 ### Seed data
 

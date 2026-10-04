@@ -38,18 +38,18 @@ Prefijo: `http://localhost:5000/api/productos`
 
 | Método | Ruta | Parámetros | Cuerpo de petición | Respuesta exitosa | Errores |
 |--------|------|------------|--------------------|-------------------|---------|
-| GET | `/api/productos` | — | — | `200` `Producto[]` | — |
+| GET | `/api/productos` | ( | ) | `200` `Producto[]` | — |
 | GET | `/api/productos/{id}` | `id` (long) | — | `200` `Producto` | `404` |
 | POST | `/api/productos` | — | `{ "nombre", "precio", "categoria", "imagen"? }` | `201` + `Location` | `400` string, binding |
 | PUT | `/api/productos/{id}` | `id` (long) | `Producto` completo | `200` | `400` (valida antes), `404` |
 | PATCH | `/api/productos/{id}` | `id` (long) | `{ "precio": number }` | `200` | `400` (sin precio antes que 404) |
 | DELETE | `/api/productos/{id}` | `id` (long) | — | `204` | `404` |
-| GET | `/api/productos/search` | Query `nombre` (opcional) | — | `200` `Producto[]` | — |
-| GET | `/api/productos/categoria/{categoria}` | `categoria` (ruta) | — | `200` `Producto[]` | — |
+| GET | `/api/productos/search` | Query `nombre` (opcional) | ( | `200` `Producto[]` | ) |
+| GET | `/api/productos/categoria/{categoria}` | `categoria` (ruta) | ( | `200` `Producto[]` | ) |
 | GET | `/api/productos/precio` | Query `min`, `max` | — | `200` `Producto[]` | `400` (no numérico) |
-| GET | `/api/productos/ordenar` | Query `asc` (default `true`) | — | `200` `Producto[]` | — |
-| GET | `/api/productos/grupo-categoria` | — | — | `200` `{ categoria: Producto[] }` | — |
-| GET | `/api/productos/estadisticas` | — | — | `200` `{ total, precioMedio, porCategoria }` | — |
+| GET | `/api/productos/ordenar` | Query `asc` (default `true`) | ( | `200` `Producto[]` | ) |
+| GET | `/api/productos/grupo-categoria` | ( | ) | `200` `{ categoria: Producto[] }` | — |
+| GET | `/api/productos/estadisticas` | ( | ) | `200` `{ total, precioMedio, porCategoria }` | — |
 
 ### Validaciones (POST/PUT/PATCH)
 

@@ -1,27 +1,27 @@
-- [29. Docker y Despliegue](#29-docker-y-despliegue)
-  - [29.1. Conceptos Fundamentales](#291-conceptos-fundamentales)
-    - [29.1.1. Que es un Contenedor](#2911-que-es-un-contenedor)
-    - [29.1.2. Ventajas de los Contenedores](#2912-ventajas-de-los-contenedores)
+- [29. Docker y despliegue](#29-docker-y-despliegue)
+  - [29.1. Conceptos fundamentales](#291-conceptos-fundamentales)
+    - [29.1.1. Que es un contenedor](#2911-que-es-un-contenedor)
+    - [29.1.2. Ventajas de los contenedores](#2912-ventajas-de-los-contenedores)
   - [29.2. Dockerfile](#292-dockerfile)
-    - [29.2.1. Estructura del Proyecto](#2921-estructura-del-proyecto)
+    - [29.2.1. Estructura del proyecto](#2921-estructura-del-proyecto)
     - [29.2.2. Dockerfile basico](#2922-dockerfile-basico)
     - [29.2.3. Explicacion de instrucciones](#2923-explicacion-de-instrucciones)
-  - [29.3. Multi-Stage Build](#293-multi-stage-build)
-  - [29.4. Docker Compose](#294-docker-compose)
-    - [29.4.1. docker-compose.yml completo](#2941-docker-composeyml-completo)
+  - [29.3. Multi-Stage build](#293-multi-stage-build)
+  - [29.4. Docker compose](#294-docker-compose)
+    - [29.4.1. Docker-compose.yml completo](#2941-docker-composeyml-completo)
     - [29.4.2. Patron de dos archivos](#2942-patron-de-dos-archivos)
-  - [29.5. Variables de Entorno](#295-variables-de-entorno)
+  - [29.5. Variables de entorno](#295-variables-de-entorno)
   - [29.6. Health Checks](#296-health-checks)
-  - [29.7. Optimizacion de Imagenes](#297-optimizacion-de-imagenes)
-    - [29.7.1. Usar Alpine Linux](#2971-usar-alpine-linux)
+  - [29.7. Optimizacion de imagenes](#297-optimizacion-de-imagenes)
+    - [29.7.1. Usar alpine Linux](#2971-usar-alpine-linux)
     - [29.7.2. .dockerignore](#2972-dockerignore)
   - [29.8. CI/CD con GitHub Actions](#298-cicd-con-github-actions)
-  - [29.9. Buenas Practicas](#299-buenas-practicas)
-  - [29.10. Reto: Despliega FunkoApp con Docker](#2910-reto-despliega-funkoapp-con-docker)
+  - [29.9. Buenas practicas](#299-buenas-practicas)
+  - [29.10. Reto: despliega FunkoApp con Docker](#2910-reto-despliega-funkoapp-con-docker)
 
 
 
-# 29. Docker y Despliegue
+# 29. Docker y despliegue
 
 > 💡 **Punto de partida:** ¿Recuerdas cuando instalabas un programa y decía "funciona en mi ordenador"? Docker resuelve ese problema: empaqueta tu aplicación con todo lo que necesita (runtime, librerías, configuración) y funciona igual en cualquier lugar. Es como un contenedor de carga pero para código.
 
@@ -35,9 +35,9 @@ En este punto aprenderás a crear Dockerfiles optimizados, usar Docker Compose p
 - Configurar variables de entorno y health checks
 - Implementar CI/CD con GitHub Actions
 
-## 29.1. Conceptos Fundamentales
+## 29.1. Conceptos fundamentales
 
-### 29.1.1. Que es un Contenedor
+### 29.1.1. Que es un contenedor
 
 Un **contenedor** es una unidad de software que incluye todo lo necesario para ejecutar una aplicacion: codigo, runtime, herramientas del sistema, librerias y configuraciones. A diferencia de las maquinas virtuales, los contenedores comparten el kernel del sistema operativo y son mas ligeros.
 
@@ -46,10 +46,10 @@ flowchart TB
     subgraph "Sin Contenedores"
         A1["App A"] --> A2["SO Completo"]
         A3["App B"] --> A4["SO Completo"]
-        style A1 fill:#f44336,color:#fff
-        style A2 fill:#f44336,color:#fff
-        style A3 fill:#f44336,color:#fff
-        style A4 fill:#f44336,color:#fff
+        style A1 fill:#f4433,color:#fff6,color:#fff
+        style A2 fill:#f4433,color:#fff6,color:#fff
+        style A3 fill:#f4433,color:#fff6,color:#fff
+        style A4 fill:#f4433,color:#fff6,color:#fff
     end
 
     subgraph "Con Contenedores"
@@ -57,18 +57,18 @@ flowchart TB
         B3["App B"] --> B4["Contenedor B"]
         B2 & B4 --> B5["Docker Engine"]
         B5 --> B6["SO Compartido"]
-        style B1 fill:#4CAF50,color:#fff
-        style B2 fill:#4CAF50,color:#fff
-        style B3 fill:#4CAF50,color:#fff
-        style B4 fill:#4CAF50,color:#fff
-        style B5 fill:#2196F3,color:#fff
-        style B6 fill:#2196F3,color:#fff
+        style B1 fill:#4CAF5,color:#fff0,color:#fff
+        style B2 fill:#4CAF5,color:#fff0,color:#fff
+        style B3 fill:#4CAF5,color:#fff0,color:#fff
+        style B4 fill:#4CAF5,color:#fff0,color:#fff
+        style B5 fill:#2196F,color:#fff3,color:#fff
+        style B6 fill:#2196F,color:#fff3,color:#fff
     end
 ```
 
 📌 **Ejemplo real:** Spotify usa contenedores Docker para desplegar miles de microservicios. Cada servicio esta empaquetado en su propio contenedor, lo que permite escalar solo los que necesitan mas recursos.
 
-### 29.1.2. Ventajas de los Contenedores
+### 29.1.2. Ventajas de los contenedores
 
 | Aspecto | Beneficio |
 |---------|-----------|
@@ -83,7 +83,7 @@ flowchart TB
 
 El **Dockerfile** es un archivo de texto que contiene instrucciones para construir una imagen Docker.
 
-### 29.2.1. Estructura del Proyecto
+### 29.2.1. Estructura del proyecto
 
 ```
 FunkoApp/
@@ -123,7 +123,7 @@ ENTRYPOINT ["dotnet", "FunkoApp.dll"]
 | `ENTRYPOINT` | Comando que se ejecuta al iniciar |
 | `HEALTHCHECK` | Verificacion de salud del contenedor |
 
-## 29.3. Multi-Stage Build
+## 29.3. Multi-Stage build
 
 El **multi-stage build** permite construir la aplicacion en una etapa y copiar solo los archivos necesarios a una imagen final mas pequena.
 
@@ -183,7 +183,7 @@ ENTRYPOINT ["dotnet", "FunkoApp.dll"]
 
 📌 **Ejemplo real:** La imagen de Netflix Backend usa multi-stage builds. La etapa de build tiene el SDK completo (~800MB), pero la imagen final solo tiene el runtime (~200MB). Esto reduce el tiempo de despliegue y el ataque superficial de seguridad.
 
-### Comparacion de Tamanos
+### Comparacion de tamanos
 
 | Tipo de Build | Tamanio Aproximado |
 |---------------|-------------------|
@@ -193,11 +193,11 @@ ENTRYPOINT ["dotnet", "FunkoApp.dll"]
 
 > ⚠️ **Advertencia:** Usa siempre multi-stage builds en produccion. Una imagen con el SDK incluido expone herramientas de desarrollo que no deberian estar en produccion.
 
-## 29.4. Docker Compose
+## 29.4. Docker compose
 
 **Docker Compose** es una herramienta para definir y ejecutar aplicaciones Docker multi-contenedor usando un archivo YAML.
 
-### 29.4.1. docker-compose.yml completo
+### 29.4.1. Docker-compose.yml completo
 
 ```yaml
 services:
@@ -252,7 +252,7 @@ networks:
     driver: bridge
 ```
 
-### Comandos de Docker Compose
+### Comandos de Docker compose
 
 | Comando | Descripcion |
 |---------|-------------|
@@ -312,7 +312,7 @@ docker compose -f docker-compose.api.yml up -d
 
 > 💡 **Consejo:** Manten las versiones de imagenes consistentes en todos los compose. Ejemplo: `postgres:17-alpine`, `redis:7-alpine`.
 
-## 29.5. Variables de Entorno
+## 29.5. Variables de entorno
 
 Las variables de entorno permiten configurar la aplicacion sin modificar el codigo.
 
@@ -351,7 +351,7 @@ secrets.json
 
 Los health checks monitorizan la salud de la aplicacion y permiten al orquestador tomar decisiones.
 
-### Endpoint de Salud en ASP.NET Core
+### Endpoint de salud en ASP.NET Core
 
 ```bash
 # Paquete necesario para AddDbContextCheck
@@ -397,9 +397,9 @@ services:
       start_period: 10s
 ```
 
-## 29.7. Optimizacion de Imagenes
+## 29.7. Optimizacion de imagenes
 
-### 29.7.1. Usar Alpine Linux
+### 29.7.1. Usar alpine Linux
 
 ```dockerfile
 # Imagenes Alpine son mas ligeras
@@ -439,7 +439,7 @@ out/
 
 CI/CD (Continuous Integration / Continuous Deployment) automatiza el build, test y deploy de tu aplicacion.
 
-### Workflow Completo
+### Workflow completo
 
 ```yaml
 name: CI/CD Pipeline
@@ -537,7 +537,7 @@ jobs:
 
 📌 **Ejemplo real:** Spotify ejecuta mas de 50,000 tests en cada pull request usando pipelines CI/CD similares. Si algun test falla, el PR no se puede merge.
 
-## 29.9. Buenas Practicas
+## 29.9. Buenas practicas
 
 | Practica | Descripcion |
 |----------|-------------|
@@ -554,7 +554,7 @@ jobs:
 
 > ⚠️ **Advertencia:** Nunca guardes secretos en el Dockerfile o en el codigo fuente. Usa variables de entorno o archivos .env que nunca se suban al repositorio.
 
-## 29.10. Reto: Despliega FunkoApp con Docker
+## 29.10. Reto: despliega FunkoApp con Docker
 
 > Antes de irte, despliega tu API de Funkos completamente con Docker.
 
@@ -571,7 +571,7 @@ Tu API de Funkos necesita ser desplegable en cualquier entorno usando contenedor
 5. Configura persistencia de datos con volumes
 6. Crea un workflow basico de CI/CD con GitHub Actions
 
-### Archivos Esperados
+### Archivos esperados
 
 ```
 FunkoApp/

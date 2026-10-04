@@ -1,29 +1,29 @@
-- [27. Logging y Monitoreo](#27-logging-y-monitoreo)
-  - [27.1. Fundamentos de Logging](#271-fundamentos-de-logging)
-    - [27.1.1. Qué es el Logging](#2711-qué-es-el-logging)
-    - [27.1.2. Logging Estructurado vs Texto Plano](#2712-logging-estructurado-vs-texto-plano)
-  - [27.2. Serilog: Logging Estructurado](#272-serilog-logging-estructurado)
+- [27. Logging y monitoreo](#27-logging-y-monitoreo)
+  - [27.1. Fundamentos de logging](#271-fundamentos-de-logging)
+    - [27.1.1. Qué es el logging](#2711-qué-es-el-logging)
+    - [27.1.2. Logging estructurado vs texto plano](#2712-logging-estructurado-vs-texto-plano)
+  - [27.2. Serilog: logging estructurado](#272-serilog-logging-estructurado)
     - [27.2.1. Configuración básica](#2721-configuración-básica)
     - [27.2.2. Configuración desde appsettings.json](#2722-configuración-desde-appsettingsjson)
-    - [27.2.3. Sinks y Formateadores](#2723-sinks-y-formateadores)
-    - [27.2.4. Enriquecedores de Log](#2724-enriquecedores-de-log)
-  - [27.3. Uso de Logging en Servicios](#273-uso-de-logging-en-servicios)
+    - [27.2.3. Sinks y formateadores](#2723-sinks-y-formateadores)
+    - [27.2.4. Enriquecedores de log](#2724-enriquecedores-de-log)
+  - [27.3. Uso de logging en servicios](#273-uso-de-logging-en-servicios)
     - [27.3.1. Inyección de ILogger](#2731-inyección-de-ilogger)
-    - [27.3.2. Niveles de Log](#2732-niveles-de-log)
-    - [27.3.3. Scopes de Log](#2733-scopes-de-log)
-    - [27.3.4. Logueo de Excepciones](#2734-logueo-de-excepciones)
-  - [27.4. Correlation ID para Trazabilidad](#274-correlation-id-para-trazabilidad)
+    - [27.3.2. Niveles de log](#2732-niveles-de-log)
+    - [27.3.3. Scopes de log](#2733-scopes-de-log)
+    - [27.3.4. Logueo de excepciones](#2734-logueo-de-excepciones)
+  - [27.4. Correlation ID para trazabilidad](#274-correlation-id-para-trazabilidad)
   - [27.5. Health Checks](#275-health-checks)
     - [27.5.1. Health Checks básicos](#2751-health-checks-básicos)
-    - [27.5.2. Custom Health Check](#2752-custom-health-check)
+    - [27.5.2. Custom health check](#2752-custom-health-check)
   - [27.6. Endpoint de versión: GET /version](#276-endpoint-de-versión-get-version)
-  - [27.7. Buenas Prácticas de Logging](#277-buenas-prácticas-de-logging)
-    - [27.7.1. Cierre seguro del Logger](#2771-cierre-seguro-del-logger)
-  - [27.8. Reto: Implementa Logging en FunkoApp](#278-reto-implementa-logging-en-funkoapp)
+  - [27.7. Buenas prácticas de logging](#277-buenas-prácticas-de-logging)
+    - [27.7.1. Cierre seguro del logger](#2771-cierre-seguro-del-logger)
+  - [27.8. Reto: implementa logging en FunkoApp](#278-reto-implementa-logging-en-funkoapp)
 
 
 
-# 27. Logging y Monitoreo
+# 27. Logging y monitoreo
 
 > 💡 **Punto de partida:** Cuando tu aplicación falla en producción y no tienes logs, es como intentar arreglar un coche a ciegas. Los logs son el cuadro de mando que te dice qué está pasando en tiempo real. Un buen sistema de logging te permite debugear errores, auditar seguridad y optimizar rendimiento.
 
@@ -36,9 +36,9 @@ En este punto aprenderás a configurar Serilog para logging estructurado, implem
 - Usar correlation IDs para trazabilidad de requests
 - Configurar health checks para monitorizar la aplicación
 
-## 27.1. Fundamentos de Logging
+## 27.1. Fundamentos de logging
 
-### 27.1.1. Qué es el Logging
+### 27.1.1. Qué es el logging
 
 El **logging** es el proceso de registrar eventos, errores e información relevante que ocurre durante la ejecución de una aplicación. Estos registros son fundamentales para el debugging, la auditoría de seguridad y la resolución de problemas en producción.
 
@@ -50,7 +50,7 @@ El **logging** es el proceso de registrar eventos, errores e información releva
 | Sin trazabilidad | Dificultad para debuggear | Correlation ID |
 | Sin métricas | Decisiones sin datos | Métricas + dashboards |
 
-### 27.1.2. Logging Estructurado vs Texto Plano
+### 27.1.2. Logging estructurado vs texto plano
 
 El **logging estructurado** almacena los logs en formato JSON con campos clave-valor, permitiendo queries eficientes y análisis.
 
@@ -63,7 +63,7 @@ El **logging estructurado** almacena los logs en formato JSON con campos clave-v
 
 > 💡 **Consejo:** El logging de texto plano es como escribir notas en un cuaderno desordenado. El logging estructurado es como usar una base de datos donde cada dato tiene su campo.
 
-## 27.2. Serilog: Logging Estructurado
+## 27.2. Serilog: logging estructurado
 
 Serilog es la biblioteca de logging estructurado más popular en .NET.
 
@@ -156,7 +156,7 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 ```
 
-### 27.2.3. Sinks y Formateadores
+### 27.2.3. Sinks y formateadores
 
 Los **sinks** determinan dónde se envían los logs.
 
@@ -169,7 +169,7 @@ Los **sinks** determinan dónde se envían los logs.
 
 📌 **Ejemplo real:** Seq es como un Google Analytics pero para logs. Permite buscar, filtrar y analizar todos los logs de tu aplicación en una interfaz web.
 
-### 27.2.4. Enriquecedores de Log
+### 27.2.4. Enriquecedores de log
 
 Los **enriquecedores** añaden información contextual a todos los logs.
 
@@ -189,7 +189,7 @@ Log.Logger = new LoggerConfiguration()
 dotnet add package Serilog.Enrichers.Environment
 ```
 
-## 27.3. Uso de Logging en Servicios
+## 27.3. Uso de logging en servicios
 
 ### 27.3.1. Inyección de ILogger
 
@@ -221,7 +221,7 @@ public class FunkoService(
 }
 ```
 
-### 27.3.2. Niveles de Log
+### 27.3.2. Niveles de log
 
 | Nivel | Uso | Cuándo Usar |
 |-------|-----|-------------|
@@ -239,7 +239,7 @@ logger.LogError(ex, "Error al procesar funko {FunkoId}", id);
 logger.LogCritical("Error critico: {Message}", ex.Message);
 ```
 
-### 27.3.3. Scopes de Log
+### 27.3.3. Scopes de log
 
 Los **scopes** agrupan logs relacionados bajo un contexto común.
 
@@ -258,7 +258,7 @@ public async Task<List<Funko>> GetByCategoriaAsync(long categoriaId)
 }
 ```
 
-### 27.3.4. Logueo de Excepciones
+### 27.3.4. Logueo de excepciones
 
 ```csharp
 // ❌ MALO: Logear sin contexto
@@ -278,7 +278,7 @@ catch (DbUpdateException ex)
 
 > ⚠️ **Advertencia:** Nunca loguees datos sensibles como contraseñas, tokens JWT o datos personales. Esto es un riesgo de seguridad y puede violar regulaciones como GDPR.
 
-## 27.4. Correlation ID para Trazabilidad
+## 27.4. Correlation ID para trazabilidad
 
 El **correlation ID** es un identificador único que sigue una request a través de todos los servicios y logs, permitiendo reconstruir el flujo completo de una operación.
 
@@ -338,7 +338,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 });
 ```
 
-### 27.5.2. Custom Health Check
+### 27.5.2. Custom health check
 
 ```csharp
 public class CustomHealthCheck(IServiceScopeFactory scopeFactory) : IHealthCheck
@@ -454,7 +454,7 @@ curl -s http://localhost:5000/version | jq .version
 
 > 📝 **Nota:** El trifecta de monitorización: **`/health`** (¿vive?), **`/health/ready`** (¿puede recibir tráfico?), **`/version`** (¿qué versión?). Juntos responden en tres curl lo que de otro modo exigiría entrar en el servidor.
 
-## 27.7. Buenas Prácticas de Logging
+## 27.7. Buenas prácticas de logging
 
 | Práctica | Descripción |
 |----------|-------------|
@@ -469,7 +469,7 @@ curl -s http://localhost:5000/version | jq .version
 
 > ⚠️ **Advertencia:** Los logs en producción deben tener nivel Warning o superior. Los logs Debug e Information en producción generan demasiado volumen y pueden impactar el rendimiento.
 
-### 27.7.1. Cierre seguro del Logger
+### 27.7.1. Cierre seguro del logger
 
 Si la aplicación muere por una excepción no controlada, el logger global (estático) puede perder los últimos mensajes. Registra el error fatal y **cierra el logger** para garantizar el flush:
 
@@ -493,7 +493,7 @@ finally
 
 > 💡 **Consejo:** `Log.CloseAndFlush()` es imprescindible con sinks como File o Seq: sin él, los eventos en cola pueden perderse si el proceso muere bruscamente. `Log.Fatal` captura el error que habría quedado sin registrar al romper el host.
 
-## 27.8. Reto: Implementa Logging en FunkoApp
+## 27.8. Reto: implementa logging en FunkoApp
 
 > Antes de irte, implementa un sistema completo de logging y monitoreo para tu API de Funkos.
 

@@ -1,38 +1,38 @@
 - [16. Autenticación JWT y BCrypt](#16-autenticación-jwt-y-bcrypt)
   - [16.1. Introducción](#161-introducción)
-    - [16.1.1. ¿Qué es la Autenticación?](#1611-qué-es-la-autenticación)
-    - [16.1.2. Stateless vs Stateful](#1612-stateless-vs-stateful)
+    - [16.1.1. ¿Qué es la autenticación?](#1611-qué-es-la-autenticación)
+    - [16.1.2. Stateless vs stateful](#1612-stateless-vs-stateful)
     - [16.1.3. Por qué JWT para APIs](#1613-por-qué-jwt-para-apis)
-    - [16.1.4. Flujo Completo de Autenticación](#1614-flujo-completo-de-autenticación)
-  - [16.2. JWT en Profundidad](#162-jwt-en-profundidad)
+    - [16.1.4. Flujo completo de autenticación](#1614-flujo-completo-de-autenticación)
+  - [16.2. JWT en profundidad](#162-jwt-en-profundidad)
     - [16.2.1. Estructura del JWT](#1621-estructura-del-jwt)
     - [16.2.2. Claims](#1622-claims)
-    - [16.2.3. Validación de Tokens](#1623-validación-de-tokens)
-  - [16.3. BCrypt: Hash de Contraseñas](#163-bcrypt-hash-de-contraseñas)
+    - [16.2.3. Validación de tokens](#1623-validación-de-tokens)
+  - [16.3. BCrypt: hash de contraseñas](#163-bcrypt-hash-de-contraseñas)
     - [16.3.1. Por qué no MD5 ni SHA256](#1631-por-qué-no-md5-ni-sha256)
     - [16.3.2. BCrypt en C#](#1632-bcrypt-en-c)
-    - [16.3.3. Work Factor](#1633-work-factor)
-    - [16.3.4. Comparativa de Algoritmos](#1634-comparativa-de-algoritmos)
-  - [16.4. Enfoque Manual (Estilo Tienda)](#164-enfoque-manual-estilo-tienda)
-    - [16.4.1. Modelo de Usuario](#1641-modelo-de-usuario)
+    - [16.3.3. Work factor](#1633-work-factor)
+    - [16.3.4. Comparativa de algoritmos](#1634-comparativa-de-algoritmos)
+  - [16.4. Enfoque manual (estilo tienda)](#164-enfoque-manual-estilo-tienda)
+    - [16.4.1. Modelo de usuario](#1641-modelo-de-usuario)
     - [16.4.2. JwtService](#1642-jwtservice)
     - [16.4.3. AuthService](#1643-authservice)
     - [16.4.4. Configuración en DI](#1644-configuración-en-di)
     - [16.4.5. AuthController](#1645-authcontroller)
     - [16.4.6. Program.cs](#1646-programcs)
-  - [16.5. OAuth2 y Autenticación con Proveedores Externos](#165-oauth2-y-autenticación-con-proveedores-externos)
+  - [16.5. OAuth2 y autenticación con proveedores externos](#165-oauth2-y-autenticación-con-proveedores-externos)
     - [16.5.1. ¿Qué es OAuth2?](#1651-qué-es-oauth2)
-    - [16.5.2. Configuración con Google](#1652-configuración-con-google)
+    - [16.5.2. Configuración con google](#1652-configuración-con-google)
     - [16.5.3. Configuración con GitHub](#1653-configuración-con-github)
-    - [16.5.4. Flow Completo OAuth2](#1654-flow-completo-oauth2)
+    - [16.5.4. Flow completo OAuth2](#1654-flow-completo-oauth2)
   - [16.6. Enfoque Identity](#166-enfoque-identity)
     - [16.6.1. ¿Qué es ASP.NET Core Identity?](#1661-qué-es-aspnet-core-identity)
-    - [16.6.2. Instalación y Configuración](#1662-instalación-y-configuración)
+    - [16.6.2. Instalación y configuración](#1662-instalación-y-configuración)
     - [16.6.3. UserManager y SignInManager](#1663-usermanager-y-signinmanager)
     - [16.6.4. Identity con JWT](#1664-identity-con-jwt)
-    - [16.6.5. Identity con OAuth2 (Login Externo)](#1665-identity-con-oauth2-login-externo)
-  - [16.7. Comparación de Enfoques](#167-comparación-de-enfoques)
-  - [16.8. Buenas Prácticas](#168-buenas-prácticas)
+    - [16.6.5. Identity con OAuth2 (login externo)](#1665-identity-con-oauth2-login-externo)
+  - [16.7. Comparación de enfoques](#167-comparación-de-enfoques)
+  - [16.8. Buenas prácticas](#168-buenas-prácticas)
   - [16.9. Reto](#169-reto)
 
 
@@ -49,7 +49,7 @@
 
 ## 16.1. Introducción
 
-### 16.1.1. ¿Qué es la Autenticación?
+### 16.1.1. ¿Qué es la autenticación?
 
 La **autenticación** es el proceso de verificar la identidad de un usuario. Es la pregunta: **¿Quién eres?**
 
@@ -57,7 +57,7 @@ La **autenticación** es el proceso de verificar la identidad de un usuario. Es 
 
 📌 Ejemplo real: Cuando inicias sesión en **Netflix**, introduces tu email y contraseña. Netflix verifica esas credenciales contra su base de datos. Si son correctas, te permite acceder a tu perfil y tu lista de contenido. Eso es autenticación.
 
-### 16.1.2. Stateless vs Stateful
+### 16.1.2. Stateless vs stateful
 
 Existen dos modelos fundamentales para mantener la sesión de un usuario. Imagina una discoteca: el modelo **stateful** es como un portero que te reconoce la cara cada vez que pasas; el modelo **stateless** es como si te dieran una pulsera con tu nombre en la entrada y tuvieras que enseñarla en cada zona.
 
@@ -79,12 +79,12 @@ flowchart LR
         B4 -->|5. Responder| B1
     end
 
-    style A1 fill:#9C27B0,color:#fff
-    style A2 fill:#2196F3,color:#fff
-    style A3 fill:#2196F3,color:#fff
-    style B1 fill:#9C27B0,color:#fff
-    style B2 fill:#4CAF50,color:#fff
-    style B4 fill:#4CAF50,color:#fff
+    style A1 fill:#9C27B,color:#fff0,color:#fff
+    style A2 fill:#2196F,color:#fff3,color:#fff
+    style A3 fill:#2196F,color:#fff3,color:#fff
+    style B1 fill:#9C27B,color:#fff0,color:#fff
+    style B2 fill:#4CAF5,color:#fff0,color:#fff
+    style B4 fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 | Aspecto | Stateful (Sesión) | Stateless (JWT) |
@@ -110,7 +110,7 @@ flowchart LR
 
 📌 Ejemplo real: **Stripe** usa JWT para autenticar las llamadas a su API de pagos. Cada petición de un cliente lleva un token Bearer que Stripe valida localmente sin consultar una base de datos.
 
-### 16.1.4. Flujo Completo de Autenticación
+### 16.1.4. Flujo completo de autenticación
 
 El flujo de autenticación se repite en cada petición. La diferencia con sesiones es que el servidor NO almacena nada: el token es autocontenido y se valida únicamente con la clave secreta.
 
@@ -128,17 +128,17 @@ flowchart TD
     I -->|Token valido| K[Procesar peticion]
     K --> L[200 OK con datos]
 
-    style A fill:#9C27B0,color:#fff
-    style D fill:#f44336,color:#fff
-    style E fill:#4CAF50,color:#fff
-    style F fill:#4CAF50,color:#fff
-    style J fill:#f44336,color:#fff
-    style L fill:#4CAF50,color:#fff
+    style A fill:#9C27B,color:#fff0,color:#fff
+    style D fill:#f4433,color:#fff6,color:#fff
+    style E fill:#4CAF5,color:#fff0,color:#fff
+    style F fill:#4CAF5,color:#fff0,color:#fff
+    style J fill:#f4433,color:#fff6,color:#fff
+    style L fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 > 📝 **Nota:** Este flujo es idéntico para el enfoque manual y para Identity. Lo que cambia es cómo se genera el token y cómo se gestiona el usuario, pero el ciclo de vida del token es el mismo.
 
-#### Flujo positivo: Login exitoso
+#### Flujo positivo: login exitoso
 
 ```mermaid
 sequenceDiagram
@@ -158,7 +158,7 @@ sequenceDiagram
     S-->>C: 200 OK [productos]
 ```
 
-#### Flujo negativo: Credenciales inválidas
+#### Flujo negativo: credenciales inválidas
 
 ```mermaid
 sequenceDiagram
@@ -172,7 +172,7 @@ sequenceDiagram
     S-->>C: 401 Unauthorized
 ```
 
-#### Flujo negativo: Token expirado
+#### Flujo negativo: token expirado
 
 ```mermaid
 sequenceDiagram
@@ -184,7 +184,7 @@ sequenceDiagram
     S-->>C: 401 Unauthorized (token expirado)
 ```
 
-#### Flujo negativo: Token falsificado
+#### Flujo negativo: token falsificado
 
 ```mermaid
 sequenceDiagram
@@ -196,7 +196,7 @@ sequenceDiagram
     S-->>C: 401 Unauthorized (firma invalida)
 ```
 
-## 16.2. JWT en Profundidad
+## 16.2. JWT en profundidad
 
 ### 16.2.1. Estructura del JWT
 
@@ -224,10 +224,10 @@ flowchart TD
     T -->|Parte 2| P1
     T -->|Parte 3| S1
 
-    style T fill:#607D8B,color:#fff
-    style H1 fill:#4CAF50,color:#fff
-    style P1 fill:#2196F3,color:#fff
-    style S1 fill:#FF9800,color:#fff
+    style T fill:#607D8,color:#fffB,color:#fff
+    style H1 fill:#4CAF5,color:#fff0,color:#fff
+    style P1 fill:#2196F,color:#fff3,color:#fff
+    style S1 fill:#FF980,color:#fff0,color:#fff
 ```
 
 **Header** — Define el algoritmo de firma y tipo de token. Es un JSON con dos campos obligatorios:
@@ -328,7 +328,7 @@ var claims = new List<Claim>
 
 > 📝 **Nota:** El claim `sub` es el estándar para el identificador del usuario. Usar `user.Id` como valor de `sub` permite al servidor identificar al usuario en cada petición sin consultar la base de datos.
 
-### 16.2.3. Validación de Tokens
+### 16.2.3. Validación de tokens
 
 Cuando un servidor recibe un JWT, debe validar múltiples aspectos antes de aceptarlo. Esto es como un policía que comprueba que tu DNI no esté caducado, que sea auténtico y que corresponda a la persona que lo presenta.
 
@@ -348,13 +348,13 @@ flowchart TD
     K -->|OK| M[Extraer claims]
     M --> N[ClaimsPrincipal valido]
 
-    style A fill:#607D8B,color:#fff
-    style D fill:#f44336,color:#fff
-    style F fill:#f44336,color:#fff
-    style H fill:#f44336,color:#fff
-    style J fill:#f44336,color:#fff
-    style L fill:#f44336,color:#fff
-    style N fill:#4CAF50,color:#fff
+    style A fill:#607D8,color:#fffB,color:#fff
+    style D fill:#f4433,color:#fff6,color:#fff
+    style F fill:#f4433,color:#fff6,color:#fff
+    style H fill:#f4433,color:#fff6,color:#fff
+    style J fill:#f4433,color:#fff6,color:#fff
+    style L fill:#f4433,color:#fff6,color:#fff
+    style N fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 La validación en ASP.NET Core se configura con `TokenValidationParameters`. Este objeto le dice al middleware qué aspectos del token debe comprobar y con qué valores esperados.
@@ -376,7 +376,7 @@ options.TokenValidationParameters = new TokenValidationParameters
 
 > 💡 **Consejo:** Establecer `ClockSkew = TimeSpan.Zero` elimina la tolerancia de 5 minutos por defecto. Si el token expira a las 12:00:00, se considera expirado exactamente a las 12:00:00. Sin esto, un token expirado seguiría siendo válido durante 5 minutos más.
 
-## 16.3. BCrypt: Hash de Contraseñas
+## 16.3. BCrypt: hash de contraseñas
 
 ### 16.3.1. Por qué no MD5 ni SHA256
 
@@ -454,21 +454,21 @@ flowchart LR
         L4 -->|No| L6[Credenciales invalidas]
     end
 
-    style R1 fill:#4CAF50,color:#fff
-    style R2 fill:#4CAF50,color:#fff
-    style R3 fill:#4CAF50,color:#fff
-    style R4 fill:#4CAF50,color:#fff
-    style L1 fill:#2196F3,color:#fff
-    style L2 fill:#2196F3,color:#fff
-    style L3 fill:#2196F3,color:#fff
-    style L4 fill:#FF9800,color:#fff
-    style L5 fill:#4CAF50,color:#fff
-    style L6 fill:#f44336,color:#fff
+    style R1 fill:#4CAF5,color:#fff0,color:#fff
+    style R2 fill:#4CAF5,color:#fff0,color:#fff
+    style R3 fill:#4CAF5,color:#fff0,color:#fff
+    style R4 fill:#4CAF5,color:#fff0,color:#fff
+    style L1 fill:#2196F,color:#fff3,color:#fff
+    style L2 fill:#2196F,color:#fff3,color:#fff
+    style L3 fill:#2196F,color:#fff3,color:#fff
+    style L4 fill:#FF980,color:#fff0,color:#fff
+    style L5 fill:#4CAF5,color:#fff0,color:#fff
+    style L6 fill:#f4433,color:#fff6,color:#fff
 ```
 
 > 💡 **Analogía:** BCrypt es como un molino de café. Cuando registras una contraseña, la pasas por el molino 11 veces (work factor 11) para obtener el polvo (hash). Verificar es pasar el café por el mismo molino y comparar. Un atacante tendría que moler cada contraseña 11 veces para intentar adivinarla.
 
-### 16.3.3. Work Factor
+### 16.3.3. Work factor
 
 El **work factor** determina cuántas iteraciones se realizan. Cada incremento **duplica** el tiempo de cálculo. Es como subir la dificultad de un juego: cada nivel es el doble de difícil que el anterior.
 
@@ -486,7 +486,7 @@ string hash = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 11);
 
 > 💡 **Consejo:** Un work factor de **11** es el punto óptimo: lo suficientemente lento para impedir fuerza bruta (~100ms), pero lo suficientemente rápido para no afectar la experiencia de usuario en login.
 
-### 16.3.4. Comparativa de Algoritmos
+### 16.3.4. Comparativa de algoritmos
 
 | Algoritmo | Velocidad hash | Resistencia rainbow tables | Salt automático | Recomendado |
 |-----------|----------------|---------------------------|-----------------|-------------|
@@ -498,11 +498,11 @@ string hash = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 11);
 
 > 📝 **Nota:** BCrypt genera un salt único automáticamente en cada hash. No necesitas almacenar el salt por separado: está incrustado en el propio hash. Esto protege contra ataques de rainbow tables, donde un atacante usa tablas precalculadas de hashes comunes.
 
-## 16.4. Enfoque Manual (Estilo Tienda)
+## 16.4. Enfoque manual (estilo tienda)
 
 Este enfoque implementa autenticación JWT completa **sin usar ASP.NET Core Identity**. Es más ligero, más flexible y ideal para APIs REST donde quieres control total sobre el modelo de usuario y la generación de tokens.
 
-### 16.4.1. Modelo de Usuario
+### 16.4.1. Modelo de usuario
 
 El modelo de usuario es la base de todo el sistema de autenticación. Almacena el hash de la contraseña (nunca la contraseña en texto plano), el rol y metadatos de sesión. El campo `PasswordHash` contiene el resultado de BCrypt, que incluye el algoritmo, el work factor, el salt y el hash.
 
@@ -991,11 +991,11 @@ flowchart LR
     A4 --> A5[MapControllers]
     A5 --> RESP[Response]
 
-    style A3 fill:#4CAF50,color:#fff
-    style A4 fill:#2196F3,color:#fff
+    style A3 fill:#4CAF5,color:#fff0,color:#fff
+    style A4 fill:#2196F,color:#fff3,color:#fff
 ```
 
-## 16.5. OAuth2 y Autenticación con Proveedores Externos
+## 16.5. OAuth2 y autenticación con proveedores externos
 
 ### 16.5.1. ¿Qué es OAuth2?
 
@@ -1009,7 +1009,7 @@ Los tres actores principales son:
 - **Client**: Tu aplicación (la que quiere acceder)
 - **Authorization Server**: El proveedor (Google, GitHub, Microsoft)
 
-### 16.5.2. Configuración con Google
+### 16.5.2. Configuración con google
 
 Para configurar login con Google, necesitas crear un proyecto en Google Cloud Console, obtener el Client ID y Client Secret, y registrarlos en tu aplicación.
 
@@ -1058,7 +1058,7 @@ builder.Services.AddAuthentication()
 
 > 💡 **Consejo:** Para configurar GitHub, ve a Settings > Developer settings > OAuth Apps > New OAuth App. El campo "Authorization callback URL" debe coincidir con la ruta de callback de tu aplicación (normalmente `https://tu-dominio/signin-github`).
 
-### 16.5.4. Flow Completo OAuth2
+### 16.5.4. Flow completo OAuth2
 
 El flujo completo de OAuth2 sigue cuatro pasos: redirigir al proveedor, el usuario autoriza, el proveedor devuelve un código, y tu aplicación intercambia ese código por un token de acceso.
 
@@ -1074,15 +1074,15 @@ flowchart TD
     G -->|No| I[Crear usuario automaticamente]
     I --> H
 
-    style A fill:#9C27B0,color:#fff
-    style B fill:#2196F3,color:#fff
-    style C fill:#4CAF50,color:#fff
-    style D fill:#2196F3,color:#fff
-    style E fill:#FF9800,color:#fff
-    style F fill:#FF9800,color:#fff
-    style G fill:#607D8B,color:#fff
-    style H fill:#4CAF50,color:#fff
-    style I fill:#4CAF50,color:#fff
+    style A fill:#9C27B,color:#fff0,color:#fff
+    style B fill:#2196F,color:#fff3,color:#fff
+    style C fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#2196F,color:#fff3,color:#fff
+    style E fill:#FF980,color:#fff0,color:#fff
+    style F fill:#FF980,color:#fff0,color:#fff
+    style G fill:#607D8,color:#fffB,color:#fff
+    style H fill:#4CAF5,color:#fff0,color:#fff
+    style I fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 📌 Ejemplo real: **Spotify** usa este flujo exacto. Cuando haces "Conectar con Spotify" en una app de terceros, Spotify te redirige a su página de autorización, tú eliges qué datos compartir (nombre, playlists, etc.), y la app recibe un token con esos permisos.
@@ -1109,17 +1109,17 @@ flowchart TD
         I3 --> I4[AuthController]
     end
 
-    style M1 fill:#4CAF50,color:#fff
-    style M2 fill:#4CAF50,color:#fff
-    style M3 fill:#4CAF50,color:#fff
-    style M4 fill:#4CAF50,color:#fff
-    style I1 fill:#FF9800,color:#fff
-    style I2 fill:#FF9800,color:#fff
-    style I3 fill:#FF9800,color:#fff
-    style I4 fill:#FF9800,color:#fff
+    style M1 fill:#4CAF5,color:#fff0,color:#fff
+    style M2 fill:#4CAF5,color:#fff0,color:#fff
+    style M3 fill:#4CAF5,color:#fff0,color:#fff
+    style M4 fill:#4CAF5,color:#fff0,color:#fff
+    style I1 fill:#FF980,color:#fff0,color:#fff
+    style I2 fill:#FF980,color:#fff0,color:#fff
+    style I3 fill:#FF980,color:#fff0,color:#fff
+    style I4 fill:#FF980,color:#fff0,color:#fff
 ```
 
-### 16.6.2. Instalación y Configuración
+### 16.6.2. Instalación y configuración
 
 Para usar Identity, necesitas instalar los paquetes NuGet correspondientes y configurar el DbContext que herede de `IdentityDbContext`.
 
@@ -1379,7 +1379,7 @@ Identity genera contraseñas hasheadas con PBKDF2 por defecto (no BCrypt). Para 
 
 La ventaja de combinar Identity con JWT es que obtienes la gestión de usuarios de Identity (2FA, lockout, external logins) con la escalabilidad de JWT para APIs REST.
 
-#### Flujo positivo: Login con Identity
+#### Flujo positivo: login con Identity
 
 ```mermaid
 sequenceDiagram
@@ -1422,7 +1422,7 @@ sequenceDiagram
     S-->>C: 403 Forbidden (usuario bloqueado)
 ```
 
-### 16.6.5. Identity con OAuth2 (Login Externo)
+### 16.6.5. Identity con OAuth2 (login externo)
 
 Identity integra de forma nativa el login con proveedores externos como Google, GitHub o Microsoft. Esto significa que puedes ofrecer a tus usuarios la opción de iniciar sesión con su cuenta de Google sin tener que gestionar contraseñas. Identity se encarga automáticamente de crear el usuario la primera vez y de asociar el proveedor externo.
 
@@ -1496,7 +1496,7 @@ public async Task<IActionResult> ExternalLoginCallback(
 
 > 📝 **Nota:** Cuando un usuario se registra con Google por primera vez, Identity crea el usuario en tu BD y asocia el proveedor externo. En el segundo login, simplemente lo reconoce. El usuario nunca necesita crear una contraseña local.
 
-## 16.7. Comparación de Enfoques
+## 16.7. Comparación de enfoques
 
 ```mermaid
 flowchart TD
@@ -1512,12 +1512,12 @@ flowchart TD
     G --> I[7 tablas y features completas]
     H --> J[1 tabla y control total]
 
-    style C fill:#FF9800,color:#fff
-    style F fill:#4CAF50,color:#fff
-    style G fill:#FF9800,color:#fff
-    style H fill:#4CAF50,color:#fff
-    style I fill:#FF9800,color:#fff
-    style J fill:#4CAF50,color:#fff
+    style C fill:#FF980,color:#fff0,color:#fff
+    style F fill:#4CAF5,color:#fff0,color:#fff
+    style G fill:#FF980,color:#fff0,color:#fff
+    style H fill:#4CAF5,color:#fff0,color:#fff
+    style I fill:#FF980,color:#fff0,color:#fff
+    style J fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 | Aspecto | Manual (JWT + BCrypt) | Identity |
@@ -1546,7 +1546,7 @@ flowchart TD
 
 > 📝 **Nota:** Ambos enfoques usan el **mismo middleware** de autenticación/autorización de ASP.NET Core. Los atributos `[Authorize]`, `[Authorize(Roles="Admin")]` y la inyección de `HttpContext.User` funcionan exactamente igual. Solo cambia cómo se gestiona el usuario y se genera el token.
 
-## 16.8. Buenas Prácticas
+## 16.8. Buenas prácticas
 
 | Práctica | Descripción |
 |----------|-------------|

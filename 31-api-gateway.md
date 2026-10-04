@@ -1,42 +1,42 @@
-- [31. API Gateway y Microservicios](#31-api-gateway-y-microservicios)
-  - [31.1. ¿Por qué Microservicios?](#311-por-qué-microservicios)
-    - [31.1.1. Monolito vs Microservicios](#3111-monolito-vs-microservicios)
-    - [31.1.2. Ventajas de los Microservicios](#3112-ventajas-de-los-microservicios)
-    - [31.1.3. Problemas de los Microservicios](#3113-problemas-de-los-microservicios)
-  - [31.2. Comunicación entre Microservicios](#312-comunicación-entre-microservicios)
+- [31. API Gateway y microservicios](#31-api-gateway-y-microservicios)
+  - [31.1. ¿Por qué microservicios?](#311-por-qué-microservicios)
+    - [31.1.1. Monolito vs microservicios](#3111-monolito-vs-microservicios)
+    - [31.1.2. Ventajas de los microservicios](#3112-ventajas-de-los-microservicios)
+    - [31.1.3. Problemas de los microservicios](#3113-problemas-de-los-microservicios)
+  - [31.2. Comunicación entre microservicios](#312-comunicación-entre-microservicios)
     - [31.2.1. Comunicación sincrónica (REST)](#3121-comunicación-sincrónica-rest)
-    - [31.2.2. Comunicación asincrónica (Eventos)](#3122-comunicación-asincrónica-eventos)
+    - [31.2.2. Comunicación asincrónica (eventos)](#3122-comunicación-asincrónica-eventos)
     - [31.2.3. Repositorio remoto vs URL directa](#3123-repositorio-remoto-vs-url-directa)
   - [31.3. ¿Qué es un API Gateway?](#313-qué-es-un-api-gateway)
-    - [31.3.1. El problema sin Gateway](#3131-el-problema-sin-gateway)
-    - [31.3.2. La solución: Gateway como proxy inverso](#3132-la-solución-gateway-como-proxy-inverso)
-    - [31.3.3. Funciones del Gateway](#3133-funciones-del-gateway)
-  - [31.4. YARP: Microsoft Reverse Proxy](#314-yarp-microsoft-reverse-proxy)
+    - [31.3.1. El problema sin gateway](#3131-el-problema-sin-gateway)
+    - [31.3.2. La solución: gateway como proxy inverso](#3132-la-solución-gateway-como-proxy-inverso)
+    - [31.3.3. Funciones del gateway](#3133-funciones-del-gateway)
+  - [31.4. YARP: Microsoft reverse proxy](#314-yarp-microsoft-reverse-proxy)
     - [31.4.1. ¿Qué es YARP?](#3141-qué-es-yarp)
     - [31.4.2. Configuración en appsettings.json](#3142-configuración-en-appsettingsjson)
     - [31.4.3. Configuración en Program.cs](#3143-configuración-en-programcs)
     - [31.4.4. Tokens JWT con YARP](#3144-tokens-jwt-con-yarp)
-  - [31.5. Ejemplo práctico: Auth y Productos con YARP](#315-ejemplo-práctico-auth-y-productos-con-yarp)
+  - [31.5. Ejemplo práctico: auth y productos con YARP](#315-ejemplo-práctico-auth-y-productos-con-yarp)
     - [31.5.1. Arquitectura del ejemplo](#3151-arquitectura-del-ejemplo)
-    - [31.5.2. Docker Compose](#3152-docker-compose)
+    - [31.5.2. Docker compose](#3152-docker-compose)
     - [31.5.3. Configuración de rutas](#3153-configuración-de-rutas)
-    - [31.5.4. Diagrama: Flujo completo de autenticación y autorización](#3154-diagrama-flujo-completo-de-autenticación-y-autorización)
-    - [31.5.5. Diagrama: Qué pasa cuando la autenticación falla](#3155-diagrama-qué-pasa-cuando-la-autenticación-falla)
-    - [31.5.6. Diagrama: Pipeline interno del Gateway](#3156-diagrama-pipeline-interno-del-gateway)
-  - [31.6. Nginx: La alternativa profesional](#316-nginx-la-alternativa-profesional)
-    - [31.6.1. ¿Qué es Nginx?](#3161-qué-es-nginx)
-    - [31.6.2. Configuración de Nginx](#3162-configuración-de-nginx)
-    - [31.6.3. YARP vs Nginx](#3163-yarp-vs-nginx)
+    - [31.5.4. Diagrama: flujo completo de autenticación y autorización](#3154-diagrama-flujo-completo-de-autenticación-y-autorización)
+    - [31.5.5. Diagrama: qué pasa cuando la autenticación falla](#3155-diagrama-qué-pasa-cuando-la-autenticación-falla)
+    - [31.5.6. Diagrama: pipeline interno del gateway](#3156-diagrama-pipeline-interno-del-gateway)
+  - [31.6. Nginx: la alternativa profesional](#316-nginx-la-alternativa-profesional)
+    - [31.6.1. ¿Qué es nginx?](#3161-qué-es-nginx)
+    - [31.6.2. Configuración de nginx](#3162-configuración-de-nginx)
+    - [31.6.3. YARP vs nginx](#3163-yarp-vs-nginx)
   - [31.7. Docker y contenedores](#317-docker-y-contenedores)
     - [31.7.1. Nombres de servicio vs localhost](#3171-nombres-de-servicio-vs-localhost)
     - [31.7.2. Redes internas](#3172-redes-internas)
-  - [31.8. Ventajas y Desventajas](#318-ventajas-y-desventajas)
-  - [31.9. Buenas Prácticas](#319-buenas-prácticas)
+  - [31.8. Ventajas y desventajas](#318-ventajas-y-desventajas)
+  - [31.9. Buenas prácticas](#319-buenas-prácticas)
   - [31.10. Reto](#3110-reto)
 
 
 
-# 31. API Gateway y Microservicios
+# 31. API Gateway y microservicios
 
 > 💡 **Punto de partida:** Netflix no tiene una sola aplicación gigante. Tiene cientos de servicios independientes: uno para recomendar contenido, otro para gestionar pagos, otro para enviar notificaciones. Cuando abres la app, todos esos servicios trabajan juntos como si fueran uno solo. ¿Cómo lo consiguen? Con **microservicios** y un **API Gateway** que coordina todo.
 
@@ -51,7 +51,7 @@ En este punto aprenderás por qué los microservicios han revolucionado el desar
 - Implementar un ejemplo práctico con Docker Compose
 - Conocer Nginx como alternativa profesional
 
-## 31.1. ¿Por qué Microservicios?
+## 31.1. ¿Por qué microservicios?
 
 La arquitectura de software ha evolucionado mucho en los últimos años. Hasta hace relativamente poco, la mayoría de aplicaciones se construían como **monolitos**: un único bloque de código que contenía toda la lógica de negocio, acceso a datos, interfaces de usuario y más. Con el crecimiento de las aplicaciones web y la demanda de escalabilidad, surgieron los **microservicios** como alternativa.
 
@@ -59,7 +59,7 @@ La arquitectura de software ha evolucionado mucho en los últimos años. Hasta h
 
 📌 **Ejemplo real:** Netflix pasó de un monolito a microservicios en 2009. Hoy tiene más de 1000 servicios independientes. Cuando haces play en una serie, el servicio de recomendaciones sugiere títulos, el servicio de streaming entrega el vídeo, el servicio de pagos verifica tu suscripción y el de notificaciones avisa a tus amigos. Todo en paralelo, sin que uno dependa del otro para funcionar.
 
-### 31.1.1. Monolito vs Microservicios
+### 31.1.1. Monolito vs microservicios
 
 ```mermaid
 graph TD
@@ -74,13 +74,13 @@ graph TD
         GW --> MS3["Servicio Pedidos"]
         GW --> MS4["Servicio Pagos"]
     end
-    style M fill:#f44336,color:#fff
-    style MA fill:#FF9800,color:#fff
-    style GW fill:#2196F3,color:#fff
-    style MS1 fill:#4CAF50,color:#fff
-    style MS2 fill:#4CAF50,color:#fff
-    style MS3 fill:#4CAF50,color:#fff
-    style MS4 fill:#4CAF50,color:#fff
+    style M fill:#f4433,color:#fff6,color:#fff
+    style MA fill:#FF980,color:#fff0,color:#fff
+    style GW fill:#2196F,color:#fff3,color:#fff
+    style MS1 fill:#4CAF5,color:#fff0,color:#fff
+    style MS2 fill:#4CAF5,color:#fff0,color:#fff
+    style MS3 fill:#4CAF5,color:#fff0,color:#fff
+    style MS4 fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 | Característica | Monolito | Microservicios |
@@ -93,7 +93,7 @@ graph TD
 | **Complejidad inicial** | Baja | Alta |
 | **Complejidad a largo plazo** | Alta (código enredado) | Media (servicios independientes) |
 
-### 31.1.2. Ventajas de los Microservicios
+### 31.1.2. Ventajas de los microservicios
 
 - **Escalabilidad independiente**: Si el servicio de productos recibe más tráfico, solo escalas ese servicio, no toda la aplicación
 - **Despliegue aislado**: Si introduces un bug en el servicio de pagos, solo afecta a pagos, no a login ni a productos
@@ -103,7 +103,7 @@ graph TD
 
 📌 **Ejemplo real:** Amazon despliega cambios en producción cada 11.7 segundos de media. ¿Cómo? Porque cada microservicio se despliega de forma independiente. Cuando cambian el algoritmo de recomendaciones, no necesitan tocar el servicio de pagos.
 
-### 31.1.3. Problemas de los Microservicios
+### 31.1.3. Problemas de los microservicios
 
 - **Complejidad de red**: Ahora los servicios se comunican por HTTP o mensajería, lo que introduce latencia y posibles fallos de red
 - **Transacciones distribuidas**: En un monolito, una transacción de base de datos lo cubre todo. En microservicios, necesitas patrones como **Saga** o **eventual consistency**
@@ -114,7 +114,7 @@ graph TD
 
 > ⚠️ **Advertencia:** Los microservicios **no son la respuesta a todo**. Si tu aplicación es pequeña (menos de 100.000 usuarios), un monolito bien diseñado puede ser mejor opción. Los microservicios aportan valor cuando tienes **escala, equipos grandes y necesidad de despliegues independientes**.
 
-## 31.2. Comunicación entre Microservicios
+## 31.2. Comunicación entre microservicios
 
 En un monolito, las partes de la aplicación se comunican llamando a métodos en el mismo proceso. En microservicios, esa comunicación se hace a través de la red, y hay dos grandes enfoques.
 
@@ -139,7 +139,7 @@ sequenceDiagram
 
 📌 **Ejemplo real:** Cuando haces un pedido en Amazon, el servicio de pedidos llama sincrónicamente al servicio de inventario para comprobar stock. Necesita saber **ahora mismo** si hay disponibilidad antes de confirmar el pedido.
 
-### 31.2.2. Comunicación asincrónica (Eventos)
+### 31.2.2. Comunicación asincrónica (eventos)
 
 La comunicación **asincrónica** usa colas de mensajes (como RabbitMQ o Apache Kafka). Un servicio publica un evento y otros servicios se suscriben para reaccionar a él.
 
@@ -179,7 +179,7 @@ Cuando un servicio necesita datos de otro, ¿debe llamar a la URL del otro servi
 
 Un **API Gateway** es el punto de entrada único de tu arquitectura de microservicios. En lugar de que el cliente conozca la URL de cada servicio, solo conoce una: la del Gateway.
 
-### 31.3.1. El problema sin Gateway
+### 31.3.1. El problema sin gateway
 
 Sin un Gateway, el cliente (app móvil, web, IoT) debe conocer la URL de cada microservicio:
 
@@ -190,12 +190,12 @@ graph TD
     CL -->|Pedidos| PD["pedidos.microservice:5003"]
     CL -->|Pagos| PG["pagos.microservice:5004"]
     CL -->|Notif| N["notif.microservice:5005"]
-    style CL fill:#607D8B,color:#fff
-    style A fill:#f44336,color:#fff
-    style P fill:#4CAF50,color:#fff
-    style PD fill:#2196F3,color:#fff
-    style PG fill:#FF9800,color:#fff
-    style N fill:#9C27B0,color:#fff
+    style CL fill:#607D8,color:#fffB,color:#fff
+    style A fill:#f4433,color:#fff6,color:#fff
+    style P fill:#4CAF5,color:#fff0,color:#fff
+    style PD fill:#2196F,color:#fff3,color:#fff
+    style PG fill:#FF980,color:#fff0,color:#fff
+    style N fill:#9C27B,color:#fff0,color:#fff
 ```
 
 **Problemas:**
@@ -205,7 +205,7 @@ graph TD
 - No hay un punto centralizado para auth, rate limiting o logs
 - Duplicación de lógica transversal en cada servicio
 
-### 31.3.2. La solución: Gateway como proxy inverso
+### 31.3.2. La solución: gateway como proxy inverso
 
 ```mermaid
 graph TD
@@ -214,19 +214,19 @@ graph TD
     GW -->|/productos| P["Servicio Productos"]
     GW -->|/pedidos| PD["Servicio Pedidos"]
     GW -->|/pagos| PG["Servicio Pagos"]
-    style CL fill:#607D8B,color:#fff
-    style GW fill:#2196F3,color:#fff
-    style A fill:#4CAF50,color:#fff
-    style P fill:#4CAF50,color:#fff
-    style PD fill:#4CAF50,color:#fff
-    style PG fill:#4CAF50,color:#fff
+    style CL fill:#607D8,color:#fffB,color:#fff
+    style GW fill:#2196F,color:#fff3,color:#fff
+    style A fill:#4CAF5,color:#fff0,color:#fff
+    style P fill:#4CAF5,color:#fff0,color:#fff
+    style PD fill:#4CAF5,color:#fff0,color:#fff
+    style PG fill:#4CAF5,color:#fff0,color:#fff
 ```
 
 El cliente solo conoce **una URL** (la del Gateway). El Gateway se encarga de redirigir la petición al servicio correcto.
 
 📌 **Ejemplo real:** Cuando entras en la web de Netflix, tu navegador solo hace peticiones a `netflix.com`. El API Gateway internamente redirige a cientos de microservicios. Tú no necesitas saber que el catálogo está en `catalogue.service` y las recomendaciones en `recommendations.service`.
 
-### 31.3.3. Funciones del Gateway
+### 31.3.3. Funciones del gateway
 
 | Función | Descripción | Ejemplo |
 |---------|-------------|---------|
@@ -240,7 +240,7 @@ El cliente solo conoce **una URL** (la del Gateway). El Gateway se encarga de re
 
 > 💡 **Analogía:** El API Gateway es como la recepción de un hotel. Los clientes llegan a recepción, no a las habitaciones directamente. El recepcionista verifica tu identidad (auth), te asigna una habitación (routing) y si hay muchos huéspedes, gestiona la cola (rate limiting).
 
-## 31.4. YARP: Microsoft Reverse Proxy
+## 31.4. YARP: Microsoft reverse proxy
 
 ### 31.4.1. ¿Qué es YARP?
 
@@ -386,7 +386,7 @@ Los headers `Authorization` pasan a través del Gateway hacia el servicio destin
 
 > ⚠️ **Advertencia:** Si el Gateway valida el token y el servicio destino también, se hace una **doble validación**. Decide en qué punto validas: en el Gateway (centralizado) o en cada servicio (distribuido). La mayoría de arquitecturas validan en el Gateway para simplificar los servicios.
 
-## 31.5. Ejemplo práctico: Auth + Productos con YARP
+## 31.5. Ejemplo práctico: auth + productos con YARP
 
 ### 31.5.1. Arquitectura del ejemplo
 
@@ -399,19 +399,19 @@ graph TD
     GW -->|/api/productos| P["Productos Service :5002"]
     A --> DB1[("SQLite Auth")]
     P --> DB2[("SQLite Productos")]
-    style CL fill:#607D8B,color:#fff
-    style GW fill:#2196F3,color:#fff
-    style A fill:#4CAF50,color:#fff
-    style P fill:#FF9800,color:#fff
-    style DB1 fill:#9C27B0,color:#fff
-    style DB2 fill:#9C27B0,color:#fff
+    style CL fill:#607D8,color:#fffB,color:#fff
+    style GW fill:#2196F,color:#fff3,color:#fff
+    style A fill:#4CAF5,color:#fff0,color:#fff
+    style P fill:#FF980,color:#fff0,color:#fff
+    style DB1 fill:#9C27B,color:#fff0,color:#fff
+    style DB2 fill:#9C27B,color:#fff0,color:#fff
 ```
 
 - **API Gateway** (puerto 5000): Recibe todas las peticiones y las redirige
 - **Auth Service** (puerto 5001): Gestiona login y genera tokens JWT
 - **Productos Service** (puerto 5002): CRUD de productos, requiere token válido
 
-### 31.5.2. Docker Compose
+### 31.5.2. Docker compose
 
 ```yaml
 services:
@@ -533,7 +533,7 @@ El `appsettings.json` del Gateway:
 5. El cliente envía `GET http://localhost:5000/api/productos` con el header `Authorization: Bearer <token>`
 6. El Gateway valida el token y redirige a `http://productos-service:5002/api/productos`
 
-### 31.5.4. Diagrama: Flujo completo de autenticación y autorización
+### 31.5.4. Diagrama: flujo completo de autenticación y autorización
 
 Este diagrama muestra **el ciclo de vida completo** de un usuario: desde el login hasta el acceso a recursos protegidos. Observa en qué punto se valida el token y dónde se procesa la autorización:
 
@@ -604,7 +604,7 @@ sequenceDiagram
 | **3. Crear producto** | `POST /api/productos` | ✅ Sí | JWT válido | Productos Service |
 | **4. Logout** | `POST /api/auth/logout` | ❌ No | Nada (ruta pública) | Auth Service |
 
-### 31.5.5. Diagrama: Qué pasa cuando la autenticación falla
+### 31.5.5. Diagrama: qué pasa cuando la autenticación falla
 
 El Gateway rechaza peticiones **antes** de que lleguen al servicio destino. Esto protege los servicios de tráfico no autorizado:
 
@@ -668,7 +668,7 @@ sequenceDiagram
 
 > ⚠️ **Advertencia:** Si el Gateway **no** configura `"AuthorizationPolicy": "default"` en la ruta, las peticiones pasan **sin validar token**. El Gateway actúa como simple proxy inverso. Asegúrate de que cada ruta protegida declarar la política.
 
-### 31.5.6. Diagrama: Pipeline interno del Gateway
+### 31.5.6. Diagrama: pipeline interno del gateway
 
 ¿Qué pasa **dentro** del Gateway cuando recibe una petición? Este diagrama muestra el **pipeline de middleware** que procesa cada request antes de reenviarla:
 
@@ -733,9 +733,9 @@ sequenceDiagram
 
 > 💡 **Consejo:** El orden importa. Si el Rate Limiting va primero, rechaza peticiones antes de gastar CPU en validar tokens. Si Authentication va antes de Authorization, siempre sabes quién es el usuario antes de decidir si puede hacer algo. Este orden es el estándar de la industria.
 
-## 31.6. Nginx: La alternativa profesional
+## 31.6. Nginx: la alternativa profesional
 
-### 31.6.1. ¿Qué es Nginx?
+### 31.6.1. ¿Qué es nginx?
 
 **Nginx** es un servidor web de alto rendimiento que también funciona como **reverse proxy**, load balancer y caché HTTP. Es la herramienta más usada en producción a nivel mundial para este tipo de tareas.
 
@@ -746,7 +746,7 @@ sequenceDiagram
 
 > 📝 **Nota:** Mientras YARP es la opción nativa de .NET, Nginx es el estándar de la industria. Conocer ambos te da más opciones en el mercado laboral.
 
-### 31.6.2. Configuración de Nginx
+### 31.6.2. Configuración de nginx
 
 ```nginx
 events {
@@ -792,7 +792,7 @@ http {
 
 📌 **Ejemplo real:** GitHub usa Nginx como reverse proxy frontal de todas sus APIs. Cuando haces `git push`, la petición pasa por Nginx antes de llegar al servicio de Git.
 
-### 31.6.3. YARP vs Nginx
+### 31.6.3. YARP vs nginx
 
 | Característica | YARP | Nginx |
 |----------------|------|-------|
@@ -840,15 +840,15 @@ graph TD
     GW -->|"auth-service:5001"| A
     GW -->|"productos-service:5002"| P
     CL["Host"] -->|"localhost:5000"| GW
-    style GW fill:#2196F3,color:#fff
-    style A fill:#4CAF50,color:#fff
-    style P fill:#FF9800,color:#fff
-    style CL fill:#607D8B,color:#fff
+    style GW fill:#2196F,color:#fff3,color:#fff
+    style A fill:#4CAF5,color:#fff0,color:#fff
+    style P fill:#FF980,color:#fff0,color:#fff
+    style CL fill:#607D8,color:#fffB,color:#fff
 ```
 
 > ⚠️ **Advertencia:** Si necesitas que un servicio acceda a otro de un **docker-compose.yml diferente**, necesitas declarar la red como `external` o usar `host` networking. Las redes por defecto son aisladas por proyecto.
 
-## 31.8. Ventajas y Desventajas
+## 31.8. Ventajas y desventajas
 
 | Ventajas | Desventajas |
 |----------|-------------|
@@ -859,7 +859,7 @@ graph TD
 | **Punto de entrada único**: El Gateway simplifica el acceso del cliente | **Monitorización**: Necesitas herramientas de tracing distribuido |
 | **Seguridad centralizada**: Auth y rate limiting en un solo punto | **Operaciones**: Docker, Kubernetes, logs distribuidos |
 
-## 31.9. Buenas Prácticas
+## 31.9. Buenas prácticas
 
 - **Un servicio, una base de datos**: Nunca compartas base de datos entre servicios. Cada uno es dueño de sus datos
 - **API Gateway como único punto de entrada**: Los clientes nunca deben llamar directamente a los servicios internos
@@ -882,7 +882,7 @@ graph TD
 
 Imagina que vas a escalar la **FunkoApp** que estás construyendo en esta unidad. Actualmente es un monolito con un solo proyecto ASP.NET Core que gestiona productos, usuarios y pedidos.
 
-### Ejercicio: Diseña la arquitectura de microservicios
+### Ejercicio: diseña la arquitectura de microservicios
 
 1. **Identifica los servicios**: ¿En cuántos microservicios dividirías la FunkoApp? Justifica cada uno
 2. **Dibuja la arquitectura**: ¿Cómo se comunicarían entre sí? ¿Qué datos compartiría cada servicio?
