@@ -384,6 +384,7 @@ graph TD
 - **Hub:** Clase que maneja conexiones. Métodos invocables desde cliente y servidor
 - **Groups:** Agrupar conexiones. Enviar mensajes a un grupo específico
 - **Métodos:** SendAsync (enviar), Clients.Group (broadcast a grupo), JoinGroup
+- **Server-Sent Events:** canal de un solo sentido en caja (`Results.ServerSentEvents`); alternativa ligera al WebSocket
 - 📌 Un chat en tiempo real usa SignalR: cada mensaje llega a todos los usuarios del grupo al instante
 
 #### Tema 19: GraphQL
