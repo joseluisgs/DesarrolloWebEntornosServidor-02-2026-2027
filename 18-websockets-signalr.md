@@ -104,6 +104,27 @@ flowchart LR
 
 > 💡 **Analogía:** HTTP es como llamar a un amigo cada vez que quieres saber algo. WebSocket es como tener una llamada telefonica abierta permanente: cualquiera de los dos puede hablar cuando quiera.
 
+> 💡 **Consejo:** antes de montar un WebSocket completo, mira si te basta el canal de un solo sentido. ASP.NET Core trae los Server-Sent Events en caja con `Results.ServerSentEvents`: el servidor emite eventos y el navegador los recibe con un `EventSource`, sin negociación ni paquetes propios.
+
+```csharp
+// Un flujo de eventos del servidor al navegador, sin más estructura
+app.MapGet("/avisos", async (CancellationToken cancelacion) =>
+{
+    async IAsyncEnumerable<string> Flujo()
+    {
+        for (var i = 1; i <= 5; i++)
+        {
+            await Task.Delay(1000, cancelacion);
+            yield return $"aviso {i}";
+        }
+    }
+
+    return Results.ServerSentEvents(Flujo());
+});
+```
+
+📌 **Ejemplo real:** Cualquier panel que actualiza un contador en directo, una cola o una subasta, puede vivir con SSE: el navegador se suscribe una vez y el servidor avisa cuando hay algo nuevo; para lo que necesita diálogo de ida y vuelta, ahí sigue estando SignalR.
+
 ### 18.1.3. Casos de uso
 
 | Caso de uso | Ejemplo real | Tecnologia recomendada |
