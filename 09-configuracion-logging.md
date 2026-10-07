@@ -447,6 +447,54 @@ Log.Logger = new LoggerConfiguration()
 
 > 💡 **Consejo:** Para proyectos pequeños, configura Serilog en código (más simple). Para proyectos grandes con muchos entornos, usa `appsettings.json` (más flexible, no requiere recompilar).
 
+#### Program.cs completo: sustituir el logger de Microsoft
+
+`builder.Host.UseSerilog()` es la línea que **sustituye** el logger por defecto de Microsoft. Sin ella, la sección `"Serilog"` del `appsettings.json` se ignora y solo se escribe en consola:
+
+```csharp
+using Serilog;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// 1. Crear el logger desde appsettings.json
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
+// 2. Sustituir el logger de Microsoft por Serilog
+//    A partir de aquí, todos los ILogger<T> escriben en los sinks de Serilog
+builder.Host.UseSerilog();
+
+var app = builder.Build();
+app.Run();
+```
+
+> ⚠️ **Advertencia:** Sin `builder.Host.UseSerilog()`, la configuración `"Serilog"` del `appsettings.json` se ignora por completo.
+
+#### DI del logger en servicios
+
+El `ILogger<T>` se inyecta igual que cualquier otro servicio. No necesitas registrar nada extra: `UseSerilog()` cambia el proveedor y la inyección sigue funcionando igual:
+
+```csharp
+public class ProductoService(
+    IProductoRepository repository,
+    ILogger<ProductoService> logger) : IProductoService
+{
+    public async Task<Producto?> GetByIdAsync(int id)
+    {
+        logger.LogInformation("Buscando producto {Id}", id);
+        var producto = await repository.GetByIdAsync(id);
+        if (producto is null)
+        {
+            logger.LogWarning("Producto {Id} no encontrado", id);
+        }
+        return producto;
+    }
+}
+```
+
+La categoría del logger es automáticamente el nombre del tipo (`ProductoService`), y los sinks de Serilog la usan para filtrar.
+
 ## 9.3. Buenas prácticas
 
 9.1. **Nunca guardes secrets en appsettings.json:** Usa variables de entorno o `dotnet user-secrets`

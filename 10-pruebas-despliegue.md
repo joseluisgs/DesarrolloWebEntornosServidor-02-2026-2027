@@ -1,4 +1,4 @@
-- [10. Pruebas y despliegue básicos](#10-pruebas-y-despliegue-básicos)
+﻿- [10. Pruebas y despliegue básicos](#10-pruebas-y-despliegue-básicos)
   - [10.1. Test unitarios con NUnit](#101-test-unitarios-con-nunit)
     - [10.1.1. Estructura de un test: arrange, act, assert](#1011-estructura-de-un-test-arrange-act-assert)
     - [10.1.2. Aserciones con FluentAssertions](#1012-aserciones-con-fluentassertions)
@@ -269,6 +269,40 @@ COPY --from=build /app .
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "ProductosApi.dll"]
 ```
+
+#### Excluir proyectos de test del build
+
+Si tu repositorio tiene proyectos de test (`*.Tests.csproj`), el Dockerfile de producción **no debería compilarlos**: la imagen solo necesita la app, no las pruebas.
+
+```dockerfile
+# ❌ MALO: copia todo y compila también los tests
+COPY . .
+RUN dotnet publish -c Release -o /app
+
+# ✅ BUENO: copiar solo los .csproj de producción
+COPY ["ProductosApi/ProductosApi.csproj", "ProductosApi/"]
+COPY ["ProductosApi.Shared/ProductosApi.Shared.csproj", "ProductosApi.Shared/"]
+# NO copiar ProductosApi.Tests/ProductosApi.Tests.csproj
+
+RUN dotnet restore "ProductosApi/ProductosApi.csproj"
+COPY ["ProductosApi/", "ProductosApi/"]
+COPY ["ProductosApi.Shared/", "ProductosApi.Shared/"]
+RUN dotnet publish "ProductosApi/ProductosApi.csproj" -c Release -o /app
+```
+
+Y en `.dockerignore`:
+
+```
+# Excluir tests y artefactos del contexto de Docker
+**/*Tests*/
+**/*Test/
+**/bin/
+**/obj/
+```
+
+> ⚠️ **Advertencia:** No excluir los tests del build de producción es una mala práctica: la imagen tarda el doble y pesa el doble sin aportar nada. Solo se excluyen del **despliegue**, no de la ejecución de tests en CI.
+
+> 📝 **Nota:** Si usas CPM (Central Package Management), recuerda copiar `Directory.Packages.props` antes de los `.csproj`, o el `dotnet restore` fallará con NU1015.
 
 ### 10.4.2. Multi-stage build
 
