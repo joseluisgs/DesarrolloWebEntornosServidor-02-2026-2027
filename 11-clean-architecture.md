@@ -1,4 +1,4 @@
-- [11. Arquitecturas en capas y Clean Architecture](#11-arquitecturas-en-capas-y-clean-architecture)
+﻿- [11. Arquitecturas en capas y Clean Architecture](#11-arquitecturas-en-capas-y-clean-architecture)
   - [11.1. ¿Por qué necesitamos una arquitectura?](#111-por-qué-necesitamos-una-arquitectura)
     - [11.1.1. El problema del "spaghetti code"](#1111-el-problema-del-spaghetti-code)
     - [11.1.2. Separación de responsabilidades](#1112-separación-de-responsabilidades)
@@ -581,7 +581,119 @@ services.AddStorage();
 > ⚠️ **Advertencia:** Cuando el proyecto tenga más de 3 desarrolladores o más de 20 endpoints, considera migrar a Clean Architecture con proyectos separados. La arquitectura plana funciona bien en educación y proyectos pequeños, pero escala limitada en equipos grandes.
 
 
-## 11.6. Estructura del proyecto
+## 11.6. Del monolito a los microservicios
+
+Hasta aquí, todo lo que hemos visto (capas, onion, clean, CQRS) cabe dentro de un **monolito**: una única aplicación que contiene toda la lógica. Es un buen punto de partida, pero llega un momento en el que la aplicación crece tanto que el monolito se convierte en un problema.
+
+📌 **Ejemplo real:** Netflix empezó como un monolito en Java. Al alcanzar millones de usuarios, desplegaban en 30-40 minutos cada vez y cualquier cambio afectaba a todo el sistema. Lo dividieron en microservicios: hoy despliegan miles de veces al día, cada servicio de forma independiente.
+
+### 11.6.1. El problema del monolito que crece
+
+Un monolito bien construido funciona bien... hasta que deja de hacerlo:
+
+| Problema | Qué ocurre | Ejemplo |
+|----------|------------|---------|
+| Despliegue lento | Todo se publica junto, aunque solo haya cambiado una parte | 40 minutos de build para cambiar un precio |
+| Acoplamiento | Un cambio en un módulo puede romper otro | Al tocar facturación, se cae el catálogo |
+| Escalado ciego | Se escala entero aunque solo necesites más en una parte | Duplicar servidores para soportar picos de pagos |
+| Tecnología atada | Todo el monolito usa la misma tecnología | No puedes usar Redis para caché si todo está en SQL Server |
+
+> 💡 **Analogía:** Un monolito es como una tienda donde todo está en la misma planta: almacén, caja, oficina y taller. Si el taller se llena, la tienda entera sufre. Con microservicios, cada área tiene su propio local.
+
+### 11.6.2. Qué son los microservicios
+
+Un microservicio es una aplicación pequeña e independiente que hace **una cosa bien** y se comunica con los demás por red (HTTP, mensajería). Cada uno tiene su propia base de datos, su propio ciclo de despliegue y su propio equipo.
+
+```mermaid
+graph TD
+    M[Monolito] -->|Escalas| A[Servicio A<br/>Catálogo]
+    M --> B[Servicio B<br/>Pagos]
+    M --> C[Servicio C<br/>Usuarios]
+    A -->|HTTP| B
+    B -->|HTTP| C
+    style M fill:#f44336,color:#fff
+    style A fill:#4CAF50,color:#fff
+    style B fill:#2196F3,color:#fff
+    style C fill:#FF9800,color:#fff
+```
+
+| Característica | Monolito | Microservicios |
+|----------------|:--------:|:--------------:|
+| Despliegue | Todo junto | Cada servicio por separado |
+| Base de datos | Una compartida | Una por servicio |
+| Escalado | Entero | Solo el que necesita |
+| Fallo de un módulo | Se cae todo | Se cae solo ese módulo |
+| Complejidad inicial | Baja | Alta |
+
+### 11.6.3. Problemas que resuelve y problemas que crea
+
+Los microservicios **resuelven** problemas de escala y despliegue, pero **crean** otros nuevos:
+
+**Lo que resuelven:**
+- Despliegues independientes (el equipo de pagos publica sin tocar el catálogo)
+- Escalado selectivo (más servidores solo para el servicio de pagos en Navidad)
+- Aislamiento de fallos (si cae el catálogo, los pagos siguen funcionando)
+
+**Lo que crean:**
+- Complejidad de red: dos llamadas por red son ~100x más lentas que una llamada en memoria
+- **Consistencia**: ya no hay transacciones ACID entre servicios; hay que usar patrones como Sagas
+- **Observabilidad**: depurar un error que pasa por 5 servicios requiere trazas distribuidas
+- Despliegues coordinados: cambiar un contrato entre servicios requiere planificación
+
+> ⚠️ **Advertencia:** No empieces por microservicios. Un monolito bien hecho con arquitectura limpia es mejor que 20 microservicios mal conectados. La mayoría de equipos que empieza por microservicios acaba con un "monolito distribuido", que es lo peor de ambos mundos.
+
+### 11.6.4. API Gateway: la puerta de entrada
+
+Cuando tienes varios microservicios, el cliente no debería hablar con cada uno directamente. El API Gateway es el punto único de entrada: recibe todas las peticiones y las enruta al servicio correspondiente.
+
+📌 **Ejemplo real:** Cuando abres la app de Glovo, el móvil habla con **un solo** endpoint (el gateway). El gateway decide si la petición va al servicio de restaurantes, al de repartidores o al de pagos. El móvil no sabe nada de la arquitectura interna.
+
+```mermaid
+graph LR
+    N[Móvil / Navegador] --> G[API Gateway]
+    G -->|/productos| A[Servicio Catálogo]
+    G -->|/pagos| B[Servicio Pagos]
+    G -->|/usuarios| C[Servicio Usuarios]
+    style G fill:#9C27B0,color:#fff
+    style N fill:#607D8B,color:#fff
+    style A fill:#4CAF50,color:#fff
+    style B fill:#2196F3,color:#fff
+    style C fill:#FF9800,color:#fff
+```
+
+**Qué hace el API Gateway:**
+
+| Función | Descripción |
+|---------|-------------|
+| **Enrutamiento** | `/productos` → servicio catálogo, `/pagos` → servicio pagos |
+| **Autenticación** | Valida el token una sola vez, no en cada servicio |
+| **Rate limiting** | Limita peticiones por cliente antes de llegar a los servicios |
+| **Balanceo** | Distribuye la carga entre instancias del mismo servicio |
+| **Caché** | Almacena respuestas frecuentes sin llegar al servicio |
+
+**Herramientas habituales:**
+- **YARP** (Yet Another Reverse Proxy): el reverse proxy de Microsoft para .NET
+- **Ocelot**: gateway para .NET construido sobre YARP
+- **NGINX / Traefik**: gateways genéricos multiplataforma
+
+> 📝 **Nota:** En .NET, YARP es la opción recomendada. Es una librería, no un servicio externo: se configura en el `Program.cs` de un proyecto pequeño dedicado.
+
+> 💡 **Consejo:** Si tu app es un monolito bien hecho, no necesitas API Gateway. El gateway aparece cuando tienes **varios servicios** y necesitas un punto único de entrada.
+
+### 11.6.5. ¿Cuándo pasar de monolito a microservicios?
+
+No hay una fecha, hay señales:
+
+| Señal | Indica que toca pensar en microservicios |
+|-------|------------------------------------------|
+| El build del monolito tarda más de 10 minutos | Estás desplegando demasiado junto |
+| Un equipo de 5 personas no puede desplegar sin coordinarse | El monolito frena la autonomía |
+| Necesitas escalar una parte concreta y estás escalando todo | Desperdicio de recursos |
+| Los fallos de un módulo afectan a todos | Falta de aislamiento |
+
+> 💡 **Consejo:** Pasa a microservicios **por dolor real**, no por moda. Un monolito modular con Clean Architecture puede seguir creciendo años antes de necesitar la separación.
+
+## 11.7. Estructura del proyecto
 
 ### 11.6.1. Organización de carpetas
 
@@ -608,7 +720,7 @@ MiApi/
     └── Program.cs
 ```
 
-### 11.6.2. Capas y sus contenidos
+### 11.7.2. Capas y sus contenidos
 
 | Capa | Contenido | Regla |
 |------|-----------|-------|
@@ -628,7 +740,7 @@ MiApi/
 - **Clean Architecture para equipos:** En proyectos con varios desarrolladores, Clean Architecture da claridad
 
 
-## 11.8. Decisiones de arquitectura: ADRs
+## 11.9. Decisiones de arquitectura: ADRs
 
 Hemos comparado capas, Onion y Clean... y llegará el día en que tu equipo tenga que **elegir**. El problema no es decidir: es que seis meses después nadie recuerda **por qué** se decidió.
 
@@ -648,7 +760,7 @@ Un **ADR** (*Architecture Decision Record*, "registro de decisiones de arquitect
 
 > 💡 **Analogía:** Es la bitácora de un barco: no te dice hacia dónde va ahora (eso es el README), te dice **por qué giró** cuando el capitán lo decidió.
 
-### 11.8.2. Plantilla de ADR (formato MADR)
+### 11.9.2. Plantilla de ADR (formato MADR)
 
 La plantilla más extendida es **MADR**. En el proyecto la verás en inglés; aquí la tienes traducida:
 
@@ -686,7 +798,7 @@ Elegimos la **opción A** porque <justificación>.
 
 Los campos clave son **Estado**, **Contexto**, **Opciones** y **Consecuencias**: si no puedes rellenar las opciones, probablemente no haya decisión (solo una imposición).
 
-### 11.8.3. Ejemplo completo: rate limiting nativo
+### 11.9.3. Ejemplo completo: rate limiting nativo
 
 Este es un ADR real de nuestro ámbito: la decisión de sustituir `AspNetCoreRateLimit` por la API nativa de .NET (la que viste en el tema 23, sección 23.5.2).
 
@@ -727,7 +839,7 @@ y los headers exactamente como queremos.
 
 > 📝 **Nota:** Un ADR **aceptada no se edita**. Si dentro de un año cambias de opinión, escribes un ADR nuevo y el antiguo pasa a `Estado: obsoleta (reemplazada por ADR-0012)`. Así queda la **historia** de las decisiones.
 
-### 11.8.4. Reglas de oro
+### 11.9.4. Reglas de oro
 
 - **Uno por decisión:** si un fichero documenta tres decisiones, en realidad no documenta ninguna.
 - **Corto:** una o dos páginas. Si no cabe, es un diseño, no un ADR.
@@ -740,7 +852,7 @@ y los headers exactamente como queremos.
 
 > ⚠️ **Advertencia:** El ADR más peligroso es el que no existe: sin él, el siguiente desarrollador "arreglará" tu decisión porque nadie dejó escrita la razón.
 
-## 11.9. Reto
+## 11.10. Reto
 
 > Diseña la arquitectura de FunkoApp.
 
