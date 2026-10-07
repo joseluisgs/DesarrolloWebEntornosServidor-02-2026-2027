@@ -1,4 +1,4 @@
-- [27. Logging y monitoreo](#27-logging-y-monitoreo)
+﻿- [27. Logging y monitoreo](#27-logging-y-monitoreo)
   - [27.1. Fundamentos de logging](#271-fundamentos-de-logging)
     - [27.1.1. Qué es el logging](#2711-qué-es-el-logging)
     - [27.1.2. Logging estructurado vs texto plano](#2712-logging-estructurado-vs-texto-plano)
@@ -156,6 +156,20 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 ```
 
+
+**Qué hace `UseSerilog()`: sustituye el logger de Microsoft.**
+
+ASP.NET Core trae un `ILogger` por defecto que escribe en consola. `builder.Host.UseSerilog()` lo **sustituye** por completo: a partir de ese momento, todos los `ILogger<T>` que inyectes en servicios, controladores o páginas escriben en los sinks de Serilog (consola, fichero, etc.), no en el proveedor por defecto.
+
+```csharp
+// ANTES de UseSerilog: los ILogger escriben en consola (proveedor por defecto)
+// DESPUÉS de UseSerilog: los ILogger escriben donde diga Serilog (consola + fichero + ...)
+builder.Host.UseSerilog();
+```
+
+> ⚠️ **Advertencia:** `UseSerilog()` solo cambia el proveedor. No toca los `ILogger<T>` que ya inyectaste: siguen funcionando igual, pero su salida va a los sinks de Serilog.
+
+> 📝 **Nota:** Si no llamas a `UseSerilog()`, la configuración `"Serilog"` del `appsettings.json` se ignora: el logger por defecto sigue mandando.
 ### 27.2.3. Sinks y formateadores
 
 Los **sinks** determinan dónde se envían los logs.

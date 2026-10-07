@@ -1,4 +1,4 @@
-- [9. Configuración y logging](#9-configuración-y-logging)
+﻿- [9. Configuración y logging](#9-configuración-y-logging)
   - [9.1. Configuración en ASP.NET Core](#91-configuración-en-aspnet-core)
     - [9.1.1. Appsettings.json](#911-appsettingsjson)
     - [9.1.2. Perfiles de entorno (Development vs Production)](#912-perfiles-de-entorno-development-vs-production)
@@ -160,10 +160,32 @@ if (string.IsNullOrEmpty(connectionString))
 
 📌 **Ejemplo real:** en TiendaAPI el commit *fix: fail-fast en producción — credenciales BD/Mongo/Redis obligatorias (fallback solo en dev)* reescribió `AddDatabases` y `AddCache` con este mismo patrón: **tres** excepciones `InvalidOperationException` (PostgreSQL, MongoDB y Redis) que saltan al arrancar si falta la configuración.
 
-> 📝 **Nota:** Se llama *fail-fast* («fallar rápido») porque el error aparece en el **primer segundo** de vida de la aplicación, justo cuando el orquestador puede verlo y reiniciar con la configuración corregida. La alternativa (el `??` silencioso) produce una app que **arranca en verde** y empieza a escupir `Connection refused` con la primera petición real, a las 3 de la mañana, con nadie mirando.
+> 📝 **Nota:** Se llama *fail-fast* ("fallar rápido") porque el error aparece en el **primer segundo** de vida de la aplicación, justo cuando el orquestador puede verlo y reiniciar con la configuración corregida. La alternativa (el `??` silencioso) produce una app que **arranca en verde** y empieza a escupir `Connection refused` con la primera petición real, a las 3 de la mañana, con nadie mirando.
 
 > 💡 **Analogía:** Es como revisar las llaves antes de salir de casa. Si te das cuenta en la puerta, vuelves y las coges (2 segundos). Si no te das cuenta hasta llegar al coche y arrancar, descubrirás el problema en el barrio de destino... o peor: el coche arranca igualmente (llega a intentar conectar) y el fallo real aparece cuando ya no puedes volver.
 
+
+**Program.cs: los ficheros se cargan solos:**
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+
+// No hay que hacer nada especial: builder.Configuration YA carga
+// appsettings.json + appsettings.{Environment}.json + variables de entorno
+var miConfig = builder.Configuration.GetSection("Application").Get<AppConfig>();
+
+var app = builder.Build();
+```
+
+El orden de superposición es automático:
+
+| Fuente | Prioridad | Ejemplo |
+|--------|:---------:|---------|
+| `appsettings.json` | 1 (más baja) | Valores por defecto |
+| `appsettings.{Environment}.json` | 2 | Sobrescribe según entorno |
+| Variables de entorno | 3 (más alta) | `ConnectionStrings__Default` |
+
+> 💡 **Consejo:** Si un valor cambia según el entorno, va en el `appsettings.{Entorno}.json`. Si cambia según la máquina, va en variable de entorno. Nunca en el `appsettings.json` base.
 ### 9.1.3. Variables de entorno
 
 Para secrets (contraseñas, tokens) **nunca** se usan ficheros JSON. Se usan **variables de entorno**:

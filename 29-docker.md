@@ -1,4 +1,4 @@
-- [29. Docker y despliegue](#29-docker-y-despliegue)
+﻿- [29. Docker y despliegue](#29-docker-y-despliegue)
   - [29.1. Conceptos fundamentales](#291-conceptos-fundamentales)
     - [29.1.1. Que es un contenedor](#2911-que-es-un-contenedor)
     - [29.1.2. Ventajas de los contenedores](#2912-ventajas-de-los-contenedores)
@@ -15,6 +15,7 @@
   - [29.7. Optimizacion de imagenes](#297-optimizacion-de-imagenes)
     - [29.7.1. Usar alpine Linux](#2971-usar-alpine-linux)
     - [29.7.2. .dockerignore](#2972-dockerignore)
+  - [29.7.3. Excluir proyectos de test del build](#2973-excluir-proyectos-de-test-del-build)
   - [29.8. CI/CD con GitHub Actions](#298-cicd-con-github-actions)
   - [29.9. Buenas practicas](#299-buenas-practicas)
   - [29.10. Reto: despliega FunkoApp con Docker](#2910-reto-despliega-funkoapp-con-docker)
@@ -435,6 +436,44 @@ out/
 
 > 💡 **Consejo:** El `.dockerignore` es como el `.gitignore` pero para Docker. Excluye archivos innecesarios para reducir el tamanio de la imagen y mejorar la seguridad.
 
+### 29.7.3. Excluir proyectos de test del build
+
+Un repositorio completo tiene proyectos de test (`*.Tests.csproj`, `*.Test.csproj`). El Dockerfile de producción **no debería compilarlos**: solo necesitas la app, no las pruebas.
+
+📌 **Ejemplo real:** Una tienda tiene la API, los tests unitarios y los tests E2E en el mismo repositorio. Si el Dockerfile copia todo y ejecuta `dotnet build`, el contenedor tarda el doble y pesa el doble. Con la exclusión correcta, el build solo compila lo que se despliega.
+
+**Cómo excluirlos:**
+
+```dockerfile
+# Copiar solo los .csproj de PRODUCCIÓN
+COPY ["MiApi/MiApi.csproj", "MiApi/"]
+COPY ["MiApi.Shared/MiApi.Shared.csproj", "MiApi.Shared/"]
+# ❌ NO copiar MiApi.Tests/MiApi.Tests.csproj
+
+RUN dotnet restore "MiApi/MiApi.csproj"
+```
+
+**O usar un patrón amplio:**
+
+```dockerfile
+# Copiar todos los .csproj EXCEPTO los de test
+COPY ["MiApi*/MiApi*.csproj", "MiApi/"]
+# O mejor: listar uno a uno los que sí necesitas
+```
+
+**Y en `.dockerignore`:**
+
+```
+# Excluir carpetas de test del contexto de Docker
+**/bin/
+**/obj/
+**/*Tests*/
+**/*Test/
+```
+
+> ⚠️ **Advertencia:** No excluir los tests del build de producción es una mala práctica: la imagen de contenedor no necesita los binarios de pruebas, y copiarlos alarga el build sin aportar nada.
+
+> 📝 **Nota:** Si usas CPM, recuerda copiar `Directory.Packages.props` antes de los `.csproj` (ver punto 20.5 de UD03).
 ## 29.8. CI/CD con GitHub Actions
 
 CI/CD (Continuous Integration / Continuous Deployment) automatiza el build, test y deploy de tu aplicacion.
