@@ -22,6 +22,12 @@ public class ProductoService(IProductoRepository repository) : IProductoService
 
     public Result<Producto, DomainError> Create(CreateProductoDto dto)
     {
+        if (string.IsNullOrWhiteSpace(dto.Nombre))
+            return Result.Failure<Producto, DomainError>(ProductoError.NombreVacio());
+
+        if (dto.Precio < 0)
+            return Result.Failure<Producto, DomainError>(ProductoError.PrecioInvalido(dto.Precio));
+
         var producto = dto.ToModel();
         var creado = repository.Add(producto);
         return Result.Success<Producto, DomainError>(creado);
@@ -29,6 +35,12 @@ public class ProductoService(IProductoRepository repository) : IProductoService
 
     public Result<Producto, DomainError> Update(long id, UpdateProductoDto dto)
     {
+        if (string.IsNullOrWhiteSpace(dto.Nombre))
+            return Result.Failure<Producto, DomainError>(ProductoError.NombreVacio());
+
+        if (dto.Precio < 0)
+            return Result.Failure<Producto, DomainError>(ProductoError.PrecioInvalido(dto.Precio));
+
         var producto = dto.ToModel();
         var actualizado = repository.Update(id, producto);
         return actualizado is not null

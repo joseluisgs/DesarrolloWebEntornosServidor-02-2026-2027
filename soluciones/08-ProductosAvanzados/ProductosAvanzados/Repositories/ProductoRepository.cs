@@ -7,6 +7,28 @@ public class ProductoRepository : IProductoRepository
     private readonly Dictionary<long, Producto> _productos = [];
     private long _nextId = 1;
 
+    public ProductoRepository()
+    {
+        var productos = new[]
+        {
+            new Producto { Nombre = "Laptop HP Pavilion", Precio = 899.99m, Categoria = "Electrónica", Imagen = "laptop.jpg" },
+            new Producto { Nombre = "Mouse Logitech MX", Precio = 79.99m, Categoria = "Accesorios", Imagen = "mouse.jpg" },
+            new Producto { Nombre = "Teclado Mecánico RGB", Precio = 129.50m, Categoria = "Accesorios", Imagen = "teclado.jpg" },
+            new Producto { Nombre = "Monitor Samsung 27\"", Precio = 349.00m, Categoria = "Electrónica", Imagen = "monitor.jpg" },
+            new Producto { Nombre = "Auriculares Sony WH-1000XM4", Precio = 279.99m, Categoria = "Audio", Imagen = "auriculares.jpg" },
+            new Producto { Nombre = "Cable USB-C 2m", Precio = 15.99m, Categoria = "Accesorios", Imagen = "cable.jpg" },
+            new Producto { Nombre = "Disco SSD 1TB", Precio = 89.99m, Categoria = "Almacenamiento", Imagen = "ssd.jpg" },
+            new Producto { Nombre = "Memoria RAM 16GB", Precio = 59.99m, Categoria = "Componentes", Imagen = "ram.jpg" },
+            new Producto { Nombre = "Webcam HD 1080p", Precio = 49.99m, Categoria = "Cámaras", Imagen = "webcam.jpg" },
+            new Producto { Nombre = "Silla Gamer Ergonómica", Precio = 199.99m, Categoria = "Muebles", Imagen = "silla.jpg" }
+        };
+
+        foreach (var producto in productos)
+        {
+            Add(producto);
+        }
+    }
+
     public IEnumerable<Producto> GetAll() =>
         _productos.Values.Where(p => p.IsActivo);
 
