@@ -1,4 +1,4 @@
-﻿- [12. Entity Framework Core](#12-entity-framework-core)
+- [12. Entity Framework Core](#12-entity-framework-core)
   - [12.1. Fundamentos](#121-fundamentos)
     - [12.1.1. ¿Qué es un ORM?](#1211-qué-es-un-orm)
     - [12.1.2. DbContext](#1212-dbcontext)
@@ -411,26 +411,89 @@ modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 | **Recomendación** | Para lo simple | Para lo complejo |
 
 ## 12.5. Relaciones
+## 12.5. Relaciones entre entidades
+
+Una relación describe cómo se conectan dos tablas entre sí. EF Core las detecta automáticamente por convención (propiedad de navegación + clave foránea), pero puedes configurarlas con Data Annotations o con Fluent API.
 
 ### 12.5.1. Uno a uno
 
+Un registro de la tabla A se asocia con exactamente un registro de la tabla B. Ejemplo: un usuario tiene un perfil.
+
+```mermaid
+erDiagram
+    USUARIO ||--o| USUARIO_PERFIL : "tiene"
+    USUARIO {
+        long Id PK
+        string Nombre
+    }
+    USUARIO_PERFIL {
+        long Id PK
+        long UsuarioId FK
+        string Biografia
+    }
+```
+
+**Modelo:**
+
 ```csharp
+public class Usuario
+{
+    public long Id { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+
+    // Navegación: un usuario tiene un perfil (puede ser null)
+    public UsuarioPerfil? Perfil { get; set; }
+}
+
 public class UsuarioPerfil
 {
     public long Id { get; set; }
+    public string Biografia { get; set; } = string.Empty;
+
+    // Clave foránea al usuario
     public long UsuarioId { get; set; }
     public Usuario Usuario { get; set; } = null!;
-    public string Biografia { get; set; } = string.Empty;
 }
 ```
 
+**Configuración con Fluent API** (en `OnModelCreating`):
+
+```csharp
+builder.Entity<UsuarioPerfil>()
+    .HasOne(p => p.Usuario)
+    .WithOne(u => u.Perfil)
+    .HasForeignKey<UsuarioPerfil>(p => p.UsuarioId);
+```
+
+> 📝 **Nota:** La clave foránea vive en la tabla `UsuarioPerfil`, no en `Usuario`. Así, la relación es "cada perfil apunta a un usuario".
+
 ### 12.5.2. Uno a muchos
+
+Un registro de la tabla A se asocia con muchos registros de la tabla B. Ejemplo: una categoría tiene muchos productos.
+
+```mermaid
+erDiagram
+    CATEGORIA ||--o{ PRODUCTO : "tiene"
+    CATEGORIA {
+        long Id PK
+        string Nombre
+    }
+    PRODUCTO {
+        long Id PK
+        string Nombre
+        long CategoriaId FK
+    }
+```
+
+**Modelo:**
 
 ```csharp
 public class Categoria
 {
     public long Id { get; set; }
     public string Nombre { get; set; } = string.Empty;
+
+    // Colección de productos de esta categoría
     public ICollection<Producto> Productos { get; set; } = [];
 }
 
@@ -438,54 +501,161 @@ public class Producto
 {
     public long Id { get; set; }
     public string Nombre { get; set; } = string.Empty;
+
+    // Clave foránea a la categoría
     public long CategoriaId { get; set; }
     public Categoria Categoria { get; set; } = null!;
 }
 ```
 
-### 12.5.3. Muchos a muchos
+**Configuración con Fluent API:**
 
 ```csharp
-// Con tabla intermedia explícita
+builder.Entity<Producto>()
+    .HasOne(p => p.Categoria)
+    .WithMany(c => c.Productos)
+    .HasForeignKey(p => p.CategoriaId);
+```
+
+**Cómo se usa:**
+
+```csharp
+// Obtener una categoría con sus productos
+var categoria = await db.Categorias
+    .Include(c => c.Productos)
+    .FirstOrDefaultAsync(c => c.Id == 1);
+
+// Obtener un producto con su categoría
+var producto = await db.Productos
+    .Include(p => p.Categoria)
+    .FirstOrDefaultAsync(p => p.Id == 1);
+```
+
+> 💡 **Consejo:** `Include` carga la relación en la misma consulta. Sin él, acceder a `producto.Categoria` lanza una excepción si no hay lazy loading.
+
+### 12.5.3. Muchos a muchos
+
+Muchos registros de A se asocian con muchos registros de B. Ejemplo: un producto tiene muchas etiquetas.
+
+```mermaid
+erDiagram
+    PRODUCTO ||--o{ PRODUCTO_ETIQUETA : ""
+    ETIQUETA ||--o{ PRODUCTO_ETIQUETA : ""
+    PRODUCTO {
+        long Id PK
+        string Nombre
+    }
+    PRODUCTO_ETIQUETA {
+        long ProductoId FK
+        long EtiquetaId FK
+    }
+    ETIQUETA {
+        long Id PK
+        string Nombre
+    }
+```
+
+**Modelo con tabla intermedia explícita:**
+
+```csharp
+public class Producto
+{
+    public long Id { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+
+    public ICollection<ProductoEtiqueta> ProductoEtiquetas { get; set; } = [];
+}
+
+public class Etiqueta
+{
+    public long Id { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+
+    public ICollection<ProductoEtiqueta> ProductoEtiquetas { get; set; } = [];
+}
+
+// Tabla intermedia: conecta productos con etiquetas
 public class ProductoEtiqueta
 {
     public long ProductoId { get; set; }
     public Producto Producto { get; set; } = null!;
+
     public long EtiquetaId { get; set; }
     public Etiqueta Etiqueta { get; set; } = null!;
 }
 ```
 
+**Configuración con Fluent API:**
+
+```csharp
+builder.Entity<ProductoEtiqueta>()
+    .HasOne(pe => pe.Producto)
+    .WithMany(p => p.ProductoEtiquetas)
+    .HasForeignKey(pe => pe.ProductoId);
+
+builder.Entity<ProductoEtiqueta>()
+    .HasOne(pe => pe.Etiqueta)
+    .WithMany(e => e.ProductoEtiquetas)
+    .HasForeignKey(pe => pe.EtiquetaId);
+```
+
+**Cómo se usa:**
+
+```csharp
+// Obtener un producto con sus etiquetas
+var producto = await db.Productos
+    .Include(p => p.ProductoEtiquetas)
+        .ThenInclude(pe => pe.Etiqueta)
+    .FirstOrDefaultAsync(p => p.Id == 1);
+
+foreach (var pe in producto!.ProductoEtiquetas)
+{
+    Console.WriteLine(pe.Etiqueta.Nombre);
+}
+```
+
+> 📝 **Nota:** `ThenInclude` carga la relación segundo nivel: primero los `ProductoEtiquetas`, y después cada `Etiqueta`.
+
 ### 12.5.4. Navegabilidad
 
-```csharp
-// Hacia adelante (Producto → Categoria)
-public Categoria Categoria { get; set; } = null!;
+La navegabilidad es la capacidad de ir de una entidad a sus relaciones sin escribir SQL. Funciona en ambas direcciones:
 
-// Hacia atrás (Categoria → Productos)
-public ICollection<Producto> Productos { get; set; } = [];
-```
+| Dirección | Ejemplo | Carga |
+|-----------|---------|-------|
+| Hacia adelante | `producto.Categoria` | `Include(p => p.Categoria)` |
+| Hacia atrás | `categoria.Productos` | `Include(c => c.Productos)` |
 
-### 12.5.5. Cascada (DeleteBehavior)
+### 12.5.5. Comportamiento de borrado (DeleteBehavior)
 
-| Comportamiento | Descripción |
-|----------------|-------------|
-| `Cascade` | Elimina registros dependientes |
-| `Restrict` | Impide eliminar si hay dependientes |
-| `SetNull` | Pone la FK a null |
-| `NoAction` | No hace nada |
+Cuando borras una entidad padre, ¿qué pasa con las hijas? EF Core lo controla con `DeleteBehavior`:
 
-❌ **MALO**: Usar Cascade sin pensar:
+| Comportamiento | Qué hace | Ejemplo |
+|----------------|----------|---------|
+| `Cascade` | Borra las hijas automáticamente | Borrar categoría → se borran sus productos |
+| `Restrict` | Impide borrar si hay hijas | No puedes borrar categoría con productos |
+| `SetNull` | Pone la FK a null | Borrar categoría → productos quedan sin categoría |
+| `SetDefault` | Pone la FK a su valor por defecto | Borrar categoría → productos con categoríaId=0 |
 
-```csharp
-.OnDelete(DeleteBehavior.Cascade); // Si borras una categoría, se borran TODOS sus productos
-```
-
-✅ **BUENO**: Usar Restrict para datos importantes:
+**Configuración con Fluent API:**
 
 ```csharp
-.OnDelete(DeleteBehavior.Restrict); // No permite borrar categoría si tiene productos
+// Cascade: si borro la categoría, se borran sus productos
+builder.Entity<Producto>()
+    .HasOne(p => p.Categoria)
+    .WithMany(c => c.Productos)
+    .HasForeignKey(p => p.CategoriaId)
+    .OnDelete(DeleteBehavior.Cascade);
+
+// Restrict: no puedo borrar una categoría con productos
+builder.Entity<Producto>()
+    .HasOne(p => p.Categoria)
+    .WithMany(c => c.Productos)
+    .HasForeignKey(p => p.CategoriaId)
+    .OnDelete(DeleteBehavior.Restrict);
 ```
+
+> ⚠️ **Advertencia:** `Cascade` es el comportamiento por defecto en EF Core. Si no lo configuras, borrar una categoría borra todos sus productos. En producción, casi siempre quieres `Restrict` o `SetNull`.
+
 
 ## 12.6. Owned types
 
@@ -840,50 +1010,104 @@ var totalProductos = await db.Productos.CountAsync();
 
 ## 12.14. Migraciones
 
+Las migraciones son la forma de versionar el esquema de la base de datos. Cuando cambias un modelo (añades una columna, creas una tabla), generas una migración que EF Core aplica a la BD sin perder datos.
+
+📌 **Ejemplo real:** Netflix usa migraciones para gestionar cambios de esquema en sus microservicios. Cada cambio de BD es una migración versionada que se aplica automáticamente en despliegue.
+
+### 12.14.1. Comandos básicos
+
 ```bash
-# Crear migración
+# Crear una migración (genera el código que describe el cambio)
 dotnet ef migrations add AddProductoTable
 
-# Aplicar migraciones
+# Aplicar migraciones pendientes a la BD
 dotnet ef database update
 
-# Rollback
+# Ver qué migraciones hay aplicadas
+dotnet ef migrations list
+
+# Volver atrás (deshacer la última migración)
 dotnet ef database update PreviousMigration
 
-# Eliminar última migración
+# Eliminar la última migración (si no se ha aplicado)
 dotnet ef migrations remove
 
-# Generar script SQL
+# Generar script SQL sin ejecutarlo
 dotnet ef migrations script
 ```
 
-📌 Ejemplo real: **Netflix** usa migraciones para gestionar cambios de esquema en sus microservicios. Cada cambio de BD es una migración versionada que se aplica automáticamente en despliegue.
+### 12.14.2. Flujo completo de una migración
 
-### 12.14.1. Migraciones sobre una BD existente (baseline)
+```mermaid
+sequenceDiagram
+    participant D as Desarrollador
+    participant C as Código (modelo)
+    participant M as Migración
+    participant B as Base de datos
 
-El caso real: tu API ya está **en producción con datos** y llevas meses usando `Database.EnsureCreated()`. Aquí hay una trampa clásica:
-
-> ⚠️ **Advertencia:** `EnsureCreated` **solo crea la BD si no existe**. Si ya existe, **no toca nada**: no añade tablas nuevas, no añade índices, no modifica el esquema. Tus "mejoras de rendimiento" (índices, columnas) **nunca llegarán** a una BD ya creada.
-
-La solución es migrar a EF Core Migrations con un **baseline** (línea base):
-
-1. **Crear la migración inicial** del esquema *tal como está hoy*: `dotnet ef migrations add InitialCreate`.
-2. **En producción**, sustituir `EnsureCreated()` por `context.Database.Migrate()`:
-   - BD nueva → la crea y aplica todo.
-   - BD existente **sin** `__EFMigrationsHistory` → necesita el paso 3.
-3. **El baseline:** se crea la tabla `__EFMigrationsHistory` y se marca `InitialCreate` como aplicada **sin ejecutarla**. Así `Migrate()` solo aplica las migraciones **futuras** y **los datos quedan intactos**.
-4. **En desarrollo** puedes seguir con `EnsureDeleted + EnsureCreated` (más rápido) o usar también `Migrate()`.
-
-```csharp
-// Producción: aplica solo lo pendiente, sin tocar los datos existentes
-context.Database.Migrate();
+    D->>C: Modifica el modelo (añade columna)
+    D->>M: dotnet ef migrations add
+    M->>M: Genera código C# con el cambio
+    D->>B: dotnet ef database update
+    B->>B: Aplica el SQL generado
+    Note over B: BD actualizada sin perder datos
 ```
 
-> 💡 **Analogía:** El baseline es sellar el expediente: "todo lo anterior ya está hecho"; a partir de aquí, solo se ejecuta lo nuevo.
+**Ejemplo paso a paso:**
 
-📌 **Ejemplo real:** TiendaAPI hizo exactamente esto: generó `InitialCreate` (tablas + los 3 índices únicos que ya existían), lo marcó como aplicada sin ejecutarlo, y después `AddOptimizationIndexes` (5 índices de rendimiento) se ejecutó al arrancar sobre la BD viva. Verificado con datos: usuarios, categorías y productos **intactos** tras migrar.
+1. Añades una propiedad al modelo:
+```csharp
+public class Producto
+{
+    public long Id { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+    public string? Descripcion { get; set; }  // ← Nueva columna
+}
+```
 
-> 💡 **Truco:** si al ejecutar `dotnet ef` se ejecuta tu `Program.cs` en design-time y eso borra la BD (por tu código de arranque), define un `IDesignTimeDbContextFactory<TContext>`: las herramientas EF usarán esa fábrica y no arrancarán la aplicación.
+2. Generas la migración:
+```bash
+dotnet ef migrations add AddDescripcion
+```
+
+3. EF Core crea un fichero en `Migrations/` con el código que describe el cambio (crear columna, índice, etc.)
+
+4. Aplicas la migración:
+```bash
+dotnet ef database update
+```
+
+5. La BD tiene la nueva columna `Descripcion`
+
+### 12.14.3. Migraciones sobre una BD existente (baseline)
+
+El caso real: tu API ya está en producción con datos y llevas meses usando `Database.EnsureCreated()`. Aquí hay una trampa clásica:
+
+> ⚠️ **Advertencia:** `EnsureCreated` solo crea la BD si no existe. Si ya existe, no toca nada: no añade tablas nuevas, no añade columnas, no modifica el esquema. Tus "mejoras de rendimiento" (índices, columnas) nunca llegarán a una BD ya creada.
+
+**La solución: crear una migración baseline**
+
+```bash
+# 1. Crear una migración inicial que represente el esquema actual
+dotnet ef migrations add InitialCreate
+
+# 2. Marcarla como aplicada SIN ejecutar el SQL (la BD ya tiene esos datos)
+dotnet ef database update --connection "tu_connection_string"
+```
+
+O mejor, en el `Program.cs`:
+
+```csharp
+// Solo en desarrollo: aplicar migraciones automáticamente
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();  // Aplica migraciones pendientes
+}
+```
+
+> 💡 **Consejo:** Usa `EnsureCreated` solo en prototipos y tests. En producción, usa migraciones siempre.
 
 ## 12.15. Seed data
 
