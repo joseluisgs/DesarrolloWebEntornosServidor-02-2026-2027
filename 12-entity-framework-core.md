@@ -457,6 +457,24 @@ entity.ToView("vw_productos");      // Mapear a vista
 
 ### 12.4.5. Relaciones
 
+Las relaciones conectan entidades entre sí. EF Core las detecta por convención (propiedad de navegación + clave foránea), pero Fluent API permite configurarlas con detalle:
+
+'''csharp
+// Relación uno a muchos: una categoría tiene muchos productos
+entity.HasOne(p => p.Categoria)        // Propiedad de navegación en Producto
+      .WithMany(c => c.Productos)      // Colección en Categoria
+      .HasForeignKey(p => p.CategoriaId) // Clave foránea
+      .OnDelete(DeleteBehavior.Restrict); // Qué hacer al borrar la categoría
+'''csharp
+
+| Método | Qué configura |
+|--------|---------------|
+| `HasOne()` | La propiedad de navegación (lado "uno") |
+| `WithMany()` | La colección (lado "muchos") |
+| `HasForeignKey()` | La columna clave foránea |
+| `OnDelete()` | Qué pasa con las hijas al borrar la padre |
+
+
 ```csharp
 entity.HasOne(p => p.Categoria)     // Propiedad de navegación
       .WithMany(c => c.Productos)   // Colección en la otra entidad
@@ -503,7 +521,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 | **Relaciones** | `[ForeignKey]` | `HasOne().WithMany()` |
 | **Recomendación** | Para lo simple | Para lo complejo |
 
-## 12.5. Relaciones
+
 ## 12.5. Relaciones entre entidades
 
 Una relación describe cómo se conectan dos tablas entre sí. EF Core las detecta automáticamente por convención (propiedad de navegación + clave foránea), pero puedes configurarlas con Data Annotations o con Fluent API.
@@ -545,6 +563,23 @@ public class UsuarioPerfil
 
     // Clave foránea al usuario
     public long UsuarioId { get; set; }
+    public Usuario Usuario { get; set; } = null!;
+}
+```
+
+**Configuración con Data Annotations:**
+
+```csharp
+public class UsuarioPerfil
+{
+    public long Id { get; set; }
+    public string Biografia { get; set; } = string.Empty;
+
+    // La clave foránea se detecta por convención (Nombre + Id)
+    public long UsuarioId { get; set; }
+
+    // O explícitamente con [ForeignKey]
+    [ForeignKey(nameof(UsuarioId))]
     public Usuario Usuario { get; set; } = null!;
 }
 ```
@@ -597,6 +632,32 @@ public class Producto
 
     // Clave foránea a la categoría
     public long CategoriaId { get; set; }
+    public Categoria Categoria { get; set; } = null!;
+}
+```
+
+**Configuración con Data Annotations:**
+
+```csharp
+public class Categoria
+{
+    public long Id { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+
+    // Colección de productos (sin atributo necesario)
+    public ICollection<Producto> Productos { get; set; } = [];
+}
+
+public class Producto
+{
+    public long Id { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+
+    // Clave foránea detectada por convención (CategoriaId)
+    public long CategoriaId { get; set; }
+
+    // O explícitamente:
+    [ForeignKey(nameof(CategoriaId))]
     public Categoria Categoria { get; set; } = null!;
 }
 ```
@@ -677,6 +738,26 @@ public class ProductoEtiqueta
     public Etiqueta Etiqueta { get; set; } = null!;
 }
 ```
+
+**Configuración con Data Annotations:**
+
+```csharp
+public class ProductoEtiqueta
+{
+    // Clave primaria compuesta (dos claves juntas)
+    [Key]
+    public long ProductoId { get; set; }
+
+    [Key]
+    public long EtiquetaId { get; set; }
+
+    // Las claves foráneas se detectan por convención
+    public Producto Producto { get; set; } = null!;
+    public Etiqueta Etiqueta { get; set; } = null!;
+}
+```
+
+> 📝 **Nota:** Para claves compuestas en muchas a muchas, Data Annotations usa `[Key]` en ambas propiedades. Fluent API usa `HasKey(pe => new { pe.ProductoId, pe.EtiquetaId })`.
 
 **Configuración con Fluent API:**
 
