@@ -1105,13 +1105,15 @@ await container.StartAsync();
 
 ## 12.16. Reto: repositorio CRUD con Entity Framework Core
 
-> Monta un repositorio CRUD completo para una tienda de productos, con borrado lógico, migraciones y tests de integración con Docker.
+> Monta un repositorio CRUD completo para FunkoApp, con borrado lógico, migraciones y tests de integración con Docker.
 
 ### 12.16.1. Contexto
 
-**Paso 0:** parte de una API que ya funcione con productos en memoria. Ahora toca persistir en una base de datos real con EF Core y SQLite (desarrollo) o PostgreSQL (producción).
+**Paso 0:** parte de la API de FunkoApp que ya funcione con funkos en memoria (punto 07 o 08). Ahora toca persistir en una base de datos real con EF Core y SQLite (desarrollo) o PostgreSQL (producción).
 
 ### 12.16.2. Modelo de datos
+
+**Modelo Funko:**
 
 | Propiedad | Tipo | Obligatorio |
 |-----------|------|:-----------:|
@@ -1124,20 +1126,28 @@ await container.StartAsync();
 | `createdAt` | DateTime | Sí (autogenerado) |
 | `updatedAt` | DateTime? | No |
 
+**Modelo Categoria:**
+
+| Propiedad | Tipo | Obligatorio |
+|-----------|------|:-----------:|
+| `id` | int | Sí (autogenerado) |
+| `nombre` | string | Sí |
+| `descripcion` | string? | No |
+
 ### 12.16.3. Almacenamiento
 
 - **Base de datos:** SQLite en desarrollo, PostgreSQL en producción
 - **Migraciones:** aplicar automáticamente en desarrollo
-- **Seed Data:** 5 productos y 3 categorías
+- **Seed Data:** 5 Funkos y 3 Categorías de ejemplo
 - **Query Filter:** filtrado automático de `isDeleted`
 
 ### 12.16.4. Retos
 
-1. **Modelo:** crear `Producto` y `Categoria` con relación Uno a Muchos
+1. **Modelo:** crear `Funko` y `Categoria` con relación Uno a Muchos
 2. **DbContext:** configurar con Fluent API, Query Filter para borrado lógico
 3. **Repositorio:** Create, GetAll, GetById, Update, Delete (lógico), Restore
 4. **Migraciones:** generar y aplicar, comprobar que la BD se crea
-5. **Seed Data:** insertar datos iniciales al arrancar
+5. **Seed Data:** insertar 5 Funkos y 3 Categorías al arrancar
 6. **Tests:** con TestContainers, probar Create, GetById, GetAll, Delete lógico
 
 **Puntos extra:**
@@ -1146,7 +1156,6 @@ await container.StartAsync();
 - Concurrencia optimista con `xmin` (PostgreSQL)
 - ExecuteUpdate para actualizar precios en lote
 
----
 
 **Resumen del punto:**
 
