@@ -1120,8 +1120,8 @@ await context.Productos
 
 ```csharp
 public class Producto
-{
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]  // Auto-increment
     public long Id { get; set; }
 
     [Required]
@@ -1158,74 +1158,84 @@ public interface IProductoRepository
 
 ### 12.13.3. Create, GetById, GetAll, update
 
+Todos los métodos que acceden a la base de datos deben ser **asíncronos** (`async`/`await`). EF Core genera SQL que se ejecuta en la BD, y eso es una operación de E/S que no debe bloquear el hilo.
+
 ```csharp
 public class ProductoRepository(AppDbContext db) : IProductoRepository
 {
-    public IEnumerable<Producto> GetAll() =>
-        db.Productos.AsNoTracking().Include(p => p.Categoria).ToList();
+    public async Task<IReadOnlyList<Producto>> GetAllAsync() =>
+        await db.Productos.AsNoTracking().Include(p => p.Categoria).ToListAsync();
 
-    public Producto? GetById(long id) =>
-        db.Productos.AsNoTracking().Include(p => p.Categoria)
-            .FirstOrDefault(p => p.Id == id);
+    public async Task<Producto?> GetByIdAsync(long id) =>
+        await db.Productos.AsNoTracking().Include(p => p.Categoria)
+            .FirstOrDefaultAsync(p => p.Id == id);
 
-    public Producto Add(Producto producto)
+    public async Task<Producto> AddAsync(Producto producto)
     {
         producto.CreatedAt = DateTime.UtcNow;
-        db.Productos.Add(producto);
-        db.SaveChanges();
+        await db.Productos.AddAsync(producto);
+        await db.SaveChangesAsync();
         return producto;
     }
 
-    public Producto? Update(Producto producto)
+    public async Task<Producto?> UpdateAsync(Producto producto)
     {
-        var existente = db.Productos.Find(producto.Id);
+        var existente = await db.Productos.FindAsync(producto.Id);
         if (existente is null) return null;
 
         existente.Nombre = producto.Nombre;
         existente.Precio = producto.Precio;
-        existente.Imagen = producto.Imagen;
         existente.CategoriaId = producto.CategoriaId;
         existente.UpdatedAt = DateTime.UtcNow;
 
-        db.SaveChanges();
+        await db.SaveChangesAsync();
         return existente;
     }
 }
 ```
 
+> ⚠️ **Advertencia:** Nunca uses `.Result` ni `.Wait()` para esperar a un método asíncrono: bloquea el hilo y puede causar deadlocks. Usa siempre `await`.
+
 ### 12.13.4. Borrado físico
 
 ```csharp
-public bool Delete(long id)
+public async Task<bool> DeleteAsync(long id)
 {
-    var producto = db.Productos.Find(id);
+    var producto = await db.Productos.FindAsync(id);
     if (producto is null) return false;
 
     db.Productos.Remove(producto);
-    db.SaveChanges();
+    await db.SaveChangesAsync();
     return true;
 }
 ```
 
+> 📝 **Nota:** `Remove` marca la entidad como `Deleted` en el Change Tracker. El SQL real se ejecuta al llamar a `SaveChangesAsync()`.
+
 ### 12.13.5. Borrado lógico
 
+El borrado lógico no borra el registro: marca un flag (`IsDeleted = true`) y lo oculta de las consultas con un Query Filter.
+
 ```csharp
-public bool Delete(long id)
+public async Task<bool> SoftDeleteAsync(long id)
 {
-    var producto = db.Productos.Find(id);
+    var producto = await db.Productos.FindAsync(id);
     if (producto is null) return false;
 
-    producto.IsDeleted = true;
-    db.SaveChanges();
+    producto.IsDeleted = true;  // Solo marca el flag
+    await db.SaveChangesAsync();
     return true;
 }
 
-// Query Filter automático
+// Query Filter: todas las consultas excluyen los borrados lógicamente
 protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
     modelBuilder.Entity<Producto>().HasQueryFilter(p => !p.IsDeleted);
 }
 ```
+
+> 💡 **Consejo:** Para ver los registros borrados lógicamente, usa `IgnoreQueryFilters()`:
+> `await db.Productos.IgnoreQueryFilters().ToListAsync()`
 
 ### 12.13.6. Consultas típicas
 
