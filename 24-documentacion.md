@@ -131,6 +131,8 @@ app.MapControllers();
 
 ### 24.2.3. Configuración básica
 
+La configuración mínima de Swagger son dos líneas en `Program.cs`: una para registrar el generador y otra para montar la página de documentación.
+
 ```bash
 dotnet add package Swashbuckle.AspNetCore
 dotnet add package Swashbuckle.AspNetCore.Annotations
@@ -176,6 +178,8 @@ Acceder a Swagger UI: `https://localhost:5001/swagger/index.html`
 
 ### 24.2.4. Configuración avanzada
 
+La configuración avanzada personaliza los metadatos del esquema: título, versión, descripción y los servidores contra los que se puede probar.
+
 ```csharp
 using Microsoft.OpenApi.Models;
 
@@ -218,6 +222,8 @@ Habilitar comentarios XML en `.csproj` (si no, no se genera el `.xml` y el `if (
 
 ### 24.3.1. Atributos de documentación
 
+Los atributos de documentación describen cada endpoint para Swagger: código de estado, tipo de respuesta y ejemplo de lo que devuelve.
+
 ```csharp
 [ApiController]
 [Route("api/[controller]")]
@@ -250,6 +256,8 @@ public class FunkosController : ControllerBase
 ```
 
 ### 24.3.2. Ejemplo completo de endpoint documentado
+
+Este ejemplo junta todo lo anterior en un endpoint real: XMLDoc en el método, atributos de respuesta y ejemplos para Swagger.
 
 ```csharp
 /// <summary>
@@ -323,6 +331,8 @@ public async Task<ActionResult<FunkoResponseDto>> Create(
 
 ## 24.4. Documentar modelos y DTOs
 
+Los modelos también se documentan con XMLDoc y data annotations: Swagger usa esas descripciones para mostrar cada campo del cuerpo de la petición y la respuesta.
+
 ```csharp
 using System.ComponentModel.DataAnnotations;
 using Swashbuckle.AspNetCore.Annotations;
@@ -372,6 +382,8 @@ public record CreateFunkoDto
 > 💡 **Consejo:** Usa el tag `<example>` para mostrar valores de ejemplo en Swagger. Esto ayuda mucho a los desarrolladores que consumen tu API.
 
 ## 24.5. Documentar autenticación JWT
+
+Para que Swagger permita probar endpoints protegidos hay que añadirle el esquema de seguridad JWT y el botón de autorización.
 
 ```csharp
 builder.Services.AddSwaggerGen(options =>

@@ -69,6 +69,8 @@ Serilog es la biblioteca de logging estructurado más popular en .NET.
 
 ### 27.2.1. Configuración básica
 
+La configuración de Serilog empieza instalando el paquete y montando el logger en el `Program.cs` con sus sinks de consola y fichero.
+
 ```bash
 dotnet add package Serilog.AspNetCore
 dotnet add package Serilog.Sinks.Console
@@ -111,6 +113,8 @@ app.Run();
 ```
 
 ### 27.2.2. Configuración desde appsettings.json
+
+Los niveles de log y los sinks también pueden vivir en `appsettings.json`, lo que te permite cambiar el detalle del logging sin tocar código.
 
 ```json
 {
@@ -207,6 +211,8 @@ dotnet add package Serilog.Enrichers.Environment
 
 ### 27.3.1. Inyección de ILogger
 
+El logger se inyecta por constructor como cualquier otro servicio. Guardarlo en un campo estático o crearlo a mano pierde la configuración y el contexto.
+
 ```csharp
 // ❌ MALO: Logger como campo estatico
 public static class BadLogger
@@ -274,6 +280,8 @@ public async Task<List<Funko>> GetByCategoriaAsync(long categoriaId)
 
 ### 27.3.4. Logueo de excepciones
 
+Las excepciones se loguean con la excepción como último argumento del logger, para que Serilog guarde el stack trace completo y no solo el mensaje.
+
 ```csharp
 // ❌ MALO: Logear sin contexto
 logger.LogError("Error");
@@ -328,6 +336,8 @@ Los health checks permiten a orquestadores como Kubernetes o Azure monitorizar l
 
 ### 27.5.1. Health Checks básicos
 
+Los health checks exponen un endpoint `/health` que comprueba si la aplicación y sus dependencias están vivas. Se configuran con un paquete por cada servicio que quieras vigilar.
+
 ```bash
 dotnet add package AspNetCore.HealthChecks.NpgSql
 dotnet add package AspNetCore.HealthChecks.Redis
@@ -353,6 +363,8 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 ```
 
 ### 27.5.2. Custom health check
+
+Un health check propio permite comprobar lo que necesites: una tabla específica, un servicio externo o una cola de mensajes.
 
 ```csharp
 public class CustomHealthCheck(IServiceScopeFactory scopeFactory) : IHealthCheck

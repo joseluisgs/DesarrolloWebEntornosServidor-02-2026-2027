@@ -312,6 +312,8 @@ La configuración de YARP se divide en **Routes** (cómo se redirigen las petici
 
 ### 31.4.3. Configuración en Program.cs
 
+La configuración de YARP se hace en el `Program.cs` con un solo bloque: se carga el reverse proxy y se leen las rutas del `appsettings.json`.
+
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
@@ -412,6 +414,8 @@ graph TD
 - **Productos Service** (puerto 5002): CRUD de productos, requiere token válido
 
 ### 31.5.2. Docker compose
+
+El `docker-compose.yml` levanta el gateway junto a los microservicios que enruta, cada uno en su propio contenedor y red interna.
 
 ```yaml
 services:
@@ -747,6 +751,8 @@ sequenceDiagram
 > 📝 **Nota:** Mientras YARP es la opción nativa de .NET, Nginx es el estándar de la industria. Conocer ambos te da más opciones en el mercado laboral.
 
 ### 31.6.2. Configuración de nginx
+
+La configuración de nginx define los bloques `upstream` con los microservicios y las reglas `location` que enrutan cada prefijo de URL a su destino.
 
 ```nginx
 events {

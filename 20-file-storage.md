@@ -216,6 +216,8 @@ builder.WebHost.ConfigureKestrel(options =>
 
 ### 20.2.3. Clase de configuración
 
+La clase de configuración encapsula las rutas y opciones del almacenamiento para poder leerlas desde `appsettings.json` sin esparcir `IConfiguration` por todo el código.
+
 ```csharp
 namespace TiendaApi.Apis.Configuration;
 
@@ -276,6 +278,8 @@ El middleware `UseStaticFiles` permite servir archivos desde wwwroot y otros dir
 
 ### 20.3.1. Configuración básica
 
+La configuración mínima para servir ficheros estáticos se hace en el `Program.cs` con dos líneas: habilitar archivos estáticos y apuntar a la carpeta de uploads.
+
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
@@ -290,6 +294,8 @@ app.Run();
 📌 **Ejemplo real:** Spotify Web usa archivos estáticos para servir sus iconos, fuentes y hojas de estilo. Cuando abres open.spotify.com, el navegador carga decenas de archivos estáticos desde el directorio raíz del servidor.
 
 ### 20.3.2. Configuración avanzada
+
+La configuración avanzada añade restricciones al servidor estáticos: tipos MIME permitidos, caché y comportamiento ante ficheros no encontrados.
 
 ```csharp
 using Microsoft.AspNetCore.StaticFiles;
@@ -317,6 +323,8 @@ app.UseStaticFiles(new StaticFileOptions
 
 ### 20.3.3. Servir archivos de uploads
 
+Servir los ficheros subidos implica montar un servidor estáticos apuntando a la carpeta de uploads y tener cuidado con los casos en los que `wwwroot` no existe.
+
 ```csharp
 // WebRootPath puede ser null si no existe wwwroot (ej. carpeta vacía no commiteada)
 var webRoot = app.Environment.WebRootPath ?? app.Environment.ContentRootPath;
@@ -336,6 +344,8 @@ app.UseStaticFiles(new StaticFileOptions
 ```
 
 ### 20.3.4. WebRootPath vs ContentRootPath
+
+`WebRootPath` apunta a la carpeta pública (`wwwroot`) y `ContentRootPath` a la raíz del proyecto. Elegir la incorrecta hace que los ficheros no se encuentren o se expongan.
 
 ```csharp
 // En Program.cs
@@ -376,6 +386,8 @@ En el siguiente punto veremos **IStorageService**: la interfaz que abstrae las o
 La interfaz `IStorageService` define el contrato para operaciones de almacenamiento, permitiendo diferentes implementaciones (local, nube, etc.) sin cambiar el código que la usa.
 
 ### 20.4.1. Interfaz completa
+
+La interfaz `IStorageService` define el contrato de operaciones con ficheros (subir, borrar, obtener URL) que comparten todas las implementaciones.
 
 ```csharp
 using Microsoft.AspNetCore.Http;
@@ -468,6 +480,8 @@ En el siguiente punto veremos **FileSystemStorageService**: la implementación c
 Implementación de `IStorageService` que almacena archivos en el sistema de archivos local.
 
 ### 20.5.1. Implementación completa
+
+La implementación concreta `FileSystemStorageService` guarda los ficheros en el disco del servidor: valida, renombra y escribe cada archivo en la carpeta de uploads.
 
 ```csharp
 using Microsoft.AspNetCore.Hosting;
@@ -676,6 +690,8 @@ var fileName = GenerateFileName(file.FileName);
 
 ### 20.5.2. Excepciones personalizadas
 
+Las excepciones personalizadas permiten distinguir un fichero no encontrado de un error de disco, y devolver el código HTTP que corresponda en cada caso.
+
 ```csharp
 namespace TiendaApi.Apis.Models.Exceptions;
 
@@ -705,6 +721,8 @@ public class InvalidFileTypeException : Exception
 
 ### 20.5.3. Registro en DI
 
+El registro en la DI es donde decides qué implementación concreta de `IStorageService` recibe quien la pide: disco en desarrollo, Azure en producción.
+
 ```csharp
 builder.Services.AddScoped<IStorageService, FileSystemStorageService>();
 
@@ -733,6 +751,8 @@ En el siguiente punto veremos **Controlador de Archivos**: cómo exponer endpoin
 El controlador expone endpoints REST para las operaciones de almacenamiento.
 
 ### 20.6.1. FilesController
+
+El controlador expone los endpoints HTTP para subir, listar y borrar ficheros, y traduce las excepciones del servicio en códigos de estado correctos.
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
@@ -980,6 +1000,8 @@ La seguridad en uploads es crítica. Un atacante podría subir un archivo `.exe`
 
 ### 20.7.1. Validar extensión y tipo MIME
 
+La primera línea de defensa al subir ficheros es comprobar la extensión permitida y el tipo MIME real del archivo, no solo el nombre que manda el cliente.
+
 ```csharp
 using System.ComponentModel.DataAnnotations;
 
@@ -1027,6 +1049,8 @@ public class AllowedExtensionsAttribute : ValidationAttribute
 ```
 
 ### 20.7.2. Validar tamaño
+
+Limitar el tamaño del fichero evita que un archivo gigante llene el disco del servidor. Se valida en el modelo y también en el servidor web.
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
@@ -1087,6 +1111,8 @@ if (safeName.Contains("..") || Path.IsPathRooted(safeName))
 ```
 
 ### 20.7.4. Validar nombre de archivo
+
+El nombre del fichero que manda el cliente puede contener rutas o caracteres especiales. Renombrarlo con un GUID elimina ese riesgo por completo.
 
 ```csharp
 using System.Text.RegularExpressions;
@@ -1194,6 +1220,8 @@ public class Producto
 ```
 
 ### 20.8.1. Endpoint para actualizar imagen de producto
+
+Este endpoint recibe la nueva imagen de un producto, la guarda en el almacenamiento y actualiza la URL del registro en base de datos.
 
 ```csharp
 /// <summary>
@@ -1354,6 +1382,8 @@ public class AzureBlobStorageService : IStorageService
 
 ### 20.9.2. Configuración y cambio entre proveedores
 
+La configuración de Azure vive en `appsettings.json` con la cadena de conexión. Cambiar de proveedor solo implica registrar otra implementación en la DI, sin tocar el resto del código.
+
 ```json
 {
   "AzureBlob": {
@@ -1397,6 +1427,8 @@ En el siguiente punto veremos **Testing**: cómo testear el servicio de almacena
 ## 20.10. Testing
 
 ### 20.10.1. Test del servicio
+
+El test del servicio comprueba que cada operación con ficheros se comporta bien en disco: que el archivo se crea, que el nombre es único y que las excepciones salen en los casos esperados.
 
 ```csharp
 using Microsoft.AspNetCore.Hosting;
@@ -1523,6 +1555,8 @@ public class FileSystemStorageServiceTests
 ```
 
 ### 20.10.2. Test del controlador
+
+El test del controlador mockea el servicio de almacenamiento y comprueba que los endpoints devuelven los códigos HTTP correctos: 201 al subir, 404 si no existe.
 
 ```csharp
 using Microsoft.AspNetCore.Http;

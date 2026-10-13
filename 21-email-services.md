@@ -296,6 +296,8 @@ private static SecureSocketOptions GetSecureSocket(string security)
 
 ### 21.4.3. Envío de adjuntos
 
+Los adjuntos se añaden al mensaje recorriendo la lista de ficheros y adjuntándolos como streams al correo saliente.
+
 ```csharp
 foreach (var attachment in message.Attachments)
 {
@@ -523,6 +525,8 @@ public class EmailQueueService
 
 ### 21.7.2. Procesamiento de cola
 
+El `BackgroundWorker` va sacando correos de la cola y enviándolos uno a uno, para que el envío no bloquee la respuesta HTTP del usuario.
+
 ```csharp
 public class EmailBackgroundWorker(
     EmailQueueService queue,
@@ -659,6 +663,8 @@ public class ProductosService(
 
 ## 21.9. Configuración en appsettings.json
 
+Los ajustes del servidor SMTP viven en `appsettings.json`, separados por entorno: uno para desarrollo con MailHog y otro para producción con el proveedor real.
+
 ```json
 {
   "Email": {
@@ -692,6 +698,8 @@ Para desarrollo local con Mailhog (servidor SMTP ficticio):
 > 📝 **Nota:** Esta sección `"Email"` se enlaza con `SmtpSettings` mediante `IOptions<SmtpSettings>` (ver 21.4.2). El JSON es **plano** (sin anidar `Smtp`) para que los nombres de las claves caseen exactamente con las propiedades de la clase.
 
 ## 21.10. Testing
+
+Los tests del servicio de correo no envían mensajes de verdad: se mockea el cliente SMTP o se usa un servidor local como MailHog para capturar lo que se envía.
 
 ```csharp
 using FluentAssertions;

@@ -121,6 +121,8 @@ flowchart TB
 
 ### 22.3.1. Tarea simple con intervalo fijo
 
+Un `BackgroundService` con `Task.Delay` es la forma más simple de ejecutar algo periódicamente: espera, ejecuta y vuelve a esperar.
+
 ```csharp
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -186,6 +188,8 @@ builder.Services.AddHostedService<SimpleScheduledTask>();
 > 💡 **Consejo:** Siempre incluye `try-catch` dentro del bucle `while`. Si una excepción escapa, la tarea se detiene silenciosamente y nunca vuelves a tener noticias de ella.
 
 ### 22.3.2. Tarea con intervalo configurable
+
+Si el intervalo vive en `appsettings.json` puedes cambiarlo sin recompilar: solo tocas la configuración y reinicias.
 
 ```csharp
 public class ConfigurableScheduledTask(
@@ -384,6 +388,8 @@ builder.Services.AddHostedService<PeriodicTask>();
 
 ### 22.4.1. Instalación
 
+NCrontab es un paquete ligero que calcula expresiones cron en .NET sin necesidad de un servidor de tareas completo.
+
 ```bash
 dotnet add package NCrontab
 ```
@@ -391,6 +397,8 @@ dotnet add package NCrontab
 > 📝 **Nota:** El paquete se llama **`NCrontab`** (no "NCronTab"): es el repositorio [atifaziz/NCrontab](https://github.com/atifaziz/NCrontab) y su namespace es `NCrontab`.
 
 ### 22.4.2. Servicio base con cron
+
+El servicio base encapsula la lógica de espera: calcula la próxima ocurrencia de la expresión cron, duerme hasta ese momento y ejecuta la tarea.
 
 ```csharp
 using NCrontab;
@@ -448,6 +456,8 @@ public abstract class CronScheduledService(ILogger logger) : BackgroundService
 
 ### 22.4.3. Ejemplo: limpieza diaria de caché
 
+Este ejemplo hereda del servicio base y ejecuta una limpieza de caché cada noche a las 3 de la mañana con la expresión cron `0 3 * * *`.
+
 ```csharp
 public class DailyCacheCleanupTask(
     ICacheService cacheService,
@@ -499,6 +509,8 @@ flowchart LR
 ## 22.5. Implementación con Hangfire (producción)
 
 ### 22.5.1. Instalación
+
+Hangfire es un paquete NuGet que trae un servidor de tareas, una cola persistente en base de datos y un panel de control web.
 
 ```bash
 dotnet add package Hangfire.Core
@@ -557,6 +569,8 @@ app.Run();
 
 ### 22.5.3. Crear tareas recurrentes
 
+Con Hangfire una tarea recurrente se declara con una expresión cron y un nombre, y Hangfire se encarga de ejecutarla y reintentarla si falla.
+
 ```csharp
 using Hangfire;
 
@@ -583,6 +597,8 @@ RecurringJob.AddOrUpdate<ReportService>(
 📌 **Ejemplo real:** En una plataforma de e-commerce, Hangfire ejecuta la sincronización de inventario con el proveedor cada 10 minutos (`*/10 * * * *`), genera el reporte de ventas cada lunes a las 9:00 AM, y envía los emails de confirmación de pedido de forma asíncrona.
 
 ### 22.5.4. Dashboard de monitoreo
+
+El dashboard de Hangfire muestra las tareas encoladas, las ejecutadas y las fallidas. En producción hay que protegerlo con autenticación.
 
 ```csharp
 // Proteger dashboard en producción
@@ -619,6 +635,8 @@ flowchart TB
 ## 22.6. Ejemplo avanzado: servicio de novedades por email
 
 ### 22.6.1. Con BackgroundService
+
+La misma tarea de novedades por email implementada con `BackgroundService` pura: sin dependencias externas, controlando tú los reintentos.
 
 ```csharp
 public class NovedadesEmailTask(
@@ -713,6 +731,8 @@ public class NovedadesEmailTask(
 
 ### 22.6.2. Con Hangfire
 
+La misma tarea con Hangfire: la lógica es idéntica, pero Hangfire se encarga de la planificación, los reintentos y la persistencia del estado.
+
 ```csharp
 public class NovedadesEmailService(
     IFunkoService funkoService,
@@ -765,6 +785,8 @@ RecurringJob.AddOrUpdate<NovedadesEmailService>(
 > 💡 **Consejo:** Hangfire maneja automáticamente los reintentos. Si un email falla, Hangfire lo reintentará según la configuración. Con BackgroundService, tú solo controlas eso con tu propio try-catch.
 
 ## 22.7. Monitoreo y logging
+
+Sin monitoreo no sabes si una tarea programada funciona: puede fallar en silencio durante semanas. El logging y las métricas te avisan de cada ejecución.
 
 ```csharp
 public class MonitoredScheduledTask(ILogger<MonitoredScheduledTask> logger) : BackgroundService
@@ -820,6 +842,8 @@ public class MonitoredScheduledTask(ILogger<MonitoredScheduledTask> logger) : Ba
 > 💡 **Analogía:** El monitoreo de tareas programadas es como tener un panel de control en una fábrica. Te muestra qué máquinas están trabajando, cuántas piezas producen, y si hay algún problema.
 
 ## 22.8. Testing de tareas programadas
+
+El truco para testear tareas programadas es separar la lógica de la espera: el método que hace el trabajo se prueba directamente, sin dormir el test.
 
 ```csharp
 using Moq;

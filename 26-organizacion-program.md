@@ -45,6 +45,8 @@ Cuando una aplicación ASP.NET Core crece, el archivo `Program.cs` puede volvers
 
 ### 26.1.1. Ejemplo de Program.cs monolítico
 
+Un `Program.cs` monolítico acumula toda la configuración en un solo fichero: base de datos, autenticación, logging, CORS y más, línea tras línea.
+
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
@@ -143,6 +145,8 @@ El patrón de extension methods consiste en crear métodos de extension para `IS
 
 ### 26.2.1. Concepto fundamental
 
+La idea de las clases de extensión es mover cada bloque de configuración a un método `static` en su propia clase, y encadenarlos desde el `Program.cs`.
+
 ```csharp
 // ❌ MALO: Configuracion dispersa en Program.cs
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -228,6 +232,8 @@ FunkoApp/
 
 ### 26.4.1. Configuración de base de datos
 
+La configuración de la base de datos se extrae a su propia clase de extensión, que lee el connection string y registra el `DbContext`.
+
 ```csharp
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
@@ -258,6 +264,8 @@ public static class DatabaseConfig
 ```
 
 ### 26.4.2. Configuración de autenticación JWT
+
+La autenticación JWT también tiene su clase de extensión: valida el token, configura los parámetros de emisión y lectura, y define las políticas de autorización.
 
 ```csharp
 using System.Text;

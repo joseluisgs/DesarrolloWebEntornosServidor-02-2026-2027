@@ -114,6 +114,8 @@ flowchart TD
 
 ### 25.2.1. Estructura de archivos
 
+La estructura de configuración por entorno usa varios ficheros `appsettings` que se cargan en orden: base, después el del entorno activo.
+
 ```
 FunkoApp/
 ├── appsettings.json                  # Configuracion base (comun)
@@ -172,6 +174,8 @@ FunkoApp/
 
 ### 25.2.4. Configuracion de produccion
 
+`appsettings.Production.json` lleva los ajustes del entorno real: logs mínimos, connection string seguro y URLs del dominio definitivo.
+
 ```json
 {
   "Logging": {
@@ -210,6 +214,8 @@ ENV ConnectionStrings__DefaultConnection=""
 En desarrollo, la contraseña (si hace falta) se guarda con User Secrets, nunca en el JSON.
 
 ## 25.3. Configuracion de base de datos por entorno
+
+Cada entorno apunta a una base de datos distinta: SQLite local en desarrollo, PostgreSQL del servidor en producción. La clave está en el connection string.
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -351,6 +357,8 @@ public class EmailService(IWebHostEnvironment environment, ILogger<EmailService>
 
 ## 25.6. Configuracion de Swagger por entorno
 
+Swagger se habilita solo en desarrollo: en producción no tiene sentido exponer la documentación completa de la API.
+
 ```csharp
 // Configurar Swagger solo en Development
 if (builder.Environment.IsDevelopment())
@@ -440,6 +448,8 @@ var jwtSecret = builder.Configuration["Jwt:Secret"];
 ## 25.9. Configuracion avanzada
 
 ### 25.9.1. Clases de configuracion tipadas
+
+Las clases tipadas encapsulan la configuración en propiedades con nombre, en vez de andar buscando claves con strings mágicos por el `IConfiguration`.
 
 ```csharp
 // ❌ MALO: Acceder a configuracion con strings mágicos

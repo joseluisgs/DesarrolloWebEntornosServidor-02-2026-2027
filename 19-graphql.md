@@ -142,6 +142,8 @@ HotChocolate es la implementacion mas popular de GraphQL para .NET. Usa un enfoq
 
 ### 19.2.1. Paquetes NuGet
 
+Hot Chocolate es el servidor GraphQL para .NET. El paquete principal trae el esquema, el servidor HTTP y la integración con ASP.NET Core.
+
 ```bash
 # Paquete principal
 dotnet add package HotChocolate.AspNetCore
@@ -154,6 +156,8 @@ dotnet add package GreenDonut
 ```
 
 ### 19.2.2. Configuración en Program.cs
+
+La configuración registra el servidor GraphQL y expone el endpoint `/graphql`, que es donde el cliente envía sus consultas.
 
 ```csharp
 using HotChocolate;
@@ -239,6 +243,8 @@ sequenceDiagram
 HotChocolate usa **Code-First**: el esquema GraphQL se genera automaticamente desde clases C#. No necesitas escribir un `.graphql` a mano.
 
 ### 19.3.1. ObjectType básico
+
+Un `ObjectType` describe un tipo del esquema GraphQL a partir de una clase C#: sus campos, sus descriptores y sus resolvers.
 
 ```csharp
 using HotChocolate.Types;
@@ -364,6 +370,8 @@ Los Input Types representan datos de entrada para las Mutations, equivalentes a 
 
 ### 19.4.1. Input record
 
+Los input types son los equivalentes a los DTOs en GraphQL: definen qué datos aceptan las mutations al llegar del cliente.
+
 ```csharp
 public record CreateProductoInput(
     string Nombre,
@@ -377,6 +385,8 @@ public record CreateProductoInput(
 > 💡 **Consejo:** Usa `record` para Inputs simples. Son inmutables, con `init` implicito y serializan bien.
 
 ### 19.4.2. Input con validación
+
+La validación se añade al input type con descriptores: si el dato no cumple las reglas, Hot Chocolate rechaza la mutation antes de llegar a la lógica de negocio.
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
@@ -426,6 +436,8 @@ public class CreateProductoInput : IValidatableObject
 
 ### 19.4.3. Input para actualización parcial
 
+En una actualización parcial el cliente solo manda los campos que quiere cambiar, y el resto se queda como estaba. Este input usa campos anulables para permitirlo.
+
 ```csharp
 public record UpdateProductoInput(
     string? Nombre,
@@ -443,6 +455,8 @@ public record UpdateProductoInput(
 Las Queries son operaciones de solo lectura, equivalentes a GET en REST.
 
 ### 19.5.1. Query básica
+
+Una query es el equivalente a un `GET` en REST: solo lee datos y no modifica nada en el servidor.
 
 ```csharp
 using HotChocolate.Data;
@@ -577,6 +591,8 @@ Las Mutations son operaciones que modifican datos, equivalentes a POST, PUT, DEL
 
 ### 19.6.1. Mutation de crear
 
+La mutation de crear recibe el input con los datos nuevos, los guarda en base de datos y devuelve el objeto creado.
+
 ```csharp
 using HotChocolate.Subscriptions;
 
@@ -612,6 +628,8 @@ public class Mutation
 
 ### 19.6.2. Mutation de actualizar
 
+La mutation de actualizar busca el objeto por su ID, le aplica los cambios del input y devuelve el objeto ya modificado.
+
 ```csharp
 public class Mutation
 {
@@ -646,6 +664,8 @@ public class Mutation
 ```
 
 ### 19.6.3. Mutation de eliminar
+
+La mutation de eliminar hace un borrado lógico: marca el objeto como eliminado en vez de borrarlo físicamente de la base de datos.
 
 ```csharp
 public class Mutation
@@ -755,6 +775,8 @@ graph TB
 📌 Ejemplo real: **Shopify** usa subscriptions para notificar a los comerciantes cuando se realiza un pedido nuevo. El panel de administracion se actualiza instantaneamente sin recargar la pagina.
 
 ### 19.7.2. Implementación de subscription
+
+Las subscriptions mantienen una conexión abierta y avisan al cliente cada vez que ocurre un evento, como la creación de un producto nuevo.
 
 ```csharp
 public class Subscription
@@ -902,6 +924,8 @@ graph TD
 
 ### 19.8.3. Implementación de DataLoaders
 
+El `DataLoader` agrupa las peticiones simultáneas de categorías en una sola consulta, evitando el problema N+1 que dispara tantas consultas como productos tiene la lista.
+
 ```csharp
 using GreenDonut;
 using Microsoft.EntityFrameworkCore;
@@ -995,6 +1019,8 @@ HotChocolate se integra directamente con ASP.NET Core Identity y JWT.
 
 ### 19.9.1. Configuración de autenticación JWT
 
+La autenticación en GraphQL usa el mismo JWT que el resto de la API: el cliente manda el token en la cabecera `Authorization` y el servidor lo valida antes de procesar la consulta.
+
 ```csharp
 // La clave es obligatoria: si falta, lanza excepción en el arranque (evita el CS8604)
 var jwtKey = builder.Configuration["Jwt:Key"]!;
@@ -1026,6 +1052,8 @@ builder.Services
 > ⚠️ **Advertencia:** En producción, la **introspección** (`__schema`, `__type`) debe estar **deshabilitada o restringida**: expone el esquema completo de la API a cualquiera. Deja activa la introspección solo en desarrollo y, si la mantienes en producción, protégela con una política de autorización.
 
 ### 19.9.2. Proteger queries y mutations
+
+Proteger una operación significa comprobar la identidad del usuario antes de ejecutarla. Si no hay token válido, la consulta se rechaza sin llegar a tocar los datos.
 
 ```csharp
 public class Query
@@ -1087,6 +1115,8 @@ public async Task<bool> EliminarProducto(long id, ...) { ... }
 
 ### 19.9.3. Políticas personalizadas
 
+Las políticas permiten reglas más finas que el rol solo: por ejemplo, que un usuario solo pueda editar su propio perfil. Se definen una vez y se aplican con un atributo.
+
 ```csharp
 builder.Services.AddAuthorization(options =>
 {
@@ -1139,6 +1169,8 @@ return builder;
 ## 19.10. Testing
 
 ### 19.10.1. Test de queries
+
+Los tests de queries envían una consulta GraphQL real al servidor de prueba y comprueban que la respuesta trae los campos esperados.
 
 ```csharp
 using HotChocolate;
@@ -1257,6 +1289,8 @@ public class ProductoGraphQLTests
 
 ### 19.10.2. Test de mutations
 
+Los tests de mutations mandan la consulta de escritura y verifican tanto el resultado devuelto como el efecto real en la base de datos.
+
 ```csharp
 [Test]
 public async Task Mutation_CrearProducto_ReturnsNewProduct()
@@ -1287,6 +1321,8 @@ public async Task Mutation_CrearProducto_ReturnsNewProduct()
 ```
 
 ## 19.11. Buenas prácticas
+
+Estas son las reglas que debes seguir al diseñar un esquema GraphQL. El primer ejemplo expone la entidad completa con datos sensibles; el segundo proyecta solo los campos que el cliente necesita:
 
 ```csharp
 // ❌ MALO: Exponer entidades directamente sin filtrar campos

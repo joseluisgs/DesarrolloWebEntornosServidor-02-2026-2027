@@ -86,6 +86,8 @@ El **Dockerfile** es un archivo de texto que contiene instrucciones para constru
 
 ### 29.2.1. Estructura del proyecto
 
+La estructura de un proyecto Docker incluye el `Dockerfile`, el `.dockerignore` y el `docker-compose.yml` para las dependencias externas.
+
 ```
 FunkoApp/
 ├── src/
@@ -199,6 +201,8 @@ ENTRYPOINT ["dotnet", "FunkoApp.dll"]
 **Docker Compose** es una herramienta para definir y ejecutar aplicaciones Docker multi-contenedor usando un archivo YAML.
 
 ### 29.4.1. Docker-compose.yml completo
+
+El `docker-compose.yml` levanta la aplicación con todas sus dependencias: base de datos, caché Redis y el servicio de la API en un solo comando.
 
 ```yaml
 services:
@@ -402,6 +406,8 @@ services:
 
 ### 29.7.1. Usar alpine Linux
 
+Las imágenes Alpine son mucho más ligeras que las estándar de Debian, lo que reduce el tamaño final de la imagen y el tiempo de descarga.
+
 ```dockerfile
 # Imagenes Alpine son mas ligeras
 FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
@@ -416,6 +422,8 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
 ```
 
 ### 29.7.2. .dockerignore
+
+El `.dockerignore` excluye ficheros del contexto de construcción (carpetas `bin`, `obj`, `.git`) para que la imagen no los lleve dentro.
 
 ```
 .git

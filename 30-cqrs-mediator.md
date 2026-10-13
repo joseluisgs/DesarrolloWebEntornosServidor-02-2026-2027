@@ -429,6 +429,8 @@ erDiagram
 
 ### 30.3.2. Producto con categoria y proveedor
 
+En el modelo normalizado de PostgreSQL, cada producto apunta a su categoría y proveedor por ID. El CQRS separa la consulta de las relaciones con `Include`.
+
 ```csharp
 // Modelo normalizado en PostgreSQL
 public class Producto
@@ -505,6 +507,8 @@ erDiagram
 📌 Ejemplo real: **Instagram** almacena posts con el perfil del usuario embebido. Cuando ves un post, no necesitas hacer JOIN con la tabla de usuarios: todo está en el mismo documento.
 
 ### 30.4.2. Producto con relaciones embebidas
+
+En el modelo denormalizado de MongoDB, la categoría y el proveedor van embebidos dentro del propio producto, así la consulta de lectura no necesita joins.
 
 ```csharp
 // Modelo denormalizado en MongoDB

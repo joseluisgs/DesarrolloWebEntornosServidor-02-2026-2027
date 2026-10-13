@@ -491,6 +491,8 @@ maxmemory-policy allkeys-lru
 
 ### 14.6.4. Configuración con Docker
 
+Para probar Redis en local lo más cómodo es levantar un contenedor con Docker. Este es el mínimo imprescindible en el `docker-compose.yml`:
+
 **docker-compose.yml (solo Redis):**
 
 ```yaml
@@ -512,6 +514,8 @@ volumes:
 
 ### 14.7.1. Paquetes NuGet
 
+Para trabajar con caché en .NET necesitas dos paquetes: uno para la memoria caché propia y otro para conectarte a Redis.
+
 ```bash
 dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis
 dotnet add package Microsoft.Extensions.Caching.Memory
@@ -519,6 +523,8 @@ dotnet add package Scrutor
 ```
 
 ### 14.7.2. Interfaz ICacheService
+
+La interfaz `ICacheService` es el contrato que comparten las dos implementaciones: el consumidor solo conoce esta interfaz y no sabe si los datos viven en memoria o en Redis.
 
 ```csharp
 namespace ProductosApi.Services.Cache;
@@ -540,6 +546,8 @@ public interface ICacheService
 > 💡 **Consejo:** El método `GetOrSetAsync` mitiga el "cache stampede" (thundering herd): cuando varios hilos piden el mismo dato a la vez, el `SemaphoreSlim` garantiza que **solo uno ejecute la `factory`** y los demás esperen y reutilicen su resultado. Ojo: el candado es **por proceso** — en un despliegue multiinstancia cada instancia puede disparar su propia carga (para eso haría falta un bloqueo distribuido en Redis).
 
 ### 14.7.3. CacheOptions (configurable desde appsettings.json)
+
+`CacheOptions` agrupa los ajustes de la caché (tiempo de expiración, tamaño) para poder leerlos desde `appsettings.json` sin tocar código.
 
 ```csharp
 namespace ProductosEFCore.Cache;
@@ -569,6 +577,8 @@ public class CacheOptions
 ```
 
 ### 14.7.4. MemoryCacheService
+
+`MemoryCacheService` es la implementación que guarda los datos en la memoria del propio proceso. Es la que usarás en desarrollo y en tests.
 
 ```csharp
 using Microsoft.Extensions.Caching.Memory;
@@ -646,6 +656,8 @@ public class MemoryCacheService(
 
 ### 14.7.5. RedisCacheService
 
+`RedisCacheService` implementa la misma interfaz pero guardando los datos en un servidor Redis externo. Así cambias de una implementación a otra sin modificar el código que las usa.
+
 ```csharp
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
@@ -722,6 +734,8 @@ public class RedisCacheService(
 ```
 
 ### 14.7.6. Configuración en DI
+
+El registro en la DI es el punto donde decides qué implementación concreta recibe quien pide `ICacheService`.
 
 ```csharp
 // Program.cs - Configuración según entorno
@@ -981,6 +995,8 @@ builder.Services.Decorate<IProductoService, CachedProductoService>();
 
 ### 14.12.1. Unit testing con mocks
 
+En el unit testing la caché se mockea: el test se centra en la lógica del servicio sin depender de Redis ni de la memoria.
+
 ```csharp
 using NUnit.Framework;
 using Moq;
@@ -1038,6 +1054,8 @@ public class CachedProductoServiceTests
 ```
 
 ### 14.12.2. Integration testing con TestContainers
+
+En el integration testing no se mockea nada: TestContainers levanta un Redis real en Docker durante el test y lo apaga al terminar.
 
 ```csharp
 using Testcontainers.Redis;
@@ -1102,6 +1120,8 @@ public class RedisCacheServiceTests : IAsyncLifetime
 > 💡 **Consejo:** `_cache` debe construirse **después** de `StartAsync()` del contenedor, porque necesita la cadena de conexión real que TestContainers asigna al arrancar Redis.
 
 ## 14.13. Buenas prácticas
+
+Estas son las reglas que debes seguir al trabajar con caché. El primer ejemplo muestra el error típico de guardar el dato solo en caché y perderlo si nadie lo persiste:
 
 ```csharp
 // ❌ MALO: Usar IMemoryCache directamente en el servicio — acoplamiento total

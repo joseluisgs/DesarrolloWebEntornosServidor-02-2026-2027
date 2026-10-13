@@ -385,6 +385,8 @@ public class WebSocketHandler
 
 ### 18.3.4. Endpoint de conexión
 
+Este es el punto de entrada que escucha las peticiones WebSocket en la ruta `/ws`: comprueba que la petición es WebSocket y acepta o rechaza la conexión.
+
 ```csharp
 app.Map("/ws", async (HttpContext context) =>
 {
@@ -703,6 +705,8 @@ public class PedidoService(IHubContext<NotificacionesHub> hubContext)
 
 ### 18.6.2. Grupos por rol
 
+Al conectarse, cada usuario se añade a los grupos que le corresponden según sus claims. Así después puedes enviar mensajes a todos los administradores sin listarlos uno a uno.
+
 ```csharp
 public override async Task OnConnectedAsync()
 {
@@ -785,6 +789,8 @@ public class PedidoService(
 > 📌 **Ejemplo real:** En **Amazon**, cuando un vendedor actualiza el stock de un producto, los clientes que tienen ese producto en su carrito reciben una notificacion instantanea. Eso es `IHubContext` en accion: el servicio de inventario notifica a traves del Hub sin que el cliente haya pedido nada.
 
 ### 18.7.2. Notificaciones privadas vs públicas
+
+La diferencia entre ambos tipos está solo en a quién se envía: al grupo de un usuario concreto (privada) o a todos los conectados (pública).
 
 ```csharp
 // Privada: solo un usuario
