@@ -1,4 +1,4 @@
-- [12. Entity Framework Core](#12-entity-framework-core)
+﻿- [12. Entity Framework Core](#12-entity-framework-core)
   - [12.1. Fundamentos](#121-fundamentos)
     - [12.1.1. ¿Qué es un ORM?](#1211-qué-es-un-orm)
     - [12.1.2. DbContext](#1212-dbcontext)
@@ -1022,20 +1022,50 @@ public async Task Create_ProductoValido_RetornaProductoConId()
 - **Índices en columnas de filtro** frecuentes
 - **TestContainers** para tests de integración con BD real
 
-## 12.20. Reto
+## 12.20. Reto: repositorio CRUD con Entity Framework Core
 
-> Implementa un repositorio CRUD completo para FunkoApp con Entity Framework Core.
+> Monta un repositorio CRUD completo para una tienda de productos, con borrado lógico, migraciones y tests de integración con Docker.
 
-**Añade a tu API:**
+### 12.20.1. Contexto
 
-1. **Modelo Funko:** `Id`, `Nombre`, `Precio`, `Stock`, `CategoriaId`, `IsDeleted`, `CreatedAt`, `UpdatedAt`
-2. **Modelo Categoria:** `Id`, `Nombre`, `Descripcion`
-3. **Relación Uno a Muchos** entre Categoria y Funkos
-4. **Repositorio** con Create, Read (GetAll, GetById), Update, Delete (borrado lógico), Restore
-5. **Query Filters** para borrado lógico
-6. **Migraciones** aplicadas automáticamente en desarrollo
-7. **Seed Data** con 5 Funkos y 3 Categorías
-8. **Tests** con TestContainers: Create, GetById, GetAll, Delete lógico, IsDuplicated
+**Paso 0:** parte de una API Minimal o MVC que ya funcione con productos en memoria (punto 07 o 08). Ahora toca persistir en una base de datos real con EF Core y SQLite (desarrollo) o PostgreSQL (producción).
+
+### 12.20.2. Modelo de datos
+
+| Propiedad | Tipo | Obligatorio |
+|-----------|------|:-----------:|
+| `id` | int | Sí (autogenerado) |
+| `nombre` | string | Sí |
+| `precio` | decimal | Sí |
+| `stock` | int | Sí |
+| `categoriaId` | int | Sí (FK) |
+| `isDeleted` | bool | Sí (default false) |
+| `createdAt` | DateTime | Sí (autogenerado) |
+| `updatedAt` | DateTime? | No |
+
+**Modelo Categoria:**
+
+| Propiedad | Tipo | Obligatorio |
+|-----------|------|:-----------:|
+| `id` | int | Sí (autogenerado) |
+| `nombre` | string | Sí |
+| `descripcion` | string? | No |
+
+### 12.20.3. Almacenamiento
+
+- **Base de datos:** SQLite en desarrollo, PostgreSQL en producción (misma configuración por entornos)
+- **Migraciones:** `dotnet ef migrations add` + aplicar automáticamente en desarrollo
+- **Seed Data:** 5 productos y 3 categorías de ejemplo
+- **Query Filter:** filtrado automático de `isDeleted` en el DbContext
+
+### 12.20.4. Retos
+
+1. **Modelo:** crear `Producto` y `Categoria` con la relación Uno a Muchos
+2. **DbContext:** configurar con Fluent API, Query Filter para borrado lógico
+3. **Repositorio:** Create, GetAll, GetById, Update, Delete (lógico), Restore
+4. **Migraciones:** generar y aplicar, comprobar que la BD se crea
+5. **Seed Data:** insertar datos iniciales al arrancar
+6. **Tests:** con TestContainers, probar Create, GetById, GetAll, Delete lógico
 
 **Puntos extra:**
 
@@ -1051,7 +1081,7 @@ public async Task Create_ProductoValido_RetornaProductoConId()
 |----------|-------------|
 | **ORM** | Mapeo objeto-relacional que traduce C# a SQL |
 | **DbContext** | Sesión con la base de datos |
-| **DbSet<T>** | Colección de entidades |
+| **DbSet\<T\>** | Colección de entidades |
 | **Data Annotations** | Atributos para configurar el modelo |
 | **Fluent API** | Configuración potente en OnModelCreating |
 | **Relaciones** | Uno a Uno, Uno a Muchos, Muchos a Muchos |
@@ -1065,4 +1095,4 @@ public async Task Create_ProductoValido_RetornaProductoConId()
 
 **¿Qué viene después?**
 
-En el siguiente punto veremos **MongoDB**: una base de datos NoSQL orientada a documentos que no usa tablas ni SQL. Verás cómo trabajar con colecciones de documentos JSON y cómo muchos conceptos de EF Core (repositorios, mapeo, configuración) tienen su equivalente en el mundo NoSQL con el **MongoDB.Driver** o el uso de **EF Core para MongoDB**.
+En el siguiente punto veremos **MongoDB**: una base de datos NoSQL orientada a documentos que no usa tablas ni SQL. Verás cómo trabajar con colecciones de documentos JSON y cómo muchos conceptos de EF Core tienen su equivalente en el mundo NoSQL.
