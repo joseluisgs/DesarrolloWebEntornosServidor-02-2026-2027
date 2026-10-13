@@ -132,7 +132,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 
 > 📝 **Nota:** El DbContext se registra en la inyección de dependencias como **transitorio** o **scoped**: cada petición HTTP recibe una instancia nueva. Nunca lo registres como singleton.
 
-### 12.1.3. Change tracker
+### 12.1.3. Change tracker y metadatos
 
 El **Change Tracker** monitoriza todas las entidades cargadas en el contexto. Cuando cambias una propiedad y llamas a `SaveChangesAsync()`, EF Core compara el estado actual con el original y genera el SQL correspondiente.
 
@@ -146,6 +146,8 @@ stateDiagram-v2
     Unchanged --> Deleted: Remove()
     Deleted --> [*]: SaveChanges
 ```
+
+**Metadatos automáticos:** EF Core puede calcular campos como `CreatedAt` y `UpdatedAt` sin que tú los asignes a mano. Se configuran con `HasDefaultValueSql()` en fluent API o asignándolos en el constructor de la entidad.
 
 ```csharp
 // El Change Tracker detecta el cambio automáticamente
@@ -223,6 +225,8 @@ Las **Data Annotations** son atributos C# que configuran el modelo directamente 
 
 ### 12.3.1. Columnas y tipos
 
+Los atributos de columna controlan cómo se mapea una propiedad C# a una columna de la BD. Puedes cambiar el nombre, la longitud y si admite null.
+
 ```csharp
 public class Producto
 {
@@ -236,6 +240,8 @@ public class Producto
 > 📝 **Nota:** `[StringLength]` valida en el servidor; `[MaxLength]` solo configura el esquema. Si quieres validación, usa `[StringLength]`.
 
 ### 12.3.2. Claves y generación
+
+La clave primaria identifica cada fila única de la tabla. `[Key]` la declara, y `[DatabaseGenerated]` controla cómo se genera el valor (auto-increment, calculado por BD, o manual).
 
 ```csharp
 public class Producto
@@ -266,6 +272,8 @@ public class Producto
 > 📝 **Nota:** `[Index]` requiere `using Microsoft.EntityFrameworkCore;`. Para índices compuestos, usa `[Index(nameof(Nombre), nameof(CategoriaId), IsUnique = true)]`.
 
 ### 12.3.4. Restricciones de negocio
+
+Estos atributos validan los datos antes de guardarlos en la BD. Si la validación falla, EF Core lanza una excepción.
 
 ```csharp
 public class Producto
@@ -303,6 +311,8 @@ La **Fluent API** configura el modelo mediante código en `OnModelCreating`. Es 
 
 ### 12.4.1. Propiedades y columnas
 
+Los métodos de fluent API controlan las mismas propiedades que data annotations, pero con más opciones. `HasPrecision` es exclusivo de fluent API: define la precisión decimal exacta.
+
 ```csharp
 protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
@@ -320,6 +330,8 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
 ### 12.4.2. Claves y generación
 
+Fluent API permite declarar claves primarias, alternativas y controlar cómo se generan los valores. `HasAlternateKey` crea una restricción UNIQUE a nivel de BD.
+
 ```csharp
 entity.HasKey(p => p.Id);                              // Clave primaria
 entity.Property(p => p.Id).ValueGeneratedOnAdd();      // Auto-increment
@@ -327,6 +339,8 @@ entity.HasAlternateKey(p => p.Codigo);                 // Clave alternativa (UNI
 ```
 
 ### 12.4.3. Restricción única (UNIQUE)
+
+Fluent API crea índices únicos con `HasIndex().IsUnique()`. Es más flexible que data annotations porque permite índices compuestos y nombres personalizados.
 
 ```csharp
 entity.HasIndex(p => p.Nombre).IsUnique();                          // UNIQUE en una columna
@@ -337,6 +351,8 @@ entity.HasIndex(p => p.Codigo).HasDatabaseName("IX_Codigo");       // Nombre per
 > 📝 **Nota:** `HasIndex` crea un índice; `IsUnique` lo hace único. Son métodos distintos: `HasAlternateKey` crea una clave alternativa (UNIQUE a nivel de BD), `HasIndex(...).IsUnique()` crea un índice único (más flexible).
 
 ### 12.4.4. Tablas y vistas
+
+Fluent API permite mapear entidades a tablas y vistas de la BD. `ToView` es útil para leer datos de vistas sin modificarlas.
 
 ```csharp
 entity.ToTable("tbl_productos");    // Nombre de tabla
@@ -714,11 +730,13 @@ EF Core convierte consultas LINQ a SQL. Siempre son asíncronas (`await`).
 
 ### 12.7.1. Básicas y condicionales
 
+Las consultas básicas filtran, ordenan y devuelven listas. LINQ genera el SQL equivalente automáticamente.
+
 ```csharp
 // Todos los productos
 var todos = await db.Productos.ToListAsync();
 
-// Filtrar
+// Filtrar con Where
 var caros = await db.Productos
     .Where(p => p.Precio > 100)
     .OrderByDescending(p => p.Precio)
@@ -731,6 +749,8 @@ var filtrados = await db.Productos
 ```
 
 ### 12.7.2. Elemento único y agregación
+
+Estos métodos devuelven un solo valor o agregado en vez de una lista. Son más eficientes porque el SQL hace el cálculo.
 
 ```csharp
 // Primer elemento que cumple la condición
@@ -751,6 +771,8 @@ var porCategoria = await db.Productos
 
 ### 12.7.3. Joins y subconsultas
 
+LINQ hace joins implícitos cuando usas propiedades de navegación. Para subconsultas, usas la propiedad `DbSet` dentro de `Where`.
+
 ```csharp
 // Join implícito (por navegación)
 var productos = await db.Productos
@@ -765,6 +787,8 @@ var caros = await db.Productos
 ```
 
 ### 12.7.4. SQL nativo y ToQueryString
+
+Cuando LINQ no llega, puedes escribir SQL nativo con `FromSqlRaw`. Y `ToQueryString` te permite ver qué SQL genera LINQ.
 
 ```csharp
 // Ver el SQL generado
@@ -856,6 +880,8 @@ modelBuilder.Entity<Producto>()
 
 ### 12.9.4. NotMapped y propiedades calculadas
 
+`[NotMapped]` indica que una propiedad no se mapea a la BD. Las propiedades calculadas (sin setter) tampoco se mapean automáticamente.
+
 ```csharp
 public class Producto
 {
@@ -866,13 +892,16 @@ public class Producto
     [NotMapped]           // No se mapea a la BD
     public string Temporal { get; set; } = "";
 
-    public decimal PrecioConIva => Precio * (1 + Iva);  // Calculada
+    // Calculada: EF Core la ignora porque no tiene setter
+    public decimal PrecioConIva => Precio * (1 + Iva);
 }
 ```
 
 ## 12.10. Repositorio CRUD
 
 ### 12.10.1. Entidad y configuración
+
+La entidad `Producto` usa data annotations para lo básico. Los metadatos (`CreatedAt`, `UpdatedAt`) se asignan automáticamente en el constructor.
 
 ```csharp
 public class Producto
@@ -899,6 +928,8 @@ public class Producto
 ```
 
 ### 12.10.2. Interfaz del repositorio
+
+La interfaz define las operaciones que el repositorio ofrece. Todos los métodos son asíncronos porque la BD es una operación de E/S.
 
 ```csharp
 public interface IProductoRepository
@@ -991,6 +1022,8 @@ Las migraciones versionan el esquema de la base de datos.
 
 ### 12.11.1. Comandos básicos
 
+Estos son los comandos que usarás habitualmente con `dotnet ef`. El más importante es `add` (crea la migración) y `update` (la aplica).
+
 ```bash
 dotnet ef migrations add AddProductoTable   # Crear migración
 dotnet ef database update                    # Aplicar migraciones
@@ -1001,6 +1034,8 @@ dotnet ef migrations script                  # Generar SQL sin ejecutar
 ```
 
 ### 12.11.2. Flujo de una migración
+
+El flujo completo es: modificar el modelo, generar la migración, aplicarla a la BD.
 
 ```mermaid
 sequenceDiagram
