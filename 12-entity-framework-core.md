@@ -1,4 +1,4 @@
-- [12. Entity Framework Core](#12-entity-framework-core)
+﻿- [12. Entity Framework Core](#12-entity-framework-core)
   - [12.1. Fundamentos](#121-fundamentos)
     - [12.1.1. ¿Qué es un ORM?](#1211-qué-es-un-orm)
     - [12.1.2. DbContext](#1212-dbcontext)
@@ -259,93 +259,136 @@ await context.Database.MigrateAsync(); // Aplica todas las migraciones pendiente
 
 ## 12.3. Data annotations
 
-Las **Data Annotations** son atributos C# que configuran el modelo directamente en las entidades.
+Las **Data Annotations** son atributos C# que configuran el modelo directamente en las entidades. Son la forma más simple de configurar EF Core, pero tienen limitaciones: para configuraciones avanzadas necesitas Fluent API.
 
 ### 12.3.1. Atributos de columna
 
 ```csharp
-[Column("precio_producto")]
-[Required]
-[StringLength(100)]
-public decimal Precio { get; set; }
+public class Producto
+{
+    [Column("precio_producto")]  // Cambia el nombre de la columna en la BD
+    [Required]                   // No permite null
+    [StringLength(100)]          // Longitud máxima
+    [Range(0.01, 9999.99)]      // Rango de valores
+    public decimal Precio { get; set; }
+}
 ```
+
+| Atributo | Qué hace | Ejemplo |
+|----------|----------|---------|
+| `[Column("nombre")]` | Cambia el nombre de la columna | `[Column("precio_prod")]` |
+| `[Required]` | No permite null | `[Required] public string Nombre` |
+| `[StringLength(100)]` | Longitud máxima | `[StringLength(80)]` |
+| `[Range(0, 100)]` | Rango de valores | `[Range(1, 10)]` |
+| `[MaxLength(50)]` | Longitud máxima (no valida en runtime) | `[MaxLength(50)]` |
+
+> 📝 **Nota:** `[StringLength]` valida en el servidor; `[MaxLength]` solo configura el esquema. Si quieres validación, usa `[StringLength]`.
 
 ### 12.3.2. Atributos de clave
 
 ```csharp
-[Key]
-[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-public long Id { get; set; }
+public class Producto
+{
+    [Key]  // Clave primaria (por convención, la propiedad "Id" ya lo es)
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]  // Auto-increment
+    public long Id { get; set; }
+}
 ```
 
 ### 12.3.3. Atributos de tabla
 
 ```csharp
-[Table("tbl_productos")]
+[Table("tbl_productos")]  // Nombre de la tabla en la BD
 public class Producto { ... }
 ```
 
-### 12.3.4. Atributos de concurrencia
+### 12.3.4. Atributos de restricciones únicas (UNIQUE)
+
+Una restricción **UNIQUE** impide que dos filas tengan el mismo valor en una columna. Ejemplo: no puede haber dos productos con el mismo nombre.
+
+**Con Data Annotations** (usando `[Index]` de EF Core 5+):
 
 ```csharp
-[Timestamp]
-public byte[] RowVersion { get; set; }
+using Microsoft.EntityFrameworkCore;
+
+public class Producto
+{
+    public long Id { get; set; }
+
+    [Required]
+    [StringLength(100)]
+    public string Nombre { get; set; } = string.Empty;
+
+    // Índice único: no puede haber dos productos con el mismo nombre
+    [Index(nameof(Nombre), IsUnique = true)]
+    public string? Codigo { get; set; }
+}
 ```
 
-> ⚠️ **Advertencia — `[Timestamp]` es patrón de SQL Server, no de PostgreSQL**
->
-> El atributo `[Timestamp]` con `byte[] RowVersion` genera una columna `rowversion` **exclusiva de SQL Server**. En este curso usamos **PostgreSQL/Npgsql**, que **no soporta** ese tipo de columna: si lo usas, obtendrás un error de migración o de mapeo.
->
-> **Alternativa correcta en PostgreSQL:** usar la columna de sistema `xmin` (una versión de fila que PostgreSQL mantiene automáticamente), mapeada como `uint` con la Fluent API:
+O con el atributo `[Index]` en la clase:
 
 ```csharp
-// En la entidad: NO usar [Timestamp] ni byte[] RowVersion
+[Index(nameof(Nombre), IsUnique = true)]
 public class Producto
 {
     public long Id { get; set; }
     public string Nombre { get; set; } = string.Empty;
-
-    // xmin como propiedad CLR de tipo uint
-    public uint Xmin { get; set; }
 }
-
-// En OnModelCreating (Fluent API):
-modelBuilder.Entity<Producto>(entity =>
-{
-    // Mapea la columna de sistema xmin de PostgreSQL como token de concurrencia
-    entity.Property(e => e.Xmin)
-        .HasColumnName("xmin")
-        .HasColumnType("xid")
-        .IsRowVersion();
-});
 ```
 
-> 💡 **Consejo:** Si más adelante trabajas con SQL Server, entonces sí podrás usar `[Timestamp]` + `byte[] RowVersion`. Cada BD tiene su propio mecanismo de concurrencia optimista.
-
-### 12.3.5. Atributos de generación
+**Con Fluent API** (más potente):
 
 ```csharp
-[DatabaseGenerated(DatabaseGeneratedOption.Identity)] // Auto-increment
-[DatabaseGenerated(DatabaseGeneratedOption.Computed)] // Calculado por BD
-[DatabaseGenerated(DatabaseGeneratedOption.None)] // Sin generación
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity<Producto>(entity =>
+    {
+        // Índice único en una columna
+        entity.HasIndex(p => p.Nombre).IsUnique();
+
+        // Índice único compuesto (dos columnas juntas)
+        entity.HasIndex(p => new { p.Nombre, p.CategoriaId }).IsUnique();
+    });
+}
 ```
 
-### 12.3.6. Tabla resumen
+> 💡 **Consejo:** Usa UNIQUE cuando el negocio lo exige: email de usuario, código de producto, NIF. No lo uses solo por "limpieza": cada índice ralentiza las escrituras.
+
+### 12.3.5. Atributos de concurrencia
+
+```csharp
+// SOLO SQL Server:
+[Timestamp]
+public byte[] RowVersion { get; set; }
+```
+
+> ⚠️ **Advertencia:** `[Timestamp]` con `byte[] RowVersion` genera una columna `rowversion` exclusiva de SQL Server. En PostgreSQL, usa la columna de sistema `xmin` (ver Fluent API en 12.4).
+
+### 12.3.6. Atributos de generación
+
+```csharp
+[DatabaseGenerated(DatabaseGeneratedOption.Identity)]  // Auto-increment
+[DatabaseGenerated(DatabaseGeneratedOption.Computed)]  // Calculado por BD (ej: GETDATE())
+[DatabaseGenerated(DatabaseGeneratedOption.None)]      // Sin generación
+```
+
+### 12.3.7. Tabla resumen
 
 | Atributo | Uso | Ejemplo |
 |----------|-----|---------|
 | `[Key]` | Clave primaria | `public long Id { get; set; }` |
-| `[Required]` | Campo obligatorio | `[Required] public string Nombre { get; set; }` |
-| `[StringLength(100)]` | Longitud máxima | `[StringLength(100)]` |
-| `[Column("nombre")]` | Nombre de columna | `[Column("producto_nombre")]` |
+| `[Required]` | Campo obligatorio | `[Required] public string Nombre` |
+| `[StringLength(100)]` | Longitud máxima con validación | `[StringLength(80)]` |
+| `[Column("nombre")]` | Nombre de columna | `[Column("precio_prod")]` |
 | `[Table("tbl_prod")]` | Nombre de tabla | `[Table("tbl_productos")]` |
-| `[Timestamp]` | Concurrencia optimista (**solo SQL Server**) | `public byte[] RowVersion { get; set; }` — en PostgreSQL usar `uint xmin` + `IsRowVersion()` (ver 12.3.4) |
-| `[NotMapped]` | No mapear a BD | `[NotMapped] public string Temporal { get; set; }` |
+| `[Index(nameof(Nombre), IsUnique = true)]` | Índice único | No duplicar valores |
 | `[ForeignKey("CategoriaId")]` | Clave foránea | `[ForeignKey("Categoria")]` |
+| `[NotMapped]` | No mapear a BD | `[NotMapped] public string Temporal` |
+| `[Timestamp]` | Concurrencia (solo SQL Server) | `public byte[] RowVersion` |
 
 ## 12.4. Fluent API
 
-La **Fluent API** permite configurar el modelo mediante código en `OnModelCreating`. Es más potente que Data Annotations.
+La **Fluent API** permite configurar el modelo mediante código en `OnModelCreating`. Es más potente que Data Annotations y separa la configuración de la entidad.
 
 ### 12.4.1. Propiedades
 
@@ -354,8 +397,22 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
     modelBuilder.Entity<Producto>(entity =>
     {
-        entity.Property(p => p.Nombre).HasMaxLength(100).IsRequired();
-        entity.Property(p => p.Precio).HasPrecision(18, 2);
+        // Longitud máxima y obligatorio
+        entity.Property(p => p.Nombre)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        // Precisión decimal (18 dígitos, 2 decimales)
+        entity.Property(p => p.Precio)
+            .HasPrecision(18, 2);
+
+        // Valor por defecto
+        entity.Property(p => p.Stock)
+            .HasDefaultValue(0);
+
+        // Nombre de columna diferente
+        entity.Property(p => p.Precio)
+            .HasColumnName("precio_producto");
     });
 }
 ```
@@ -363,28 +420,53 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 ### 12.4.2. Claves
 
 ```csharp
-entity.HasKey(p => p.Id);
-entity.HasAlternateKey(p => p.Codigo); // Clave alternativa
+entity.HasKey(p => p.Id);                    // Clave primaria
+entity.HasAlternateKey(p => p.Codigo);       // Clave alternativa (UNIQUE)
 ```
 
-### 12.4.3. Tablas y vistas
+### 12.4.3. Restricciones únicas (UNIQUE)
 
 ```csharp
-entity.ToTable("tbl_productos");
-entity.HasNoKey(); // Para vistas
-entity.ToView("vw_productos_resumen");
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity<Producto>(entity =>
+    {
+        // Índice único en una columna
+        entity.HasIndex(p => p.Nombre).IsUnique();
+
+        // Índice único compuesto (dos columnas juntas)
+        entity.HasIndex(p => new { p.Nombre, p.CategoriaId }).IsUnique();
+
+        // Índice con nombre personalizado
+        entity.HasIndex(p => p.Codigo)
+            .HasDatabaseName("IX_Productos_Codigo")
+            .IsUnique();
+    });
+}
 ```
 
-### 12.4.4. Relaciones
+> 📝 **Nota:** `HasIndex` crea un índice; `IsUnique` lo hace único. Son métodos distintos: `HasAlternateKey` crea una clave alternativa (restricción UNIQUE a nivel de BD), `HasIndex(...).IsUnique()` crea un índice único (más flexible).
+
+### 12.4.4. Tablas y vistas
 
 ```csharp
-entity.HasOne(p => p.Categoria)
-      .WithMany(c => c.Productos)
-      .HasForeignKey(p => p.CategoriaId)
-      .OnDelete(DeleteBehavior.Restrict);
+entity.ToTable("tbl_productos");    // Nombre de tabla
+entity.HasNoKey();                  // Para vistas (sin clave)
+entity.ToView("vw_productos");      // Mapear a vista
 ```
 
-### 12.4.5. IEntityTypeConfiguration
+### 12.4.5. Relaciones
+
+```csharp
+entity.HasOne(p => p.Categoria)     // Propiedad de navegación
+      .WithMany(c => c.Productos)   // Colección en la otra entidad
+      .HasForeignKey(p => p.CategoriaId)  // Clave foránea
+      .OnDelete(DeleteBehavior.Restrict); // Comportamiento de borrado
+```
+
+### 12.4.6. IEntityTypeConfiguration
+
+Para separar la configuración en clases dedicadas:
 
 ```csharp
 public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
@@ -392,22 +474,33 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
     public void Configure(EntityTypeBuilder<Producto> builder)
     {
         builder.HasKey(p => p.Id);
-        builder.Property(p => p.Nombre).HasMaxLength(100);
-        builder.HasOne(p => p.Categoria).WithMany(c => c.Productos);
+        builder.Property(p => p.Nombre).HasMaxLength(100).IsRequired();
+        builder.Property(p => p.Precio).HasPrecision(18, 2);
+        builder.HasIndex(p => p.Nombre).IsUnique();
+        builder.HasOne(p => p.Categoria)
+               .WithMany(c => c.Productos)
+               .HasForeignKey(p => p.CategoriaId);
     }
 }
 
-// En OnModelCreating:
-modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+// En el DbContext:
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+}
 ```
 
-### 12.4.6. Data annotations vs fluent API
+> 💡 **Consejo:** Cuando tengas muchas entidades, usa `IEntityTypeConfiguration` para mantener `OnModelCreating` limpio.
+
+### 12.4.7. Data annotations vs fluent API
 
 | Criterio | Data Annotations | Fluent API |
 |----------|-----------------|------------|
 | **Sintaxis** | Atributos en la entidad | Código en OnModelCreating |
-| **Potencia** | Limitada | Completa |
+| **Potencia** | Limitada (lo básico) | Completa (todo) |
 | **Separación** | Mezclado con la entidad | Separado en configuración |
+| **UNIQUE** | `[Index(IsUnique = true)]` | `HasIndex(...).IsUnique()` |
+| **Relaciones** | `[ForeignKey]` | `HasOne().WithMany()` |
 | **Recomendación** | Para lo simple | Para lo complejo |
 
 ## 12.5. Relaciones
@@ -721,55 +814,123 @@ public class Producto
 
 ## 12.10. Carga de datos
 
-### 12.10.1. Eager loading
+Cuando tienes relaciones entre entidades, necesitas decidir cómo cargarlas. EF Core ofrece tres estrategias:
+
+```mermaid
+flowchart TD
+    A[Consulta] --> B{¿Cómo cargo<br/>las relaciones?}
+    B -->|Include| C[Eager loading<br/>Todo en una consulta]
+    B -->|Lazy| D[Lazy loading<br/> bajo demanda]
+    B -->|Load| E[Explicit loading<br/>Manual]
+    style C fill:#4CAF50,color:#fff
+    style D fill:#FF9800,color:#fff
+    style E fill:#2196F3,color:#fff
+```
+
+### 12.10.1. Eager loading (include)
+
+**Carga todo en una sola consulta.** Es la estrategia más usada y la que EF Core recomienda por defecto.
 
 ```csharp
-// Include: carga la relación junto con la entidad principal
-var productos = await context.Productos
-    .Include(p => p.Categoria)
-    .ToListAsync();
-
-// ThenInclude: carga relaciones anidadas
-var productos = await context.Productos
-    .Include(p => p.Categoria)
-        .ThenInclude(c => c.Subcategorias)
+// Una sola consulta: productos + categorías
+var productos = await db.Productos
+    .Include(p => p.Categoria)       // Carga la categoría de cada producto
+    .AsNoTracking()                  // Solo lectura: más rápido
     .ToListAsync();
 ```
+
+**Carga de relaciones encadenadas (ThenInclude):**
+
+```csharp
+// Producto → Categoría → Subcategoría (tercer nivel)
+var productos = await db.Productos
+    .Include(p => p.Categoria)
+        .ThenInclude(c => c.Subcategoria)  // Segundo nivel
+    .ToListAsync();
+```
+
+> 📝 **Nota:** `ThenInclude` carga la relación **siguiente** en la cadena. Sin él, `producto.Categoria.Subcategoria` sería null.
+
+**Carga de muchas a muchas:**
+
+```csharp
+// Producto → ProductoEtiquetas → Etiqueta
+var producto = await db.Productos
+    .Include(p => p.ProductoEtiquetas)
+        .ThenInclude(pe => pe.Etiqueta)
+    .FirstOrDefaultAsync(p => p.Id == 1);
+```
+
+> 💡 **Consejo:** Usa `Include` siempre que necesites las relaciones. Si solo necesitas datos de la tabla principal, no lo uses (las consultas son más rápidas).
 
 ### 12.10.2. Lazy loading
 
-```csharp
-// La relación se carga automáticamente al acceder
-var producto = await context.Productos.FindAsync(1);
-var categoria = producto.Categoria; // Se carga automáticamente (SELECT adicional)
-```
-
-❌ **MALO**: Usar Lazy Loading sin quererlo:
+**Carga las relaciones bajo demanda**, cuando accedes a la propiedad. EF Core lo hace con proxies:
 
 ```csharp
-foreach (var producto in productos)
-{
-    var categoria = producto.Categoria; // N+1 queries!
-}
+// Instalación previa:
+// dotnet add package Microsoft.EntityFrameworkCore.Proxies
+
+// En el DbContext:
+options.UseLazyLoadingProxies();
 ```
+
+```csharp
+// Con lazy loading, esto carga la categoría automáticamente
+var producto = await db.Productos.FirstOrDefaultAsync(p => p.Id == 1);
+Console.WriteLine(producto!.Categoria.Nombre);  // ← Carga la categoría aquí
+```
+
+> ⚠️ **Advertencia:** Lazy loading puede causar el "problema N+1": una consulta por cada relación, en vez de una sola. En producción, usa eager loading con `Include`.
 
 ### 12.10.3. Explicit loading
 
+**Carga manual** cuando ya tienes la entidad cargada:
+
 ```csharp
-await context.Entry(producto)
+var producto = await db.Productos.FirstOrDefaultAsync(p => p.Id == 1);
+
+// Cargar la categoría explícitamente
+await db.Entry(producto!)
     .Reference(p => p.Categoria)
+    .LoadAsync();
+
+// Cargar la colección de etiquetas
+await db.Entry(producto!)
+    .Collection(p => p.ProductoEtiquetas)
     .LoadAsync();
 ```
 
 ### 12.10.4. AsSplitQuery
 
+Cuando cargas **múltiples Include**, EF Core genera un JOIN enorme. `AsSplitQuery` divide la consulta en varias:
+
 ```csharp
-// Divide las consultas en vez de un JOIN gigante
-var productos = await context.Productos
+// Una sola consulta con JOINs (puede ser lenta con muchas relaciones)
+var productos = await db.Productos
     .Include(p => p.Categoria)
-    .AsSplitQuery()
+    .Include(p => p.ProductoEtiquetas)
+        .ThenInclude(pe => pe.Etiqueta)
+    .ToListAsync();
+
+// Consultas separadas (más rápido con muchas relaciones)
+var productos = await db.Productos
+    .Include(p => p.Categoria)
+    .Include(p => p.ProductoEtiquetas)
+        .ThenInclude(pe => pe.Etiqueta)
+    .AsSplitQuery()  // ← Divide en varias consultas
     .ToListAsync();
 ```
+
+### 12.10.5. Tabla resumen
+
+| Estrategia | Cuándo usarla | Rendimiento |
+|------------|---------------|:-----------:|
+| `Include` (eager) | Cuando necesitas las relaciones | Bueno |
+| `ThenInclude` | Para relaciones segundo nivel | Bueno |
+| Lazy loading | Prototipos, no producción | Malo (N+1) |
+| Explicit loading | Cuando ya tienes la entidad | Medio |
+| `AsSplitQuery` | Con muchos Include | Mejor |
 
 ## 12.11. Consultas con LINQ
 
