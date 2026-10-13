@@ -281,6 +281,8 @@ public class ProductoService(
 
 ### 6.3.2. Constructores primarios en controladores
 
+En C# 12+, los constructores primarios permiten inyectar dependencias directamente en la declaración de la clase, sin escribir un constructor explícito.
+
 ```csharp
 // ❌ Tradicional
 public class ProductosController : ControllerBase
@@ -334,6 +336,8 @@ public interface IProductoRepository
 
 ### 6.4.2. Implementación
 
+La implementación concreta del servicio contiene la lógica de negocio. Se registra en la DI para que el contenedor la proporcione donde se necesite.
+
 ```csharp
 public class ProductoService(
     IProductoRepository repository,
@@ -372,6 +376,8 @@ public class ProductoService(
 ## 6.5. Registro de servicios en Program.cs
 
 ### 6.5.1. Registro básico
+
+El registro básico de servicios en la DI se hace en Program.cs con AddScoped, AddSingleton o AddTransient. Cada uno tiene un ciclo de vida diferente.
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -473,6 +479,8 @@ flowchart TD
 
 ### 6.6.1. Instalación
 
+Scrutor es un paquete NuGet que permite auto-registrar servicios por convención, sin escribir cada registro a mano.
+
 ```bash
 dotnet add package Scrutor
 ```
@@ -572,6 +580,8 @@ builder.Services.Scan(scan => scan
 | **Marker interfaces** | Proyectos grandes, muchos servicios, ciclo de vida visible | `classes.AssignableTo<IScopedService>()` |
 
 ### 6.6.6. Ejemplo completo con ambos enfoques
+
+Este ejemplo muestra la misma aplicación registrada de dos formas: manualmente y con Scrutor. Comparar ambos enfoques ayuda a decidir cuál usar.
 
 ```csharp
 // Program.cs — Enfoque convention-based (como en TiendaAPI)
@@ -695,6 +705,8 @@ app.Run();
 
 ### 6.7.2. Ejemplo completo
 
+Este ejemplo muestra un servicio completo con todas las dependencias inyectadas, desde el repositorio hasta el logger.
+
 ```csharp
 // Program.cs
 using Scrutor;
@@ -792,6 +804,8 @@ public class ProductosController(
 ```
 
 ### 6.8.2. Ejemplo completo
+
+Este ejemplo muestra la configuración de un proyecto completo con patrones avanzados de DI, incluyendo factory y decorator.
 
 ```csharp
 // Program.cs
@@ -920,6 +934,8 @@ var app = builder.Build();
 ```
 
 ### 6.9.3. Estructura de carpetas
+
+La estructura de carpetas de un proyecto con DI bien organizada separa interfaces, implementaciones y configuración en carpetas distintas.
 
 ```
 MiApi/

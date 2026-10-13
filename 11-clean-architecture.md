@@ -277,6 +277,8 @@ flowchart TB
 
 ### 11.4.4. Ejemplo práctico en .NET
 
+Este ejemplo muestra una aplicación completa con Clean Architecture en .NET, organizada por anillos con las dependencias hacia el centro.
+
 ```csharp
 // ── ENTITIES (Anillo 1) ─────────────────────────────────────
 namespace Producto.Domain;
@@ -696,6 +698,8 @@ No hay una fecha, hay señales:
 ## 11.7. Estructura del proyecto
 
 ### 11.6.1. Organización de carpetas
+
+La organización de carpetas refleja los anillos de Clean Architecture: cada capa tiene su propia carpeta y solo depende de las capas interiores.
 
 ```
 MiApi/

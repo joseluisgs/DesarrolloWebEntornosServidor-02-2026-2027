@@ -110,6 +110,8 @@ public record UpdateProductoDto(
 
 ### 8.1.3. DTOs en minimal APIs vs controladores
 
+Los DTOs se usan igual en minimal APIs y en controladores MVC, pero la forma de recibirlos cambia: en minimal APIs se enlazan directamente al parámetro, en controladores usan atributos como `[FromBody]`.
+
 ```csharp
 // Minimal API: el DTO se usa directamente en el delegate
 app.MapPost("/api/productos", (CreateProductoDto dto, IProductoService service) =>
@@ -819,6 +821,8 @@ public IActionResult GetAll(
 
 ### 8.4.2. Ordenación
 
+La ordenación permite devolver los resultados en un orden específico. LINQ ofrece `OrderBy`, `OrderByDescending` y `ThenBy` para ordenar por múltiples campos.
+
 ```csharp
 [HttpGet]
 public IActionResult GetAll(
@@ -857,6 +861,8 @@ public IActionResult GetAll()
 📌 Ejemplo real: **Netflix** cuando muestra el catálogo no carga todos los campos de cada serie (sinopsis completa, actores, fechas de estreno...). Solo carga título, imagen y valoración. Eso es projection — devolver solo lo necesario para la vista actual.
 
 ### 8.4.4. Búsqueda con patrones
+
+La búsqueda con patrones permite filtrar por texto parcial usando `Contains`, `StartsWith` o `EndsWith`, que el ORM traduce a SQL con LIKE.
 
 ```csharp
 [HttpGet("search")]
@@ -908,6 +914,8 @@ flowchart LR
 
 ### 8.5.2. [FromQuery] en controladores
 
+En controladores MVC, el atributo `[FromQuery]` indica explícitamente que un parámetro viene del query string. Es útil cuando el nombre del parámetro no coincide con el de la URL.
+
 ```csharp
 [HttpGet]
 public IActionResult GetAll(
@@ -921,6 +929,8 @@ public IActionResult GetAll(
 ```
 
 ### 8.5.3. Query strings en minimal APIs
+
+En minimal APIs, los parámetros del query string se reciben directamente como argumentos del handler, sin necesidad de atributos.
 
 ```csharp
 app.MapGet("/api/productos", (
@@ -1027,6 +1037,8 @@ graph LR
 
 ### 8.6.3. Ejemplo práctico
 
+Este ejemplo muestra una API completa con paginación, ordenación y búsqueda usando query strings y DTOs.
+
 ```http
 QUERY /api/productos HTTP/1.1
 Content-Type: application/json
@@ -1107,6 +1119,8 @@ Otra forma es incluir los enlaces directamente en el body:
 ```
 
 ### 8.7.4. Implementación en ASP.NET Core
+
+La validación con FluentValidation se integra en ASP.NET Core registrando los validadores en la DI y ejecutándolos antes de procesar la petición.
 
 ```csharp
 public static class PaginationLinksHelper

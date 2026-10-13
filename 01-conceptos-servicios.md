@@ -1,4 +1,4 @@
-- [1. Conceptos de servicios web y configuración de proyectos .NET](#1-conceptos-de-servicios-web-y-configuración-de-proyectos-net)
+﻿- [1. Conceptos de servicios web y configuración de proyectos .NET](#1-conceptos-de-servicios-web-y-configuración-de-proyectos-net)
   - [1.1. ¿Qué es un servicio web?](#11-qué-es-un-servicio-web)
     - [1.1.1. Servicios orientados a la conexión vs sin conexión](#111-servicios-orientados-a-la-conexión-vs-sin-conexión)
     - [1.1.2. Arquitecturas de servicios web](#112-arquitecturas-de-servicios-web)
@@ -88,6 +88,8 @@ flowchart TD
 ```
 
 ### 1.1.2. Arquitecturas de servicios web
+
+Los servicios web se organizan en distintas arquitecturas según cuántas responsabilidades asumen. REST es la más usada, pero hay otras como gRPC o GraphQL.
 
 ```mermaid
 flowchart TD
@@ -222,6 +224,8 @@ Una **solución** (.slnx) es un contenedor que agrupa proyectos relacionados. Un
 
 ### 1.3.2. Crear la estructura desde cero
 
+Estos comandos crean la estructura base de un proyecto .NET 10 desde cero.
+
 ```bash
 # Crear una solución (en .NET 10, `dotnet new sln` crea un .slnx)
 dotnet new sln -n MiApi
@@ -240,6 +244,8 @@ dotnet sln add MiApi.Tests/MiApi.Tests.csproj
 > 📝 **Nota:** `MiApi.Tests` es solo un ejemplo de nombre. La convención de estructura del curso es `NombreSolucion.Test` (singular) para el proyecto de tests — p. ej. `MiApi.Test`. No hay una única forma "oficial" de .NET: elige un formato y manténlo **consistente** en toda la solución.
 
 ### 1.3.3. Estructura de carpetas resultante
+
+La estructura resultante separa la lógica en carpetas con un propósito claro.
 
 ```
 MiApi.slnx
@@ -311,6 +317,8 @@ Son librerías que otros desarrolladores han creado y compartido. En lugar de es
 📌 **Ejemplo real:** Entity Framework Core para acceder a bases de datos, Newtonsoft.Json para trabajar con JSON, NUnit + FluentAssertions + Moq para hacer tests... todos son paquetes NuGet.
 
 ### 1.4.2. Comandos útiles
+
+Estos son los comandos de CLI que usarás a diario con .NET.
 
 ```bash
 # Instalar un paquete

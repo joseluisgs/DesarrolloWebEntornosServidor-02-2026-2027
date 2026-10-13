@@ -390,6 +390,8 @@ flowchart TD
 
 ### 2.5.1. Estructura de un request
 
+Un request HTTP lleva la ruta, los headers con metadatos y el cuerpo con los datos. Así se ve un POST completo:
+
 ```http
 POST /api/productos HTTP/1.1
 Host: api.tienda.com
@@ -411,6 +413,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 | **Body** | Los datos que envías (solo en POST, PUT, PATCH) |
 
 ### 2.5.2. Estructura de un response
+
+La respuesta del servidor lleva el código de estado, los headers y el cuerpo con los datos o el error. Así se ve un 201 Created:
 
 ```http
 HTTP/1.1 201 Created

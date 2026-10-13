@@ -308,6 +308,8 @@ Cuando tu API tiene muchos endpoints, `Program.cs` se llena de `app.MapGet(...)`
 
 ### 3.6.1. El problema
 
+Cuando el Program.cs crece demasiado con muchas rutas, se vuelve difícil de mantener. Este es el problema que resuelve la arquitectura por capas:
+
 ```csharp
 // ❌ Program.cs lleno de rutas
 app.MapGet("/api/productos", ...);

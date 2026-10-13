@@ -179,6 +179,8 @@ flowchart TD
 
 ### 7.2.3. Ejemplo: servicio con excepciones (mal)
 
+Este ejemplo muestra cómo NO manejar errores: lanzando excepciones que el controlador debe capturar uno a uno. Es el enfoque que queremos evitar.
+
 ```csharp
 // ❌ INCORRECTO: Excepciones para errores de negocio
 public class ProductoService
@@ -343,6 +345,8 @@ Los **Union Types** son una nueva característica de C# 15 (con .NET 11) que per
 
 ### 7.5.1. Sintaxis
 
+La sintaxis del patrón Result usa métodos estáticos para crear instancias de éxito o error, sin lanzar excepciones.
+
 ```csharp
 // Definir los casos
 public record Success<T>(T Value);
@@ -416,6 +420,8 @@ of its input type (it is not exhaustive).
 
 ### 7.6.1. Result\<T, TError\> y UnitResult\<TError\>
 
+Estos tipos permiten devolver un resultado con un error tipado en vez de una excepción. `Result<T, TError>` devuelve un valor o un error; `UnitResult<TError>` solo devuelve un error (para operaciones sin retorno).
+
 ```csharp
 using CSharpFunctionalExtensions;
 
@@ -434,6 +440,8 @@ dotnet add package CSharpFunctionalExtensions
 ```
 
 ### 7.6.2. Métodos principales
+
+Estos son los métodos que usarás con `Result<T, TError>` para crear, combinar y consumir resultados.
 
 ```csharp
 // Verificar estado

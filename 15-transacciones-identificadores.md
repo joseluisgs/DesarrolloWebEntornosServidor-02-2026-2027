@@ -569,6 +569,8 @@ flowchart TD
 
 ## 15.5. Buenas prácticas
 
+Estas son las reglas que debes seguir al trabajar con transacciones. El primer ejemplo muestra un error común y el segundo la forma correcta:
+
 ```csharp
 // ❌ MALO: Olvidar el rollback en catch — transacción abandonada bloquea recursos
 await using var transaction = await context.Database.BeginTransactionAsync();

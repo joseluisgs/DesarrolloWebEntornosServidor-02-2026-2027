@@ -324,7 +324,7 @@ flowchart LR
 
 ### 10.4.3. Docker compose
 
-`docker-compose.yml` define cómo ejecutar tu aplicación con sus dependencias:
+`docker-compose.yml` define cómo ejecutar tu aplicación con sus dependencias. Cada servicio (app, base de datos, caché) se declara en el mismo fichero:
 
 ```yaml
 services:

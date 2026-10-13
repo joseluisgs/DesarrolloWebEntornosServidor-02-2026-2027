@@ -194,6 +194,8 @@ dotnet scaffold
 
 ## 3. Hot reload: desarrollo en vivo
 
+El hot reload recompila el proyecto automáticamente cada vez que guardas un archivo. Así no tienes que parar y arrancar la aplicación a mano.
+
 ```bash
 # Ejecutar con hot reload (recompila al guardar)
 dotnet watch
@@ -224,6 +226,8 @@ dotnet watch run --urls "http://localhost:5000"
 
 
 ## 4. Compilar y ejecutar
+
+Estos comandos compilan el proyecto para verificar errores y lo ejecutan en el servidor de desarrollo.
 
 ```bash
 # Compilar (verificar errores)
@@ -263,6 +267,8 @@ dotnet run archivo.cs
 
 
 ## 5. Paquetes NuGet
+
+Los paquetes NuGet son librerías externas que añades a tu proyecto. Se gestionan con comandos de CLI o desde el IDE.
 
 ```bash
 # Añadir paquete
@@ -337,6 +343,8 @@ dotnet add package Microsoft.VisualStudio.Web.CodeGeneration.Design
 
 ## 6. .NET tools: herramientas globales
 
+Las herramientas globales de .NET son utilidades CLI que se instalan una vez y se usan desde cualquier proyecto.
+
 ```bash
 # Listar herramientas instaladas globalmente
 dotnet tool list -g
@@ -361,6 +369,8 @@ dotnet tool list
 
 
 ## 7. Entity Framework Core
+
+Estos comandos gestionan las herramientas de EF Core: migraciones, base de datos y scaffolding.
 
 ```bash
 # Instalar herramienta EF (si no está)
@@ -403,6 +413,8 @@ dotnet ef migrations script InitialCreate AddProductoTable -o script.sql
 
 ## 8. Tests
 
+Los tests verifican que tu código funciona correctamente. Estos comandos ejecutan las pruebas unitarias del proyecto.
+
 ```bash
 # Ejecutar todos los tests
 dotnet test
@@ -436,6 +448,8 @@ dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
 
 ## 9. Formateo de código
 
+El formateo automático asegura que todo el equipo usa el mismo estilo de código. Se ejecuta con dotnet format.
+
 ```bash
 # Formatear según .editorconfig
 dotnet format
@@ -459,6 +473,8 @@ dotnet format style --diagnostics IDE0005 --severity info
 
 
 ## 10. User Secrets (secretos de desarrollo)
+
+User Secrets almacena credenciales y configuración sensible fuera del repositorio. Solo funciona en desarrollo.
 
 ```bash
 # Inicializar user secrets en un proyecto
@@ -484,6 +500,8 @@ dotnet user-secrets clear
 
 ## 11. Certificados de desarrollo
 
+ASP.NET Core usa HTTPS en desarrollo con un certificado autofirmado. Estos comandos lo gestionan.
+
 ```bash
 # Crear certificado de desarrollo (HTTPS)
 dotnet dev-certs https
@@ -501,6 +519,8 @@ dotnet dev-certs https -ep "%USERPROFILE%\.aspnet\https\certificado.pfx" -p "con
 
 
 ## 12. Docker
+
+Estos comandos construyen y ejecutan contenedores Docker para tu aplicación.
 
 ```bash
 # Compilar imagen
@@ -527,6 +547,8 @@ docker-compose -f docker-compose.api.yml up -d
 
 
 ## 13. Git
+
+Estos comandos de Git son los que usarás a diario para controlar versiones de tu código.
 
 ```bash
 # Estado

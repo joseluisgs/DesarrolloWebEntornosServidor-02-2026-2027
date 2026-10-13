@@ -1,4 +1,4 @@
-- [13. MongoDB](#13-mongodb)
+﻿- [13. MongoDB](#13-mongodb)
   - [13.1. Fundamentos NoSQL](#131-fundamentos-nosql)
     - [13.1.1. ¿Qué es MongoDB?](#1311-qué-es-mongodb)
     - [13.1.2. Modelo de documentos](#1312-modelo-de-documentos)
@@ -376,6 +376,8 @@ Solución: **Subset Pattern** — guarda solo los últimos N elementos embebidos
 
 ### 13.3.1. Paquete NuGet
 
+Para usar el driver de MongoDB necesitas instalar el paquete NuGet oficial. Es el punto de partida para trabajar con MongoDB en .NET.
+
 ```bash
 dotnet add package MongoDB.Driver
 ```
@@ -383,6 +385,8 @@ dotnet add package MongoDB.Driver
 > 📝 **Nota:** El driver nativo es el paquete oficial de MongoDB para .NET. Es la forma más directa y completa de trabajar con MongoDB.
 
 ### 13.3.2. Conexión: MongoClient
+
+`MongoClient` es la clase que gestiona la conexión con el servidor MongoDB. Se crea una sola vez y se reutiliza en toda la aplicación.
 
 ```csharp
 using MongoDB.Driver;
@@ -412,9 +416,13 @@ graph LR
     style DB fill:#f4433,color:#fff6,color:#fff
 ```
 
+La conexión con MongoDB se organiza en database y collections. Una database contiene varias collections, y cada collection guarda documentos JSON.
+
 `MongoClient` es **thread-safe** y gestiona un pool de conexiones. Debes crear **una sola instancia** y reutilizarla (como `HttpClient`).
 
 ### 13.3.3. Database y collection
+
+La conexión con MongoDB se organiza en database y collections. Una database contiene varias collections, y cada collection guarda documentos JSON.
 
 ```csharp
 // Obtener la base de datos
@@ -485,10 +493,14 @@ Atributos Bson más habituales:
 | `[BsonId]` | Marca la propiedad como `_id` |
 | `[BsonElement("nombre")]` | Mapea a un nombre de campo concreto |
 | `[BsonIgnore]` | Ignora la propiedad (no se serializa) |
+
+Insertar documentos en MongoDB es similar a añadir registros en SQL, pero trabajas con objetos JSON directamente.
 | `[BsonDateTimeKind(DateTimeKind.Utc)]` | Fuerza la zona horaria |
 | `[BsonRepresentation(BsonType.ObjectId)]` | Representa como ObjectId en BSON |
 
 ### 13.3.5. Insertar documentos
+
+Insertar documentos en MongoDB es similar a añadir registros en SQL, pero trabajas con objetos JSON directamente.
 
 ```csharp
 var collection = database.GetCollection<Producto>("productos");
@@ -506,9 +518,13 @@ var productos = new List<Producto>
 collection.InsertMany(productos);
 ```
 
+Las consultas en MongoDB usan filtros con la sintaxis de la librería driver, que traduce a JSON Query.
+
 > 📝 **Nota:** Después de `InsertOne`, el driver rellena automáticamente el campo `Id` con un `ObjectId` generado.
 
 ### 13.3.6. Consultar documentos
+
+Las consultas en MongoDB usan filtros con la sintaxis del driver, que traduce a JSON Query.
 
 ```csharp
 var collection = database.GetCollection<Producto>("productos");
@@ -539,6 +555,8 @@ var total = collection.CountDocuments(_ => true);
 
 ### 13.3.7. Actualizar documentos
 
+Actualizar documentos permite modificar campos específicos sin reemplazar el documento completo.
+
 ```csharp
 // Actualizar uno
 var filtro = Builders<Producto>.Filter.Eq(p => p.Id, id);
@@ -560,6 +578,8 @@ collection.UpdateOne(filtro, actualizacion, new UpdateOptions { IsUpsert = true 
 ```
 
 ### 13.3.8. Borrar documentos
+
+Borrar documentos elimina registros de la collection según un filtro.
 
 ```csharp
 // Borrar uno
@@ -593,6 +613,8 @@ var resultados = collection.Find(filtro1).Project(proyeccion).ToList();
 ```
 
 ### 13.3.10. Índices
+
+Los índices en MongoDB aceleran las consultas igual que en SQL. Sin ellos, cada consulta recorre todos los documentos de la collection.
 
 ```csharp
 // ❌ MALO: No crear índices y hacer full table scan en colecciones grandes
@@ -704,17 +726,25 @@ productos.UpdateOne(
 
 📌 Ejemplo real: **Glovo** embebe dentro del restaurante sus horarios y su carta (se leen juntos en cada pantalla), pero el repartidor va **referenciado**: se asigna y cambia en cada pedido sin tocar el documento del restaurante.
 
+Para usar EF Core con MongoDB necesitas el proveedor oficial, que permite trabajar con el mismo patrón que con SQL.
+
 ## 13.4. MongoDB con EF Core
 
 ### 13.4.1. Paquete NuGet
+
+Para usar EF Core con MongoDB necesitas el proveedor oficial, que permite trabajar con el mismo patrón que con SQL.
 
 ```bash
 dotnet add package MongoDB.EntityFrameworkCore
 ```
 
+El DbContext con UseMongoDB configura la conexión a MongoDB siguiendo el mismo patrón que con Entity Framework y SQL.
+
 > 📝 **Nota:** El proveedor EF Core para MongoDB es oficial (desarrollado por MongoDB, Inc). Permite usar la misma sintaxis de EF Core que usas con PostgreSQL o SQLite, pero guardando en MongoDB.
 
 ### 13.4.2. DbContext con UseMongoDB
+
+El DbContext con UseMongoDB configura la conexión a MongoDB siguiendo el mismo patrón que con Entity Framework y SQL.
 
 ```csharp
 using Microsoft.EntityFrameworkCore;
@@ -741,6 +771,8 @@ services.AddDbContext<TiendaDbContext>(options =>
 ```
 
 ### 13.4.3. Data annotations en MongoDB
+
+Las data annotations funcionan igual con MongoDB que con SQL: configuran el modelo directamente en las entidades.
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
@@ -773,9 +805,13 @@ public class Producto
 }
 ```
 
+La fluent API en MongoDB permite configurar colecciones, índices y serialización con el mismo patrón que en SQL.
+
 > 📝 **Nota:** En MongoDB, los Data Annotations de EF Core (`[Required]`, `[StringLength]`) funcionan para validación en C#, pero **no se aplican en la BD**. MongoDB no tiene constraints como SQL. La `[BsonId]` y `[BsonElement]` son las que controlan el mapeo real.
 
 ### 13.4.4. Fluent API en MongoDB
+
+La fluent API en MongoDB permite configurar colecciones, índices y serialización con el mismo patrón que en SQL.
 
 ```csharp
 protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -1133,9 +1169,13 @@ graph TD
 
 📌 Ejemplo real: **TiendaAPI** usa el Driver Nativo para MongoDB porque necesita agregaciones y consultas complejas que EF Core no soporta. Pero para PostgreSQL usa EF Core porque las migraciones y el LINQ son muy útiles.
 
+El modelo y su configuración definen cómo se mapean los documentos MongoDB a las clases C#.
+
 ## 13.6. Repositorio CRUD con MongoDB
 
 ### 13.6.1. Modelo y configuración
+
+El modelo y su configuración definen cómo se mapean los documentos MongoDB a las clases C#.
 
 ```csharp
 // Modelo
@@ -1169,6 +1209,8 @@ public class Funko
 
 ### 13.6.2. Interfaz del repositorio
 
+La interfaz del repositorio define las operaciones CRUD que el almacén de MongoDB ofrece.
+
 ```csharp
 public interface IFunkoRepository
 {
@@ -1182,6 +1224,8 @@ public interface IFunkoRepository
 ```
 
 ### 13.6.3. Implementación con driver nativo
+
+La implementación con el driver nativo de MongoDB usa las clases del driver directamente, sin EF Core.
 
 ```csharp
 using MongoDB.Driver;
@@ -1261,9 +1305,13 @@ catch (MongoWriteException ex) when (ex.WriteError?.Code == 11000)
 
 > ⚠️ **Advertencia:** Antes de dar por bueno un `E11000`, comprueba **qué índice** lo ha provocado. Si **no** tienes guardia de versión y no has tocado el esquema, ese duplicado es un problema real de integridad (dos escrituras simultáneas, ID mal generado…). Ignorar un duplicado sin leer `ex.WriteError` es como cerrar el ojo al humo porque «a veces humea».
 
+La implementación con EF Core permite usar el mismo patrón que con SQL, pero sobre MongoDB.
+
 > 💡 **Truco:** `ex.WriteError?.Code` devuelve el código numérico (`11000`); si prefieres no dejar números mágicos en el código, usa `ex.WriteError?.Category == WriteErrorCategory.DuplicateKey`. Es la misma condición, pero se lee sola.
 
 ### 13.6.4. Implementación con EF Core
+
+La implementación con EF Core permite usar el mismo patrón que con SQL, pero sobre MongoDB.
 
 ```csharp
 using Microsoft.EntityFrameworkCore;
@@ -1468,10 +1516,14 @@ public abstract class MongoTestBase : IAsyncLifetime
 >     Database.GetCollection<BsonDocument>("categorias").DeleteMany(FilterDefinition<BsonDocument>.Empty);
 > }
 > ```
+
+Los tests con el driver nativo prueban las operaciones CRUD directamente contra una base de datos real en Docker.
 >
 > 🔧 **Truco:** MongoDB no tiene `TRUNCATE ... RESTART IDENTITY` porque los IDs son `ObjectId` (generados por el driver, no por la BD). La limpieza con `DeleteMany` es suficiente.
 
 ### 13.7.3. Tests con driver nativo
+
+Los tests con el driver nativo prueban las operaciones CRUD directamente contra una base de datos real en Docker.
 
 ```csharp
 [TestFixture]
@@ -1534,9 +1586,13 @@ public class FunkoRepositoryTests : MongoTestBase
 }
 ```
 
+Los tests con EF Core prueban el repositorio usando el mismo patrón que con SQL, pero sobre MongoDB.
+
 > 💡 **Consejo:** El repositorio debe filtrar `IsDeleted` también en `GetById`, no solo en `GetAll`. Si no, un elemento borrado lógicamente seguiría siendo visible por ID — inconsistente con el test `Delete → GetById == Null`.
 
 ### 13.7.4. Tests con EF Core
+
+Los tests con EF Core prueban el repositorio usando el mismo patrón que con SQL, pero sobre MongoDB.
 
 ```csharp
 using Microsoft.EntityFrameworkCore;
@@ -1705,9 +1761,13 @@ public static void SeedEfCore(ProductosMongoDbContext context)
 }
 ```
 
+Estas son las reglas que debes seguir al trabajar con MongoDB en .NET.
+
 > 💡 **Consejo:** El seeder siempre debe comprobar si ya existes datos (`CountDocumentsAsync` o `AnyAsync`) antes de insertar. Así es seguro ejecutarlo múltiples veces sin duplicar datos.
 
 ## 13.9. Buenas prácticas
+
+Estas son las reglas que debes seguir al trabajar con MongoDB en .NET.
 
 ```csharp
 // ❌ MALO: Crear un MongoClient por petición — agota el pool de conexiones
