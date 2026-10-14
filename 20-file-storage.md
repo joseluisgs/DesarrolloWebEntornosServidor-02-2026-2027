@@ -1202,7 +1202,6 @@ public class Producto
     public string Nombre { get; set; } = string.Empty;
 
     [Required]
-    [Range(0.01, 10000)]
     public decimal Precio { get; set; }
 
     public int Stock { get; set; }

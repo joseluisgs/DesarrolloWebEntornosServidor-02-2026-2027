@@ -12,15 +12,17 @@
     - [12.3.1. Columnas y tipos](#1231-columnas-y-tipos)
     - [12.3.2. Claves y generación](#1232-claves-y-generación)
     - [12.3.3. Restricción única (UNIQUE)](#1233-restricción-única-unique)
-    - [12.3.4. Restricciones de negocio](#1234-restricciones-de-negocio)
+    - [12.3.4. Atributos de validación: no los ejecuta EF Core](#1234-atributos-de-validación-no-los-ejecuta-ef-core)
     - [12.3.5. Tabla resumen](#1235-tabla-resumen)
   - [12.4. Configuración del modelo con fluent API](#124-configuración-del-modelo-con-fluent-api)
     - [12.4.1. Propiedades y columnas](#1241-propiedades-y-columnas)
     - [12.4.2. Claves y generación](#1242-claves-y-generación)
     - [12.4.3. Restricción única (UNIQUE)](#1243-restricción-única-unique)
-    - [12.4.4. Tablas y vistas](#1244-tablas-y-vistas)
-    - [12.4.5. IEntityTypeConfiguration](#1245-ientitytypeconfiguration)
-    - [12.4.6. Data annotations vs fluent API](#1246-data-annotations-vs-fluent-api)
+    - [12.4.4. Restricciones de valor (CHECK)](#1244-restricciones-de-valor-check)
+    - [12.4.5. Tablas y vistas](#1245-tablas-y-vistas)
+    - [12.4.6. IEntityTypeConfiguration](#1246-ientitytypeconfiguration)
+    - [12.4.7. Data annotations vs fluent API](#1247-data-annotations-vs-fluent-api)
+    - [12.4.8. ¿Dónde especifico las cosas?](#1248-dónde-especifico-las-cosas)
   - [12.5. Relaciones entre entidades](#125-relaciones-entre-entidades)
     - [12.5.1. Uno a uno](#1251-uno-a-uno)
     - [12.5.2. Uno a muchos](#1252-uno-a-muchos)
@@ -271,24 +273,49 @@ public class Producto
 
 > 📝 **Nota:** `[Index]` requiere `using Microsoft.EntityFrameworkCore;`. Para índices compuestos, usa `[Index(nameof(Nombre), nameof(CategoriaId), IsUnique = true)]`.
 
-### 12.3.4. Restricciones de negocio
+### 12.3.4. Atributos de validación: no los ejecuta EF Core
 
-Estos atributos validan los datos antes de guardarlos en la BD. Si la validación falla, EF Core lanza una excepción.
+Las validaciones que aprendiste con los DTOs en el punto 08 (`[Range]`, `[EmailAddress]`, `[Phone]`, `[RegularExpression]`...) no sirven en EF Core. Si las copias a una entidad, el proyecto compila, pero `SaveChangesAsync` no las mira.
 
 ```csharp
+// ❌ MALO: atributos de validación de DTO copiados en la entidad
 public class Producto
 {
-    [Required(ErrorMessage = "El nombre es obligatorio")]
-    [StringLength(80, MinimumLength = 2)]
+    [Key]
+    [StringLength(100)]           // Sí sirve: la columna será nvarchar(100)
     public string Nombre { get; set; } = string.Empty;
 
-    [Range(0.01, 9999.99, ErrorMessage = "El precio debe ser válido")]
+    [Range(0.01, 9999.99)]        // No sirve: EF Core no lo comprueba
     public decimal Precio { get; set; }
 
-    [EmailAddress]
+    [EmailAddress]                // No sirve: EF Core no lo comprueba
     public string? EmailContacto { get; set; }
 }
 ```
+
+Si guardas `EmailContacto = "no-es-un-email"` o `Precio = -5`, el `INSERT` se hace sin ninguna excepción y la fila se queda en la base de datos tal cual. Quién ejecuta esos atributos es la validación de modelos de ASP.NET Core (`ModelState`), y solo cuando el dato entra por una petición. Por eso se quedan en el DTO:
+
+```csharp
+// ✅ BUENO: la validación vive en el DTO, como en el punto 08
+public class CreateProductoDto
+{
+    [Range(0.01, 9999.99, ErrorMessage = "El precio debe estar entre 0,01 y 9999,99")]
+    public decimal Precio { get; set; }
+
+    [EmailAddress(ErrorMessage = "El email no tiene un formato válido")]
+    public string? EmailContacto { get; set; }
+}
+```
+
+En la entidad solo tienen cabida los atributos de mapeo, que son los únicos que EF Core traduce a la base de datos:
+
+| Atributos en la entidad | Qué hace EF Core con ellos |
+|-------------------------|----------------------------|
+| `[Key]`, `[Column]`, `[Table]`, `[ForeignKey]`, `[NotMapped]`, `[Index]` | Los traduce a esquema |
+| `[Required]`, `[StringLength]`, `[MaxLength]` | Crea la columna `NOT NULL` y le da longitud |
+| `[Range]`, `[EmailAddress]`, `[Phone]`, `[Url]`, `[RegularExpression]` | No hace nada por sí solo (sección 12.4.4) |
+
+> ⚠️ **Advertencia:** un `[EmailAddress]` en la entidad no protege la base de datos: el email sin arroba entra igual. Si la base de datos tiene que rechazar el valor ella misma, eso no es una data annotation, es una restricción CHECK (sección 12.4.4).
 
 ### 12.3.5. Tabla resumen
 
@@ -303,7 +330,8 @@ public class Producto
 | `[Index(IsUnique = true)]` | Índice único | `[Index(nameof(Nombre), IsUnique = true)]` |
 | `[ForeignKey("CatId")]` | Clave foránea | `[ForeignKey("Categoria")]` |
 | `[NotMapped]` | No mapear a BD | `[NotMapped] string Temporal` |
-| `[Range(0, 100)]` | Rango de valores | `[Range(1, 10)]` |
+
+> 📝 **Nota:** `[Range]`, `[EmailAddress]`, `[Phone]` o `[RegularExpression]` no aparecen en la tabla a propósito: son atributos de validación de los DTOs y EF Core no los ejecuta (sección 12.3.4).
 
 ## 12.4. Configuración del modelo con fluent API
 
@@ -350,7 +378,68 @@ entity.HasIndex(p => p.Codigo).HasDatabaseName("IX_Codigo");       // Nombre per
 
 > 📝 **Nota:** `HasIndex` crea un índice; `IsUnique` lo hace único. Son métodos distintos: `HasAlternateKey` crea una clave alternativa (UNIQUE a nivel de BD), `HasIndex(...).IsUnique()` crea un índice único (más flexible).
 
-### 12.4.4. Tablas y vistas
+### 12.4.4. Restricciones de valor (CHECK)
+
+La única forma de que la base de datos rechace ella misma un valor inválido es la restricción CHECK: una expresión SQL que debe cumplirse en todas las filas de la tabla. Se define con fluent API, dentro de `ToTable`.
+
+```csharp
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity<Producto>(entity =>
+    {
+        entity.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_Producto_Precio", "[Precio] >= 0.01");
+            t.HasCheckConstraint("CK_Producto_Stock", "[Stock] >= 0");
+        });
+    });
+}
+```
+
+Con este check en vigor, un `INSERT` con precio negativo falla en la propia base de datos, incluso si el SQL llega escrito a mano y se salta toda la aplicación. Es la garantía fuerte que el `[Range]` de data annotations no te daba.
+
+El límite del CHECK es que la condición se escribe en SQL del proveedor: sirve para rangos y comparaciones, pero no para comprobar formatos como email o teléfono, porque no todas las bases de datos saben expresar regex. Como norma general, esos formatos se validan en la capa de entrada, en los DTOs del punto 08.
+
+El CHECK que trae EF Core de serie solo sale de la fluent API: `[Range]` por sí mismo no genera nada en la base de datos. Si prefieres que las reglas vivan en la entidad, está el paquete de la comunidad `EFCore.CheckConstraints`. Se instala con `dotnet add package EFCore.CheckConstraints` y se activa justo detrás del proveedor:
+
+```csharp
+// Program.cs: primero el proveedor, después la activación
+options.UseSqlite(connectionString)
+       .UseValidationCheckConstraints();
+```
+
+Con eso, el paquete recorre las entidades y traduce cada atributo de validación a un CHECK con nombre `CK_Tabla_Columna_Tipo`, por ejemplo `CK_Producto_Nombre_MinLength`. La correspondencia es esta:
+
+| Atributo en la entidad | CHECK generado |
+|------------------------|----------------|
+| `[Range]` con valores del mismo tipo que la propiedad | `col BETWEEN mínimo AND máximo` |
+| `[MinLength]`, `[StringLength(MinimumLength)]`, `[Required]` | `LENGTH(col) >= n` |
+| `[AllowedValues]`, `[DeniedValues]` | `col IN (...)` y `col NOT IN (...)` |
+| `[EmailAddress]`, `[Phone]`, `[Url]`, `[RegularExpression]` | regex, solo en cuatro motores |
+
+Los de rango y longitud funcionan en los cuatro motores principales; los de formato necesitan regex en SQL, y cada motor la llama a su manera:
+
+| Motor | Longitud | Regex |
+|-------|----------|-------|
+| **PostgreSQL** | `LENGTH` | `~` |
+| **SQL Server** | `LEN` | `REGEXP_LIKE` con compatibilidad ≥ 170; si no, `dbo.RegexMatch` instalada a mano |
+| **MySQL** | `LENGTH` | `REGEXP` |
+| **SQLite** | `LENGTH` | `REGEXP` |
+| **Otros** (Oracle, DB2...) | no genera el CHECK | no genera el CHECK |
+
+> 📝 **Nota:** El paquete no sustituye a la fluent API: solo añade CHECK a partir de los atributos. Si una anotación y la fluent API se contradicen, sigue mandando la fluent API (sección 12.4.8).
+
+> ⚠️ **Advertencia:** `[Range]` sobre `decimal`, el tipo de los precios, no genera ningún CHECK. El atributo admite `double` o `string`, la propiedad es `decimal` y el paquete exige tipos idénticos, así que descarta la regla en silencio. Para precios, el CHECK se escribe a mano con fluent API, como en el ejemplo de arriba.
+
+> ⚠️ **Advertencia:** No combines `[Required]` y `[StringLength]` sobre la misma propiedad. Los dos generan el mismo nombre de CHECK, `CK_Tabla_Columna_MinLength`, y el paquete revienta al construir el modelo con un `InvalidOperationException`. En un string no nullable `[Required]` no aporta nada: quítalo y déjate solo `[StringLength(MinimumLength = 1)]`.
+
+> 🔧 **Truco:** Cada CHECK de formato se evalúa en cada escritura. Si una regex complicada frena las inserciones, apágalos con `UseValidationCheckConstraints(options => options.UseRegex(false))` y deja el formato solo en los DTOs.
+
+> 💡 **Consejo:** `[StringLength]` solo traduce su `MinimumLength`: sin mínimo, genera un `LENGTH(col) >= 0` siempre verdadero. Si solo te interesa la longitud máxima, déjala en la fluent API con `HasMaxLength` y no la dupliques en la entidad.
+
+> 💡 **Consejo:** Los tres niveles defienden el mismo dato en capas distintas: el DTO valida el formato al entrar, la entidad define el esquema de la columna y el CHECK garantiza el valor dentro de la base de datos.
+
+### 12.4.5. Tablas y vistas
 
 Fluent API permite mapear entidades a tablas y vistas de la BD. `ToView` es útil para leer datos de vistas sin modificarlas.
 
@@ -360,7 +449,7 @@ entity.HasNoKey();                  // Para vistas (sin clave)
 entity.ToView("vw_productos");      // Mapear a vista
 ```
 
-### 12.4.5. IEntityTypeConfiguration
+### 12.4.6. IEntityTypeConfiguration
 
 Para separar la configuración en clases dedicadas:
 
@@ -384,7 +473,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
 > 💡 **Consejo:** Cuando tengas muchas entidades, usa `IEntityTypeConfiguration` para mantener `OnModelCreating` limpio.
 
-### 12.4.6. Data annotations vs fluent API
+### 12.4.7. Data annotations vs fluent API
 
 | Criterio | Data Annotations | Fluent API |
 |----------|-----------------|------------|
@@ -392,8 +481,74 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 | **Potencia** | Limitada (lo básico) | Completa (todo) |
 | **Separación** | Mezclado con la entidad | Separado en configuración |
 | **UNIQUE** | `[Index(IsUnique = true)]` | `HasIndex(...).IsUnique()` |
+| **CHECK (valor en BD)** | No existe | `ToTable(t => t.HasCheckConstraint(...))` |
+| **Validación de formato** | No: va en el DTO (sección 12.3.4) | No: va en el DTO |
 | **Relaciones** | `[ForeignKey]` | `HasOne().WithMany()` |
 | **Recomendación** | Para lo simple | Para lo complejo |
+
+### 12.4.8. ¿Dónde especifico las cosas?
+
+La misma regla se puede escribir de las dos formas y en un proyecto real acaban conviviendo. Estas son las cuatro situaciones que se pueden plantear.
+
+**Caso 1: solo data annotations.** Se aplican ellas.
+
+```csharp
+public class Producto
+{
+    [StringLength(60)]            // única fuente de la regla: columna de 60
+    public string Origen { get; set; } = string.Empty;
+}
+```
+
+**Caso 2: solo fluent API.** Se aplica ella.
+
+```csharp
+// En OnModelCreating
+entity.Property(p => p.Web).HasMaxLength(40);   // única fuente: columna de 40
+```
+
+**Caso 3: las dos y se complementan.** Cada una configura una cosa distinta y las dos se aplican.
+
+```csharp
+public class Producto
+{
+    [Column("nombre_prod")]        // anotación: nombre de columna
+    public string Nombre { get; set; } = string.Empty;
+}
+
+// En OnModelCreating
+entity.Property(p => p.Nombre).HasMaxLength(80);   // fluent: longitud
+```
+
+El modelo final se queda con las dos cosas: la columna se llama `nombre_prod` y admite 80 caracteres.
+
+**Caso 4: se contradicen.** Gana la fluent API, siempre. EF Core es la fuente de verdad del modelo y lo que se configure en `OnModelCreating` tiene precedencia absoluta sobre lo que digan los atributos; la anotación en conflicto queda ignorada.
+
+```csharp
+public class Producto
+{
+    [StringLength(100)]           // dice 100
+    [Table("TablaAnotacion")]     // dice TablaAnotacion
+    public string? Descripcion { get; set; }
+}
+
+// En OnModelCreating
+entity.ToTable("TablaFluent");
+entity.Property(p => p.Descripcion).HasMaxLength(50);   // dice 50
+```
+
+La tabla se llama `TablaFluent` y la columna admite 50. La anotación no se aplica, y de paso no se entera ni el que la escribió.
+
+| Situación | Qué manda |
+|-----------|-----------|
+| **Solo data annotations** | Las anotaciones |
+| **Solo fluent API** | La fluent API |
+| **Las dos, sin pisarse** | Las dos: cada una configura lo suyo |
+| **Las dos, contradiciéndose** | La fluent API |
+
+> ⚠️ **Advertencia:** la contradicción no produce ningún error ni aviso: el modelo funciona igual y el valor de la anotación simplemente no se usa. Si cambias un `[StringLength]` pensando que se nota, y encima hay otra configuración en `OnModelCreating`, no cambia nada.
+
+> 💡 **Consejo:** Un estilo mixto y ordenado: anotaciones para lo básico en la entidad (`[Key]`, `[Required]`, `[StringLength]`) y fluent API en `IEntityTypeConfiguration` para todo lo demás. Y si quieres mirar qué decide el modelo final de verdad, en cualquier sitio tienes `db.Model.FindEntityType(typeof(Producto)).FindProperty(nameof(Producto.Descripcion)).GetMaxLength()`, que devuelve `50`.
 
 ## 12.5. Relaciones entre entidades
 
@@ -901,7 +1056,7 @@ public class Producto
 
 ### 12.10.1. Entidad y configuración
 
-La entidad `Producto` usa data annotations para lo básico. Los metadatos (`CreatedAt`, `UpdatedAt`) se asignan automáticamente en el constructor.
+La entidad `Producto` solo lleva atributos de mapeo; los de validación se quedan en el DTO (sección 12.3.4). Los metadatos (`CreatedAt`, `UpdatedAt`) se asignan automáticamente en el constructor.
 
 ```csharp
 public class Producto
@@ -915,7 +1070,6 @@ public class Producto
     public string Nombre { get; set; } = string.Empty;
 
     [Required]
-    [Range(0.01, 9999.99)]
     public decimal Precio { get; set; }
 
     public long CategoriaId { get; set; }
@@ -1132,6 +1286,8 @@ await container.StartAsync();
 ## 12.15. Buenas prácticas
 
 - **Siempre async**: `await db.SaveChangesAsync()`, nunca `.Result`
+- **Valida en el DTO**: no pongas `[EmailAddress]`, `[Range]` ni `[Phone]` en la entidad; EF Core no los ejecuta
+- **CHECK para la garantía final**: `HasCheckConstraint` cuando la base de datos tiene que rechazar el valor ella misma
 - **AsNoTracking en lecturas**: más rendimiento cuando no modificas
 - **Migraciones en desarrollo, no EnsureCreated en producción**
 - **IEntityTypeConfiguration** para separar configuración de entidades
@@ -1201,6 +1357,8 @@ await container.StartAsync();
 | **DbSet\<T\>** | Colección de entidades |
 | **Data Annotations** | Atributos para configurar el modelo |
 | **Fluent API** | Configuración potente en OnModelCreating |
+| **CHECK** | Restricción de valor que garantiza la base de datos |
+| **Validación de valores** | Va en el DTO; EF Core no ejecuta `[EmailAddress]` ni `[Range]` |
 | **Relaciones** | Uno a Uno, Uno a Muchos, Muchos a Muchos |
 | **Eager Loading** | Carga relaciones con Include/ThenInclude |
 | **AsNoTracking** | Mejor rendimiento en solo lectura |
