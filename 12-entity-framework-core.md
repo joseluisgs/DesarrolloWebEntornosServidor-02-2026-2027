@@ -400,15 +400,15 @@ Con este check en vigor, un `INSERT` con precio negativo falla en la propia base
 
 El límite del CHECK es que la condición se escribe en SQL del proveedor: sirve para rangos y comparaciones, pero no para comprobar formatos como email o teléfono, porque no todas las bases de datos saben expresar regex. Como norma general, esos formatos se validan en la capa de entrada, en los DTOs del punto 08.
 
-El CHECK que trae EF Core de serie solo sale de la fluent API: `[Range]` por sí mismo no genera nada en la base de datos. Si prefieres que las reglas vivan en la entidad, está el paquete de la comunidad `EFCore.CheckConstraints`. Se instala con `dotnet add package EFCore.CheckConstraints` y se activa justo detrás del proveedor:
+El CHECK que trae EF Core de serie solo sale de la fluent API: `[Range]` por sí mismo no genera nada en la base de datos. El paquete de la comunidad `EFCore.CheckConstraints` viene a cerrar ese hueco: permite que la regla viva al lado de la propiedad, en la entidad, y él se encarga de convertirla en CHECK de verdad. No hace magia: cuando el modelo se cierra, recorre los atributos de cada propiedad y añade un CHECK por cada regla que entiende, con nombre previsible del tipo `CK_Producto_Nombre_MinLength`. Se instala con `dotnet add package EFCore.CheckConstraints` y se activa una sola vez, justo detrás del proveedor:
 
 ```csharp
-// Program.cs: primero el proveedor, después la activación
+// Program.cs: primero el proveedor, después la traducción
 options.UseSqlite(connectionString)
        .UseValidationCheckConstraints();
 ```
 
-Con eso, el paquete recorre las entidades y traduce cada atributo de validación a un CHECK con nombre `CK_Tabla_Columna_Tipo`, por ejemplo `CK_Producto_Nombre_MinLength`. La correspondencia es esta:
+Los atributos que sabe traducir son estos:
 
 | Atributo en la entidad | CHECK generado |
 |------------------------|----------------|
@@ -417,7 +417,9 @@ Con eso, el paquete recorre las entidades y traduce cada atributo de validación
 | `[AllowedValues]`, `[DeniedValues]` | `col IN (...)` y `col NOT IN (...)` |
 | `[EmailAddress]`, `[Phone]`, `[Url]`, `[RegularExpression]` | regex, solo en cuatro motores |
 
-Los de rango y longitud funcionan en los cuatro motores principales; los de formato necesitan regex en SQL, y cada motor la llama a su manera:
+La traducción tiene sus reglas, y conviene conocerlas antes de confiarse. `[Range]` solo genera CHECK cuando los valores del atributo y la propiedad son del mismo tipo exacto: sobre `int` o `double` va bien, sobre `decimal` no, porque el atributo admite `double` o `string` y el paquete no hace conversiones. Por eso el precio de arriba se quedó con su CHECK escrito a mano en la fluent API. Y el CHECK de formato no es gratis: se evalúa en cada escritura, por eso la activación permite desactivarlos con `UseValidationCheckConstraints(options => options.UseRegex(false))` si una regex complicada frena las inserciones.
+
+La longitud y la regex también dependen del motor, y el paquete conoce a los cuatro más usados:
 
 | Motor | Longitud | Regex |
 |-------|----------|-------|
@@ -427,15 +429,13 @@ Los de rango y longitud funcionan en los cuatro motores principales; los de form
 | **SQLite** | `LENGTH` | `REGEXP` |
 | **Otros** (Oracle, DB2...) | no genera el CHECK | no genera el CHECK |
 
+En el resto de motores el paquete omite ese CHECK en silencio: no falla nada, pero la regla tampoco existe en la base de datos. El nombre de cada restricción sale por convención, con el patrón `CK_Tabla_Columna_MinLength`, y ese mismo nombre es la fuente del único error que el paquete puede provocar:
+
+> ⚠️ **Advertencia:** No combines `[Required]` y `[StringLength]` sobre la misma propiedad. Los dos producen un CHECK con el mismo nombre, `CK_Tabla_Columna_MinLength`, y el paquete revienta al construir el modelo con un `InvalidOperationException`. En un string no nullable `[Required]` no aporta nada, la columna ya sale `NOT NULL`: quítalo y déjate solo `[StringLength(MinimumLength = 1)]`.
+
+Antes de soltarlo hay un último detalle de la traducción: `[StringLength]` solo mira su `MinimumLength`, así que si no lleva mínimo genera un `LENGTH(col) >= 0` siempre verdadero. Si solo te interesa la longitud máxima, déjala en la fluent API con `HasMaxLength` y no la dupliques en la entidad.
+
 > 📝 **Nota:** El paquete no sustituye a la fluent API: solo añade CHECK a partir de los atributos. Si una anotación y la fluent API se contradicen, sigue mandando la fluent API (sección 12.4.8).
-
-> ⚠️ **Advertencia:** `[Range]` sobre `decimal`, el tipo de los precios, no genera ningún CHECK. El atributo admite `double` o `string`, la propiedad es `decimal` y el paquete exige tipos idénticos, así que descarta la regla en silencio. Para precios, el CHECK se escribe a mano con fluent API, como en el ejemplo de arriba.
-
-> ⚠️ **Advertencia:** No combines `[Required]` y `[StringLength]` sobre la misma propiedad. Los dos generan el mismo nombre de CHECK, `CK_Tabla_Columna_MinLength`, y el paquete revienta al construir el modelo con un `InvalidOperationException`. En un string no nullable `[Required]` no aporta nada: quítalo y déjate solo `[StringLength(MinimumLength = 1)]`.
-
-> 🔧 **Truco:** Cada CHECK de formato se evalúa en cada escritura. Si una regex complicada frena las inserciones, apágalos con `UseValidationCheckConstraints(options => options.UseRegex(false))` y deja el formato solo en los DTOs.
-
-> 💡 **Consejo:** `[StringLength]` solo traduce su `MinimumLength`: sin mínimo, genera un `LENGTH(col) >= 0` siempre verdadero. Si solo te interesa la longitud máxima, déjala en la fluent API con `HasMaxLength` y no la dupliques en la entidad.
 
 > 💡 **Consejo:** Los tres niveles defienden el mismo dato en capas distintas: el DTO valida el formato al entrar, la entidad define el esquema de la columna y el CHECK garantiza el valor dentro de la base de datos.
 
