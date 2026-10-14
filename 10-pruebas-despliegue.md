@@ -15,7 +15,7 @@
   - [10.5. Podman: la alternativa a Docker](#105-podman-la-alternativa-a-docker)
   - [10.6. Verificación automatizada del repo](#106-verificación-automatizada-del-repo)
   - [10.7. Buenas prácticas](#107-buenas-prácticas)
-  - [10.8. Reto](#108-reto)
+  - [10.8. Reto: pruebas y despliegue de FunkoApp](#108-reto-pruebas-y-despliegue-de-funkoapp)
 
 
 
@@ -475,7 +475,7 @@ dotnet list package --vulnerable   # 4. Sin vulnerabilidades conocidas
 | **Dockerfile multi-stage** | Imágenes pequeñas y seguras |
 | **No subir secrets al Dockerfile** | Usar variables de entorno o docker-compose |
 
-## 10.8. Reto
+## 10.8. Reto: pruebas y despliegue de FunkoApp
 
 > Testea FunkoApp y despliega la API con Docker.
 

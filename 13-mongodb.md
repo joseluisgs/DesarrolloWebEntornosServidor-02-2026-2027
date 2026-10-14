@@ -46,7 +46,7 @@
     - [Con driver nativo](#con-driver-nativo)
     - [Con EF Core](#con-ef-core)
   - [13.9. Buenas prácticas](#139-buenas-prácticas)
-  - [13.10. Reto: MongoDB con categoría embebida y proveedor referenciado](#1310-reto-mongodb-con-categoría-embebida-y-proveedor-referenciado)
+  - [13.10. Reto: FunkoApp con MongoDB (categoría embebida y proveedor referenciado)](#1310-reto-funkoapp-con-mongodb-categoría-embebida-y-proveedor-referenciado)
     - [13.10.1. Contexto](#13101-contexto)
     - [13.10.2. Retos](#13102-retos)
     - [13.10.3. Ejemplo de documento Funko](#13103-ejemplo-de-documento-funko)
@@ -1873,7 +1873,7 @@ public ObjectId Id { get; set; } // Indexado automáticamente, búsqueda óptima
 9. **EF Core para CRUD simple** — Si vienes de EF Core relacional, es más fácil
 10. **TestContainers para tests** — Un MongoDB real en Docker, sin depender de instalación local
 
-## 13.10. Reto: MongoDB con categoría embebida y proveedor referenciado
+## 13.10. Reto: FunkoApp con MongoDB (categoría embebida y proveedor referenciado)
 
 ### 13.10.1. Contexto
 

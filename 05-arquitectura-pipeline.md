@@ -20,7 +20,7 @@
     - [5.5.2. Registro de servicios](#552-registro-de-servicios)
     - [5.5.3. Configuración del pipeline](#553-configuración-del-pipeline)
   - [5.6. Buenas prácticas](#56-buenas-prácticas)
-  - [5.7. Reto: traza una petición HTTP](#57-reto-traza-una-petición-http)
+  - [5.7. Reto: traza una petición HTTP en FunkoApp](#57-reto-traza-una-petición-http-en-funkoapp)
     - [5.7.1. Contexto](#571-contexto)
     - [5.7.2. Ejercicio 1: dibuja el pipeline](#572-ejercicio-1-dibuja-el-pipeline)
     - [5.7.3. Ejercicio 2: identifica las capas](#573-ejercicio-2-identifica-las-capas)
@@ -345,7 +345,7 @@ app.Run();
 - **Pipeline ordenado:** El orden de middlewares importa. Siempre: ExceptionHandler → HTTPS → CORS → Authentication → Authorization → Routing → Endpoints
 - **Config classes para DI:** Organiza el registro de dependencias en clases estáticas (RepositoriesConfig, ServicesConfig) en lugar de llenar Program.cs
 
-## 5.7. Reto: traza una petición HTTP
+## 5.7. Reto: traza una petición HTTP en FunkoApp
 
 > Antes de irte, dibuja el camino completo de una petición.
 

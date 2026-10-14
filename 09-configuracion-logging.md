@@ -14,7 +14,7 @@
     - [9.2.6. Serilog en fichero con rolling](#926-serilog-en-fichero-con-rolling)
     - [9.2.7. Serilog con configuración desde appsettings.json](#927-serilog-con-configuración-desde-appsettingsjson)
   - [9.3. Buenas prácticas](#93-buenas-prácticas)
-  - [9.4. Reto](#94-reto)
+  - [9.4. Reto: configuración y logging en FunkoApp](#94-reto-configuración-y-logging-en-funkoapp)
 
 
 
@@ -511,7 +511,7 @@ La categoría del logger es automáticamente el nombre del tipo (`ProductoServic
 
 9.7. **`Log.CloseAndFlush()` en el finally:** Asegúrate de que todos los logs se escriben antes de que la aplicación termine
 
-## 9.4. Reto
+## 9.4. Reto: configuración y logging en FunkoApp
 
 > Configura FunkoApp con perfiles de entorno y Serilog.
 

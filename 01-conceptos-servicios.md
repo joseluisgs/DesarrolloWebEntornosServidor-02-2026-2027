@@ -128,7 +128,7 @@ flowchart TD
 sequenceDiagram
     participant C as 🌐 Cliente
     participant S as 🖥️ Servidor
-    C->>S: GET /api/funkos/1
+    C->>S: GET /api/productos/1
     S->>C: 200 OK { "nombre": "Grogu" }
 ```
 
@@ -140,7 +140,7 @@ Una petición HTTP tiene cuatro componentes:
 
 **2. URL** — El recurso solicitado:
 ```
-https://api.tienda.com/api/funkos/1
+https://api.productos.com/api/productos/1
 \_____ \________________/ \________/ \__/
  esquema      host/dominio      ruta    recurso
 ```
@@ -156,8 +156,8 @@ https://api.tienda.com/api/funkos/1
 **4. Body** — Los datos enviados (POST, PUT, PATCH):
 
 ```http
-POST /api/funkos HTTP/1.1
-Host: api.tienda.com
+POST /api/productos HTTP/1.1
+Host: api.productos.com
 Content-Type: application/json
 
 {
@@ -194,11 +194,11 @@ Content-Type: application/json
 
 | Método | Descripción | Idempotente | Ejemplo |
 |--------|-------------|:-----------:|---------|
-| `GET` | Obtener un recurso | Sí | Ver un Funko |
-| `POST` | Crear un recurso | No | Crear un Funko |
-| `PUT` | Actualizar completo | Sí | Modificar un Funko |
+| `GET` | Obtener un recurso | Sí | Ver un Producto |
+| `POST` | Crear un recurso | No | Crear un Producto |
+| `PUT` | Actualizar completo | Sí | Modificar un Producto |
 | `PATCH` | Actualizar parcial | No* | Cambiar solo el precio |
-| `DELETE` | Eliminar | Sí | Borrar un Funko |
+| `DELETE` | Eliminar | Sí | Borrar un Producto |
 
 > 💡 **Consejo:** **Idempotente** = hacer la misma petición varias veces produce el mismo resultado. GET, PUT y DELETE son idempotentes; POST no lo es. PATCH **puede** ser idempotente si el body es siempre el mismo, pero la especificación HTTP no lo garantiza: por seguridad, trátalo como no idempotente.
 

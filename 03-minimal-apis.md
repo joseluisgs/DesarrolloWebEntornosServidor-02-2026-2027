@@ -266,12 +266,12 @@ Cuando creas un recurso, el **id** debe ser **autogenerado** por el servidor. Nu
 La forma más simple: usar un contador que se incrementa con cada creación:
 
 ```csharp
-var funkos = new List<Funko>();
+var productos = new List<Producto>();
 var nextId = 1L;
 
-app.MapPost("/api/funkos", (FunkoDto dto) =>
+app.MapPost("/api/productos", (ProductoDto dto) =>
 {
-    var funko = new Funko
+    var producto = new Producto
     {
         Id = nextId++,
         Nombre = dto.Nombre,
@@ -279,8 +279,8 @@ app.MapPost("/api/funkos", (FunkoDto dto) =>
         Categoria = dto.Categoria,
         CreadoEn = DateTime.UtcNow
     };
-    funkos.Add(funko);
-    return Results.Created($"/api/funkos/{funko.Id}", funko);
+    productos.Add(producto);
+    return Results.Created($"/api/productos/{producto.Id}", producto);
 });
 ```
 
@@ -289,9 +289,9 @@ app.MapPost("/api/funkos", (FunkoDto dto) =>
 Otra opción: calcular el siguiente id a partir de la lista existente:
 
 ```csharp
-var funko = new Funko
+var producto = new Producto
 {
-    Id = funkos.Count > 0 ? funkos.Max(f => f.Id) + 1 : 1,
+    Id = productos.Count > 0 ? productos.Max(f => f.Id) + 1 : 1,
     // ... demás propiedades
 };
 ```

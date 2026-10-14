@@ -77,7 +77,7 @@ flowchart LR
 | **Alertas** | Notificar stock bajo | Continua |
 | **Limpieza** | Eliminar archivos temporales | Diaria |
 
-📌 **Ejemplo real:** En un e-commerce como FunkoApp, una tarea horaria comprueba el stock de productos y envía un email al administrador cuando un Funko tiene menos de 10 unidades. Sin esa tarea, alguien tendría que revisar manualmente cada producto cada día.
+📌 **Ejemplo real:** En un e-commerce como ProductosApp, una tarea horaria comprueba el stock de productos y envía un email al administrador cuando un Producto tiene menos de 10 unidades. Sin esa tarea, alguien tendría que revisar manualmente cada producto cada día.
 
 > 💡 **Consejo:** En entrevistas, menciona que las tareas programadas son fundamentales en arquitecturas de microservicios para manejar cross-cutting concerns como logging, métricas y mantenimiento automático.
 
@@ -127,7 +127,7 @@ Un `BackgroundService` con `Task.Delay` es la forma más simple de ejecutar algo
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace FunkosApi.Services.Background;
+namespace ProductosApi.Services.Background;
 
 public class SimpleScheduledTask(ILogger<SimpleScheduledTask> logger) : BackgroundService
 {
@@ -403,7 +403,7 @@ El servicio base encapsula la lógica de espera: calcula la próxima ocurrencia 
 ```csharp
 using NCrontab;
 
-namespace FunkosApi.Services.Background;
+namespace ProductosApi.Services.Background;
 
 public abstract class CronScheduledService(ILogger logger) : BackgroundService
 {
@@ -681,7 +681,7 @@ public class NovedadesEmailTask(
     private async Task EnviarNovedadesAsync()
     {
         using var scope = serviceProvider.CreateScope();
-        var funkoService = scope.ServiceProvider.GetRequiredService<IFunkoService>();
+        var productoService = scope.ServiceProvider.GetRequiredService<IProductoService>();
         var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
         var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
 
@@ -689,16 +689,16 @@ public class NovedadesEmailTask(
         {
             logger.LogInformation("Enviando novedades diarias");
 
-            var nuevosFunkos = await funkoService.GetNuevosDesdeAsync(_ultimaEjecucion);
+            var nuevosProductos = await productoService.GetNuevosDesdeAsync(_ultimaEjecucion);
 
-            if (nuevosFunkos.Any())
+            if (nuevosProductos.Any())
             {
-                var htmlBody = GenerarHtmlNovedades(nuevosFunkos);
+                var htmlBody = GenerarHtmlNovedades(nuevosProductos);
                 var usuarios = await userService.GetAllSuscritosAsync();
 
                 foreach (var usuario in usuarios)
                 {
-                    await emailService.SendHtmlEmailAsync(usuario.Email, "Nuevos Funkos", htmlBody);
+                    await emailService.SendHtmlEmailAsync(usuario.Email, "Nuevos productos", htmlBody);
                 }
 
                 logger.LogInformation("Novedades enviadas a {Count} usuarios", usuarios.Count());
@@ -710,9 +710,9 @@ public class NovedadesEmailTask(
         }
     }
 
-    private static string GenerarHtmlNovedades(IEnumerable<Funko> funkos)
+    private static string GenerarHtmlNovedades(IEnumerable<Producto> productos)
     {
-        var items = string.Join("", funkos.Select(f =>
+        var items = string.Join("", productos.Select(f =>
             $@"<div style=""margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 8px;"">
                 <h3 style=""margin: 0 0 10px 0; color: #4CAF50;"">{f.Nombre}</h3>
                 <p><strong>Precio:</strong> {f.Precio:C}</p>
@@ -722,7 +722,7 @@ public class NovedadesEmailTask(
         return $@"<!DOCTYPE html>
 <html><head><meta charset=""UTF-8""></head>
 <body style=""font-family: Arial; padding: 20px;"">
-    <h1 style=""color: #4CAF50;"">Nuevos Funkos disponibles</h1>
+    <h1 style=""color: #4CAF50;"">Nuevos productos disponibles</h1>
     {items}
 </body></html>";
     }
@@ -735,7 +735,7 @@ La misma tarea con Hangfire: la lógica es idéntica, pero Hangfire se encarga d
 
 ```csharp
 public class NovedadesEmailService(
-    IFunkoService funkoService,
+    IProductoService productoService,
     IEmailService emailService,
     IUserService userService,
     ILogger<NovedadesEmailService> logger)
@@ -745,26 +745,26 @@ public class NovedadesEmailService(
         logger.LogInformation("Enviando novedades diarias");
 
         var ayer = DateTime.Now.AddDays(-1);
-        var nuevosFunkos = await funkoService.GetNuevosDesdeAsync(ayer);
+        var nuevosProductos = await productoService.GetNuevosDesdeAsync(ayer);
 
-        if (!nuevosFunkos.Any())
+        if (!nuevosProductos.Any())
         {
-            logger.LogInformation("No hay funkos nuevos para enviar");
+            logger.LogInformation("No hay productos nuevos para enviar");
             return;
         }
 
-        var htmlBody = GenerarHtmlNovedades(nuevosFunkos);
+        var htmlBody = GenerarHtmlNovedades(nuevosProductos);
         var usuarios = await userService.GetAllSuscritosAsync();
 
         foreach (var usuario in usuarios)
         {
-            await emailService.SendHtmlEmailAsync(usuario.Email, "Nuevos Funkos en la tienda", htmlBody);
+            await emailService.SendHtmlEmailAsync(usuario.Email, "Nuevos productos en la tienda", htmlBody);
         }
 
         logger.LogInformation("Novedades enviadas a {Count} usuarios", usuarios.Count());
     }
 
-    private static string GenerarHtmlNovedades(IEnumerable<Funko> funkos)
+    private static string GenerarHtmlNovedades(IEnumerable<Producto> productos)
     {
         // Mismo código que antes
         return string.Empty;
@@ -850,7 +850,7 @@ using Moq;
 using NUnit.Framework;
 using FluentAssertions;
 
-namespace FunkosApi.Tests.Background;
+namespace ProductosApi.Tests.Background;
 
 [TestFixture]
 public class SimpleScheduledTaskTests
@@ -1027,7 +1027,7 @@ _ = Task.Run(() =>
 | **Escalabilidad** | Limitada | Limitada | Alta | Alta |
 | **Dependencias** | Ninguna extra | NCrontab | Hangfire.SqlServer | Quartz |
 
-📌 **Ejemplo real:** Spotify usa Hangfire o similar para gestionar millones de tareas diarias (actualizar playlists, procesar pagos, enviar notificaciones). Para un proyecto académico como FunkoApp, BackgroundService es más que suficiente.
+📌 **Ejemplo real:** Spotify usa Hangfire o similar para gestionar millones de tareas diarias (actualizar playlists, procesar pagos, enviar notificaciones). Para un proyecto académico como ProductosApp, BackgroundService es más que suficiente.
 
 **Recomendación por escenario:**
 

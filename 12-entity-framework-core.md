@@ -63,7 +63,7 @@
   - [12.13. Control de concurrencia](#1213-control-de-concurrencia)
   - [12.14. Testing con EF Core](#1214-testing-con-ef-core)
   - [12.15. Buenas prácticas](#1215-buenas-prácticas)
-  - [12.16. Reto: repositorio CRUD con Entity Framework Core](#1216-reto-repositorio-crud-con-entity-framework-core)
+  - [12.16. Reto: repositorio CRUD con Entity Framework Core en FunkoApp](#1216-reto-repositorio-crud-con-entity-framework-core-en-funkoapp)
 
 
 
@@ -1402,7 +1402,7 @@ await container.StartAsync();
 - **Query Filters** para borrado lógico, no filtrar a mano en cada consulta
 - **TestContainers** para tests con BD real en CI
 
-## 12.16. Reto: repositorio CRUD con Entity Framework Core
+## 12.16. Reto: repositorio CRUD con Entity Framework Core en FunkoApp
 
 > Monta un repositorio CRUD completo para FunkoApp, con borrado lógico, migraciones y tests de integración con Docker.
 

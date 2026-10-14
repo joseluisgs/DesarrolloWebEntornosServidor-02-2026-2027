@@ -110,21 +110,21 @@ En este proyecto usamos **NUnit** por su sintaxis clara y atributos descriptivos
 ## 28.4. Estructura del proyecto de tests
 
 ```
-FunkoApp.Tests/
+ProductosApp.Tests/
 ├── Unit/
 │   ├── Services/
-│   │   └── FunkoServiceTests.cs
+│   │   └── ProductoServiceTests.cs
 │   └── Validators/
-│       └── FunkoValidatorTests.cs
+│       └── ProductoValidatorTests.cs
 ├── Integration/
 │   ├── Controllers/
-│   │   └── FunkosControllerTests.cs
+│   │   └── ProductosControllerTests.cs
 │   └── Repositories/
-│       └── FunkoRepositoryTests.cs
+│       └── ProductoRepositoryTests.cs
 ├── Fixtures/
-│   ├── FunkoAppWebApplicationFactory.cs
+│   ├── ProductosAppWebApplicationFactory.cs
 │   └── TestContainersFixture.cs
-└── FunkoApp.Tests.csproj
+└── ProductosApp.Tests.csproj
 ```
 
 **Fichero `.csproj` del proyecto de tests** (versiones del módulo):
@@ -151,7 +151,7 @@ FunkoApp.Tests/
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\FunkoApp\FunkoApp.csproj" />
+        <ProjectReference Include="..\ProductosApp\ProductosApp.csproj" />
     </ItemGroup>
 </Project>
 ```
@@ -166,38 +166,38 @@ using Moq;
 using NUnit.Framework;
 
 [TestFixture]
-public class FunkoServiceTests
+public class ProductoServiceTests
 {
     [Test]
-    public async Task GetById_FunkoExistente_ReturnSuccess()
+    public async Task GetById_ProductoExistente_ReturnSuccess()
     {
         // =====================================
         // ARRANGE: Preparar el escenario
         // =====================================
-        var funkoId = 1L;
-        var funkoEsperado = new Funko
+        var productoId = 1L;
+        var productoEsperado = new Producto
         {
-            Id = funkoId,
-            Nombre = "Iron Man",
+            Id = productoId,
+            Nombre = "Teclado",
             Precio = 29.99m
         };
 
-        var repositoryMock = new Mock<IFunkoRepository>();
-        repositoryMock.Setup(r => r.GetByIdAsync(funkoId))
-            .ReturnsAsync(funkoEsperado);
+        var repositoryMock = new Mock<IProductoRepository>();
+        repositoryMock.Setup(r => r.GetByIdAsync(productoId))
+            .ReturnsAsync(productoEsperado);
 
-        var service = new FunkoService(repositoryMock.Object);
+        var service = new ProductoService(repositoryMock.Object);
 
         // =====================================
         // ACT: Ejecutar la accion a testear
         // =====================================
-        var resultado = await service.GetByIdAsync(funkoId);
+        var resultado = await service.GetByIdAsync(productoId);
 
         // =====================================
         // ASSERT: Verificar el resultado
         // =====================================
         resultado.IsSuccess.Should().BeTrue();
-        resultado.Value.Nombre.Should().Be("Iron Man");
+        resultado.Value.Nombre.Should().Be("Teclado");
     }
 }
 ```
@@ -219,16 +219,16 @@ public class FunkoServiceTests
 
 ```csharp
 [TestFixture]
-public class FunkoServiceTests
+public class ProductoServiceTests
 {
-    private Mock<IFunkoRepository> _repositoryMock = null!;
-    private FunkoService _service = null!;
+    private Mock<IProductoRepository> _repositoryMock = null!;
+    private ProductoService _service = null!;
 
     [SetUp]
     public void SetUp()
     {
-        _repositoryMock = new Mock<IFunkoRepository>();
-        _service = new FunkoService(_repositoryMock.Object);
+        _repositoryMock = new Mock<IProductoRepository>();
+        _service = new ProductoService(_repositoryMock.Object);
     }
 
     [TearDown]
@@ -238,10 +238,10 @@ public class FunkoServiceTests
     }
 
     [Test]
-    public async Task GetById_FunkoExistente_ReturnSuccess()
+    public async Task GetById_ProductoExistente_ReturnSuccess()
     {
-        var funko = new Funko { Id = 1, Nombre = "Iron Man" };
-        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(funko);
+        var producto = new Producto { Id = 1, Nombre = "Teclado" };
+        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(producto);
 
         var result = await _service.GetByIdAsync(1);
 
@@ -251,15 +251,15 @@ public class FunkoServiceTests
     [TestCase(1L)]
     [TestCase(2L)]
     [TestCase(100L)]
-    public async Task GetById_DiferentesIds_ReturnCorrecto(long funkoId)
+    public async Task GetById_DiferentesIds_ReturnCorrecto(long productoId)
     {
-        var funko = new Funko { Id = funkoId, Nombre = "Funko" };
-        _repositoryMock.Setup(r => r.GetByIdAsync(funkoId)).ReturnsAsync(funko);
+        var producto = new Producto { Id = productoId, Nombre = "Producto" };
+        _repositoryMock.Setup(r => r.GetByIdAsync(productoId)).ReturnsAsync(producto);
 
-        var result = await _service.GetByIdAsync(funkoId);
+        var result = await _service.GetByIdAsync(productoId);
 
         result.IsSuccess.Should().BeTrue();
-        result.Value.Id.Should().Be(funkoId);
+        result.Value.Id.Should().Be(productoId);
     }
 }
 ```
@@ -270,7 +270,7 @@ Separa los casos válidos e inválidos con **inner classes** para que la suite s
 
 ```csharp
 [TestFixture]
-public class FunkoTests
+public class ProductoTests
 {
     [TestFixture]
     public class CasosValidos
@@ -279,13 +279,13 @@ public class FunkoTests
         public void Precio_Cero_OtrasPropiedadesCorrectas()
         {
             // Arrange
-            var funko = new Funko { Id = 1, Nombre = "Iron Man", Precio = 29.99m };
+            var producto = new Producto { Id = 1, Nombre = "Teclado", Precio = 29.99m };
 
             // Act
-            var resultado = funko.Nombre;
+            var resultado = producto.Nombre;
 
             // Assert
-            resultado.Should().Be("Iron Man");
+            resultado.Should().Be("Teclado");
         }
     }
 
@@ -298,8 +298,8 @@ public class FunkoTests
             // Arrange
             var accion = () =>
             {
-                var funko = new Funko { Nombre = "Iron Man", Precio = -1 };
-                _ = funko.Validar();
+                var producto = new Producto { Nombre = "Teclado", Precio = -1 };
+                _ = producto.Validar();
             };
 
             // Assert
@@ -329,15 +329,15 @@ public class FluentAssertionsExamples
         resultado.Should().BeGreaterThan(10);
 
         // Strings
-        var nombre = "Iron Man";
+        var nombre = "Teclado";
         nombre.Should().NotBeEmpty();
         nombre.Should().StartWith("Iron");
         nombre.Should().Contain("Man");
 
         // Colecciones
-        var funkos = new List<Funko> { new() { Id = 1 }, new() { Id = 2 } };
-        funkos.Should().HaveCount(2);
-        funkos.Should().Contain(f => f.Id == 1);
+        var productos = new List<Producto> { new() { Id = 1 }, new() { Id = 2 } };
+        productos.Should().HaveCount(2);
+        productos.Should().Contain(f => f.Id == 1);
 
         // Excepciones
         Action accion = () => throw new ArgumentException("Error");
@@ -345,9 +345,9 @@ public class FluentAssertionsExamples
             .WithMessage("*Error*");
 
         // Objetos
-        var funko = new Funko { Id = 1, Nombre = "Batman" };
-        funko.Should().NotBeNull();
-        funko.Nombre.Should().Be("Batman");
+        var producto = new Producto { Id = 1, Nombre = "Laptop" };
+        producto.Should().NotBeNull();
+        producto.Nombre.Should().Be("Laptop");
     }
 }
 ```
@@ -362,46 +362,46 @@ public class FluentAssertionsExamples
 
 ```csharp
 [TestFixture]
-public class FunkoServiceMockTests
+public class ProductoServiceMockTests
 {
-    private Mock<IFunkoRepository> _repositoryMock = null!;
-    private Mock<ILogger<FunkoService>> _loggerMock = null!;
-    private FunkoService _service = null!;
+    private Mock<IProductoRepository> _repositoryMock = null!;
+    private Mock<ILogger<ProductoService>> _loggerMock = null!;
+    private ProductoService _service = null!;
 
     [SetUp]
     public void SetUp()
     {
-        _repositoryMock = new Mock<IFunkoRepository>();
-        _loggerMock = new Mock<ILogger<FunkoService>>();
-        _service = new FunkoService(_repositoryMock.Object, _loggerMock.Object);
+        _repositoryMock = new Mock<IProductoRepository>();
+        _loggerMock = new Mock<ILogger<ProductoService>>();
+        _service = new ProductoService(_repositoryMock.Object, _loggerMock.Object);
     }
 
     [Test]
-    public async Task GetById_FunkoExistente_ReturnSuccess()
+    public async Task GetById_ProductoExistente_ReturnSuccess()
     {
         // Arrange
-        var funkoId = 1L;
-        var funkoEsperado = new Funko
+        var productoId = 1L;
+        var productoEsperado = new Producto
         {
-            Id = funkoId,
-            Nombre = "Iron Man",
+            Id = productoId,
+            Nombre = "Teclado",
             Precio = 29.99m
         };
 
         _repositoryMock
-            .Setup(r => r.GetByIdAsync(funkoId))
-            .ReturnsAsync(funkoEsperado);
+            .Setup(r => r.GetByIdAsync(productoId))
+            .ReturnsAsync(productoEsperado);
 
         // Act
-        var resultado = await _service.GetByIdAsync(funkoId);
+        var resultado = await _service.GetByIdAsync(productoId);
 
         // Assert
         resultado.IsSuccess.Should().BeTrue();
-        resultado.Value.Nombre.Should().Be("Iron Man");
+        resultado.Value.Nombre.Should().Be("Teclado");
 
         // Verify: verificar que se llamo al metodo exactamente una vez
         _repositoryMock.Verify(
-            r => r.GetByIdAsync(funkoId),
+            r => r.GetByIdAsync(productoId),
             Times.Once);
     }
 
@@ -409,26 +409,26 @@ public class FunkoServiceMockTests
     public async Task CreateAsync_Duplicado_ReturnConflict()
     {
         // Arrange
-        var nuevoFunko = new CreateFunkoDto
+        var nuevoProducto = new CreateProductoDto
         {
-            Nombre = "Iron Man", // Ya existe
+            Nombre = "Teclado", // Ya existe
             Precio = 29.99m,
             Categoria = "Marvel"
         };
 
         _repositoryMock
-            .Setup(r => r.GetByNombreAsync(nuevoFunko.Nombre))
-            .ReturnsAsync(new Funko { Id = 1, Nombre = "Iron Man" });
+            .Setup(r => r.GetByNombreAsync(nuevoProducto.Nombre))
+            .ReturnsAsync(new Producto { Id = 1, Nombre = "Teclado" });
 
         // Act
-        var resultado = await _service.CreateAsync(nuevoFunko);
+        var resultado = await _service.CreateAsync(nuevoProducto);
 
         // Assert
         resultado.IsFailure.Should().BeTrue();
 
         // Verify: NO debe crear
         _repositoryMock.Verify(
-            r => r.CreateAsync(It.IsAny<Funko>()),
+            r => r.CreateAsync(It.IsAny<Producto>()),
             Times.Never);
     }
 }
@@ -443,7 +443,7 @@ _repositoryMock.Setup(r => r.GetCountAsync()).ReturnsAsync(42);
 // Setup con expresion lambda
 _repositoryMock
     .Setup(r => r.GetByIdAsync(It.IsAny<long>()))
-    .ReturnsAsync((long id) => new Funko { Id = id });
+    .ReturnsAsync((long id) => new Producto { Id = id });
 
 // Setup que lanza excepcion
 _repositoryMock
@@ -487,25 +487,25 @@ using Testcontainers.PostgreSql;
 public class IntegrationTestBase : IAsyncLifetime
 {
     protected PostgreSqlContainer _container = null!;
-    protected FunkoDbContext _context = null!;
+    protected ProductosDbContext _context = null!;
 
     // IAsyncLifetime: se ejecuta UNA SOLA VEZ por fixture (antes de todos los tests)
     public async Task InitializeAsync()
     {
         _container = new PostgreSqlBuilder()
             .WithImage("postgres:17-alpine")
-            .WithDatabase("funkoapp_test")
+            .WithDatabase("productosapp_test")
             .WithUsername("test")
             .WithPassword("test")
             .Build();
 
         await _container.StartAsync();
 
-        var options = new DbContextOptionsBuilder<FunkoDbContext>()
+        var options = new DbContextOptionsBuilder<ProductosDbContext>()
             .UseNpgsql(_container.GetConnectionString())
             .Options;
 
-        _context = new FunkoDbContext(options);
+        _context = new ProductosDbContext(options);
         _context.Database.EnsureCreated();
     }
 
@@ -518,9 +518,9 @@ public class IntegrationTestBase : IAsyncLifetime
 ```
 
 ```csharp
-public class FunkoRepositoryTests : IntegrationTestBase
+public class ProductoRepositoryTests : IntegrationTestBase
 {
-    private FunkoRepository _repository = null!;
+    private ProductoRepository _repository = null!;
 
     // [SetUp] normal (NO override): InitializeAsync NO es virtual,
     // pertenece a IAsyncLifetime y ya se ejecuta una vez por fixture en la base.
@@ -529,28 +529,28 @@ public class FunkoRepositoryTests : IntegrationTestBase
     {
         // Limpieza real: cada test empieza con la BD limpia
         _context.Database.ExecuteSqlRaw(
-            "TRUNCATE TABLE Funkos RESTART IDENTITY CASCADE");
+            "TRUNCATE TABLE Productos RESTART IDENTITY CASCADE");
 
-        _repository = new FunkoRepository(_context);
+        _repository = new ProductoRepository(_context);
     }
 
     [Test]
-    public async Task AddAsync_FunkoValido_ReturnSuccess()
+    public async Task AddAsync_ProductoValido_ReturnSuccess()
     {
         // Arrange
-        var funko = new Funko
+        var producto = new Producto
         {
-            Nombre = "Batman",
+            Nombre = "Laptop",
             Precio = 29.99m,
             Categoria = "DC"
         };
 
         // Act
-        var result = await _repository.AddAsync(funko);
+        var result = await _repository.AddAsync(producto);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        funko.Id.Should().BeGreaterThan(0);
+        producto.Id.Should().BeGreaterThan(0);
     }
 }
 ```
@@ -693,18 +693,18 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-public class FunkoAppWebApplicationFactory : WebApplicationFactory<Program>
+public class ProductosAppWebApplicationFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
         {
             var descriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DbContextOptions<FunkoDbContext>));
+                d => d.ServiceType == typeof(DbContextOptions<ProductosDbContext>));
             if (descriptor is not null)
                 services.Remove(descriptor);
 
-            services.AddDbContext<FunkoDbContext>(options =>
+            services.AddDbContext<ProductosDbContext>(options =>
             {
                 options.UseInMemoryDatabase("TestDatabase");
             });
@@ -714,7 +714,7 @@ public class FunkoAppWebApplicationFactory : WebApplicationFactory<Program>
 ```
 
 ```csharp
-public class FunkosControllerTests
+public class ProductosControllerTests
 {
     private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
@@ -722,7 +722,7 @@ public class FunkosControllerTests
     [SetUp]
     public void SetUp()
     {
-        _factory = new FunkoAppWebApplicationFactory();
+        _factory = new ProductosAppWebApplicationFactory();
         _client = _factory.CreateClient();
     }
 
@@ -734,23 +734,23 @@ public class FunkosControllerTests
     }
 
     [Test]
-    public async Task Get_Funkos_ReturnsOkWithLista()
+    public async Task Get_Productos_ReturnsOkWithLista()
     {
         // Act
-        var response = await _client.GetAsync("/api/funkos");
+        var response = await _client.GetAsync("/api/productos");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var funkos = await response.Content.ReadFromJsonAsync<List<Funko>>();
-        funkos.Should().NotBeNull();
+        var productos = await response.Content.ReadFromJsonAsync<List<Producto>>();
+        productos.Should().NotBeNull();
     }
 
     [Test]
-    public async Task Post_FunkoValido_ReturnsCreated()
+    public async Task Post_ProductoValido_ReturnsCreated()
     {
         // Arrange
-        var request = new CreateFunkoDto
+        var request = new CreateProductoDto
         {
             Nombre = "Spider-Man",
             Precio = 24.99m,
@@ -758,7 +758,7 @@ public class FunkosControllerTests
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/funkos", request);
+        var response = await _client.PostAsJsonAsync("/api/productos", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -807,7 +807,7 @@ public async Task CuerpoInvalido_Devuelve400_ConProblemDetails()
 public async Task RecursoDuplicado_Devuelve409_ConShapeDeDominio()
 {
     // Act
-    var response = await _client.PostAsJsonAsync("/api/funkos", funkoExistente);
+    var response = await _client.PostAsJsonAsync("/api/productos", productoExistente);
 
     // Assert
     response.StatusCode.Should().Be(HttpStatusCode.Conflict);
@@ -864,7 +864,7 @@ En 28.10.1 fijamos la **forma de los errores** de la API. Un paso más allá est
 
 | Cambio en la API | ¿Rompe contrato? | Ejemplo |
 |------------------|------------------|---------|
-| Eliminar un endpoint | ✅ Sí | `DELETE /funkos` desaparece |
+| Eliminar un endpoint | ✅ Sí | `DELETE /productos` desaparece |
 | Cambiar un código de estado | ✅ Sí | `201 Created` → `200 OK` |
 | Renombrar o eliminar un campo | ✅ Sí | `nombre` → `name` |
 | Cambiar el tipo de un campo | ✅ Sí | `precio` string → number |
@@ -937,11 +937,11 @@ NUnit puede ejecutar tests en paralelo para acelerar el tiempo de ejecucion.
 
 // Este test se ejecuta en paralelo
 [Parallelizable(ParallelScope.All)]
-public class FunkoServiceTests { }
+public class ProductoServiceTests { }
 
 // Este test se ejecuta en secuencia (porque usa Testcontainers)
 [Parallelizable(ParallelScope.None)]
-public class FunkoIntegrationTests { }
+public class ProductoIntegrationTests { }
 ```
 
 | Escenario | Recomendacion | Razon |
@@ -963,7 +963,7 @@ dotnet test --verbosity normal
 dotnet test --collect:"XPlat Code Coverage"
 
 # Tests especificos
-dotnet test --filter "FullyQualifiedName~FunkoServiceTests"
+dotnet test --filter "FullyQualifiedName~ProductoServiceTests"
 
 # Tests de integracion
 dotnet test --filter "Category=Integration"

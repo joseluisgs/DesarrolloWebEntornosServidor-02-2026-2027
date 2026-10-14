@@ -35,7 +35,7 @@
   - [18.10. Seguridad](#1810-seguridad)
   - [18.11. Buenas prácticas](#1811-buenas-prácticas)
   - [18.12. Testing](#1812-testing)
-  - [18.13. Reto](#1813-reto)
+  - [18.13. Reto: WebSockets y SignalR en FunkoApp](#1813-reto-websockets-y-signalr-en-funkoapp)
 
 
 
@@ -1252,7 +1252,7 @@ bru run ./coleccion --env local --exclude-tags=desktop-only
 
 > 💡 **Consejo:** La regla general es **etiquetar por capacidad de la herramienta, no por capricho**: `desktop-only`, `requiere-docker`, `lento`. Así la misma coleccion te sirve en el portatil y en el pipeline, y el pipeline se salta explicitamente lo que no puede hacer — en vez de fallar y obligarte a adivinar.
 
-## 18.13. Reto
+## 18.13. Reto: WebSockets y SignalR en FunkoApp
 
 > Implementa un sistema de notificaciones en tiempo real para FunkoApp.
 

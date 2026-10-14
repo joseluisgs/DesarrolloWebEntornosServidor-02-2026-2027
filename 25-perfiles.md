@@ -117,13 +117,13 @@ flowchart TD
 La estructura de configuración por entorno usa varios ficheros `appsettings` que se cargan en orden: base, después el del entorno activo.
 
 ```
-FunkoApp/
+ProductosApp/
 ├── appsettings.json                  # Configuracion base (comun)
 ├── appsettings.Development.json      # Desarrollo (sobrescribe base)
 ├── appsettings.Staging.json          # Staging (opcional)
 ├── appsettings.Production.json       # Produccion (sobrescribe base)
 ├── Program.cs
-└── FunkoApp.csproj
+└── ProductosApp.csproj
 ```
 
 ### 25.2.2. Configuracion base
@@ -139,7 +139,7 @@ FunkoApp/
     }
   },
   "AllowedHosts": "*",
-  "ApplicationName": "FunkoApp API",
+  "ApplicationName": "ProductosApp API",
   "Jwt": {
     "Issuer": "https://localhost:5001",
     "Audience": "https://localhost:5001",
@@ -162,7 +162,7 @@ FunkoApp/
     }
   },
   "ConnectionStrings": {
-    "DefaultConnection": "Data Source=funkoapp_dev.db"
+    "DefaultConnection": "Data Source=productosapp_dev.db"
   },
   "EnableSwagger": true,
   "EnableDetailedErrors": true,
@@ -186,7 +186,7 @@ FunkoApp/
     }
   },
   "ConnectionStrings": {
-    "DefaultConnection": "Server=prod-server;Database=FunkoDb;User Id=admin;Password="
+    "DefaultConnection": "Server=prod-server;Database=ProductoDb;User Id=admin;Password="
   },
   "EnableSwagger": false,
   "EnableDetailedErrors": false,
@@ -202,7 +202,7 @@ FunkoApp/
 
 ```powershell
 # Producción: la contraseña llega SOLO por variable de entorno
-$env:ConnectionStrings__DefaultConnection = "Server=prod-server;Database=FunkoDb;User Id=admin;Password=MI_CONTRASENA_SECRETA"
+$env:ConnectionStrings__DefaultConnection = "Server=prod-server;Database=ProductoDb;User Id=admin;Password=MI_CONTRASENA_SECRETA"
 ```
 
 ```dockerfile
@@ -223,7 +223,7 @@ var builder = WebApplication.CreateBuilder(args);
 if (builder.Environment.IsDevelopment())
 {
     // SQLite para desarrollo local
-    builder.Services.AddDbContext<FunkoDbContext>(options =>
+    builder.Services.AddDbContext<ProductosDbContext>(options =>
         options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
                .EnableSensitiveDataLogging()
                .EnableDetailedErrors()
@@ -232,7 +232,7 @@ if (builder.Environment.IsDevelopment())
 else
 {
     // SQL Server para produccion
-    builder.Services.AddDbContext<FunkoDbContext>(options =>
+    builder.Services.AddDbContext<ProductosDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
             sqlServerOptions =>
             {
@@ -294,7 +294,7 @@ ENV ASPNETCORE_ENVIRONMENT=Production
 
 ```bash
 # El secreto pasa como ARG en el build (o mejor: inyección en runtime)
-docker build --build-arg JWT_SECRET="mi-clave-secreta" -t funkoapp .
+docker build --build-arg JWT_SECRET="mi-clave-secreta" -t productosapp .
 ```
 
 📌 **Ejemplo real:** Las aplicaciones en Azure usan variables de entorno para las connection strings de bases de datos. Nunca se guardan en el codigo fuente.
@@ -368,7 +368,7 @@ if (builder.Environment.IsDevelopment())
     {
         options.SwaggerDoc("v1", new OpenApiInfo
         {
-            Title = "FunkoApp API - Development",
+            Title = "ProductosApp API - Development",
             Version = "v1"
         });
     });
@@ -427,7 +427,7 @@ dotnet user-secrets init
 
 ```bash
 dotnet user-secrets set "Jwt:Secret" "mi-clave-secreta-desarrollo"
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=.;Database=FunkoDb;Trusted_Connection=true"
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=.;Database=ProductoDb;Trusted_Connection=true"
 ```
 
 **Usar en Program.cs:**

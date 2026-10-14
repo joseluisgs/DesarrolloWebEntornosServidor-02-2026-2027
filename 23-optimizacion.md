@@ -300,7 +300,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration =
         builder.Configuration.GetConnectionString("Redis")!;
-    options.InstanceName = "FunkoApp:";
+    options.InstanceName = "ProductosApp:";
 });
 
 public class ProductoCacheService(
@@ -1070,7 +1070,7 @@ builder.Services.AddOpenTelemetry()
         metrics.AddAspNetCoreInstrumentation();
         metrics.AddHttpClientInstrumentation();
         metrics.AddRuntimeInstrumentation();
-        metrics.AddMeter("FunkoApp.Metrics");
+        metrics.AddMeter("ProductosApp.Metrics");
     });
 
 // Contador personalizado

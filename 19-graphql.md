@@ -43,7 +43,7 @@
     - [19.10.1. Test de queries](#19101-test-de-queries)
     - [19.10.2. Test de mutations](#19102-test-de-mutations)
   - [19.11. Buenas prácticas](#1911-buenas-prácticas)
-  - [19.12. Reto](#1912-reto)
+  - [19.12. Reto: GraphQL para FunkoApp](#1912-reto-graphql-para-funkoapp)
 
 
 
@@ -582,7 +582,7 @@ query {
 | `lt` | Menor que | `precio: { lt: 50 }` |
 | `lte` | Menor o igual | `precio: { lte: 100 }` |
 | `contains` | Contiene texto | `nombre: { contains: "Iron" }` |
-| `startsWith` | Empieza con | `nombre: { startsWith: "Funko" }` |
+| `startsWith` | Empieza con | `nombre: { startsWith: "Tecl" }` |
 | `in` | En lista | `categoriaId: { in: [1, 2, 3] }` |
 
 ## 19.6. Mutations
@@ -698,7 +698,7 @@ public class Mutation
 ```graphql
 mutation CrearProducto {
   crearProducto(input: {
-    nombre: "Funko Iron Man"
+    nombre: "Guitarra Fender"
     precio: 29.99
     stock: 15
     categoriaId: 1
@@ -1201,7 +1201,7 @@ public class ProductoGraphQLTests
         _context.Productos.Add(new Producto
         {
             Id = 1,
-            Nombre = "Iron Man",
+            Nombre = "Teclado",
             Precio = 29.99m,
             Stock = 10,
             CategoriaId = 1
@@ -1257,7 +1257,7 @@ public class ProductoGraphQLTests
         var result = await _executor.ExecuteAsync(query);
 
         // Assert
-        result.ToJson().Should().Contain("Iron Man");
+        result.ToJson().Should().Contain("Teclado");
         result.ToJson().Should().Contain("Spider-Man");
     }
 
@@ -1281,7 +1281,7 @@ public class ProductoGraphQLTests
         var result = await _executor.ExecuteAsync(query);
 
         // Assert
-        result.ToJson().Should().Contain("Iron Man");
+        result.ToJson().Should().Contain("Teclado");
         result.ToJson().Should().NotContain("Spider-Man");
     }
 }
@@ -1299,7 +1299,7 @@ public async Task Mutation_CrearProducto_ReturnsNewProduct()
     var mutation = @"
         mutation {
             crearProducto(input: {
-                nombre: ""Batman""
+                nombre: ""Laptop""
                 precio: 29.99
                 stock: 15
                 categoriaId: 1
@@ -1315,7 +1315,7 @@ public async Task Mutation_CrearProducto_ReturnsNewProduct()
     var result = await _executor.ExecuteAsync(mutation);
 
     // Assert
-    result.ToJson().Should().Contain("Batman");
+    result.ToJson().Should().Contain("Laptop");
     result.ToJson().Should().Contain("29.99");
 }
 ```
@@ -1378,7 +1378,7 @@ public async Task<Categoria> GetCategoria(
 9. **Testing** — Testea queries y mutations como si fueran endpoints REST
 10. **Error handling** — HotChocolate convierte excepciones en errores GraphQL automaticamente
 
-## 19.12. Reto
+## 19.12. Reto: GraphQL para FunkoApp
 
 > Implementa una API GraphQL completa para gestionar Funkos con categorias usando HotChocolate y ASP.NET Core.
 

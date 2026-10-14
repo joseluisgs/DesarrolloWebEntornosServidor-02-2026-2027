@@ -32,7 +32,7 @@
     - [11.8.2. Plantilla de ADR (formato MADR)](#1182-plantilla-de-adr-formato-madr)
     - [11.8.3. Ejemplo completo: rate limiting nativo](#1183-ejemplo-completo-rate-limiting-nativo)
     - [11.8.4. Reglas de oro](#1184-reglas-de-oro)
-  - [11.9. Reto](#119-reto)
+  - [11.9. Reto: Clean Architecture por carpetas en FunkoApp](#119-reto-clean-architecture-por-carpetas-en-funkoapp)
 
 
 
@@ -695,7 +695,7 @@ No hay una fecha, hay señales:
 
 > 💡 **Consejo:** Pasa a microservicios **por dolor real**, no por moda. Un monolito modular con Clean Architecture puede seguir creciendo años antes de necesitar la separación.
 
-## 11.7. Estructura del proyecto
+## 11.6. Estructura del proyecto
 
 ### 11.6.1. Organización de carpetas
 
@@ -724,7 +724,7 @@ MiApi/
     └── Program.cs
 ```
 
-### 11.7.2. Capas y sus contenidos
+### 11.6.2. Capas y sus contenidos
 
 | Capa | Contenido | Regla |
 |------|-----------|-------|
@@ -744,7 +744,7 @@ MiApi/
 - **Clean Architecture para equipos:** En proyectos con varios desarrolladores, Clean Architecture da claridad
 
 
-## 11.9. Decisiones de arquitectura: ADRs
+## 11.8. Decisiones de arquitectura: ADRs
 
 Hemos comparado capas, Onion y Clean... y llegará el día en que tu equipo tenga que **elegir**. El problema no es decidir: es que seis meses después nadie recuerda **por qué** se decidió.
 
@@ -764,7 +764,7 @@ Un **ADR** (*Architecture Decision Record*, "registro de decisiones de arquitect
 
 > 💡 **Analogía:** Es la bitácora de un barco: no te dice hacia dónde va ahora (eso es el README), te dice **por qué giró** cuando el capitán lo decidió.
 
-### 11.9.2. Plantilla de ADR (formato MADR)
+### 11.8.2. Plantilla de ADR (formato MADR)
 
 La plantilla más extendida es **MADR**. En el proyecto la verás en inglés; aquí la tienes traducida:
 
@@ -802,7 +802,7 @@ Elegimos la **opción A** porque <justificación>.
 
 Los campos clave son **Estado**, **Contexto**, **Opciones** y **Consecuencias**: si no puedes rellenar las opciones, probablemente no haya decisión (solo una imposición).
 
-### 11.9.3. Ejemplo completo: rate limiting nativo
+### 11.8.3. Ejemplo completo: rate limiting nativo
 
 Este es un ADR real de nuestro ámbito: la decisión de sustituir `AspNetCoreRateLimit` por la API nativa de .NET (la que viste en el tema 23, sección 23.5.2).
 
@@ -843,7 +843,7 @@ y los headers exactamente como queremos.
 
 > 📝 **Nota:** Un ADR **aceptada no se edita**. Si dentro de un año cambias de opinión, escribes un ADR nuevo y el antiguo pasa a `Estado: obsoleta (reemplazada por ADR-0012)`. Así queda la **historia** de las decisiones.
 
-### 11.9.4. Reglas de oro
+### 11.8.4. Reglas de oro
 
 - **Uno por decisión:** si un fichero documenta tres decisiones, en realidad no documenta ninguna.
 - **Corto:** una o dos páginas. Si no cabe, es un diseño, no un ADR.
@@ -856,7 +856,7 @@ y los headers exactamente como queremos.
 
 > ⚠️ **Advertencia:** El ADR más peligroso es el que no existe: sin él, el siguiente desarrollador "arreglará" tu decisión porque nadie dejó escrita la razón.
 
-## 11.10. Reto
+## 11.9. Reto: Clean Architecture por carpetas en FunkoApp
 
 > Diseña la arquitectura de FunkoApp.
 

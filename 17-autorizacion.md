@@ -23,7 +23,7 @@
   - [17.7. Autorización basada en recursos](#177-autorización-basada-en-recursos)
   - [17.8. Comparación de enfoques](#178-comparación-de-enfoques)
   - [17.9. Buenas prácticas](#179-buenas-prácticas)
-  - [17.10. Reto](#1710-reto)
+  - [17.10. Reto: autorización por roles y políticas en FunkoApp](#1710-reto-autorización-por-roles-y-políticas-en-funkoapp)
 
 
 
@@ -410,7 +410,7 @@ Sin Identity, gestionas los roles en tu propio modelo de usuario y los incluyes 
 ```csharp
 using Microsoft.AspNetCore.Authorization;
 
-namespace FunkoApi.Infrastructure;
+namespace ProductosApi.Infrastructure;
 
 /// <summary>
 /// Configuración de autorización sin Identity.
@@ -471,7 +471,7 @@ Con las políticas configuradas y el rol en el JWT, ya puedes proteger endpoints
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FunkoApi.Controllers;
+namespace ProductosApi.Controllers;
 
 /// <summary>
 /// Controlador de productos con autorización por roles.
@@ -577,9 +577,9 @@ El primer paso es crear los roles y usuarios seed al iniciar la aplicación. Est
 
 ```csharp
 using Microsoft.AspNetCore.Identity;
-using FunkoApi.Entity;
+using ProductosApi.Entity;
 
-namespace FunkoApi.Infrastructure;
+namespace ProductosApi.Infrastructure;
 
 /// <summary>
 /// Servicio para crear roles y usuarios seed con Identity.
@@ -606,7 +606,7 @@ public static class SeedIdentityData
         }
 
         // Crear usuario admin
-        var adminEmail = "admin@funko.com";
+        var adminEmail = "admin@admin.com";
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
         if (adminUser is null)
         {
@@ -626,7 +626,7 @@ public static class SeedIdentityData
         }
 
         // Crear usuario normal
-        var userEmail = "user@funko.com";
+        var userEmail = "user@user.com";
         var normalUser = await userManager.FindByEmailAsync(userEmail);
         if (normalUser is null)
         {
@@ -922,7 +922,7 @@ El requirement es una clase que implementa `IAuthorizationRequirement`. En C# 14
 ```csharp
 using Microsoft.AspNetCore.Authorization;
 
-namespace FunkoApi.Authorization;
+namespace ProductosApi.Authorization;
 
 /// <summary>
 /// Requisito que verifica que el usuario pertenece a un departamento concreto.
@@ -942,7 +942,7 @@ El handler es donde se ejecuta la lógica de verificación. Hereda de `Authoriza
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
 
-namespace FunkoApi.Authorization;
+namespace ProductosApi.Authorization;
 
 /// <summary>
 /// Handler que verifica si el usuario pertenece al departamento requerido.
@@ -991,7 +991,7 @@ Un caso muy habitual es verificar si el usuario es propietario de un recurso con
 ```csharp
 using Microsoft.AspNetCore.Authorization;
 
-namespace FunkoApi.Authorization;
+namespace ProductosApi.Authorization;
 
 /// <summary>
 /// Requisito que verifica si el usuario es propietario del recurso.
@@ -1163,7 +1163,7 @@ Si necesitas reutilizar la verificación de autorización basada en recursos en 
 ```csharp
 using Microsoft.AspNetCore.Authorization;
 
-namespace FunkoApi.Services;
+namespace ProductosApi.Services;
 
 /// <summary>
 /// Servicio wrapper (AuthzService) para IAuthorizationService con métodos de conveniencia.
@@ -1341,7 +1341,7 @@ await dbContext.SaveChangesAsync();
 
 > ⚠️ **Advertencia:** **Nunca** confíes en que el frontend filtra lo que el usuario puede ver. Si un usuario malicioso llama directamente a tu API con un token válido pero sin permisos, el servidor debe denegar el acceso. La autorización **siempre** se verifica en el backend.
 
-## 17.10. Reto
+## 17.10. Reto: autorización por roles y políticas en FunkoApp
 
 > Aplica autorización completa a FunkoApp usando Identity.
 

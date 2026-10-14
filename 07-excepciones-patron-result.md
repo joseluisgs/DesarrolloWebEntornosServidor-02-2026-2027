@@ -37,7 +37,7 @@
     - [7.8.4. Endpoints sin payload tipado (204)](#784-endpoints-sin-payload-tipado-204)
     - [7.8.5. Comparación](#785-comparación)
   - [7.9. Buenas prácticas](#79-buenas-prácticas)
-  - [7.10. Reto](#710-reto)
+  - [7.10. Reto: errores y patrón result en FunkoApp](#710-reto-errores-y-patrón-result-en-funkoapp)
 
 
 
@@ -824,7 +824,7 @@ public ActionResult Delete(long id)
 
 > 💡 **Consejo:** Aunque uses Result Pattern, **siempre** debes tener un middleware de excepciones global como safety net. Si se te escapa un bug, una excepción de BD, o un error inesperado, el middleware lo captura y devuelve una respuesta 500 coherente en lugar de un HTML crudo. Es como el airbag de tu coche: confías en que no lo necesitarás, pero ahí está por si acaso.
 
-## 7.10. Reto
+## 7.10. Reto: errores y patrón result en FunkoApp
 
 > Aplica el patrón Result a FunkoApp.
 

@@ -49,7 +49,7 @@
     - [30.10.3. Ventajas de este enfoque](#30103-ventajas-de-este-enfoque)
   - [30.11. Testing de CQRS](#3011-testing-de-cqrs)
   - [30.12. Buenas prácticas](#3012-buenas-prácticas)
-  - [30.13. Reto](#3013-reto)
+  - [30.13. Reto: CQRS y MediatR en FunkoApp](#3013-reto-cqrs-y-mediator-en-funkoapp)
 
 
 
@@ -1802,7 +1802,7 @@ CQRS añade complejidad (dos BDs, sincronización, consistencia eventual). Solo 
 - **Manejo de errores**: Si falla la sync, reintenta pero no bloquee el sistema
 - **Logs detallados**: Registra cada sync para debugging
 
-## 30.13. Reto
+## 30.13. Reto: CQRS y MediatR en FunkoApp
 
 > Implementa CQRS para FunkoApp: PostgreSQL para escrituras, MongoDB para lecturas.
 

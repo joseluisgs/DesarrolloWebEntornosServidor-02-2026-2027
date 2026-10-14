@@ -133,7 +133,7 @@ Los parámetros pueden ir en distintos sitios de la URL:
 | **Body** | `{ "nombre": "Guitarra", "precio": 299.99 }` | Enviar datos (POST, PUT, PATCH) |
 
 ```
-https://api.tienda.com/api/productos?categoria=musica&page=1&pageSize=10
+https://api.productos.com/api/productos?categoria=musica&page=1&pageSize=10
 \_____ \________________/ \________/ \___________________________________/
  esquema     host/dominio       ruta              query string (filtros)
 ```
@@ -150,7 +150,7 @@ Cada método HTTP tiene un significado claro en REST. No son intercambiables.
 
 ```http
 GET /api/productos HTTP/1.1
-Host: api.tienda.com
+Host: api.productos.com
 Accept: application/json
 ```
 
@@ -172,7 +172,7 @@ Content-Type: application/json
 
 ```http
 POST /api/productos HTTP/1.1
-Host: api.tienda.com
+Host: api.productos.com
 Content-Type: application/json
 
 {
@@ -203,7 +203,7 @@ Location: /api/productos/1
 
 ```http
 PUT /api/productos/1 HTTP/1.1
-Host: api.tienda.com
+Host: api.productos.com
 Content-Type: application/json
 
 {
@@ -233,7 +233,7 @@ Content-Type: application/json
 
 ```http
 PATCH /api/productos/1 HTTP/1.1
-Host: api.tienda.com
+Host: api.productos.com
 Content-Type: application/json
 
 {
@@ -261,7 +261,7 @@ Content-Type: application/json
 
 ```http
 DELETE /api/productos/1 HTTP/1.1
-Host: api.tienda.com
+Host: api.productos.com
 ```
 
 ```http
@@ -394,7 +394,7 @@ Un request HTTP lleva la ruta, los headers con metadatos y el cuerpo con los dat
 
 ```http
 POST /api/productos HTTP/1.1
-Host: api.tienda.com
+Host: api.productos.com
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIs...

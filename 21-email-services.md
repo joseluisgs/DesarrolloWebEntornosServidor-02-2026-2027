@@ -260,7 +260,7 @@ public class MailKitEmailService(
 Igual que en el tema 20 (`StorageSettings`), usamos **`IOptions<SmtpSettings>`** en lugar de leer `IConfiguration` a mano con `int.Parse` (eso revienta con `FormatException` si falta la clave o el valor no es numérico):
 
 ```csharp
-namespace FunkoApi.Configuration;
+namespace ProductosApi.Configuration;
 
 /// <summary>
 /// Configuración SMTP tipada (sección "Email" de appsettings.json)

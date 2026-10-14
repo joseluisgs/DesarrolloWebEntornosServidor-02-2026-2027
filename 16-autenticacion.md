@@ -33,7 +33,7 @@
     - [16.6.5. Identity con OAuth2 (login externo)](#1665-identity-con-oauth2-login-externo)
   - [16.7. Comparación de enfoques](#167-comparación-de-enfoques)
   - [16.8. Buenas prácticas](#168-buenas-prácticas)
-  - [16.9. Reto](#169-reto)
+  - [16.9. Reto: autenticación con JWT en FunkoApp](#169-reto-autenticación-con-jwt-en-funkoapp)
 
 
 
@@ -509,7 +509,7 @@ El modelo de usuario es la base de todo el sistema de autenticación. Almacena e
 ```csharp
 using System.ComponentModel.DataAnnotations;
 
-namespace FunkoApi.Models;
+namespace ProductosApi.Models;
 
 /// <summary>
 /// Usuario del sistema con autenticacion JWT.
@@ -564,7 +564,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
-namespace FunkoApi.Services;
+namespace ProductosApi.Services;
 
 /// <summary>
 /// Servicio para generacion y validacion de JWT tokens.
@@ -573,8 +573,8 @@ public class JwtService(IConfiguration configuration)
 {
     private readonly string _secretKey = configuration["Jwt:Secret"]
         ?? throw new InvalidOperationException("JWT Secret no configurado");
-    private readonly string _issuer = configuration["Jwt:Issuer"] ?? "FunkoApi";
-    private readonly string _audience = configuration["Jwt:Audience"] ?? "FunkoApiClients";
+    private readonly string _issuer = configuration["Jwt:Issuer"] ?? "ProductosApi";
+    private readonly string _audience = configuration["Jwt:Audience"] ?? "ProductosApiClients";
     private readonly int _accessTokenExpiryMinutes = configuration.GetValue<int>("Jwt:ExpirationMinutes", 15);
     private readonly int _refreshTokenExpiryDays = configuration.GetValue<int>("Jwt:RefreshTokenExpiryDays", 7);
 
@@ -667,7 +667,7 @@ El `AuthService` orquesta el proceso de login y registro. En el registro, hashea
 ```csharp
 using BCrypt.Net;
 
-namespace FunkoApi.Services;
+namespace ProductosApi.Services;
 
 /// <summary>
 /// DTO para respuesta de autenticacion con tokens.
@@ -778,7 +778,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
-namespace FunkoApi.Infrastructure;
+namespace ProductosApi.Infrastructure;
 
 /// <summary>
 /// Configuracion de autenticacion y autorizacion estilo Tienda.
@@ -869,7 +869,7 @@ El controller de autenticación expone los endpoints de login, signup y perfil d
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FunkoApi.Controllers;
+namespace ProductosApi.Controllers;
 
 /// <summary>
 /// Controller de autenticacion: login, signup y perfil de usuario.
@@ -953,7 +953,7 @@ public class AuthController(AuthService authService) : ControllerBase
 El `Program.cs` registra la autenticación JWT y configura los middleware en el orden correcto. El orden de `UseAuthentication()` y `UseAuthorization()` es crítico: si los inviertes, la autorización no funcionará porque no habrá identidad que verificar.
 
 ```csharp
-using FunkoApi.Infrastructure;
+using ProductosApi.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -1137,7 +1137,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace FunkoApi.Entity;
+namespace ProductosApi.Entity;
 
 /// <summary>
 /// Usuario personalizado que hereda de IdentityUser.
@@ -1169,7 +1169,7 @@ public class Role : IdentityRole<long>
 public class AppDbContext(DbContextOptions<AppDbContext> options)
     : IdentityDbContext<User, Role, long>(options)
 {
-    public DbSet<Funko> Funkos { get; set; } = null!;
+    public DbSet<Producto> Productos { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1191,7 +1191,7 @@ La configuración de Identity en `Program.cs` establece las políticas de contra
 
 ```csharp
 using Microsoft.AspNetCore.Identity;
-using FunkoApi.Entity;
+using ProductosApi.Entity;
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Default")));
@@ -1246,7 +1246,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
-namespace FunkoApi.Controllers;
+namespace ProductosApi.Controllers;
 
 /// <summary>
 /// Controller de autenticacion usando ASP.NET Core Identity.
@@ -1598,13 +1598,13 @@ public static class SeedService
         var repository = scope.ServiceProvider
             .GetRequiredService<IUserRepository>();
 
-        var existing = await repository.FindByEmailAsync("admin@funko.com");
+        var existing = await repository.FindByEmailAsync("admin@admin.com");
         if (existing is null)
         {
             await repository.CreateAsync(new User
             {
                 Username = "admin",
-                Email = "admin@funko.com",
+                Email = "admin@admin.com",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123", workFactor: 11),
                 Role = UserRoles.ADMIN
             });
@@ -1612,7 +1612,7 @@ public static class SeedService
             await repository.CreateAsync(new User
             {
                 Username = "user",
-                Email = "user@funko.com",
+                Email = "user@user.com",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("user123", workFactor: 11),
                 Role = UserRoles.USER
             });
@@ -1621,7 +1621,7 @@ public static class SeedService
 }
 ```
 
-## 16.9. Reto
+## 16.9. Reto: autenticación con JWT en FunkoApp
 
 > Implementa autenticación completa en FunkoApp con ambos enfoques.
 

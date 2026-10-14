@@ -32,7 +32,7 @@
     - [31.7.2. Redes internas](#3172-redes-internas)
   - [31.8. Ventajas y desventajas](#318-ventajas-y-desventajas)
   - [31.9. Buenas prácticas](#319-buenas-prácticas)
-  - [31.10. Reto](#3110-reto)
+  - [31.10. Reto: API Gateway para FunkoApp](#3110-reto-api-gateway-para-funkoapp)
 
 
 
@@ -428,7 +428,7 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:5000
       - Jwt__Secret=${JWT_SECRET}
-      - Jwt__Issuer=FunkoApp
+      - Jwt__Issuer=ProductosApp
       - ReverseProxy__Clusters__auth-cluster__Destinations__destination1__Address=http://auth-service:5001/
       - ReverseProxy__Clusters__productos-cluster__Destinations__destination1__Address=http://productos-service:5002/
     depends_on:
@@ -695,7 +695,7 @@ sequenceDiagram
 
     Note over Auth: Extraer token del header Authorization
     Auth->>Auth: Parse JWT → Header + Payload + Signature
-    Auth->>Auth: Validar Issuer → "FunkoApp" ✅
+    Auth->>Auth: Validar Issuer → "ProductosApp" ✅
     Auth->>Auth: Validar Firma → Jwt:Secret ✅
     Auth->>Auth: Validar Caducidad → exp > now ✅
     Auth->>Auth: Claims → {sub: "42", role: "admin"}
@@ -880,7 +880,7 @@ graph TD
 
 > 💡 **Consejo:** No implementes todos los microservicios desde el primer día. Empieza con un monolito, identifica las partes que necesitan escalabilidad independiente, y **extrae** esos módulos como servicios. Esto se conoce como "monolito modular".
 
-## 31.10. Reto
+## 31.10. Reto: API Gateway para FunkoApp
 
 > Antes de irte, piensa en cómo aplicarías esta arquitectura a tu proyecto.
 

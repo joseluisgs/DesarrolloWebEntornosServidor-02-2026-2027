@@ -169,7 +169,7 @@ El directorio `wwwroot` es el único directorio accesible públicamente vía HTT
 ```mermaid
 graph TD
     subgraph "Estructura del Proyecto"
-        A[FunkoApp/]
+        A[ProductosApp/]
         B[wwwroot/]
         C[Controllers/]
         D[Models/]
@@ -219,7 +219,7 @@ builder.WebHost.ConfigureKestrel(options =>
 La clase de configuración encapsula las rutas y opciones del almacenamiento para poder leerlas desde `appsettings.json` sin esparcir `IConfiguration` por todo el código.
 
 ```csharp
-namespace FunkoApi.Configuration;
+namespace ProductosApi.Configuration;
 
 public class StorageSettings
 {
@@ -392,7 +392,7 @@ La interfaz `IStorageService` define el contrato de operaciones con ficheros (su
 ```csharp
 using Microsoft.AspNetCore.Http;
 
-namespace FunkoApi.Services.Storage;
+namespace ProductosApi.Services.Storage;
 
 public interface IStorageService
 {
@@ -485,11 +485,11 @@ La implementación concreta `FileSystemStorageService` guarda los ficheros en el
 
 ```csharp
 using Microsoft.AspNetCore.Hosting;
-using FunkoApi.Configuration;
-using FunkoApi.Services.Storage;
+using ProductosApi.Configuration;
+using ProductosApi.Services.Storage;
 using Microsoft.Extensions.Options;
 
-namespace FunkoApi.Services.Storage.Implementation;
+namespace ProductosApi.Services.Storage.Implementation;
 
 public class FileSystemStorageService(
     IWebHostEnvironment env,
@@ -693,7 +693,7 @@ var fileName = GenerateFileName(file.FileName);
 Las excepciones personalizadas permiten distinguir un fichero no encontrado de un error de disco, y devolver el código HTTP que corresponda en cada caso.
 
 ```csharp
-namespace FunkoApi.Models.Exceptions;
+namespace ProductosApi.Models.Exceptions;
 
 public class FileSizeExceededException : Exception
 {
@@ -756,9 +756,9 @@ El controlador expone los endpoints HTTP para subir, listar y borrar ficheros, y
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
-using FunkoApi.Services.Storage;
+using ProductosApi.Services.Storage;
 
-namespace FunkoApi.Controllers;
+namespace ProductosApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -1005,7 +1005,7 @@ La primera línea de defensa al subir ficheros es comprobar la extensión permit
 ```csharp
 using System.ComponentModel.DataAnnotations;
 
-namespace FunkoApi.Models.Validation;
+namespace ProductosApi.Models.Validation;
 
 public class AllowedExtensionsAttribute : ValidationAttribute
 {
@@ -1055,7 +1055,7 @@ Limitar el tamaño del fichero evita que un archivo gigante llene el disco del s
 ```csharp
 using System.ComponentModel.DataAnnotations;
 
-namespace FunkoApi.Models.Validation;
+namespace ProductosApi.Models.Validation;
 
 public class MaxFileSizeAttribute : ValidationAttribute
 {
@@ -1117,7 +1117,7 @@ El nombre del fichero que manda el cliente puede contener rutas o caracteres esp
 ```csharp
 using System.Text.RegularExpressions;
 
-namespace FunkoApi.Models.Validation;
+namespace ProductosApi.Models.Validation;
 
 public static class FileNameValidator
 {
@@ -1190,7 +1190,7 @@ El almacenamiento de archivos cobra sentido cuando lo conectamos con entidades d
 ```csharp
 using System.ComponentModel.DataAnnotations;
 
-namespace FunkoApi.Models;
+namespace ProductosApi.Models;
 
 public class Producto
 {
@@ -1296,11 +1296,11 @@ Para producción, Azure Blob Storage ofrece seguridad, redundancia y escalabilid
 
 ```csharp
 using Azure.Storage.Blobs;
-using FunkoApi.Configuration;
-using FunkoApi.Services.Storage;
+using ProductosApi.Configuration;
+using ProductosApi.Services.Storage;
 using Microsoft.Extensions.Options;
 
-namespace FunkoApi.Services.Storage.Implementation;
+namespace ProductosApi.Services.Storage.Implementation;
 
 public class AzureBlobStorageService : IStorageService
 {
@@ -1435,10 +1435,10 @@ using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using FluentAssertions;
-using FunkoApi.Configuration;
-using FunkoApi.Services.Storage.Implementation;
+using ProductosApi.Configuration;
+using ProductosApi.Services.Storage.Implementation;
 
-namespace FunkoApi.Tests.Services;
+namespace ProductosApi.Tests.Services;
 
 [TestFixture]
 public class FileSystemStorageServiceTests
@@ -1563,10 +1563,10 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NUnit.Framework;
 using FluentAssertions;
-using FunkoApi.Controllers;
-using FunkoApi.Services.Storage;
+using ProductosApi.Controllers;
+using ProductosApi.Services.Storage;
 
-namespace FunkoApi.Tests.Controllers;
+namespace ProductosApi.Tests.Controllers;
 
 [TestFixture]
 public class FilesControllerTests
@@ -1700,7 +1700,7 @@ En el siguiente punto veremos **Buenas Prácticas**: recomendaciones para implem
 
 **¿Qué viene después?**
 
-En el siguiente punto encontrarás un **Reto** para aplicar todo lo aprendido en un caso práctico con Funkos.
+En el siguiente punto encontrarás un **Reto** para aplicar todo lo aprendido en un caso práctico con Productos.
 
 ## 20.12. Reto: sube imágenes de Funkos
 

@@ -89,11 +89,11 @@ El **Dockerfile** es un archivo de texto que contiene instrucciones para constru
 La estructura de un proyecto Docker incluye el `Dockerfile`, el `.dockerignore` y el `docker-compose.yml` para las dependencias externas.
 
 ```
-FunkoApp/
+ProductosApp/
 ├── src/
-│   └── FunkoApp/
+│   └── ProductosApp/
 │       ├── Program.cs
-│       └── FunkoApp.csproj
+│       └── ProductosApp.csproj
 ├── Dockerfile
 ├── .dockerignore
 └── docker-compose.yml
@@ -101,7 +101,7 @@ FunkoApp/
 
 ### 29.2.2. Dockerfile basico
 
-> 📝 **Nota:** Antes de construir la imagen, genera la carpeta `publish` con la aplicación compilada: `dotnet publish src/FunkoApp/FunkoApp.csproj -c Release -o publish`.
+> 📝 **Nota:** Antes de construir la imagen, genera la carpeta `publish` con la aplicación compilada: `dotnet publish src/ProductosApp/ProductosApp.csproj -c Release -o publish`.
 
 ```dockerfile
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
@@ -109,7 +109,7 @@ WORKDIR /app
 COPY ./publish .
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
-ENTRYPOINT ["dotnet", "FunkoApp.dll"]
+ENTRYPOINT ["dotnet", "ProductosApp.dll"]
 ```
 
 ### 29.2.3. Explicacion de instrucciones
@@ -138,21 +138,21 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Restaurar dependencias
-COPY ["FunkoApp/FunkoApp.csproj", "FunkoApp/"]
-RUN dotnet restore "FunkoApp/FunkoApp.csproj"
+COPY ["ProductosApp/ProductosApp.csproj", "ProductosApp/"]
+RUN dotnet restore "ProductosApp/ProductosApp.csproj"
 
 # Copiar codigo fuente
 COPY . .
-WORKDIR "/src/FunkoApp"
+WORKDIR "/src/ProductosApp"
 
 # Construir
-RUN dotnet build "FunkoApp.csproj" -c Release -o /app/build
+RUN dotnet build "ProductosApp.csproj" -c Release -o /app/build
 
 # ==================================================
 # ETAPA 2: PUBLISH
 # ==================================================
 FROM build AS publish
-RUN dotnet publish "FunkoApp.csproj" -c Release -o /app/publish
+RUN dotnet publish "ProductosApp.csproj" -c Release -o /app/publish
 
 # ==================================================
 # ETAPA 3: RUNTIME - Imagen final
@@ -179,7 +179,7 @@ ENV ASPNETCORE_ENVIRONMENT=Production
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl --fail http://localhost:8080/health || exit 1
 
-ENTRYPOINT ["dotnet", "FunkoApp.dll"]
+ENTRYPOINT ["dotnet", "ProductosApp.dll"]
 ```
 
 > ⚠️ **Advertencia — No uses `adduser`/`addgroup` en `aspnet:10.0`:** La imagen `mcr.microsoft.com/dotnet/aspnet:10.0` **no incluye** las utilidades `adduser` ni `addgroup` (si incluye `useradd`/`groupadd`, del paquete `passwd`), así que un `RUN adduser ...` **rompe el build**. Además ya trae de fábrica el usuario no-root **`app` con UID 1654** (`app:x:1654:1654::/home/app:/bin/sh`), por lo que basta con `USER app` y, si quieres los ficheros en propiedad del usuario, `COPY --chown=app:app` (evita además una capa extra de `RUN chown`).
@@ -210,19 +210,19 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: funkoapp
+    container_name: productosapp
     ports:
       - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=funkodb;Username=postgres;Password=${DB_PASSWORD}
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=productosdb;Username=postgres;Password=${DB_PASSWORD}
       - Jwt__Secret=${JWT_SECRET}
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - funkoapp-network
+      - productosapp-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -231,9 +231,9 @@ services:
 
   db:
     image: postgres:17-alpine
-    container_name: funkoapp-postgres
+    container_name: productosapp-postgres
     environment:
-      POSTGRES_DB: funkodb
+      POSTGRES_DB: productosdb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
@@ -247,13 +247,13 @@ services:
       retries: 5
     restart: unless-stopped
     networks:
-      - funkoapp-network
+      - productosapp-network
 
 volumes:
   postgres_data:
 
 networks:
-  funkoapp-network:
+  productosapp-network:
     driver: bridge
 ```
 
@@ -281,7 +281,7 @@ services:
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin123
-      POSTGRES_DB: funkodb
+      POSTGRES_DB: productosdb
 ```
 
 ```yaml
@@ -292,7 +292,7 @@ services:
     ports:
       - "5000:8080"
     environment:
-      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=funkodb;Username=postgres;Password=${DB_PASSWORD}
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=productosdb;Username=postgres;Password=${DB_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
@@ -338,7 +338,7 @@ services:
     env_file:
       - .env
     environment:
-      - ConnectionStrings__DefaultConnection=Host=db;Database=funkodb;Password=${DB_PASSWORD}
+      - ConnectionStrings__DefaultConnection=Host=db;Database=productosdb;Password=${DB_PASSWORD}
 ```
 
 > ⚠️ **Advertencia:** Nunca subas el archivo .env al repositorio. Agregalo al `.gitignore` siempre.
@@ -365,7 +365,7 @@ dotnet add package AspNetCore.HealthChecks.EntityFrameworkCore
 
 ```csharp
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<FunkoDbContext>("database")
+    .AddDbContextCheck<ProductosDbContext>("database")
     .AddRedis(
         builder.Configuration.GetConnectionString("Redis")!,
         "redis"
@@ -533,7 +533,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: funkodb
+          POSTGRES_DB: productosdb
         ports:
           - 5432:5432
 

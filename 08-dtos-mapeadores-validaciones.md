@@ -48,7 +48,7 @@
     - [8.8.5. Respuesta JSON vs XML](#885-respuesta-json-vs-xml)
     - [8.8.6. Errores comunes al configurar XML](#886-errores-comunes-al-configurar-xml)
   - [8.9. Buenas prácticas](#89-buenas-prácticas)
-  - [8.10. Reto](#810-reto)
+  - [8.10. Reto: DTOs, mapeadores y validaciones en FunkoApp](#810-reto-dtos-mapeadores-y-validaciones-en-funkoapp)
 
 
 
@@ -1330,7 +1330,7 @@ public record ProductoDto(
 - **Consistencia:** Usa los mismos nombres de query parameters en todos los endpoints
 - **JSON por defecto:** Usa JSON como formato estándar, XML solo para compatibilidad
 
-## 8.10. Reto
+## 8.10. Reto: DTOs, mapeadores y validaciones en FunkoApp
 
 > Aplica DTOs, mapeadores, validaciones y negociación de contenido a FunkoApp.
 

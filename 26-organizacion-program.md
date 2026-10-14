@@ -161,7 +161,7 @@ builder.Services.AddDatabases(builder.Configuration);
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
 
-namespace FunkoApp.Infrastructures;
+namespace ProductosApp.Infrastructures;
 
 public static class DatabaseConfig
 {
@@ -206,7 +206,7 @@ public static class DatabaseConfig
 La carpeta `Infrastructures/` es el lugar recomendado para almacenar todos los métodos de extension de configuración.
 
 ```
-FunkoApp/
+ProductosApp/
 ├── Program.cs
 ├── Infrastructures/
 │   ├── SerilogConfig.cs
@@ -238,7 +238,7 @@ La configuración de la base de datos se extrae a su propia clase de extensión,
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
 
-namespace FunkoApp.Infrastructures;
+namespace ProductosApp.Infrastructures;
 
 public static class DatabaseConfig
 {
@@ -250,7 +250,7 @@ public static class DatabaseConfig
             ?? throw new InvalidOperationException(
                 "Connection string 'PostgreSQL' no encontrada");
 
-        services.AddDbContext<FunkoDbContext>(options =>
+        services.AddDbContext<ProductosDbContext>(options =>
         {
             options.UseNpgsql(postgresConnection);
         });
@@ -272,7 +272,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
-namespace FunkoApp.Infrastructures;
+namespace ProductosApp.Infrastructures;
 
 public static class AuthenticationConfig
 {
@@ -319,7 +319,7 @@ Después de aplicar el patrón, el Program.cs queda limpio y legible:
 
 ```csharp
 using Serilog;
-using FunkoApp.Infrastructures;
+using ProductosApp.Infrastructures;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -361,7 +361,7 @@ app.MapControllers();
 
 // === INICIALIZACION ===
 using var scope = app.Services.CreateScope();
-var context = scope.ServiceProvider.GetRequiredService<FunkoDbContext>();
+var context = scope.ServiceProvider.GetRequiredService<ProductosDbContext>();
 context.Database.EnsureCreated();
 
 app.Run();

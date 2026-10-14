@@ -91,11 +91,11 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
     .Enrich.FromLogContext()
     .Enrich.WithExceptionDetails()
-    .Enrich.WithProperty("Application", "FunkoApp")
+    .Enrich.WithProperty("Application", "ProductosApp")
     .WriteTo.Console(
         outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Scopes:j}{NewLine}{Exception}")
     .WriteTo.File(
-        path: "logs/funkoapp-.log",
+        path: "logs/productosapp-.log",
         rollingInterval: RollingInterval.Day,
         rollOnFileSizeLimit: true,
         fileSizeLimitBytes: 10_000_000,
@@ -136,13 +136,13 @@ Los niveles de log y los sinks también pueden vivir en `appsettings.json`, lo q
       {
         "Name": "File",
         "Args": {
-          "path": "logs/funkoapp-.log",
+          "path": "logs/productosapp-.log",
           "rollingInterval": "Day"
         }
       }
     ],
     "Properties": {
-      "Application": "FunkoApp"
+      "Application": "ProductosApp"
     }
   }
 }
@@ -195,7 +195,7 @@ Los **enriquecedores** añaden información contextual a todos los logs.
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .Enrich.WithExceptionDetails()
-    .Enrich.WithProperty("Application", "FunkoApp")
+    .Enrich.WithProperty("Application", "ProductosApp")
     .Enrich.WithEnvironmentName()
     .Enrich.WithMachineName()
     .CreateLogger();
@@ -221,22 +221,22 @@ public static class BadLogger
 }
 
 // ✅ BUENO: Logger con inyeccion de dependencias
-public class FunkoService(
-    IFunkoRepository repository,
-    ILogger<FunkoService> logger) : IFunkoService
+public class ProductoService(
+    IProductoRepository repository,
+    ILogger<ProductoService> logger) : IProductoService
 {
-    public async Task<Funko?> GetByIdAsync(long id)
+    public async Task<Producto?> GetByIdAsync(long id)
     {
-        logger.LogInformation("Buscando funko {FunkoId}", id);
+        logger.LogInformation("Buscando producto {ProductoId}", id);
 
-        var funko = await repository.GetByIdAsync(id);
+        var producto = await repository.GetByIdAsync(id);
 
-        if (funko is null)
+        if (producto is null)
         {
-            logger.LogWarning("Funko {FunkoId} no encontrado", id);
+            logger.LogWarning("Producto {ProductoId} no encontrado", id);
         }
 
-        return funko;
+        return producto;
     }
 }
 ```
@@ -252,10 +252,10 @@ public class FunkoService(
 | **Critical** | Errores graves | Crash inminente |
 
 ```csharp
-logger.LogDebug("Consultando funko {FunkoId}", id);
-logger.LogInformation("Funko {FunkoId} obtenido exitosamente", id);
-logger.LogWarning("Stock bajo para funko {FunkoId}: {Stock}", id, stock);
-logger.LogError(ex, "Error al procesar funko {FunkoId}", id);
+logger.LogDebug("Consultando producto {ProductoId}", id);
+logger.LogInformation("Producto {ProductoId} obtenido exitosamente", id);
+logger.LogWarning("Stock bajo para producto {ProductoId}: {Stock}", id, stock);
+logger.LogError(ex, "Error al procesar producto {ProductoId}", id);
 logger.LogCritical("Error critico: {Message}", ex.Message);
 ```
 
@@ -264,17 +264,17 @@ logger.LogCritical("Error critico: {Message}", ex.Message);
 Los **scopes** agrupan logs relacionados bajo un contexto común.
 
 ```csharp
-public async Task<List<Funko>> GetByCategoriaAsync(long categoriaId)
+public async Task<List<Producto>> GetByCategoriaAsync(long categoriaId)
 {
-    using var _ = logger.BeginScope("Obteniendo funkos por categoria {CategoriaId}", categoriaId);
+    using var _ = logger.BeginScope("Obteniendo productos por categoria {CategoriaId}", categoriaId);
 
-    logger.LogDebug("Iniciando consulta de funkos");
+    logger.LogDebug("Iniciando consulta de productos");
 
-    var funkos = await repository.GetByCategoriaIdAsync(categoriaId);
+    var productos = await repository.GetByCategoriaIdAsync(categoriaId);
 
-    logger.LogDebug("Consulta completada. {Count} funkos encontrados", funkos.Count);
+    logger.LogDebug("Consulta completada. {Count} productos encontrados", productos.Count);
 
-    return funkos;
+    return productos;
 }
 ```
 
@@ -289,11 +289,11 @@ logger.LogError("Error");
 // ✅ BUENO: Logear con excepcion y contexto
 try
 {
-    var result = await repository.AddAsync(funko);
+    var result = await repository.AddAsync(producto);
 }
 catch (DbUpdateException ex)
 {
-    logger.LogError(ex, "Error de base de datos al crear funko {Nombre}", funko.Nombre);
+    logger.LogError(ex, "Error de base de datos al crear producto {Nombre}", producto.Nombre);
     throw;
 }
 ```
@@ -376,7 +376,7 @@ public class CustomHealthCheck(IServiceScopeFactory scopeFactory) : IHealthCheck
         try
         {
             using var scope = scopeFactory.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<FunkoDbContext>();
+            var db = scope.ServiceProvider.GetRequiredService<ProductosDbContext>();
 
             var canConnect = await db.Database.CanConnectAsync(cancellationToken);
 

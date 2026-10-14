@@ -241,8 +241,8 @@ graph TD
 
 #### Tema 02: REST API
 - **REST:** Arquitectura basada en recursos (URLs) y verbos HTTP. Stateless. Cacheable
-- **Recursos:** Todo es un recurso identificable con una URL (`/api/funkos`, `/api/categorias/1`)
-- **URIs significativas:** Nombres sustantivos, no verbos. ✅ `/funkos`, ❌ `/getFunkos`
+- **Recursos:** Todo es un recurso identificable con una URL (`/api/productos`, `/api/categorias/1`)
+- **URIs significativas:** Nombres sustantivos, no verbos. ✅ `/productos`, ❌ `/getProductos`
 - **Idempotencia:** GET, PUT, DELETE son idempotentes (repetir da el mismo resultado). POST no
 - **Códigos de estado:** 2xx (éxito: 200, 201, 204), 3xx (redirección), 4xx (error cliente: 400, 401, 404), 5xx (error servidor)
 - 📌 Instagram usa REST para el feed: GET `/api/posts`, POST `/api/posts`, DELETE `/api/posts/{id}`
@@ -291,12 +291,12 @@ graph TD
 
 #### Tema 08: DTOs, mapeadores y validaciones
 - **DTOs:** Data Transfer Objects. Objetos que transportan datos entre capas sin exponer entidades
-- **Request DTOs:** Lo que el cliente envía (`CreateFunkoDto`, `UpdateFunkoDto`)
-- **Response DTOs:** Lo que el servidor devuelve (`FunkoResponseDto`, `FunkoListDto`)
+- **Request DTOs:** Lo que el cliente envía (`CreateProductoDto`, `UpdateProductoDto`)
+- **Response DTOs:** Lo que el servidor devuelve (`ProductoResponseDto`, `ProductoListDto`)
 - **AutoMapper:** Mapea propiedades automáticamente entre entidades y DTOs
 - **FluentValidation:** Validación declarativa con reglas legibles en cascada
 - **[ApiController] + `[Validate]`:** Validación automática. Si falla, devuelve 400 Bad Request
-- 📌 Un endpoint de crear funko: `CreateFunkoDto` (request) → AutoMapper → Entidad → AutoMapper → `FunkoResponseDto` (response)
+- 📌 Un endpoint de crear producto: `CreateProductoDto` (request) → AutoMapper → Entidad → AutoMapper → `ProductoResponseDto` (response)
 
 #### Tema 09: configuración y logging
 - **appsettings.json:** Fichero de configuración. Valores por defecto + valores por entorno
@@ -685,13 +685,13 @@ Antes de dar por cerrado el tema, asegúrate de poder responder **SÍ** a estas 
 
 10. **SignalR:** Crea un Hub que permita a los usuarios unirse a un grupo y recibir mensajes en tiempo real. Incluye el cliente JavaScript.
 
-11. **GraphQL:** Implementa una query `GetFunkos` con HotChocolate que incluya paginación, filtrado y sorting. ¿Qué problema resuelven los DataLoaders?
+11. **GraphQL:** Implementa una query `GetProductos` con HotChocolate que incluya paginación, filtrado y sorting. ¿Qué problema resuelven los DataLoaders?
 
 12. **CQRS:** Diseña el patrón CQRS para un e-commerce: Commands (CrearPedido, CancelarPedido) y Queries (GetProductos, GetPedidoPorId). ¿Cuándo lo usarías y cuándo no?
 
 13. **Docker:** Escribe un Dockerfile multi-etapa para una API ASP.NET Core y un docker-compose.yml con PostgreSQL y Redis.
 
-14. **Testing:** Escribe tests para un FunkoService usando NUnit, Moq y FluentAssertions. Incluye test de éxito, test de fallo (Result.Failure), y verificación de llamadas con Moq.
+14. **Testing:** Escribe tests para un ProductoService usando NUnit, Moq y FluentAssertions. Incluye test de éxito, test de fallo (Result.Failure), y verificación de llamadas con Moq.
 
 15. **Proyecto integrador:** Diseña la arquitectura completa de una API para gestionar una tienda online. Indica: patrones (Repository, CQRS), tecnologías (EF Core, MongoDB, Redis), seguridad (JWT, BCrypt), APIs especiales (SignalR para notificaciones, GraphQL para catálogo), despliegue (Docker), y testing (NUnit + TestContainers).
 

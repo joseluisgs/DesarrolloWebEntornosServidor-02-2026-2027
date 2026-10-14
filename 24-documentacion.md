@@ -188,8 +188,8 @@ builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Version = "v1.0.0",
-        Title = "FunkoApp API",
-        Description = "API REST para gestion de Funkos",
+        Title = "ProductosApp API",
+        Description = "API REST para gestion de Productos",
         Contact = new OpenApiContact
         {
             Name = "Jose Luis Gonzalez",
@@ -228,26 +228,26 @@ Los atributos de documentación describen cada endpoint para Swagger: código de
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
-[SwaggerTag("Gestion de Funkos")]
-public class FunkosController : ControllerBase
+[SwaggerTag("Gestion de Productos")]
+public class ProductosController : ControllerBase
 {
     /// <summary>
-    /// Obtiene todos los funkos con paginacion
+    /// Obtiene todos los productos con paginacion
     /// </summary>
     /// <param name="pageNumber">Numero de pagina (default: 1)</param>
     /// <param name="pageSize">Tamano de pagina (default: 10)</param>
-    /// <returns>Lista paginada de funkos</returns>
-    /// <response code="200">Devuelve la lista de funkos</response>
+    /// <returns>Lista paginada de productos</returns>
+    /// <response code="200">Devuelve la lista de productos</response>
     [HttpGet]
     [SwaggerOperation(
-        Summary = "Obtener todos los funkos",
-        Description = "Devuelve una lista paginada de funkos con filtros opcionales",
-        OperationId = "GetAllFunkos",
-        Tags = new[] { "Funkos" }
+        Summary = "Obtener todos los productos",
+        Description = "Devuelve una lista paginada de productos con filtros opcionales",
+        OperationId = "GetAllProductos",
+        Tags = new[] { "Productos" }
     )]
-    [SwaggerResponse(200, "Lista de funkos obtenida correctamente", typeof(PageResponse<FunkoResponseDto>))]
+    [SwaggerResponse(200, "Lista de productos obtenida correctamente", typeof(PageResponse<ProductoResponseDto>))]
     [SwaggerResponse(400, "Parametros invalidos")]
-    public async Task<ActionResult<PageResponse<FunkoResponseDto>>> GetAll(
+    public async Task<ActionResult<PageResponse<ProductoResponseDto>>> GetAll(
         [FromQuery, SwaggerParameter("Numero de pagina", Required = false)] int pageNumber = 1,
         [FromQuery, SwaggerParameter("Tamano de pagina", Required = false)] int pageSize = 10)
     {
@@ -261,33 +261,33 @@ Este ejemplo junta todo lo anterior en un endpoint real: XMLDoc en el método, a
 
 ```csharp
 /// <summary>
-/// Actualiza un funko existente
+/// Actualiza un producto existente
 /// </summary>
-/// <param name="id">ID del funko a actualizar</param>
-/// <param name="dto">Nuevos datos del funko</param>
-/// <returns>Funko actualizado</returns>
+/// <param name="id">ID del producto a actualizar</param>
+/// <param name="dto">Nuevos datos del producto</param>
+/// <returns>Producto actualizado</returns>
 [HttpPut("{id}")]
 [Authorize(Roles = Roles.Admin)]
 [SwaggerOperation(
-    Summary = "Actualizar funko",
-    Description = "Actualiza todos los campos de un funko. Solo administradores pueden ejecutar esta operacion",
-    OperationId = "UpdateFunko"
+    Summary = "Actualizar producto",
+    Description = "Actualiza todos los campos de un producto. Solo administradores pueden ejecutar esta operacion",
+    OperationId = "UpdateProducto"
 )]
-[SwaggerResponse(200, "Funko actualizado correctamente", typeof(FunkoResponseDto))]
+[SwaggerResponse(200, "Producto actualizado correctamente", typeof(ProductoResponseDto))]
 [SwaggerResponse(400, "Datos invalidos o incompletos", typeof(ValidationProblemDetails))]
 [SwaggerResponse(401, "Usuario no autenticado")]
-[SwaggerResponse(404, "Funko no encontrado", typeof(ProblemDetails))]
-public async Task<ActionResult<FunkoResponseDto>> Update(
-    [FromRoute, SwaggerParameter("ID del funko", Required = true)] int id,
-    [FromBody, SwaggerRequestBody("Datos actualizados del funko", Required = true)] UpdateFunkoDto dto)
+[SwaggerResponse(404, "Producto no encontrado", typeof(ProblemDetails))]
+public async Task<ActionResult<ProductoResponseDto>> Update(
+    [FromRoute, SwaggerParameter("ID del producto", Required = true)] int id,
+    [FromBody, SwaggerRequestBody("Datos actualizados del producto", Required = true)] UpdateProductoDto dto)
 {
     var result = await _service.UpdateAsync(id, dto);
-    return result.Match<ActionResult<FunkoResponseDto>>(
+    return result.Match<ActionResult<ProductoResponseDto>>(
         success => Ok(success),
         error => error switch
         {
-            FunkoError.NotFound => NotFound(new ProblemDetails { Detail = error.Message }),
-            FunkoError.InvalidData => BadRequest(new ValidationProblemDetails()),
+            ProductoError.NotFound => NotFound(new ProblemDetails { Detail = error.Message }),
+            ProductoError.InvalidData => BadRequest(new ValidationProblemDetails()),
             _ => StatusCode(500)
         }
     );
@@ -302,28 +302,28 @@ Cuando un `POST` **crea** un recurso, la respuesta correcta es **201 Created** c
 
 ```csharp
 /// <summary>
-/// Crea un funko nuevo
+/// Crea un producto nuevo
 /// </summary>
-/// <param name="dto">Datos del funko a crear</param>
-/// <returns>Funko recién creado</returns>
+/// <param name="dto">Datos del producto a crear</param>
+/// <returns>Producto recién creado</returns>
 [HttpPost]
 [SwaggerOperation(
-    Summary = "Crear funko",
-    Description = "Crea un nuevo funko y devuelve su ubicación (Location)",
-    OperationId = "CreateFunko"
+    Summary = "Crear producto",
+    Description = "Crea un nuevo producto y devuelve su ubicación (Location)",
+    OperationId = "CreateProducto"
 )]
-[SwaggerResponse(201, "Funko creado correctamente", typeof(FunkoResponseDto))]
+[SwaggerResponse(201, "Producto creado correctamente", typeof(ProductoResponseDto))]
 [SwaggerResponse(400, "Datos inválidos", typeof(ValidationProblemDetails))]
-public async Task<ActionResult<FunkoResponseDto>> Create(
-    [FromBody, SwaggerRequestBody("Datos del nuevo funko", Required = true)] CreateFunkoDto dto)
+public async Task<ActionResult<ProductoResponseDto>> Create(
+    [FromBody, SwaggerRequestBody("Datos del nuevo producto", Required = true)] CreateProductoDto dto)
 {
-    var funko = await _service.CreateAsync(dto);
+    var producto = await _service.CreateAsync(dto);
 
-    // 201 + Location apuntando al recurso recién creado (GET /api/funkos/{id})
+    // 201 + Location apuntando al recurso recién creado (GET /api/productos/{id})
     return CreatedAtAction(
         nameof(GetById),
-        new { id = funko.Id },
-        funko);
+        new { id = producto.Id },
+        producto);
 }
 ```
 
@@ -338,43 +338,43 @@ using System.ComponentModel.DataAnnotations;
 using Swashbuckle.AspNetCore.Annotations;
 
 /// <summary>
-/// DTO para crear un funko
+/// DTO para crear un producto
 /// </summary>
-[SwaggerSchema(Description = "Datos necesarios para crear un funko")]
-public record CreateFunkoDto
+[SwaggerSchema(Description = "Datos necesarios para crear un producto")]
+public record CreateProductoDto
 {
     /// <summary>
-    /// Nombre del funko
+    /// Nombre del producto
     /// </summary>
     /// <example>Iron Man</example>
     [Required(ErrorMessage = "El nombre es obligatorio")]
     [StringLength(100, MinimumLength = 3, ErrorMessage = "El nombre debe tener entre 3 y 100 caracteres")]
-    [SwaggerSchema(Description = "Nombre del funko", Nullable = false)]
+    [SwaggerSchema(Description = "Nombre del producto", Nullable = false)]
     public string Nombre { get; init; } = string.Empty;
 
     /// <summary>
-    /// Precio del funko en euros
+    /// Precio del producto en euros
     /// </summary>
     /// <example>29.99</example>
     [Required(ErrorMessage = "El precio es obligatorio")]
     [Range(0.01, 9999.99, ErrorMessage = "El precio debe estar entre 0.01 y 9999.99")]
-    [SwaggerSchema(Description = "Precio del funko en euros", Format = "decimal", Nullable = false)]
+    [SwaggerSchema(Description = "Precio del producto en euros", Format = "decimal", Nullable = false)]
     public decimal Precio { get; init; }
 
     /// <summary>
-    /// Categoria del funko
+    /// Categoria del producto
     /// </summary>
     /// <example>Marvel</example>
     [Required(ErrorMessage = "La categoria es obligatoria")]
-    [SwaggerSchema(Description = "Categoria a la que pertenece el funko", Nullable = false)]
+    [SwaggerSchema(Description = "Categoria a la que pertenece el producto", Nullable = false)]
     public string Categoria { get; init; } = string.Empty;
 
     /// <summary>
-    /// URL de la imagen del funko
+    /// URL de la imagen del producto
     /// </summary>
     /// <example>https://example.com/images/ironman.jpg</example>
     [Url(ErrorMessage = "La imagen debe ser una URL valida")]
-    [SwaggerSchema(Description = "URL de la imagen del funko", Format = "uri", Nullable = true)]
+    [SwaggerSchema(Description = "URL de la imagen del producto", Format = "uri", Nullable = true)]
     public string? Imagen { get; init; }
 }
 ```
@@ -435,26 +435,26 @@ builder.Services.AddProblemDetails();
 
 ```csharp
 [HttpGet("{id}")]
-[SwaggerOperation(Summary = "Obtener funko por ID")]
-[SwaggerResponse(200, "Funko encontrado", typeof(FunkoResponseDto))]
-[SwaggerResponse(404, "Funko no encontrado", typeof(ProblemDetails))]
+[SwaggerOperation(Summary = "Obtener producto por ID")]
+[SwaggerResponse(200, "Producto encontrado", typeof(ProductoResponseDto))]
+[SwaggerResponse(404, "Producto no encontrado", typeof(ProblemDetails))]
 [SwaggerResponse(500, "Error interno del servidor", typeof(ProblemDetails))]
-public async Task<ActionResult<FunkoResponseDto>> GetById(int id)
+public async Task<ActionResult<ProductoResponseDto>> GetById(int id)
 {
-    var funko = await _service.GetByIdAsync(id);
-    if (funko is null)
+    var producto = await _service.GetByIdAsync(id);
+    if (producto is null)
     {
         // RFC 9457: type + title + status + detail + instance
         return NotFound(new ProblemDetails
         {
             Type = "https://tools.ietf.org/html/rfc9457#section-3",
-            Title = "Funko no encontrado",
+            Title = "Producto no encontrado",
             Status = StatusCodes.Status404NotFound,
-            Detail = $"No existe un funko con ID {id}",
-            Instance = $"/api/funkos/{id}"
+            Detail = $"No existe un producto con ID {id}",
+            Instance = $"/api/productos/{id}"
         });
     }
-    return Ok(funko);
+    return Ok(producto);
 }
 ```
 
@@ -495,8 +495,8 @@ builder.Services.AddVersionedApiExplorer(options =>
 
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo { Title = "FunkoApp API", Version = "v1" });
-    options.SwaggerDoc("v2", new OpenApiInfo { Title = "FunkoApp API", Version = "v2" });
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "ProductosApp API", Version = "v1" });
+    options.SwaggerDoc("v2", new OpenApiInfo { Title = "ProductosApp API", Version = "v2" });
 });
 ```
 
@@ -508,7 +508,7 @@ builder.Services.AddSwaggerGen(options =>
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class FunkosV1Controller : ControllerBase
+public class ProductosV1Controller : ControllerBase
 {
     // Endpoints V1 - Version original
 }
@@ -516,7 +516,7 @@ public class FunkosV1Controller : ControllerBase
 [ApiController]
 [ApiVersion("2.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class FunkosV2Controller : ControllerBase
+public class ProductosV2Controller : ControllerBase
 {
     // Endpoints V2 - Nueva version con cambios
 }
@@ -538,26 +538,26 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.ExampleFilters();
 });
-builder.Services.AddSwaggerExamplesFromAssemblyOf<CreateFunkoExample>();
+builder.Services.AddSwaggerExamplesFromAssemblyOf<CreateProductoExample>();
 ```
 
 ```csharp
 [HttpPost]
 [SwaggerOperation(
-    Summary = "Crear funko",
-    Description = "Crea un nuevo funko con los datos proporcionados"
+    Summary = "Crear producto",
+    Description = "Crea un nuevo producto con los datos proporcionados"
 )]
-[SwaggerRequestExample(typeof(CreateFunkoDto), typeof(CreateFunkoExample))]
-public async Task<ActionResult<FunkoResponseDto>> Create(CreateFunkoDto dto)
+[SwaggerRequestExample(typeof(CreateProductoDto), typeof(CreateProductoExample))]
+public async Task<ActionResult<ProductoResponseDto>> Create(CreateProductoDto dto)
 {
     // ...
 }
 
-public class CreateFunkoExample : IExamplesProvider<CreateFunkoDto>
+public class CreateProductoExample : IExamplesProvider<CreateProductoDto>
 {
-    public CreateFunkoDto GetExamples()
+    public CreateProductoDto GetExamples()
     {
-        return new CreateFunkoDto
+        return new CreateProductoDto
         {
             Nombre = "Iron Man Mark 50",
             Precio = 34.99m,
@@ -584,7 +584,7 @@ public class SwaggerExamplesFilter : IOperationFilter
                 if (content.Key == "application/json")
                 {
                     content.Value.Example = new OpenApiString(@"{
-                        ""nombre"": ""Batman"",
+                        ""nombre"": ""Laptop"",
                         ""precio"": 29.99,
                         ""categoria"": ""DC"",
                         ""imagen"": ""https://example.com/batman.jpg""
