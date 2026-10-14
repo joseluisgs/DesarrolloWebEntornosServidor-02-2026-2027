@@ -35,6 +35,7 @@
     - [14.7.4. MemoryCacheService](#1474-memorycacheservice)
     - [14.7.5. RedisCacheService](#1475-rediscacheservice)
     - [14.7.6. Configuración en DI](#1476-configuración-en-di)
+    - [14.7.7. Profundización: lo que IDistributedCache oculta](#1477-profundización-lo-que-idistributedcache-oculta)
   - [14.8. Qué y qué no cachear](#148-qué-y-qué-no-cachear)
   - [14.9. Invalidación de caché](#149-invalidación-de-caché)
     - [14.9.1. Invalidación por TTL](#1491-invalidación-por-ttl)
@@ -47,7 +48,10 @@
     - [14.12.1. Unit testing con mocks](#14121-unit-testing-con-mocks)
     - [14.12.2. Integration testing con TestContainers](#14122-integration-testing-con-testcontainers)
   - [14.13. Buenas prácticas](#1413-buenas-prácticas)
-  - [14.14. Reto](#1414-reto)
+  - [14.14. Reto: caché distribuida para FunkoApp](#1414-reto-caché-distribuida-para-funkoapp)
+    - [14.14.1. Contexto](#14141-contexto)
+    - [14.14.2. Retos](#14142-retos)
+    - [14.14.3. Ampliaciones (puntos extra)](#14143-ampliaciones-puntos-extra)
 
 
 
@@ -71,36 +75,35 @@ Un **caché** es una capa de almacenamiento temporal de alta velocidad que guard
 
 ### 14.1.2. Por qué usar caché
 
-El caché resuelve la **brecha de velocidad** entre la memoria (RAM) y el almacenamiento persistente (base de datos):
+El caché resuelve la **brecha de velocidad** entre la memoria (RAM) y el almacenamiento persistente (base de datos). Redis se coloca justo entre los dos mundos: vive en RAM como la memoria, pero se consulta por red como una base de datos.
 
 ```mermaid
 flowchart LR
-    subgraph "Tiempos de Acceso"
-        A["RAM<br/>~100 ns"] --> B["Redis<br/>~1-5 ms"]
-        B --> C["SSD<br/>~0.1-1 ms"]
-        C --> D["HDD<br/>~5-10 ms"]
-        D --> E["BD en Red<br/>~10-100 ms"]
+    subgraph "Tiempos de acceso"
+        A["RAM (local)<br/>~0.1 µs"] --> B["Redis (red local)<br/>~0.1-0.5 ms"]
+        B --> C["BD disco SSD<br/>~1-10 ms"]
+        C --> D["BD remota<br/>~10-100 ms"]
     end
-    style A fill:#4CAF5,color:#fff0,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#FF980,color:#fff0,color:#fff
-    style E fill:#F4433,color:#fff6,color:#fff
+    style A fill:#4CAF50,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#FF9800,color:#fff
+    style D fill:#F44336,color:#fff
 ```
 
-| Nivel | Tecnología | Latencia Típica | Throughput |
+| Nivel | Tecnología | Latencia típica | Throughput |
 |-------|------------|-----------------|------------|
-| **RAM** | Memoria RAM | ~100 ns | ~50 GB/s |
-| **Redis** | Caché en memoria | ~1-5 ms | ~100K ops/s |
-| **SSD** | Almacenamiento | ~0.1-1 ms | ~500 MB/s |
-| **HDD** | Disco magnético | ~5-10 ms | ~100 MB/s |
-| **BD** | Red a BD | ~10-100 ms | Limitado por red |
+| **RAM** | Memoria del proceso | ~0.1 µs (100 ns) | ~50 GB/s |
+| **Redis** | Caché en memoria por red local | ~0.1-0.5 ms | ~100K ops/s |
+| **BD (SSD)** | Consulta con disco de estado sólido | ~1-10 ms | Limitado por disco |
+| **BD (remota)** | Base de datos en otra máquina | ~10-100 ms | Limitado por red |
 
-> 📝 **Nota:** Redis es tan rápido porque mantiene todos los datos en memoria RAM. A diferencia de una BD tradicional que puede necesitar múltiples lecturas de disco, Redis responde en microsegundos porque todo está ya en memoria.
+> 📝 **Nota:** Redis responde en sub-milisegundos porque todos los datos viven ya en RAM: no toca disco en la operación normal. Por eso una consulta directa al SSD (~1-10 ms con toda la capa de consultas encima) siempre pierde contra Redis. La distancia no la marca el disco, la marca cuántas capas hay entre el dato y tu código.
 
 📌 Ejemplo real: **Amazon** usa caché agresivamente. Cada producto que ves en amazon.com está cacheado. Cuando buscas "auriculares Bluetooth", los resultados vienen de caché, no de una consulta SQL en tiempo real. Solo cuando compras algo se actualiza la BD.
 
 ### 14.1.3. Arquitectura con caché
+
+En una API con caché, las peticiones de lectura no van directas a la base de datos: pasan primero por el caché. Solo cuando el caché no tiene el dato (un fallo o MISS) se consulta la base de datos y se guarda una copia para las próximas veces. El siguiente esquema resume el recorrido de una petición:
 
 ```mermaid
 flowchart TB
@@ -120,8 +123,8 @@ flowchart TB
     Cache -->|HIT| C2
     Cache -->|MISS| BD
     BD --> Cache
-    style Cache fill:#4CAF5,color:#fff0,color:#fff
-    style BD fill:#2196F,color:#fff3,color:#fff
+    style Cache fill:#4CAF50,color:#fff
+    style BD fill:#2196F3,color:#fff
 ```
 
 > 💡 **Consejo:** Piensa en el caché como los estantes del supermercado. Los productos más vendidos están al frente (caché). Solo cuando se agota el estante, bajan al almacén (base de datos).
@@ -140,8 +143,8 @@ flowchart LR
         P1["Proceso 1"] --> R1["RAM Proceso 1"]
         P2["Proceso 2"] --> R2["RAM Proceso 2"]
     end
-    style R1 fill:#4CAF5,color:#fff0,color:#fff
-    style R2 fill:#4CAF5,color:#fff0,color:#fff
+    style R1 fill:#4CAF50,color:#fff
+    style R2 fill:#4CAF50,color:#fff
 ```
 
 | Aspecto | Descripción |
@@ -163,7 +166,7 @@ flowchart LR
         P2["Proceso 2"] --> RS
         P3["Proceso 3"] --> RS
     end
-    style RS fill:#4CAF5,color:#fff0,color:#fff
+    style RS fill:#4CAF50,color:#fff
 ```
 
 | Aspecto | Descripción |
@@ -176,6 +179,8 @@ flowchart LR
 
 ### 14.2.3. Comparativa MemoryCache vs IDistributedCache
 
+Antes de elegir, conviene ver el camino que recorre una petición en cada caso y qué se gana o se pierde en cada decisión. El siguiente árbol recoge las preguntas que hay que hacerse y a qué solución lleva cada respuesta:
+
 ```mermaid
 flowchart TD
     A["¿Necesitas compartir datos entre instancias?"] -->|Sí| B["¿Alta disponibilidad requerida?"]
@@ -184,10 +189,10 @@ flowchart TD
     B -->|No| E["Redis Standalone"]
     C -->|Sí| F["MemoryCache con límites"]
     C -->|No| G["MemoryCache sin límites"]
-    style D fill:#4CAF5,color:#fff0,color:#fff
-    style E fill:#4CAF5,color:#fff0,color:#fff
-    style F fill:#FF980,color:#fff0,color:#fff
-    style G fill:#2196F,color:#fff3,color:#fff
+    style D fill:#4CAF50,color:#fff
+    style E fill:#4CAF50,color:#fff
+    style F fill:#FF9800,color:#fff
+    style G fill:#2196F3,color:#fff
 ```
 
 | Característica | MemoryCache (Local) | IDistributedCache (Redis) |
@@ -196,7 +201,7 @@ flowchart TD
 | **Persistencia** | Se pierde al reiniciar | Opcional (RDB/AOF) |
 | **Escalabilidad horizontal** | Limitado | Ilimitado |
 | **Latencia** | ~0.001 ms | ~1-5 ms |
-| **Overhead de red** | Ninguno | Requiere red |
+| **Sobrecarga de red** | Ninguna | Requiere red |
 | **Memoria disponible** | Limitada al proceso | Dedicada al servidor |
 | **Alta disponibilidad** | No | Con Sentinel/Cluster |
 
@@ -229,9 +234,9 @@ flowchart TD
         S --> LFU["LFU: [A, B, C]<br/>Hit rate: 4/8 = 50%"]
         S --> FIFO["FIFO: [C, D, A]<br/>Hit rate: 2/8 = 25%"]
     end
-    style LRU fill:#4CAF5,color:#fff0,color:#fff
-    style LFU fill:#2196F,color:#fff3,color:#fff
-    style FIFO fill:#F4433,color:#fff6,color:#fff
+    style LRU fill:#4CAF50,color:#fff
+    style LFU fill:#2196F3,color:#fff
+    style FIFO fill:#F44336,color:#fff
 ```
 
 **Cómo funciona:**
@@ -254,8 +259,8 @@ flowchart LR
         A2["A: 100"] --> B2["B: 50"]
         B2 --> D2["D: 1"]
     end
-    style A fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#F4433,color:#fff6,color:#fff
+    style A fill:#4CAF50,color:#fff
+    style C fill:#F44336,color:#fff
 ```
 
 ### 14.3.3. FIFO - first in first out
@@ -289,7 +294,7 @@ var options = new MemoryCacheEntryOptions
 | **FIFO** | Datos que caducan por edad | Patrones repetitivos | O(1) | Buffering, streaming |
 | **TTL** | Datos que caducan naturalmente | Datos permanentes | O(1) | Tokens, sesiones |
 
-> 📝 **Nota:** En Redis, el algoritmo por defecto es **allkeys-lru** (LRU entre todas las claves). Se configura con `maxmemory-policy allkeys-lru` en redis.conf.
+> 📝 **Nota:** Conviene no confundir dos cosas. El algoritmo **LRU** es el que acabas de ver; la **política de evicción** es la que Redis aplica cuando la memoria se llena. Ojo porque Redis **no** viene configurado para caché: su valor por defecto es `noeviction`, que se limita a devolver errores en cuanto se alcanza `maxmemory`. Para usar Redis como caché hay que cambiarlo a mano con `maxmemory-policy allkeys-lru` en el `redis.conf` (lo veremos en 14.6.3).
 
 ## 14.4. Estrategias de acceso a caché
 
@@ -304,9 +309,9 @@ flowchart TD
     B -->|No| D["Consultar BD"]
     D --> E["Guardar en caché"]
     E --> C
-    style C fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#f4433,color:#fff6,color:#fff
-    style E fill:#FF980,color:#fff0,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style D fill:#F44336,color:#fff
+    style E fill:#FF9800,color:#fff
 ```
 
 **Implementación:**
@@ -332,7 +337,7 @@ public async Task<Producto?> GetProductoAsync(int id)
 ```
 
 **Ventajas:** Simple, datos se cargan bajo demanda, ideal para acceso impredecible.
-**Desventajas:** Primer acceso lento (cache miss), posible cache stampede.
+**Desventajas:** Primer acceso lento (fallo de caché), posible estampida de caché (cache stampede).
 
 ### 14.4.2. Write-Through
 
@@ -343,13 +348,13 @@ flowchart TD
     A["PUT /productos/1"] --> B["Actualizar en BD"]
     B --> C["Actualizar en caché"]
     C --> D["Respuesta OK"]
-    style B fill:#2196F,color:#fff3,color:#fff
-    style C fill:#FF980,color:#fff0,color:#fff
-    style D fill:#4CAF5,color:#fff0,color:#fff
+    style B fill:#2196F3,color:#fff
+    style C fill:#FF9800,color:#fff
+    style D fill:#4CAF50,color:#fff
 ```
 
-**Ventajas:** Caché siempre sincronizado, lecturas siempre devuelven datos actualizados.
-**Desventajas:** Writes más lentos (dos operaciones), overhead en cada write.
+**Ventajas:** Caché siempre sincronizado; las lecturas siempre devuelven datos actualizados.
+**Desventajas:** Escrituras más lentas (dos operaciones) y sobrecarga en cada escritura.
 
 ### 14.4.3. Write-Behind (Write-Back)
 
@@ -359,13 +364,13 @@ El patrón **Write-Behind** escribe primero en el caché y luego, de forma asín
 flowchart TD
     A["PUT /productos/1"] --> B["Escribir en caché"]
     B --> C["Respuesta inmediata"]
-    C --> D["Flush asíncrono a BD"]
-    style B fill:#FF980,color:#fff0,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#2196F,color:#fff3,color:#fff
+    C --> D["Volcado asíncrono a BD"]
+    style B fill:#FF9800,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style D fill:#2196F3,color:#fff
 ```
 
-**Ventajas:** Writes muy rápidos, reduce carga en BD.
+**Ventajas:** Escrituras muy rápidas; reduce la carga de la base de datos.
 **Desventajas:** Riesgo de pérdida de datos si el caché falla.
 
 ### 14.4.4. Refresh-Ahead
@@ -378,15 +383,15 @@ flowchart TD
     B -->|Sí| C["Refrescar en segundo plano"]
     B -->|No| D["Devolver dato"]
     C --> D
-    style C fill:#FF980,color:#fff0,color:#fff
-    style D fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#FF9800,color:#fff
+    style D fill:#4CAF50,color:#fff
 ```
 
 ### 14.4.5. Cuál elegir
 
 | Estrategia | Mejor Para | Evitar En |
 |------------|------------|-----------|
-| **Cache-Aside** | Reads frecuentes, datos no críticos | Datos que cambian constantemente |
+| **Cache-Aside** | Lecturas frecuentes, datos no críticos | Datos que cambian constantemente |
 | **Write-Through** | Datos que deben estar siempre actualizados | Writes de alto volumen |
 | **Write-Behind** | Alta escritura, tolerancia a pérdida | Transacciones financieras |
 | **Refresh-Ahead** | Datos muy populares, baja latencia | Datos muy volátiles |
@@ -428,6 +433,8 @@ flowchart TD
 
 ### 14.6.2. Estructuras de datos
 
+Redis no guarda solo cadenas de texto: almacena varios tipos de estructuras, y cada una tiene su familia de comandos. Elegir la estructura adecuada es lo que separa un caché simple de un almacén polivalente:
+
 ```mermaid
 flowchart TD
     A["Redis"] --> B["String"]
@@ -442,13 +449,13 @@ flowchart TD
     E --> E1["Conjuntos únicos"]
     F --> F1["Conjuntos ordenados"]
     G --> G1["Logs estructurados"]
-    style A fill:#F4433,color:#fff6,color:#fff
-    style B fill:#2196F,color:#fff3,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#FF980,color:#fff0,color:#fff
-    style E fill:#9C27B,color:#fff0,color:#fff
-    style F fill:#2196F,color:#fff3,color:#fff
-    style G fill:#607D8,color:#fffB,color:#fff
+    style A fill:#F44336,color:#fff
+    style B fill:#2196F3,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style D fill:#FF9800,color:#fff
+    style E fill:#9C27B0,color:#fff
+    style F fill:#2196F3,color:#fff
+    style G fill:#607D8B,color:#fff
 ```
 
 | Estructura | Uso | Ejemplo |
@@ -456,11 +463,13 @@ flowchart TD
 | **String** | Cacheo de JSON, contadores | `SET product:1 '{"id":1}'` |
 | **Hash** | Objetos con campos | `HSET user:1 name "Juan"` |
 | **List** | Colas, feeds | `LPUSH notifications "nuevopedido"` |
-| **Set** | Tags, pertenencia | `SADD product:tags "funko"` |
+| **Set** | Tags, pertenencia | `SADD producto:1:tags "oferta"` |
 | **Sorted Set** | Leaderboards | `ZADD leaderboard 100 "user:1"` |
 | **Stream** | Logging, eventos | `XADD events * type "login"` |
 
 ### 14.6.3. Persistencia
+
+Redis vive en RAM, pero puede (y en producción debe) respaldarse en disco de dos formas distintas. Combinarlas da la ventaja de las dos:
 
 ```mermaid
 flowchart TB
@@ -471,9 +480,9 @@ flowchart TB
     B1 --> B2["Archivo: dump.rdb"]
     C --> C1["Cada operación al log"]
     C1 --> C2["Archivo: appendonly.aof"]
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#2196F,color:#fff3,color:#fff
-    style D fill:#F4433,color:#fff6,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#2196F3,color:#fff
+    style D fill:#F44336,color:#fff
 ```
 
 **Configuración recomendada para producción:**
@@ -773,7 +782,76 @@ else
 }
 ```
 
+### 14.7.7. Profundización: lo que IDistributedCache oculta
+
+`IDistributedCache` es una abstracción deliberadamente pobre: solo sabe leer, escribir y borrar. Todo lo demás (claves, expiración, estructuras, bloqueos) queda fuera de la interfaz y hay que pedírselo a Redis directamente.
+
+**Inspeccionar las claves con redis-cli:**
+
+```bash
+docker exec -it app-redis redis-cli
+127.0.0.1:6379> TTL producto:1                    # segundos que quedan de vida
+127.0.0.1:6379> TYPE producto:1                   # string, hash, list, set...
+127.0.0.1:6379> SCAN 0 MATCH producto:* COUNT 100 # recorrer claves por lotes
+```
+
+> ⚠️ **Advertencia:** el comando `KEYS producto:*` parece más cómodo que `SCAN`, pero recorre toda la base de claves sin soltar el procesador: mientras lo ejecuta, Redis no atiende a nadie. En un servidor con tráfico real, un solo `KEYS` puede tumbar la API unos segundos. `SCAN` recorre por lotes sin bloquear; es el único que se usa en serio.
+
+**Bloqueo distribuido con `SET NX EX`:**
+
+El `SemaphoreSlim` que usan las dos implementaciones protege **un solo proceso**. Con tres instancias desplegadas, las tres pueden notificar el fallo de caché a la vez y ejecutar la `factory` tres veces: es la misma estampida de caché, pero ahora entre servidores. Redis la resuelve con una escritura atómica: `SET clave valor NX EX segundos` solo devuelve éxito al primer cliente que llega. Para usarla hay que registrar también el multiplexor de StackExchange.Redis:
+
+```csharp
+// Program.cs
+builder.Services.AddSingleton<IConnectionMultiplexer>(
+    ConnectionMultiplexer.Connect(
+        builder.Configuration["Redis:ConnectionString"]!));
+```
+
+```csharp
+/// <summary>
+/// GetOrSet con candado distribuido: solo un proceso carga el dato.
+/// Los demás esperan y reutilizan lo que haya en caché.
+/// </summary>
+public async Task<T?> GetOrSetAsync<T>(string key, Func<Task<T>> factory,
+    TimeSpan? expiration = null, CancellationToken ct = default)
+{
+    // db se obtiene del multiplexor singleton: multiplexer.GetDatabase()
+    var cached = await GetAsync<T>(key, ct);
+    if (cached is not null) return cached;
+
+    // 1. Intentar ganar el candado: SET clave 1 NX EX 10 (solo uno gana)
+    var lockKey = $"lock:{key}";
+    var ganado = await db.StringSetAsync(lockKey, "1",
+        TimeSpan.FromSeconds(10), When.NotExists);
+    if (!ganado)
+    {
+        // 2. Otro proceso está cargando: esperar un poco y releer
+        await Task.Delay(100, ct);
+        return await GetAsync<T>(key, ct);
+    }
+
+    try
+    {
+        var value = await factory();
+        if (value is not null)
+            await SetAsync(key, value, expiration, ct);
+        return value;
+    }
+    finally
+    {
+        await db.KeyDeleteAsync(lockKey, ct);   // 3. Soltar el candado
+    }
+}
+```
+
+El candado lleva su propia expiración (`EX 10`) por si el proceso que lo ganó se cae en medio: si no existiera, la clave `lock:...` quedaría huérfana y nadie podría volver a cargar ese dato jamás.
+
+> 💡 **Consejo:** con `SCAN` y el candado distribuido ya tienes las dos herramientas que separan un caché de juguete de uno que aguanta varias instancias. Lo que no te da `IDistributedCache` no significa que no exista: significa que hay que hablar con Redis directamente.
+
 ## 14.8. Qué y qué no cachear
+
+No todo merece caché: meter datos equivocados en Redis solo añade complejidad y riesgo de inconsistencia. Estas son las preguntas que conviene hacerse antes de cachear un dato:
 
 ```mermaid
 flowchart TD
@@ -784,10 +862,10 @@ flowchart TD
     C -->|Sí| F{"¿Es crítico?"}
     F -->|Sí| G["Cachear con TTL corto"]
     F -->|No| H["No cachear"]
-    style E fill:#4CAF5,color:#fff0,color:#fff
-    style G fill:#FF980,color:#fff0,color:#fff
-    style D fill:#F4433,color:#fff6,color:#fff
-    style H fill:#F4433,color:#fff6,color:#fff
+    style E fill:#4CAF50,color:#fff
+    style G fill:#FF9800,color:#fff
+    style D fill:#F44336,color:#fff
+    style H fill:#F44336,color:#fff
 ```
 
 ```csharp
@@ -836,6 +914,8 @@ await _cache.SetAsync(key, value, TimeSpan.FromMinutes(30));
 
 ### 14.9.2. Invalidación por operación CRUD
 
+La invalidación no ocurre sola: hay que acordarse de limpiar las claves afectadas en cada operación de escritura. Cada operación del CRUD tiene su limpieza asociada, y las listas son las que más se olvidan:
+
 ```mermaid
 flowchart TD
     subgraph "CREATE"
@@ -853,11 +933,11 @@ flowchart TD
         D1["Eliminar BD"] --> D2["Invalidar elemento"]
         D2 --> D3["Invalidar listas"]
     end
-    style A2 fill:#FF980,color:#fff0,color:#fff
-    style B2 fill:#4CAF5,color:#fff0,color:#fff
-    style B4 fill:#4CAF5,color:#fff0,color:#fff
-    style C2 fill:#FF980,color:#fff0,color:#fff
-    style D2 fill:#FF980,color:#fff0,color:#fff
+    style A2 fill:#FF9800,color:#fff
+    style B2 fill:#4CAF50,color:#fff
+    style B4 fill:#4CAF50,color:#fff
+    style C2 fill:#FF9800,color:#fff
+    style D2 fill:#FF9800,color:#fff
 ```
 
 ```csharp
@@ -874,8 +954,6 @@ await cache.RemoveAsync($"productos:cat:{producto.CategoriaId}"); // lista por c
 ```
 
 > 📝 **Nota:** Fíjate en que `productos:all` **solo aparece si alguien la lee**. Invalidar una clave que nadie consulta es **código muerto**: cuesta un viaje a Redis y no protege nada. Antes de añadir una clave a la lista de invalidación, pregúntate *"¿hay algún `GetAsync` que la pida?"*. Si la respuesta es no, borra tanto la lectura como la invalidación.
->
-> 📌 Ejemplo real: en TiendaAPI eliminaron las claves `productos:all`, `categorias:all`, `usuarios:all` y `pedidos:all` de la invalidación porque tenían **0 lectores** (las listas se servían por `OutputCache` con tags). Commit `fix: eliminar claves muertas :all de invalidación`.
 
 ### 14.9.3. Invalidación en cascada
 
@@ -883,13 +961,13 @@ Cuando un dato relacionado cambia, todas las cachés derivadas deben invalidarse
 
 ```mermaid
 flowchart TD
-    CM["Categoría cambia"] -->|Invalidar| F1["funko:1"]
-    CM -->|Invalidar| F2["funko:2"]
-    CM -->|Invalidar| L1["funkos:all"]
-    CM -->|Invalidar| L2["funkos:cat:1"]
-    style CM fill:#F4433,color:#fff6,color:#fff
-    style L1 fill:#FF980,color:#fff0,color:#fff
-    style L2 fill:#FF980,color:#fff0,color:#fff
+    CM["Categoría cambia"] -->|Invalidar| P1["producto:1"]
+    CM -->|Invalidar| P2["producto:2"]
+    CM -->|Invalidar| L1["productos:all"]
+    CM -->|Invalidar| L2["productos:cat:1"]
+    style CM fill:#F44336,color:#fff
+    style L1 fill:#FF9800,color:#fff
+    style L2 fill:#FF9800,color:#fff
 ```
 
 ### 14.9.4. Regla de oro
@@ -908,6 +986,8 @@ flowchart TD
 > 💡 **Analogía:** Piensa en las etiquetas de un armario de un almacén. Si mueves una caja y borras la etiqueta de una balda que nadie usa, solo pierdes tiempo. Pero si dejas la etiqueta vieja en la balda donde sí mira la gente, acabarán llevándose la caja equivocada.
 
 ## 14.10. CRUD con caché: diagrama completo
+
+Con lo visto hasta aquí ya podemos dibujar el recorrido completo de una petición con caché: qué pasa en cada operación del CRUD y en qué momento se consulta, se guarda o se invalida. Este es el esquema que resume el tema entero:
 
 ```mermaid
 flowchart TD
@@ -932,11 +1012,11 @@ flowchart TD
         D2 --> D3["Invalidar elemento"]
         D3 --> D4["Invalidar listas"]
     end
-    style B3 fill:#4CAF5,color:#fff0,color:#fff
-    style B5 fill:#4CAF5,color:#fff0,color:#fff
-    style A3 fill:#FF980,color:#fff0,color:#fff
-    style C3 fill:#FF980,color:#fff0,color:#fff
-    style D3 fill:#FF980,color:#fff0,color:#fff
+    style B3 fill:#4CAF50,color:#fff
+    style B5 fill:#4CAF50,color:#fff
+    style A3 fill:#FF9800,color:#fff
+    style C3 fill:#FF9800,color:#fff
+    style D3 fill:#FF9800,color:#fff
 ```
 
 ## 14.11. Decorator pattern para caché
@@ -1160,33 +1240,39 @@ await _cache.SetAsync("user:456:session", sesion);         // Sesión de usuario
 | Práctica | Descripción |
 |----------|-------------|
 | **Usar abstracción** | Interfaz `ICacheService`, nunca usar `IMemoryCache` directamente |
-| **Claves descriptivas** | `producto:1`, `productos:all`, `productos:cat:marvel` |
+| **Claves descriptivas** | `producto:1`, `productos:all`, `productos:cat:ofertas` |
 | **TTL apropiado** | Datos estables: 24h. Datos moderados: 30min. Datos volátiles: 1min |
 | **Invalidar en escrituras** | Siempre invalidar listas cuando hay CREATE/UPDATE/DELETE |
-| **Loggear HIT/MISS** | Para debug y métricas |
-| **Environment-based** | MemoryCache en Development, Redis en Production |
+| **Registrar HIT/MISS** | Para depuración y métricas |
+| **Selección por entorno** | MemoryCache en Development, Redis en Production |
 
 > ⚠️ **Advertencia:** Nunca almacenes datos sensibles (passwords, tokens JWT, datos de tarjetas de crédito) en caché. El caché no está diseñado para seguridad, solo para rendimiento.
 
-## 14.14. Reto
+## 14.14. Reto: caché distribuida para FunkoApp
 
-> Aplica caché a FunkoApp.
+### 14.14.1. Contexto
 
-**Añade a tu API:**
+FunkoApp es tu API de catálogo de figuras coleccionables, construida paso a paso a lo largo de la unidad: CRUD de funkos con EF Core y PostgreSQL, categorías relacionadas, borrado lógico y paginación. El catálogo se consulta mucho y cambia poco, así que es el candidato ideal para ponerle una capa de caché delante de la base de datos.
 
-1. Interfaz `ICacheService` con operaciones Get, Set, Remove, GetOrSet
-2. `MemoryCacheService` implementando `ICacheService` para desarrollo
-3. `RedisCacheService` implementando `ICacheService` para producción
-4. Configuración en DI que seleccione la implementación según el entorno
-5. Aplicar Cache-Aside en el servicio de productos: cachear individual y lista
-6. Invalidación correcta en CREATE, UPDATE y DELETE
+Hasta ahora tu servicio hablaba directamente con el repositorio. En este reto introduces una capa nueva entre los dos: el servicio preguntará primero al caché y solo irá a la base de datos cuando el caché no tenga el dato (un fallo o MISS).
 
-**Puntos extra:**
+### 14.14.2. Retos
 
-- Implementar el patrón Decorator con Scrutor
-- Añadir métricas de hit rate con logs
-- Tests unitarios con mocks
-- Tests de integración con TestContainers (Redis)
+1. **Interfaz `ICacheService`:** `GetAsync`, `SetAsync`, `RemoveAsync`, `ExistsAsync` y `GetOrSetAsync`
+2. **`MemoryCacheService`:** implementación en memoria para desarrollo, con candado y doble comprobación en el `GetOrSetAsync`
+3. **`RedisCacheService`:** implementación sobre `IDistributedCache` para producción, con serialización a JSON
+4. **`CacheOptions`:** expiración absoluta y deslizante leídas desde `appsettings.json`
+5. **Configuración en DI:** MemoryCache en Development, Redis en Production, seleccionado por entorno
+6. **Cache-Aside en el servicio de funkos:** cachear el funko individual (`funko:{id}`) y el listado (`funkos:all`)
+7. **Invalidación:** en CREATE, UPDATE y DELETE borra el elemento y los listados que efectivamente se estén cacheando
+
+### 14.14.3. Ampliaciones (puntos extra)
+
+- Patrón Decorator con Scrutor: un `CachedFunkoService` que decora a tu `FunkoService` sin tocar su código
+- Bloqueo distribuido con `SET NX EX` para que solo una instancia ejecute la carga en caché
+- Registro de aciertos (HIT) y fallos (MISS) con logs, para medir la efectividad del caché
+- Tests unitarios del decorador con Moq, sin tocar Redis ni la memoria
+- Tests de integración de `RedisCacheService` con TestContainers, levantando un Redis real en Docker
 
 ---
 
