@@ -13,10 +13,3 @@ public interface IProductoRepository
     bool Restore(long id);
     bool IsDuplicated(string nombre, long excludeId = 0);
 }
-
-public interface ICategoriaRepository
-{
-    IEnumerable<Categoria> GetAll();
-    Categoria? GetById(long id);
-    Categoria? GetByNombre(string nombre);
-}
