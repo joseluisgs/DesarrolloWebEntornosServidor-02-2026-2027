@@ -5,7 +5,6 @@ using ProductosConfigLogging.Dtos;
 using ProductosConfigLogging.Errors;
 using ProductosConfigLogging.Extensions;
 using ProductosConfigLogging.Helpers;
-using ProductosConfigLogging.Mappers;
 using ProductosConfigLogging.Services;
 
 namespace ProductosConfigLogging.Controllers;
@@ -14,12 +13,13 @@ namespace ProductosConfigLogging.Controllers;
 [Route("api/[controller]")]
 public class ProductosController(IProductoService service) : ControllerBase
 {
+    // El controlador solo pide y recibe DTOs: el mapeo es responsabilidad del servicio.
     [HttpGet]
     public ActionResult<List<ProductoDto>> GetAll()
     {
         var result = service.GetAll();
         return result.IsSuccess
-            ? Ok(result.Value.Select(p => p.ToDto()).ToList())
+            ? Ok(result.Value.ToList())
             : result.Error.ToHttpResult<List<ProductoDto>>();
     }
 
@@ -28,7 +28,7 @@ public class ProductosController(IProductoService service) : ControllerBase
     {
         var result = service.GetById(id);
         return result.IsSuccess
-            ? Ok(result.Value.ToDto())
+            ? Ok(result.Value)
             : result.Error.ToHttpResult<ProductoDto>();
     }
 
@@ -37,7 +37,7 @@ public class ProductosController(IProductoService service) : ControllerBase
     {
         var result = service.Create(dto);
         return result.IsSuccess
-            ? CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value.ToDto())
+            ? CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value)
             : result.Error.ToHttpResult<ProductoDto>();
     }
 
@@ -46,7 +46,7 @@ public class ProductosController(IProductoService service) : ControllerBase
     {
         var result = service.Update(id, dto);
         return result.IsSuccess
-            ? Ok(result.Value.ToDto())
+            ? Ok(result.Value)
             : result.Error.ToHttpResult<ProductoDto>();
     }
 
@@ -55,7 +55,7 @@ public class ProductosController(IProductoService service) : ControllerBase
     {
         var result = service.PatchPrice(id, precio);
         return result.IsSuccess
-            ? Ok(result.Value.ToDto())
+            ? Ok(result.Value)
             : result.Error.ToHttpResult<ProductoDto>();
     }
 
@@ -78,7 +78,7 @@ public class ProductosController(IProductoService service) : ControllerBase
     {
         var result = service.Search(q);
         return result.IsSuccess
-            ? Ok(result.Value.Select(p => p.ToDto()).ToList())
+            ? Ok(result.Value.ToList())
             : result.Error.ToHttpResult<List<ProductoDto>>();
     }
 
@@ -91,7 +91,7 @@ public class ProductosController(IProductoService service) : ControllerBase
     {
         var result = service.Filter(nombre, categoria, precioMin, precioMax);
         return result.IsSuccess
-            ? Ok(result.Value.Select(p => p.ToDto()).ToList())
+            ? Ok(result.Value.ToList())
             : result.Error.ToHttpResult<List<ProductoDto>>();
     }
 
@@ -115,7 +115,7 @@ public class ProductosController(IProductoService service) : ControllerBase
 
         return Ok(new PagedResponse<ProductoDto>
         {
-            Data = items.Select(p => p.ToDto()).ToList(),
+            Data = items.ToList(),
             Pagination = new PageMetadata(page, pageSize, totalPages, totalItems)
         });
     }
@@ -130,7 +130,7 @@ public class ProductosController(IProductoService service) : ControllerBase
 
         var result = service.Filter(nombre, categoria, precioMin, precioMax);
         return result.IsSuccess
-            ? Ok(result.Value.Select(p => p.ToDto()).ToList())
+            ? Ok(result.Value.ToList())
             : result.Error.ToHttpResult<List<ProductoDto>>();
     }
 }

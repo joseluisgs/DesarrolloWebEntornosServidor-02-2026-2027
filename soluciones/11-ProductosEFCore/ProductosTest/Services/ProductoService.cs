@@ -2,50 +2,51 @@ using CSharpFunctionalExtensions;
 using ProductosEFCore.Dtos;
 using ProductosEFCore.Errors;
 using ProductosEFCore.Mappers;
-using ProductosEFCore.Models;
 using ProductosEFCore.Repositories;
 
 namespace ProductosEFCore.Services;
 
 public class ProductoService(IProductoRepository repository, ICategoriaRepository categoriaRepository) : IProductoService
 {
-    public IEnumerable<Producto> GetAll() => repository.GetAll();
+    // El servicio trabaja con modelos por dentro y devuelve DTOs al exterior:
+    // el mapeo Modelo -> DTO vive SIEMPRE aquí, nunca en el controlador.
+    public IEnumerable<ProductoDto> GetAll() => repository.GetAll().Select(p => p.ToDto());
 
-    public IEnumerable<Producto> GetDeleted() => repository.GetDeleted();
+    public IEnumerable<ProductoDto> GetDeleted() => repository.GetDeleted().Select(p => p.ToDto());
 
-    public Result<Producto, DomainError> GetById(long id)
+    public Result<ProductoDto, DomainError> GetById(long id)
     {
         var producto = repository.GetById(id);
         return producto is not null
-            ? Result.Success<Producto, DomainError>(producto)
-            : Result.Failure<Producto, DomainError>(ProductoError.NotFound(id));
+            ? Result.Success<ProductoDto, DomainError>(producto.ToDto())
+            : Result.Failure<ProductoDto, DomainError>(ProductoError.NotFound(id));
     }
 
-    public Result<Producto, DomainError> Create(CreateProductoDto dto)
+    public Result<ProductoDto, DomainError> Create(CreateProductoDto dto)
     {
         if (repository.IsDuplicated(dto.Nombre))
-            return Result.Failure<Producto, DomainError>(ProductoError.NombreDuplicado(dto.Nombre));
+            return Result.Failure<ProductoDto, DomainError>(ProductoError.NombreDuplicado(dto.Nombre));
 
         var producto = dto.ToModel();
         var creado = repository.Add(producto);
-        return Result.Success<Producto, DomainError>(creado);
+        return Result.Success<ProductoDto, DomainError>(creado.ToDto());
     }
 
-    public Result<Producto, DomainError> Update(long id, UpdateProductoDto dto)
+    public Result<ProductoDto, DomainError> Update(long id, UpdateProductoDto dto)
     {
         var existente = repository.GetById(id);
         if (existente is null)
-            return Result.Failure<Producto, DomainError>(ProductoError.NotFound(id));
+            return Result.Failure<ProductoDto, DomainError>(ProductoError.NotFound(id));
 
         if (repository.IsDuplicated(dto.Nombre, id))
-            return Result.Failure<Producto, DomainError>(ProductoError.NombreDuplicado(dto.Nombre));
+            return Result.Failure<ProductoDto, DomainError>(ProductoError.NombreDuplicado(dto.Nombre));
 
         var producto = dto.ToModel();
         producto.Id = id;
         var actualizado = repository.Update(producto);
         return actualizado is not null
-            ? Result.Success<Producto, DomainError>(actualizado)
-            : Result.Failure<Producto, DomainError>(ProductoError.NotFound(id));
+            ? Result.Success<ProductoDto, DomainError>(actualizado.ToDto())
+            : Result.Failure<ProductoDto, DomainError>(ProductoError.NotFound(id));
     }
 
     public UnitResult<DomainError> Delete(long id)
@@ -64,12 +65,13 @@ public class ProductoService(IProductoRepository repository, ICategoriaRepositor
             : UnitResult.Failure<DomainError>(ProductoError.NotFound(id));
     }
 
-    public IEnumerable<Producto> Search(string termino) =>
+    public IEnumerable<ProductoDto> Search(string termino) =>
         repository.GetAll().Where(p =>
             p.Nombre.Contains(termino, StringComparison.OrdinalIgnoreCase) ||
-            p.Categoria.Nombre.Contains(termino, StringComparison.OrdinalIgnoreCase));
+            p.Categoria.Nombre.Contains(termino, StringComparison.OrdinalIgnoreCase))
+            .Select(p => p.ToDto());
 
-    public IEnumerable<Producto> Filter(string? nombre, long? categoriaId, decimal? precioMin, decimal? precioMax)
+    public IEnumerable<ProductoDto> Filter(string? nombre, long? categoriaId, decimal? precioMin, decimal? precioMax)
     {
         var productos = repository.GetAll().AsEnumerable();
 
@@ -82,10 +84,10 @@ public class ProductoService(IProductoRepository repository, ICategoriaRepositor
         if (precioMax.HasValue)
             productos = productos.Where(p => p.Precio <= precioMax.Value);
 
-        return productos;
+        return productos.Select(p => p.ToDto());
     }
 
-    public (IEnumerable<Producto> Items, int TotalPages, int TotalItems) GetPaged(int page, int pageSize)
+    public (IEnumerable<ProductoDto> Items, int TotalPages, int TotalItems) GetPaged(int page, int pageSize)
     {
         // Techo de paginacion en la CAPA DE DATOS: aunque el filtro llegue
         // construido en codigo (GraphQL, jobs, tests) el Skip/Take no sale de 1..100.
@@ -96,10 +98,10 @@ public class ProductoService(IProductoRepository repository, ICategoriaRepositor
         var totalItems = all.Count;
         var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
         var items = all.Skip((page - 1) * pageSize).Take(pageSize);
-        return (items, totalPages, totalItems);
+        return (items.Select(p => p.ToDto()), totalPages, totalItems);
     }
 
-    public IEnumerable<Categoria> GetAllCategorias() => categoriaRepository.GetAll();
+    public IEnumerable<CategoriaDto> GetAllCategorias() => categoriaRepository.GetAll().Select(c => c.ToDto());
 
-    public Categoria? GetCategoriaById(long id) => categoriaRepository.GetById(id);
+    public CategoriaDto? GetCategoriaById(long id) => categoriaRepository.GetById(id)?.ToDto();
 }

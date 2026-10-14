@@ -1,7 +1,6 @@
 using System.Text.Json;
 using ProductosEFCore.Dtos;
 using ProductosEFCore.Extensions;
-using ProductosEFCore.Mappers;
 using ProductosEFCore.Services;
 using Microsoft.AspNetCore.Mvc;
 using ProductosEFCore.Errors;
@@ -12,11 +11,12 @@ namespace ProductosEFCore.Controllers;
 [Route("api/[controller]")]
 public class ProductosController(IProductoService service) : ControllerBase
 {
+    // El controlador solo pide y recibe DTOs: el mapeo es responsabilidad del servicio.
     [HttpGet]
     public ActionResult<List<ProductoDto>> GetAll()
     {
         var productos = service.GetAll();
-        return Ok(productos.Select(p => p.ToDto()).ToList());
+        return Ok(productos.ToList());
     }
 
     [HttpGet("{id:long}")]
@@ -24,7 +24,7 @@ public class ProductosController(IProductoService service) : ControllerBase
     {
         var result = service.GetById(id);
         return result.IsSuccess
-            ? Ok(result.Value.ToDto())
+            ? Ok(result.Value)
             : result.Error.ToHttpResult<ProductoDto>();
     }
 
@@ -33,7 +33,7 @@ public class ProductosController(IProductoService service) : ControllerBase
     {
         var result = service.Create(dto);
         return result.IsSuccess
-            ? CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value.ToDto())
+            ? CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value)
             : result.Error.ToHttpResult<ProductoDto>();
     }
 
@@ -42,7 +42,7 @@ public class ProductosController(IProductoService service) : ControllerBase
     {
         var result = service.Update(id, dto);
         return result.IsSuccess
-            ? Ok(result.Value.ToDto())
+            ? Ok(result.Value)
             : result.Error.ToHttpResult<ProductoDto>();
     }
 
@@ -78,14 +78,14 @@ public class ProductosController(IProductoService service) : ControllerBase
     public ActionResult<List<ProductoDto>> GetDeleted()
     {
         var productos = service.GetDeleted();
-        return Ok(productos.Select(p => p.ToDto()).ToList());
+        return Ok(productos.ToList());
     }
 
     [HttpGet("search")]
     public ActionResult<List<ProductoDto>> Search([FromQuery] string q)
     {
         var productos = service.Search(q);
-        return Ok(productos.Select(p => p.ToDto()).ToList());
+        return Ok(productos.ToList());
     }
 
     [HttpGet("filter")]
@@ -96,7 +96,7 @@ public class ProductosController(IProductoService service) : ControllerBase
         [FromQuery] decimal? precioMax)
     {
         var productos = service.Filter(nombre, categoriaId, precioMin, precioMax);
-        return Ok(productos.Select(p => p.ToDto()).ToList());
+        return Ok(productos.ToList());
     }
 
     [HttpGet("paged")]
@@ -111,7 +111,7 @@ public class ProductosController(IProductoService service) : ControllerBase
 
 return Ok(new PagedResponse<ProductoDto>
         {
-            Data = items.Select(p => p.ToDto()).ToList(),
+            Data = items.ToList(),
             Pagination = new PageMetadata(page, pageSize, totalPages, totalItems)
         });
     }
@@ -120,7 +120,7 @@ return Ok(new PagedResponse<ProductoDto>
     public ActionResult<List<CategoriaDto>> GetCategorias()
     {
         var categorias = service.GetAllCategorias();
-        return Ok(categorias.Select(c => c.ToDto()).ToList());
+        return Ok(categorias.ToList());
     }
 
     [HttpGet("categorias/{id:long}")]
@@ -128,7 +128,7 @@ return Ok(new PagedResponse<ProductoDto>
     {
         var categoria = service.GetCategoriaById(id);
         return categoria is not null
-            ? Ok(categoria.ToDto())
+            ? Ok(categoria)
             : NotFound(new { message = $"Categoría con ID {id} no encontrada" });
     }
 }
