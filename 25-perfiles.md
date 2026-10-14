@@ -52,14 +52,14 @@ flowchart LR
         B3 --> B4[Logs minimos]
     end
 
-    style A1 fill:#2196F,color:#fff3,color:#fff
-    style A2 fill:#2196F,color:#fff3,color:#fff
-    style A3 fill:#2196F,color:#fff3,color:#fff
-    style A4 fill:#2196F,color:#fff3,color:#fff
-    style B1 fill:#f4433,color:#fff6,color:#fff
-    style B2 fill:#f4433,color:#fff6,color:#fff
-    style B3 fill:#f4433,color:#fff6,color:#fff
-    style B4 fill:#f4433,color:#fff6,color:#fff
+    style A1 fill:#2196F3,color:#fff
+    style A2 fill:#2196F3,color:#fff
+    style A3 fill:#2196F3,color:#fff
+    style A4 fill:#2196F3,color:#fff
+    style B1 fill:#f44336,color:#fff
+    style B2 fill:#f44336,color:#fff
+    style B3 fill:#f44336,color:#fff
+    style B4 fill:#f44336,color:#fff
 ```
 
 📌 **Ejemplo real:** Cuando usas Netflix, la aplicación en tu móvil (producción) se conecta a servidores optimizados. Pero los desarrolladores de Netflix prueban nuevas funcionalidades en su propio entorno de desarrollo con datos ficticios.
@@ -93,11 +93,11 @@ flowchart TD
     C --> D["Variables de Entorno"]
     D --> E["Argumentos de linea de comandos"]
 
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#FF980,color:#fff0,color:#fff
-    style D fill:#9C27B,color:#fff0,color:#fff
-    style E fill:#607D8,color:#fffB,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#FF9800,color:#fff
+    style D fill:#9C27B0,color:#fff
+    style E fill:#607D8B,color:#fff
 ```
 
 **Orden de carga (de menor a mayor prioridad):**

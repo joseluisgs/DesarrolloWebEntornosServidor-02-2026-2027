@@ -1,4 +1,4 @@
-﻿- [10. Pruebas y despliegue básicos](#10-pruebas-y-despliegue-básicos)
+- [10. Pruebas y despliegue básicos](#10-pruebas-y-despliegue-básicos)
   - [10.1. Test unitarios con NUnit](#101-test-unitarios-con-nunit)
     - [10.1.1. Estructura de un test: arrange, act, assert](#1011-estructura-de-un-test-arrange-act-assert)
     - [10.1.2. Aserciones con FluentAssertions](#1012-aserciones-con-fluentassertions)
@@ -314,10 +314,10 @@ flowchart LR
     B --> C["Fase runtime<br/>Solo ASP.NET (~200MB)"]
     C --> D["Imagen final<br/>~200MB"]
 
-    style A fill:#FF980,color:#fff0,color:#fff
-    style B fill:#2196F,color:#fff3,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#9C27B,color:#fff0,color:#fff
+    style A fill:#FF9800,color:#fff
+    style B fill:#2196F3,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style D fill:#9C27B0,color:#fff
 ```
 
 📌 Ejemplo real: **Spotify** usa multi-stage builds. La fase de build instala dependencias de compilación que no necesitan estar en producción. La imagen final solo contiene lo necesario para ejecutar.
@@ -408,8 +408,8 @@ flowchart TD
         P1["Cliente"] --> P3["Contenedores"]
     end
 
-    style DOCKER fill:#2196F,color:#fff3,color:#fff
-    style PODMAN fill:#4CAF5,color:#fff0,color:#fff
+    style DOCKER fill:#2196F3,color:#fff
+    style PODMAN fill:#4CAF50,color:#fff
 ```
 
 
@@ -417,7 +417,7 @@ flowchart TD
 
 Ningún equipo puede recordar a mano todas las reglas del repositorio: formato, compilación sin avisos, tests, dependencias vulnerables, documentación... La solución son **scripts de verificación** que se ejecutan solos y **fallan en rojo** si algo no cumple.
 
-📌 **Ejemplo real:** TiendaAPI tiene una carpeta `scripts/` con varios verificadores que se ejecutan antes de cada commit: `check-style.ps1` (estilo), `check-audit.mjs` (vulnerabilidades NuGet), `check-docs.mjs` (documentación) y `check-parity.mjs` (que dos variantes del proyecto sigan igual). **Si uno falla, no se commitea.**
+📌 **Ejemplo real:** un proyecto con varias variantes tiene una carpeta `scripts/` con varios verificadores que se ejecutan antes de cada commit: `check-style.ps1` (estilo), `check-audit.mjs` (vulnerabilidades NuGet), `check-docs.mjs` (documentación) y `check-parity.mjs` (que dos variantes del proyecto sigan igual). **Si uno falla, no se commitea.**
 
 | Verificador | Qué comprueba | Herramienta base |
 |-------------|---------------|------------------|

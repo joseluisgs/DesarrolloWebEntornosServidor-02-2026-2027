@@ -61,9 +61,9 @@ flowchart LR
     B -->|"recibe petición"| C["📦 Model"]
     C -->|"datos"| B
     B -->|"respuesta"| A
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#FF980,color:#fff0,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#FF9800,color:#fff
+    style C fill:#4CAF50,color:#fff
 ```
 
 📌 **Ejemplo real:** La API de Spotify usa controladores. Cuando buscas un artista, el controlador `SearchController` recibe la petición, consulta el modelo (base de datos de artistas), y devuelve la respuesta JSON.
@@ -380,11 +380,11 @@ flowchart TD
     E -->|Sí| G{"¿Los datos son válidos?"}
     G -->|No| H["BadRequest()"]
     G -->|Sí| I["Ok()"]
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#4CAF5,color:#fff0,color:#fff
-    style F fill:#f4433,color:#fff6,color:#fff
-    style H fill:#FF980,color:#fff0,color:#fff
-    style I fill:#4CAF5,color:#fff0,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style D fill:#4CAF50,color:#fff
+    style F fill:#f44336,color:#fff
+    style H fill:#FF9800,color:#fff
+    style I fill:#4CAF50,color:#fff
 ```
 
 > 💡 **Consejo:** `CreatedAtAction` es mejor que `Created` porque genera automáticamente la URL del recurso creado con la ruta del método que lo consulta.

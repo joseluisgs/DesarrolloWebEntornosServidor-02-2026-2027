@@ -400,7 +400,7 @@ builder.Services.AddHealthChecks()
 
 Los health checks responden **¿está viva?**. La otra pregunta clásica de un incidente es **¿qué versión está corriendo?** — sobre todo si tienes varias réplicas o despliegues azul/verde: ¿se completó el despliegue o una instancia se quedó en el build anterior?
 
-📌 **Ejemplo real:** TiendaAPI expone `GET /version` como un extension method en `Infrastructures/VersionConfig.cs` (el patrón de Infrastructures que viste en el tema 26), con `.AllowAnonymous()`: la versión no es información sensible.
+📌 **Ejemplo real:** una API expone `GET /version` como un extension method en `Infrastructures/VersionConfig.cs` (el patrón de Infrastructures que viste en el tema 26), con `.AllowAnonymous()`: la versión no es información sensible.
 
 **Respuesta de ejemplo:**
 

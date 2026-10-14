@@ -66,9 +66,9 @@ flowchart TD
     A["E2E Tests (Punta - Pocos)"] --> B["Integration Tests (Medio)"]
     B --> C["Unit Tests (Base - Muchos)"]
 
-    style A fill:#9C27B,color:#fff0,color:#fff
-    style B fill:#FF980,color:#fff0,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
+    style A fill:#9C27B0,color:#fff
+    style B fill:#FF9800,color:#fff
+    style C fill:#4CAF50,color:#fff
 ```
 
 | Tipo | Que testea | Velocidad | Aislamiento | Cantidad |
@@ -658,7 +658,7 @@ public class ProductoServiceIntegrationTests
 }
 ```
 
-**Resultado medido** (TiendaAPI, suite de integración, dos pasadas sin fallos):
+**Resultado medido** (suite de integración, dos pasadas sin fallos):
 
 | Métrica | Antes (contenedor por clase) | Después (1 por assembly) |
 |---------|------------------------------|--------------------------|
@@ -782,7 +782,7 @@ No basta con comprobar que un error devuelve `400`: hay que comprobar **la forma
 
 > 💡 **Analogía:** Es el **contrato** de tu API. Si cambias `message` por `error`, rompes a todos los clientes que ya lo parsean; estos tests son la red de seguridad que lo impide.
 
-📌 **Ejemplo real:** TiendaAPI añadió una clase `ErrorShapeApiTests` (10 tests) que fija esta forma: 400 con `errors` agrupados por campo, 401 con `WWW-Authenticate`, 404/409 de dominio con `message` (**y sin `errorId`**, porque esos errores no pasan por el manejador global de excepciones) y 429 con `errorType: "RateLimitError"`, `limit: 10`, `window: "1m"` y las cabeceras `RateLimit-Limit`/`Remaining`/`Reset`.
+📌 **Ejemplo real:** una clase `ErrorShapeApiTests` (10 tests) fija esta forma: 400 con `errors` agrupados por campo, 401 con `WWW-Authenticate`, 404/409 de dominio con `message` (**y sin `errorId`**, porque esos errores no pasan por el manejador global de excepciones) y 429 con `errorType: "RateLimitError"`, `limit: 10`, `window: "1m"` y las cabeceras `RateLimit-Limit`/`Remaining`/`Reset`.
 
 ```csharp
 [Test]
@@ -858,7 +858,7 @@ En 28.10.1 fijamos la **forma de los errores** de la API. Un paso más allá est
 
 > 💡 **Analogía:** Es el contrato de un alquiler. Si el casero cambia una cláusula sin avisar, el inquilino (tu Frontend, tu app móvil, el otro equipo) se entera tarde y mal. El documento OpenAPI es lo que tu API **promete** a sus consumidores.
 
-📌 **Ejemplo real:** TiendaAPI existe en dos variantes (API simple y variante CQRS con MediatR). El script `scripts/check-openapi.mjs` arranca ambas (puertos 5041 y 5042), descarga el `swagger.json` de cada una y hace un **diff profundo**: **22 rutas, 39 operaciones y 0 diferencias** significa que las dos cumplen exactamente el mismo contrato.
+📌 **Ejemplo real:** cuando un proyecto existe en dos variantes (API simple y variante CQRS con MediatR), el script `scripts/check-openapi.mjs` arranca ambas (puertos 5041 y 5042), descarga el `swagger.json` de cada una y hace un **diff profundo**: **22 rutas, 39 operaciones y 0 diferencias** significa que las dos cumplen exactamente el mismo contrato.
 
 ### 28.11.1. Cambios que rompen el contrato
 

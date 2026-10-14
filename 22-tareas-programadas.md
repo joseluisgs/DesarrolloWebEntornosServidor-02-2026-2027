@@ -59,10 +59,10 @@ flowchart LR
     A["Servidor ASP.NET Core"] -->|Programa| B["Tarea A: Cada 5 min"]
     A -->|Programa| C["Tarea B: Diaria 2AM"]
     A -->|Programa| D["Tarea C: Semanal"]
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#FF980,color:#fff0,color:#fff
-    style D fill:#9C27B,color:#fff0,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#FF9800,color:#fff
+    style D fill:#9C27B0,color:#fff
 ```
 
 ### 22.1.2. Casos de uso comunes
@@ -109,10 +109,10 @@ flowchart TB
     BS["BackgroundService"] -->|"Intervalo fijo"| NC["NCrontab"]
     NC -->|"Persistencia + Dashboard"| HB["Hangfire"]
     HB -->|"Alta complejidad"| QZ["Quartz.NET"]
-    style BS fill:#4CAF5,color:#fff0,color:#fff
-    style NC fill:#2196F,color:#fff3,color:#fff
-    style HB fill:#FF980,color:#fff0,color:#fff
-    style QZ fill:#f4433,color:#fff6,color:#fff
+    style BS fill:#4CAF50,color:#fff
+    style NC fill:#2196F3,color:#fff
+    style HB fill:#FF9800,color:#fff
+    style QZ fill:#f44336,color:#fff
 ```
 
 > 📝 **Nota:** Para este curso nos centraremos en **BackgroundService** para desarrollo (simple y efectivo) y **Hangfire** para producción (robusto con monitoreo).
@@ -500,10 +500,10 @@ flowchart LR
     C["0 2 * * *"] --> D["2:00 AM diario"]
     E["0 9 * * 1"] --> F["9:00 AM lunes"]
     G["0 0 1 * *"] --> H["1 de cada mes"]
-    style A fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#2196F,color:#fff3,color:#fff
-    style E fill:#FF980,color:#fff0,color:#fff
-    style G fill:#9C27B,color:#fff0,color:#fff
+    style A fill:#4CAF50,color:#fff
+    style C fill:#2196F3,color:#fff
+    style E fill:#FF9800,color:#fff
+    style G fill:#9C27B0,color:#fff
 ```
 
 ## 22.5. Implementación con Hangfire (producción)
@@ -623,11 +623,11 @@ flowchart TB
     DB --> MJ["Monitor de Jobs"]
     DB --> FJ["Jobs Fallidos"]
     DB --> RJ["Jobs Recurrentes"]
-    style HJ fill:#4CAF5,color:#fff0,color:#fff
-    style DB fill:#2196F,color:#fff3,color:#fff
-    style MJ fill:#FF980,color:#fff0,color:#fff
-    style FJ fill:#f4433,color:#fff6,color:#fff
-    style RJ fill:#9C27B,color:#fff0,color:#fff
+    style HJ fill:#4CAF50,color:#fff
+    style DB fill:#2196F3,color:#fff
+    style MJ fill:#FF9800,color:#fff
+    style FJ fill:#f44336,color:#fff
+    style RJ fill:#9C27B0,color:#fff
 ```
 
 > 📝 **Nota:** El dashboard de Hangfire muestra tareas recurrentes programadas, historial de ejecuciones, tareas fallidas con reintentos automáticos, colas de procesamiento y métricas de rendimiento.
@@ -1000,7 +1000,7 @@ _ = Task.Run(() =>
 });
 ```
 
-📌 **Ejemplo real:** en TiendaAPI hicieron inventario de **24** llamadas `_ = Task.Run(...)` (12 en Producto, 10 en Pedidos, 1 en Usuario, 1 en Categoría), **todas ellas con la guarda `try/catch` interior**: notificaciones WebSocket y SignalR, eventos de GraphQL Subscription y precarga de caché (`SET`). Todas **sin `await` y sin `WhenAll`**: el punto justamente es no esperar.
+📌 **Ejemplo real:** en una API con WebSockets y GraphQL se hizo inventario de **24** llamadas `_ = Task.Run(...)` (12 en Producto, 10 en Pedidos, 1 en Usuario, 1 en Categoría), **todas ellas con la guarda `try/catch` interior**: notificaciones WebSocket y SignalR, eventos de GraphQL Subscription y precarga de caché (`SET`). Todas **sin `await` y sin `WhenAll`**: el punto justamente es no esperar.
 
 > 📝 **Nota:** Este inventario **no es un dato fijo**. Cuando se escribió por primera vez eran **29** llamadas (13 en Producto, 11 en Pedidos, 3 en Usuario, 2 en Categoría); luego el proyecto **dejó la invalidación de caché de fire-and-forget** y pasó a `await InvalidarCacheXxxAsync(...)`, con lo que el contador bajó a 24. La lección no es el número, sino **qué queda dentro**: solo lo que de verdad puede perderse sin que nadie se entere.
 

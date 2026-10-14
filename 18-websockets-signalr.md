@@ -96,10 +96,10 @@ flowchart LR
         B2 -->|Push: nuevo dato| B1
     end
 
-    style A1 fill:#9C27B,color:#fff0,color:#fff
-    style A2 fill:#2196F,color:#fff3,color:#fff
-    style B1 fill:#9C27B,color:#fff0,color:#fff
-    style B2 fill:#4CAF5,color:#fff0,color:#fff
+    style A1 fill:#9C27B0,color:#fff
+    style A2 fill:#2196F3,color:#fff
+    style B1 fill:#9C27B0,color:#fff
+    style B2 fill:#4CAF50,color:#fff
 ```
 
 > 💡 **Analogía:** HTTP es como llamar a un amigo cada vez que quieres saber algo. WebSocket es como tener una llamada telefonica abierta permanente: cualquiera de los dos puede hablar cuando quiera.
@@ -949,11 +949,11 @@ flowchart TB
     A2 <--> R1
     B2 <--> R1
 
-    style A1 fill:#9C27B,color:#fff0,color:#fff
-    style A2 fill:#2196F,color:#fff3,color:#fff
-    style B1 fill:#9C27B,color:#fff0,color:#fff
-    style B2 fill:#2196F,color:#fff3,color:#fff
-    style R1 fill:#f4433,color:#fff6,color:#fff
+    style A1 fill:#9C27B0,color:#fff
+    style A2 fill:#2196F3,color:#fff
+    style B1 fill:#9C27B0,color:#fff
+    style B2 fill:#2196F3,color:#fff
+    style R1 fill:#f44336,color:#fff
 ```
 
 Sin Redis, si el Cliente A esta en la Instancia 1 y el Cliente B en la Instancia 2, un mensaje enviado desde la Instancia 1 no llega al Cliente B. Redis actua como canal de comunicacion entre instancias.
@@ -1056,7 +1056,7 @@ public class ProductosWebSocketHandler(ILogger<ProductosWebSocketHandler> logger
 | **Tope de conexiones** | Conexiones simultaneas | Agotar memoria y descriptors |
 | **Keep-alive** | Conexiones zombis | Sockets muertos que nunca se cierran |
 
-📌 **Ejemplo real:** en TiendaAPI el endpoint `/ws/productos` se quedo con un techo de **1000 conexiones**: al superarlo, el servidor cierra el socket con `PolicyViolation` y escribe un `LogWarning`. Antes de eso, el `ConcurrentDictionary` de conexiones crecia sin limite y un proceso automatizado bastaba para llevar el contenedor a la muerte **sin llegar a procesar un solo mensaje** (commit *fix: limite de conexiones WebSocket en /ws/productos*).
+📌 **Ejemplo real:** un endpoint `/ws/productos` con un techo de **1000 conexiones** evita que un proceso automatizado tumbe el contenedor: al superarlo, el servidor cierra el socket con `PolicyViolation` y escribe un `LogWarning`. Sin ese techo, el `ConcurrentDictionary` de conexiones crecía sin límite y ese proceso bastaba para llevar el contenedor a la muerte **sin llegar a procesar un solo mensaje**.
 
 > ⚠️ **Advertencia:** rechazar **despues** de `AcceptWebSocketAsync` no te ahorra recursos: en ese punto la conexion ya esta consumida. El chequeo tiene que ir **antes** de aceptar, y hay que cerrar el socket de forma explicita para que el cliente se entere (mejor `503` a nivel HTTP si aun no has aceptado).
 
@@ -1088,15 +1088,15 @@ flowchart TB
     S1 --> S2 --> S3
     E1 --> E2 --> E3
 
-    style A1 fill:#4CAF5,color:#fff0,color:#fff
-    style A2 fill:#4CAF5,color:#fff0,color:#fff
-    style A3 fill:#4CAF5,color:#fff0,color:#fff
-    style S1 fill:#f4433,color:#fff6,color:#fff
-    style S2 fill:#f4433,color:#fff6,color:#fff
-    style S3 fill:#f4433,color:#fff6,color:#fff
-    style E1 fill:#2196F,color:#fff3,color:#fff
-    style E2 fill:#2196F,color:#fff3,color:#fff
-    style E3 fill:#2196F,color:#fff3,color:#fff
+    style A1 fill:#4CAF50,color:#fff
+    style A2 fill:#4CAF50,color:#fff
+    style A3 fill:#4CAF50,color:#fff
+    style S1 fill:#f44336,color:#fff
+    style S2 fill:#f44336,color:#fff
+    style S3 fill:#f44336,color:#fff
+    style E1 fill:#2196F3,color:#fff
+    style E2 fill:#2196F3,color:#fff
+    style E3 fill:#2196F3,color:#fff
 ```
 
 | Practica | Descripcion |
@@ -1248,7 +1248,7 @@ bru run ./coleccion --env local --exclude-tags=desktop-only
 # Bruno Desktop: se ejecuta todo, WebSockets incluidos
 ```
 
-📌 **Ejemplo real:** en TiendaAPI la carpeta `12 - WEBSOCKETS` lleva `tags: desktop-only` en cada fichero `.bru`, y el `collection.bru` documenta los dos modos de ejecucion. Commit *fix: tag desktop-only en tests WebSocket Bruno CLI*.
+📌 **Ejemplo real:** una colección de Bruno con pruebas WebSocket lleva `tags: desktop-only` en cada fichero `.bru` de la carpeta correspondiente, y el `collection.bru` documenta los dos modos de ejecución: la interfaz gráfica para probar a mano y la línea de comandos para la integración continua.
 
 > 💡 **Consejo:** La regla general es **etiquetar por capacidad de la herramienta, no por capricho**: `desktop-only`, `requiere-docker`, `lento`. Así la misma coleccion te sirve en el portatil y en el pipeline, y el pipeline se salta explicitamente lo que no puede hacer — en vez de fallar y obligarte a adivinar.
 

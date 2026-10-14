@@ -75,9 +75,9 @@ flowchart LR
     C1 --> C2
     C2 --> C3
 
-    style A2 fill:#4CAF5,color:#fff0,color:#fff
-    style B1 fill:#2196F,color:#fff3,color:#fff
-    style C1 fill:#FF980,color:#fff0,color:#fff
+    style A2 fill:#4CAF50,color:#fff
+    style B1 fill:#2196F3,color:#fff
+    style C1 fill:#FF9800,color:#fff
 ```
 
 > 💡 **Analogía:** El sistema de emails es como el servicio de correo de una empresa. Los empleados (aplicación) entregan las cartas (emails) al departamento de correo (EmailService). El departamento las procesa en batch (BackgroundService) y las entrega al correo (SMTP) para que lleguen a los destinatarios finales.
@@ -260,7 +260,7 @@ public class MailKitEmailService(
 Igual que en el tema 20 (`StorageSettings`), usamos **`IOptions<SmtpSettings>`** en lugar de leer `IConfiguration` a mano con `int.Parse` (eso revienta con `FormatException` si falta la clave o el valor no es numérico):
 
 ```csharp
-namespace TiendaApi.Apis.Configuration;
+namespace FunkoApi.Configuration;
 
 /// <summary>
 /// Configuración SMTP tipada (sección "Email" de appsettings.json)

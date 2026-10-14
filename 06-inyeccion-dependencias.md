@@ -182,12 +182,12 @@ flowchart TB
         S2["Scoped: instancia B"]
         G2["Singleton: misma instancia X"]
     end
-    style T1 fill:#FF980,color:#fff0,color:#fff
-    style T2 fill:#FF980,color:#fff0,color:#fff
-    style S1 fill:#2196F,color:#fff3,color:#fff
-    style S2 fill:#2196F,color:#fff3,color:#fff
-    style G1 fill:#4CAF5,color:#fff0,color:#fff
-    style G2 fill:#4CAF5,color:#fff0,color:#fff
+    style T1 fill:#FF9800,color:#fff
+    style T2 fill:#FF9800,color:#fff
+    style S1 fill:#2196F3,color:#fff
+    style S2 fill:#2196F3,color:#fff
+    style G1 fill:#4CAF50,color:#fff
+    style G2 fill:#4CAF50,color:#fff
 ```
 
 ### 6.2.5. Flujo de una petición con DI
@@ -203,10 +203,10 @@ flowchart LR
     Service -->|"Retorna"| Controller
     Controller -->|"HTTP Response"| Client
 
-    style Controller fill:#4CAF5,color:#fff0,color:#fff
-    style Service fill:#2196F,color:#fff3,color:#fff
-    style Repository fill:#FF980,color:#fff0,color:#fff
-    style DB fill:#9C27B,color:#fff0,color:#fff
+    style Controller fill:#4CAF50,color:#fff
+    style Service fill:#2196F3,color:#fff
+    style Repository fill:#FF9800,color:#fff
+    style DB fill:#9C27B0,color:#fff
 ```
 
 ### 6.2.6. Errores comunes
@@ -471,10 +471,10 @@ flowchart TD
     Match1 --> Reg1["Registra como Scoped"]
     Match2 --> Reg2["Registra como Scoped"]
 
-    style Program fill:#4CAF5,color:#fff0,color:#fff
-    style Scan fill:#2196F,color:#fff3,color:#fff
-    style Match1 fill:#FF980,color:#fff0,color:#fff
-    style Match2 fill:#FF980,color:#fff0,color:#fff
+    style Program fill:#4CAF50,color:#fff
+    style Scan fill:#2196F3,color:#fff
+    style Match1 fill:#FF9800,color:#fff
+    style Match2 fill:#FF9800,color:#fff
 ```
 
 ### 6.6.1. Instalación
@@ -532,7 +532,7 @@ builder.Services.Scan(scan => scan
 
 > ⚠️ **Advertencia:** Nunca registres un repository (o cualquier servicio que use `DbContext`) como **Singleton**: el `DbContext` no es thread-safe y compartirlo entre peticiones provoca errores de concurrencia. Los repositories van siempre en **Scoped**.
 
-📌 Ejemplo real: **TiendaAPI** usa este enfoque. Sus clases se llaman `ProductoService`, `UserService`, `CategoriaService`, etc. Scrutor las detecta por el sufijo "Service".
+📌 Ejemplo real: una API de e-commerce con varios servicios usa este enfoque. Sus clases se llaman `ProductoService`, `UserService`, `CategoriaService`, etc. Scrutor las detecta por el sufijo "Service".
 
 ### 6.6.4. Enfoque 2: marker interfaces (por ciclo de vida)
 
@@ -584,7 +584,7 @@ builder.Services.Scan(scan => scan
 Este ejemplo muestra la misma aplicación registrada de dos formas: manualmente y con Scrutor. Comparar ambos enfoques ayuda a decidir cuál usar.
 
 ```csharp
-// Program.cs — Enfoque convention-based (como en TiendaAPI)
+// Program.cs - Enfoque convention-based
 using Scrutor;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -650,7 +650,7 @@ app.MapControllers();
 app.Run();
 ```
 
-📌 Ejemplo real: **TiendaAPI** usa este patrón en `RepositoriesConfig.cs`. La sección `Pedidos:RepositoryType` en `appsettings.json` determina si los pedidos se almacenan con MongoDB Driver nativo o con EF Core. Scrutor registra los repos normales automáticamente, y el condicional se registra manualmente después.
+📌 Ejemplo real: una API que guarda pedidos con dos motores de base de datos usa este patrón en su `RepositoriesConfig.cs`. La sección `Pedidos:RepositoryType` en `appsettings.json` determina si los pedidos se almacenan con MongoDB Driver nativo o con EF Core. Scrutor registra los repos normales automáticamente, y el condicional se registra manualmente después.
 
 > 💡 **Analogía:** Scrutor es como un conserje que registra a todos los invitados automáticamente. Pero si hay un invitado especial que solo viene si llueve (configuración), lo registras tú a mano después del conserje.
 
@@ -665,12 +665,12 @@ flowchart TD
     D --> E
     E --> F["Servicios que usan IPedidosRepository"]
 
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#FF980,color:#fff0,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#4CAF5,color:#fff0,color:#fff
-    style E fill:#9C27B,color:#fff0,color:#fff
-    style F fill:#607D8,color:#fffB,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#FF9800,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style D fill:#4CAF50,color:#fff
+    style E fill:#9C27B0,color:#fff
+    style F fill:#607D8B,color:#fff
 ```
 
 ## 6.7. DI en Minimal APIs
@@ -850,10 +850,10 @@ flowchart TD
     Config2 --> S2["ICategoriaService"]
     Config3 --> C1["ICacheService"]
 
-    style Program fill:#4CAF5,color:#fff0,color:#fff
-    style Config1 fill:#2196F,color:#fff3,color:#fff
-    style Config2 fill:#2196F,color:#fff3,color:#fff
-    style Config3 fill:#2196F,color:#fff3,color:#fff
+    style Program fill:#4CAF50,color:#fff
+    style Config1 fill:#2196F3,color:#fff
+    style Config2 fill:#2196F3,color:#fff
+    style Config3 fill:#2196F3,color:#fff
 ```
 
 ### 6.9.1. ¿Cuándo usarlo?

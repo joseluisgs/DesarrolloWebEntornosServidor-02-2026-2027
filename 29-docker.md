@@ -1,4 +1,4 @@
-﻿- [29. Docker y despliegue](#29-docker-y-despliegue)
+- [29. Docker y despliegue](#29-docker-y-despliegue)
   - [29.1. Conceptos fundamentales](#291-conceptos-fundamentales)
     - [29.1.1. Que es un contenedor](#2911-que-es-un-contenedor)
     - [29.1.2. Ventajas de los contenedores](#2912-ventajas-de-los-contenedores)
@@ -47,10 +47,10 @@ flowchart TB
     subgraph "Sin Contenedores"
         A1["App A"] --> A2["SO Completo"]
         A3["App B"] --> A4["SO Completo"]
-        style A1 fill:#f4433,color:#fff6,color:#fff
-        style A2 fill:#f4433,color:#fff6,color:#fff
-        style A3 fill:#f4433,color:#fff6,color:#fff
-        style A4 fill:#f4433,color:#fff6,color:#fff
+        style A1 fill:#f44336,color:#fff
+        style A2 fill:#f44336,color:#fff
+        style A3 fill:#f44336,color:#fff
+        style A4 fill:#f44336,color:#fff
     end
 
     subgraph "Con Contenedores"
@@ -58,12 +58,12 @@ flowchart TB
         B3["App B"] --> B4["Contenedor B"]
         B2 & B4 --> B5["Docker Engine"]
         B5 --> B6["SO Compartido"]
-        style B1 fill:#4CAF5,color:#fff0,color:#fff
-        style B2 fill:#4CAF5,color:#fff0,color:#fff
-        style B3 fill:#4CAF5,color:#fff0,color:#fff
-        style B4 fill:#4CAF5,color:#fff0,color:#fff
-        style B5 fill:#2196F,color:#fff3,color:#fff
-        style B6 fill:#2196F,color:#fff3,color:#fff
+        style B1 fill:#4CAF50,color:#fff
+        style B2 fill:#4CAF50,color:#fff
+        style B3 fill:#4CAF50,color:#fff
+        style B4 fill:#4CAF50,color:#fff
+        style B5 fill:#2196F3,color:#fff
+        style B6 fill:#2196F3,color:#fff
     end
 ```
 

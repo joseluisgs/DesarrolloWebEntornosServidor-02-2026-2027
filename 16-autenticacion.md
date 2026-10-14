@@ -79,12 +79,12 @@ flowchart LR
         B4 -->|5. Responder| B1
     end
 
-    style A1 fill:#9C27B,color:#fff0,color:#fff
-    style A2 fill:#2196F,color:#fff3,color:#fff
-    style A3 fill:#2196F,color:#fff3,color:#fff
-    style B1 fill:#9C27B,color:#fff0,color:#fff
-    style B2 fill:#4CAF5,color:#fff0,color:#fff
-    style B4 fill:#4CAF5,color:#fff0,color:#fff
+    style A1 fill:#9C27B0,color:#fff
+    style A2 fill:#2196F3,color:#fff
+    style A3 fill:#2196F3,color:#fff
+    style B1 fill:#9C27B0,color:#fff
+    style B2 fill:#4CAF50,color:#fff
+    style B4 fill:#4CAF50,color:#fff
 ```
 
 | Aspecto | Stateful (Sesión) | Stateless (JWT) |
@@ -128,12 +128,12 @@ flowchart TD
     I -->|Token valido| K[Procesar peticion]
     K --> L[200 OK con datos]
 
-    style A fill:#9C27B,color:#fff0,color:#fff
-    style D fill:#f4433,color:#fff6,color:#fff
-    style E fill:#4CAF5,color:#fff0,color:#fff
-    style F fill:#4CAF5,color:#fff0,color:#fff
-    style J fill:#f4433,color:#fff6,color:#fff
-    style L fill:#4CAF5,color:#fff0,color:#fff
+    style A fill:#9C27B0,color:#fff
+    style D fill:#f44336,color:#fff
+    style E fill:#4CAF50,color:#fff
+    style F fill:#4CAF50,color:#fff
+    style J fill:#f44336,color:#fff
+    style L fill:#4CAF50,color:#fff
 ```
 
 > 📝 **Nota:** Este flujo es idéntico para el enfoque manual y para Identity. Lo que cambia es cómo se genera el token y cómo se gestiona el usuario, pero el ciclo de vida del token es el mismo.
@@ -224,10 +224,10 @@ flowchart TD
     T -->|Parte 2| P1
     T -->|Parte 3| S1
 
-    style T fill:#607D8,color:#fffB,color:#fff
-    style H1 fill:#4CAF5,color:#fff0,color:#fff
-    style P1 fill:#2196F,color:#fff3,color:#fff
-    style S1 fill:#FF980,color:#fff0,color:#fff
+    style T fill:#607D8B,color:#fff
+    style H1 fill:#4CAF50,color:#fff
+    style P1 fill:#2196F3,color:#fff
+    style S1 fill:#FF9800,color:#fff
 ```
 
 **Header** — Define el algoritmo de firma y tipo de token. Es un JSON con dos campos obligatorios:
@@ -348,13 +348,13 @@ flowchart TD
     K -->|OK| M[Extraer claims]
     M --> N[ClaimsPrincipal valido]
 
-    style A fill:#607D8,color:#fffB,color:#fff
-    style D fill:#f4433,color:#fff6,color:#fff
-    style F fill:#f4433,color:#fff6,color:#fff
-    style H fill:#f4433,color:#fff6,color:#fff
-    style J fill:#f4433,color:#fff6,color:#fff
-    style L fill:#f4433,color:#fff6,color:#fff
-    style N fill:#4CAF5,color:#fff0,color:#fff
+    style A fill:#607D8B,color:#fff
+    style D fill:#f44336,color:#fff
+    style F fill:#f44336,color:#fff
+    style H fill:#f44336,color:#fff
+    style J fill:#f44336,color:#fff
+    style L fill:#f44336,color:#fff
+    style N fill:#4CAF50,color:#fff
 ```
 
 La validación en ASP.NET Core se configura con `TokenValidationParameters`. Este objeto le dice al middleware qué aspectos del token debe comprobar y con qué valores esperados.
@@ -454,16 +454,16 @@ flowchart LR
         L4 -->|No| L6[Credenciales invalidas]
     end
 
-    style R1 fill:#4CAF5,color:#fff0,color:#fff
-    style R2 fill:#4CAF5,color:#fff0,color:#fff
-    style R3 fill:#4CAF5,color:#fff0,color:#fff
-    style R4 fill:#4CAF5,color:#fff0,color:#fff
-    style L1 fill:#2196F,color:#fff3,color:#fff
-    style L2 fill:#2196F,color:#fff3,color:#fff
-    style L3 fill:#2196F,color:#fff3,color:#fff
-    style L4 fill:#FF980,color:#fff0,color:#fff
-    style L5 fill:#4CAF5,color:#fff0,color:#fff
-    style L6 fill:#f4433,color:#fff6,color:#fff
+    style R1 fill:#4CAF50,color:#fff
+    style R2 fill:#4CAF50,color:#fff
+    style R3 fill:#4CAF50,color:#fff
+    style R4 fill:#4CAF50,color:#fff
+    style L1 fill:#2196F3,color:#fff
+    style L2 fill:#2196F3,color:#fff
+    style L3 fill:#2196F3,color:#fff
+    style L4 fill:#FF9800,color:#fff
+    style L5 fill:#4CAF50,color:#fff
+    style L6 fill:#f44336,color:#fff
 ```
 
 > 💡 **Analogía:** BCrypt es como un molino de café. Cuando registras una contraseña, la pasas por el molino 11 veces (work factor 11) para obtener el polvo (hash). Verificar es pasar el café por el mismo molino y comparar. Un atacante tendría que moler cada contraseña 11 veces para intentar adivinarla.
@@ -991,8 +991,8 @@ flowchart LR
     A4 --> A5[MapControllers]
     A5 --> RESP[Response]
 
-    style A3 fill:#4CAF5,color:#fff0,color:#fff
-    style A4 fill:#2196F,color:#fff3,color:#fff
+    style A3 fill:#4CAF50,color:#fff
+    style A4 fill:#2196F3,color:#fff
 ```
 
 ## 16.5. OAuth2 y autenticación con proveedores externos
@@ -1074,15 +1074,15 @@ flowchart TD
     G -->|No| I[Crear usuario automaticamente]
     I --> H
 
-    style A fill:#9C27B,color:#fff0,color:#fff
-    style B fill:#2196F,color:#fff3,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#2196F,color:#fff3,color:#fff
-    style E fill:#FF980,color:#fff0,color:#fff
-    style F fill:#FF980,color:#fff0,color:#fff
-    style G fill:#607D8,color:#fffB,color:#fff
-    style H fill:#4CAF5,color:#fff0,color:#fff
-    style I fill:#4CAF5,color:#fff0,color:#fff
+    style A fill:#9C27B0,color:#fff
+    style B fill:#2196F3,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style D fill:#2196F3,color:#fff
+    style E fill:#FF9800,color:#fff
+    style F fill:#FF9800,color:#fff
+    style G fill:#607D8B,color:#fff
+    style H fill:#4CAF50,color:#fff
+    style I fill:#4CAF50,color:#fff
 ```
 
 📌 Ejemplo real: **Spotify** usa este flujo exacto. Cuando haces "Conectar con Spotify" en una app de terceros, Spotify te redirige a su página de autorización, tú eliges qué datos compartir (nombre, playlists, etc.), y la app recibe un token con esos permisos.
@@ -1109,14 +1109,14 @@ flowchart TD
         I3 --> I4[AuthController]
     end
 
-    style M1 fill:#4CAF5,color:#fff0,color:#fff
-    style M2 fill:#4CAF5,color:#fff0,color:#fff
-    style M3 fill:#4CAF5,color:#fff0,color:#fff
-    style M4 fill:#4CAF5,color:#fff0,color:#fff
-    style I1 fill:#FF980,color:#fff0,color:#fff
-    style I2 fill:#FF980,color:#fff0,color:#fff
-    style I3 fill:#FF980,color:#fff0,color:#fff
-    style I4 fill:#FF980,color:#fff0,color:#fff
+    style M1 fill:#4CAF50,color:#fff
+    style M2 fill:#4CAF50,color:#fff
+    style M3 fill:#4CAF50,color:#fff
+    style M4 fill:#4CAF50,color:#fff
+    style I1 fill:#FF9800,color:#fff
+    style I2 fill:#FF9800,color:#fff
+    style I3 fill:#FF9800,color:#fff
+    style I4 fill:#FF9800,color:#fff
 ```
 
 ### 16.6.2. Instalación y configuración
@@ -1512,12 +1512,12 @@ flowchart TD
     G --> I[7 tablas y features completas]
     H --> J[1 tabla y control total]
 
-    style C fill:#FF980,color:#fff0,color:#fff
-    style F fill:#4CAF5,color:#fff0,color:#fff
-    style G fill:#FF980,color:#fff0,color:#fff
-    style H fill:#4CAF5,color:#fff0,color:#fff
-    style I fill:#FF980,color:#fff0,color:#fff
-    style J fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#FF9800,color:#fff
+    style F fill:#4CAF50,color:#fff
+    style G fill:#FF9800,color:#fff
+    style H fill:#4CAF50,color:#fff
+    style I fill:#FF9800,color:#fff
+    style J fill:#4CAF50,color:#fff
 ```
 
 | Aspecto | Manual (JWT + BCrypt) | Identity |

@@ -190,9 +190,9 @@ flowchart LR
     M1 --> MAP
     MAP --> D1
 
-    style M1 fill:#2196F,color:#fff3,color:#fff
-    style MAP fill:#FF980,color:#fff0,color:#fff
-    style D1 fill:#4CAF5,color:#fff0,color:#fff
+    style M1 fill:#2196F3,color:#fff
+    style MAP fill:#FF9800,color:#fff
+    style D1 fill:#4CAF50,color:#fff
 ```
 
 📌 Ejemplo real: **Airbnb** tiene modelos internos con cientos de campos (disponibilidad, geolocalización, historial de reservas, puntuaciones...), pero el cliente solo ve una selección de esos campos. El mapeador se encarga de esa transformación de forma consistente.
@@ -320,13 +320,13 @@ flowchart TB
     FV -->|Válido| SVC
     SVC -->|Válido| OK
 
-    style DA fill:#2196F,color:#fff3,color:#fff
-    style FV fill:#FF980,color:#fff0,color:#fff
-    style SVC fill:#9C27B,color:#fff0,color:#fff
-    style OK fill:#4CAF5,color:#fff0,color:#fff
-    style DA_ERR fill:#f4433,color:#fff6,color:#fff
-    style FV_ERR fill:#f4433,color:#fff6,color:#fff
-    style SVC_ERR fill:#f4433,color:#fff6,color:#fff
+    style DA fill:#2196F3,color:#fff
+    style FV fill:#FF9800,color:#fff
+    style SVC fill:#9C27B0,color:#fff
+    style OK fill:#4CAF50,color:#fff
+    style DA_ERR fill:#f44336,color:#fff
+    style FV_ERR fill:#f44336,color:#fff
+    style SVC_ERR fill:#f44336,color:#fff
 ```
 
 📌 Ejemplo real: **Netflix** cuando creas una cuenta valida que el email tenga formato correcto (Data Annotations), que la contraseña tenga al menos 8 caracteres con una mayúscula y un número (FluentValidation), y que el email no esté ya registrado en la base de datos (validación en servicio). Los tres niveles trabajando en conjunto.
@@ -394,7 +394,7 @@ Comprobado con reflexión y `Validator.TryValidateObject` sobre `Page = 0` (fuer
 | **Sin** `property:` | **ninguno** | `RangeAttribute` | `True` → **acepta el valor inválido** ❌ |
 | **Con** `property:` | `RangeAttribute` | ninguno | `False` → *"La página debe estar entre 1 y 100"* ✅ |
 
-📌 Ejemplo real: en TiendaAPI el filtro de paginación (`ProductoFilterDto`) tenía exactamente este bug: `[Range(0, int.MaxValue)]` escrito "a pelo" en un record posicional, así que `Page = -5` pasaba sin más. Se corrigió con el commit *fix: `property:` en `[Range]` de records posicionales*.
+📌 Ejemplo real: el filtro de paginación (`ProductoFilterDto`) puede tener exactamente este bug: `[Range(0, int.MaxValue)]` escrito "a pelo" en un record posicional, así que `Page = -5` pasa sin más. La corrección es marcar el atributo con `property: Page`, que es lo que hace que la validación mire al campo correcto.
 
 > 💡 **Truco:** si tu record usa el estilo con propiedades (`public record X { public int Page { get; init; } }`), **no necesitas `property:`**: el atributo ya está escrito sobre la propia propiedad. El prefijo solo hace falta en los records **posicionales**.
 
@@ -760,12 +760,12 @@ flowchart TD
     H -->|Pasa| I
     I --> J["Lógica de negocio"]
 
-    style C fill:#2196F,color:#fff3,color:#fff
-    style D fill:#FF980,color:#fff0,color:#fff
-    style E fill:#9C27B,color:#fff0,color:#fff
-    style F fill:#f4433,color:#fff6,color:#fff
-    style I fill:#4CAF5,color:#fff0,color:#fff
-    style J fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#2196F3,color:#fff
+    style D fill:#FF9800,color:#fff
+    style E fill:#9C27B0,color:#fff
+    style F fill:#f44336,color:#fff
+    style I fill:#4CAF50,color:#fff
+    style J fill:#4CAF50,color:#fff
 ```
 
 ## 8.4. Consultas avanzadas en endpoints
@@ -783,11 +783,11 @@ flowchart TD
     F -->|No| H["Devolver todos"]
     G --> H
 
-    style A fill:#2196F,color:#fff3,color:#fff
-    style C fill:#FF980,color:#fff0,color:#fff
-    style E fill:#FF980,color:#fff0,color:#fff
-    style G fill:#FF980,color:#fff0,color:#fff
-    style H fill:#4CAF5,color:#fff0,color:#fff
+    style A fill:#2196F3,color:#fff
+    style C fill:#FF9800,color:#fff
+    style E fill:#FF9800,color:#fff
+    style G fill:#FF9800,color:#fff
+    style H fill:#4CAF50,color:#fff
 ```
 
 ### 8.4.1. Filtrado múltiple
@@ -901,13 +901,13 @@ flowchart LR
     I --> J["&"]
     J --> K["pageSize=10"]
 
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#FF980,color:#fff0,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
-    style E fill:#4CAF5,color:#fff0,color:#fff
-    style G fill:#4CAF5,color:#fff0,color:#fff
-    style I fill:#4CAF5,color:#fff0,color:#fff
-    style K fill:#4CAF5,color:#fff0,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#FF9800,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style E fill:#4CAF50,color:#fff
+    style G fill:#4CAF50,color:#fff
+    style I fill:#4CAF50,color:#fff
+    style K fill:#4CAF50,color:#fff
 ```
 
 📌 Ejemplo real: **Booking.com** cuando buscas hoteles, la URL tiene query parameters: `?destino=Madrid&fechaEntrada=2026-10-01&fechaSalida=2026-10-05&habitaciones=1&adultos=2`. Cada filtro es un query parameter.
@@ -974,7 +974,7 @@ pageSize = Math.Clamp(pageSize, 1, 100);
 >
 > Por eso el techo es `Math.Clamp(pageSize, 1, 100)`: **los dos extremos** importan, no solo el superior.
 
-📌 Ejemplo real: en TiendaAPI el techo se aplicaba solo en el `[Range]` del DTO, pero como GraphQL construye `ProductoFilterDto` **en código**, ese techo nunca llegaba a ejecutarse. Lo movieron también a los repositorios (commit *fix: clamp Size/Page en repositorios — cubre GraphQL*).
+📌 Ejemplo real: el techo se aplicaba solo en el `[Range]` del DTO, pero como GraphQL construye `ProductoFilterDto` **en código**, ese techo nunca llega a ejecutarse. La solución es mover el clamp también a los repositorios, así cubre los dos caminos de entrada al dato.
 
 ## 8.6. El nuevo método HTTP QUERY (RFC 10008)
 
@@ -1013,13 +1013,13 @@ flowchart LR
         Q4["✅ Bookmark"]
     end
 
-    style G2 fill:#4CAF5,color:#fff0,color:#fff
-    style G3 fill:#4CAF5,color:#fff0,color:#fff
-    style G4 fill:#f4433,color:#fff6,color:#fff
-    style P3 fill:#f4433,color:#fff6,color:#fff
-    style P4 fill:#f4433,color:#fff6,color:#fff
-    style Q3 fill:#4CAF5,color:#fff0,color:#fff
-    style Q4 fill:#4CAF5,color:#fff0,color:#fff
+    style G2 fill:#4CAF50,color:#fff
+    style G3 fill:#4CAF50,color:#fff
+    style G4 fill:#f44336,color:#fff
+    style P3 fill:#f44336,color:#fff
+    style P4 fill:#f44336,color:#fff
+    style Q3 fill:#4CAF50,color:#fff
+    style Q4 fill:#4CAF50,color:#fff
 ```
 
 ```mermaid
@@ -1027,12 +1027,12 @@ graph LR
     GET[GET] -->|Sin cuerpo| Cacheable[Cacheable + Bookmarkable]
     POST[POST] -->|Con cuerpo| NoCacheable[No cacheable + No bookmarkable]
     QUERY[QUERY] -->|Con cuerpo| Híbrido[Cacheable + Bookmarkable]
-    style GET fill:#4CAF5,color:#fff0,color:#fff
-    style POST fill:#f4433,color:#fff6,color:#fff
-    style QUERY fill:#2196F,color:#fff3,color:#fff
-    style Cacheable fill:#4CAF5,color:#fff0,color:#fff
-    style NoCacheable fill:#f4433,color:#fff6,color:#fff
-    style Híbrido fill:#2196F,color:#fff3,color:#fff
+    style GET fill:#4CAF50,color:#fff
+    style POST fill:#f44336,color:#fff
+    style QUERY fill:#2196F3,color:#fff
+    style Cacheable fill:#4CAF50,color:#fff
+    style NoCacheable fill:#f44336,color:#fff
+    style Híbrido fill:#2196F3,color:#fff
 ```
 
 ### 8.6.3. Ejemplo práctico
@@ -1079,9 +1079,9 @@ flowchart TD
     D --> G["GET /api/productos"]
     D --> H["GET /api/productos/1/historial"]
 
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#FF980,color:#fff0,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style D fill:#FF9800,color:#fff
 ```
 
 📌 Ejemplo real: **GitHub API** es el ejemplo más famoso de HATEOAS. Cuando obtienes un repositorio, la respuesta incluye enlaces para obtener los issues, los pull requests, los contributors... El cliente no necesita ensamblar las URLs — solo seguir los enlaces.
@@ -1204,7 +1204,7 @@ builder.Services.AddControllers(options =>
 
 > ⚠️ **Advertencia:** Se usa `AddXmlDataContractSerializerFormatters()` en lugar de `AddXmlSerializerFormatters()` porque `XmlSerializer` requiere un constructor vacío obligatorio, y los records posicionales de C# no lo generan automáticamente. `DataContractSerializer` es más flexible y funciona con records.
 
-📌 Ejemplo real: **TiendaAPI** usa esta misma configuración. En su `ControllersConfig.cs` tiene `RespectBrowserAcceptHeader = true` y `ReturnHttpNotAcceptable = true`, con el XML comentado para activarlo cuando se necesite.
+📌 Ejemplo real: una API preparada para clientes heterogéneos usa esta misma configuración en su `ControllersConfig`: `RespectBrowserAcceptHeader = true` y `ReturnHttpNotAcceptable = true`, con el formateador XML comentado para activarlo cuando se necesite.
 
 ### 8.8.3. XmlSerializer vs DataContractSerializer
 

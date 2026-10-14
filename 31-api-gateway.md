@@ -74,13 +74,13 @@ graph TD
         GW --> MS3["Servicio Pedidos"]
         GW --> MS4["Servicio Pagos"]
     end
-    style M fill:#f4433,color:#fff6,color:#fff
-    style MA fill:#FF980,color:#fff0,color:#fff
-    style GW fill:#2196F,color:#fff3,color:#fff
-    style MS1 fill:#4CAF5,color:#fff0,color:#fff
-    style MS2 fill:#4CAF5,color:#fff0,color:#fff
-    style MS3 fill:#4CAF5,color:#fff0,color:#fff
-    style MS4 fill:#4CAF5,color:#fff0,color:#fff
+    style M fill:#f44336,color:#fff
+    style MA fill:#FF9800,color:#fff
+    style GW fill:#2196F3,color:#fff
+    style MS1 fill:#4CAF50,color:#fff
+    style MS2 fill:#4CAF50,color:#fff
+    style MS3 fill:#4CAF50,color:#fff
+    style MS4 fill:#4CAF50,color:#fff
 ```
 
 | Característica | Monolito | Microservicios |
@@ -190,12 +190,12 @@ graph TD
     CL -->|Pedidos| PD["pedidos.microservice:5003"]
     CL -->|Pagos| PG["pagos.microservice:5004"]
     CL -->|Notif| N["notif.microservice:5005"]
-    style CL fill:#607D8,color:#fffB,color:#fff
-    style A fill:#f4433,color:#fff6,color:#fff
-    style P fill:#4CAF5,color:#fff0,color:#fff
-    style PD fill:#2196F,color:#fff3,color:#fff
-    style PG fill:#FF980,color:#fff0,color:#fff
-    style N fill:#9C27B,color:#fff0,color:#fff
+    style CL fill:#607D8B,color:#fff
+    style A fill:#f44336,color:#fff
+    style P fill:#4CAF50,color:#fff
+    style PD fill:#2196F3,color:#fff
+    style PG fill:#FF9800,color:#fff
+    style N fill:#9C27B0,color:#fff
 ```
 
 **Problemas:**
@@ -214,12 +214,12 @@ graph TD
     GW -->|/productos| P["Servicio Productos"]
     GW -->|/pedidos| PD["Servicio Pedidos"]
     GW -->|/pagos| PG["Servicio Pagos"]
-    style CL fill:#607D8,color:#fffB,color:#fff
-    style GW fill:#2196F,color:#fff3,color:#fff
-    style A fill:#4CAF5,color:#fff0,color:#fff
-    style P fill:#4CAF5,color:#fff0,color:#fff
-    style PD fill:#4CAF5,color:#fff0,color:#fff
-    style PG fill:#4CAF5,color:#fff0,color:#fff
+    style CL fill:#607D8B,color:#fff
+    style GW fill:#2196F3,color:#fff
+    style A fill:#4CAF50,color:#fff
+    style P fill:#4CAF50,color:#fff
+    style PD fill:#4CAF50,color:#fff
+    style PG fill:#4CAF50,color:#fff
 ```
 
 El cliente solo conoce **una URL** (la del Gateway). El Gateway se encarga de redirigir la petición al servicio correcto.
@@ -401,12 +401,12 @@ graph TD
     GW -->|/api/productos| P["Productos Service :5002"]
     A --> DB1[("SQLite Auth")]
     P --> DB2[("SQLite Productos")]
-    style CL fill:#607D8,color:#fffB,color:#fff
-    style GW fill:#2196F,color:#fff3,color:#fff
-    style A fill:#4CAF5,color:#fff0,color:#fff
-    style P fill:#FF980,color:#fff0,color:#fff
-    style DB1 fill:#9C27B,color:#fff0,color:#fff
-    style DB2 fill:#9C27B,color:#fff0,color:#fff
+    style CL fill:#607D8B,color:#fff
+    style GW fill:#2196F3,color:#fff
+    style A fill:#4CAF50,color:#fff
+    style P fill:#FF9800,color:#fff
+    style DB1 fill:#9C27B0,color:#fff
+    style DB2 fill:#9C27B0,color:#fff
 ```
 
 - **API Gateway** (puerto 5000): Recibe todas las peticiones y las redirige
@@ -846,10 +846,10 @@ graph TD
     GW -->|"auth-service:5001"| A
     GW -->|"productos-service:5002"| P
     CL["Host"] -->|"localhost:5000"| GW
-    style GW fill:#2196F,color:#fff3,color:#fff
-    style A fill:#4CAF5,color:#fff0,color:#fff
-    style P fill:#FF980,color:#fff0,color:#fff
-    style CL fill:#607D8,color:#fffB,color:#fff
+    style GW fill:#2196F3,color:#fff
+    style A fill:#4CAF50,color:#fff
+    style P fill:#FF9800,color:#fff
+    style CL fill:#607D8B,color:#fff
 ```
 
 > ⚠️ **Advertencia:** Si necesitas que un servicio acceda a otro de un **docker-compose.yml diferente**, necesitas declarar la red como `external` o usar `host` networking. Las redes por defecto son aisladas por proyecto.

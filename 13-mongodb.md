@@ -46,7 +46,11 @@
     - [Con driver nativo](#con-driver-nativo)
     - [Con EF Core](#con-ef-core)
   - [13.9. Buenas prácticas](#139-buenas-prácticas)
-  - [13.10. Reto](#1310-reto)
+  - [13.10. Reto: MongoDB con categoría embebida y proveedor referenciado](#1310-reto-mongodb-con-categoría-embebida-y-proveedor-referenciado)
+    - [13.10.1. Contexto](#13101-contexto)
+    - [13.10.2. Retos](#13102-retos)
+    - [13.10.3. Ejemplo de documento Funko](#13103-ejemplo-de-documento-funko)
+    - [13.10.4. Arquitectura](#13104-arquitectura)
 
 
 
@@ -1869,11 +1873,13 @@ public ObjectId Id { get; set; } // Indexado automáticamente, búsqueda óptima
 9. **EF Core para CRUD simple** — Si vienes de EF Core relacional, es más fácil
 10. **TestContainers para tests** — Un MongoDB real en Docker, sin depender de instalación local
 
-## 13.10. Reto
+## 13.10. Reto: MongoDB con categoría embebida y proveedor referenciado
 
-Implementa un repositorio CRUD de **Funkos con Categoría embebida y Proveedor referenciado** usando MongoDB.
+### 13.10.1. Contexto
 
-**Especificación:**
+FunkoApp ya tiene su CRUD con EF Core y PostgreSQL, con relaciones entre entidades y borrado lógico. En este reto el mismo catálogo se lleva a MongoDB, un motor de documentos donde cambian las decisiones de modelado: lo que en SQL era una tabla aparte, aquí puede ir embebido dentro del propio documento.
+
+### 13.10.2. Retos
 
 1. **Modelo Funko:** `Nombre`, `Precio`, `Imagen`, `IsDeleted`, `CreatedAt`, `UpdatedAt`
 2. **Categoría embebida (composición):** `Categoria` como propiedad dentro de Funko (no como colección separada)
@@ -1886,7 +1892,9 @@ Implementa un repositorio CRUD de **Funkos con Categoría embebida y Proveedor r
 7. **Seed data:** 3 proveedores con **ID fijo** + 5 Funkos que apuntan a ellos; se insertan al arrancar en desarrollo, **primero los referenciados**
 8. **Validación:** un Funko sin `ProveedorId` debe devolver `400`
 
-**Ejemplo de documento Funko: categoría embebida + proveedor referenciado:**
+### 13.10.3. Ejemplo de documento Funko
+
+Así quedaría un documento Funko con la categoría embebida dentro y solo el identificador del proveedor:
 
 ```json
 {
@@ -1905,7 +1913,9 @@ Implementa un repositorio CRUD de **Funkos con Categoría embebida y Proveedor r
 }
 ```
 
-**Arquitectura:**
+### 13.10.4. Arquitectura
+
+La estructura de carpetas de la solución, con las dos implementaciones del repositorio y sus tests:
 
 ```
 ProductosMongo/

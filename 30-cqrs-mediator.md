@@ -244,8 +244,8 @@ flowchart TD
 
     TRADICIONAL --> PROBLEMAS
 
-    style TRADICIONAL fill:#f4433,color:#fff6,color:#fff
-    style PROBLEMAS fill:#f4433,color:#fff6,color:#fff
+    style TRADICIONAL fill:#f44336,color:#fff
+    style PROBLEMAS fill:#f44336,color:#fff
 ```
 
 📌 Ejemplo real: **Netflix** tenía este problema. Sus consultas de catálogo (millones de series) eran lentas porque la misma BD manejaba escrituras de configuración. Al separar CQRS, las lecturas se volvieron 10x más rápidas.
@@ -276,8 +276,8 @@ flowchart TD
 
     CQRS --> VENTAJAS
 
-    style CQRS fill:#4CAF5,color:#fff0,color:#fff
-    style VENTAJAS fill:#2196F,color:#fff3,color:#fff
+    style CQRS fill:#4CAF50,color:#fff
+    style VENTAJAS fill:#2196F3,color:#fff
 ```
 
 📌 Ejemplo real: **LinkedIn** usa CQRS. Cuando actualizas tu perfil (escritura), va a PostgreSQL. Cuando alguien busca tu perfil (lectura), va a un sistema optimizado para búsquedas rápidas.
@@ -355,8 +355,8 @@ flowchart TD
 
     SOLO_SQL -->|"Problema: lento con muchos datos"| CQRS
 
-    style SOLO_SQL fill:#f4433,color:#fff6,color:#fff
-    style CQRS fill:#4CAF5,color:#fff0,color:#fff
+    style SOLO_SQL fill:#f44336,color:#fff
+    style CQRS fill:#4CAF50,color:#fff
 ```
 
 > 📝 **Nota:** CQRS no es la solución para todo. Si tu API tiene 100 usuarios y 50 productos, la complejidad adicional no compensa. CQRS brilla cuando tienes **miles de lecturas por escritura** y necesitas **escalar las lecturas** independientemente.
@@ -917,8 +917,8 @@ flowchart TD
 
     PROBLEMA --> CONSECUENCIAS
 
-    style PROBLEMA fill:#f4433,color:#fff6,color:#fff
-    style CONSECUENCIAS fill:#f4433,color:#fff6,color:#fff
+    style PROBLEMA fill:#f44336,color:#fff
+    style CONSECUENCIAS fill:#f44336,color:#fff
 ```
 
 📌 Ejemplo real: Si **Amazon** sincronizara todos sus millones de productos cada minuto, sus servidores de BD colapsarían en segundos.
@@ -952,8 +952,8 @@ flowchart LR
     A["PostgreSQL\n10M registros"] -->|"Lee TODO"| B["Transformar"]
     B -->|"10M operaciones"| C["MongoDB"]
 
-    style A fill:#f4433,color:#fff6,color:#fff
-    style C fill:#f4433,color:#fff6,color:#fff
+    style A fill:#f44336,color:#fff
+    style C fill:#f44336,color:#fff
 ```
 
 | Pros | Contras |
@@ -981,9 +981,9 @@ flowchart LR
     A["PostgreSQL\n10M registros"] -->|"Lee SOLO los que\ncambiaron"| B["3 registros"]
     B -->|"3 operaciones"| C["MongoDB"]
 
-    style A fill:#4CAF5,color:#fff0,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
+    style A fill:#4CAF50,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#4CAF50,color:#fff
 ```
 
 | Pros | Contras |
@@ -1012,10 +1012,10 @@ flowchart LR
     B -->|"Escucha"| C["SyncHandler"]
     C -->|"1 operación"| D["MongoDB"]
 
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#FF980,color:#fff0,color:#fff
-    style C fill:#9C27B,color:#fff0,color:#fff
-    style D fill:#4CAF5,color:#fff0,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#FF9800,color:#fff
+    style C fill:#9C27B0,color:#fff
+    style D fill:#4CAF50,color:#fff
 ```
 
 | Pros | Contras |
@@ -1086,11 +1086,11 @@ flowchart LR
     C -->|"Lee 1 producto"| D["PostgreSQL"]
     D -->|"1 operación"| E["MongoDB"]
 
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#FF980,color:#fff0,color:#fff
-    style C fill:#9C27B,color:#fff0,color:#fff
-    style D fill:#f4433,color:#fff6,color:#fff
-    style E fill:#4CAF5,color:#fff0,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#FF9800,color:#fff
+    style C fill:#9C27B0,color:#fff
+    style D fill:#f44336,color:#fff
+    style E fill:#4CAF50,color:#fff
 ```
 
 | Pros | Contras |
@@ -1147,9 +1147,9 @@ flowchart LR
         D --> I[Cache Redis]
     end
 
-    style PRODUCIDOR fill:#2196F,color:#fff3,color:#fff
-    style KAFKA fill:#FF980,color:#fff0,color:#fff
-    style CONSUMIDORES fill:#4CAF5,color:#fff0,color:#fff
+    style PRODUCIDOR fill:#2196F3,color:#fff
+    style KAFKA fill:#FF9800,color:#fff
+    style CONSUMIDORES fill:#4CAF50,color:#fff
 ```
 
 📌 Ejemplo real: **LinkedIn** usa Kafka para sincronizar datos entre cientos de microservicios. Cuando actualizas tu perfil, el evento viaja por Kafka y actualiza ElasticSearch, caches y sistemas de recomendación.
@@ -1196,9 +1196,9 @@ flowchart LR
         F -->|Transforma| G[(MongoDB)]
     end
 
-    style ORIGEN fill:#2196F,color:#fff3,color:#fff
-    style CAPTURA fill:#FF980,color:#fff0,color:#fff
-    style DESTINO fill:#4CAF5,color:#fff0,color:#fff
+    style ORIGEN fill:#2196F3,color:#fff
+    style CAPTURA fill:#FF9800,color:#fff
+    style DESTINO fill:#4CAF50,color:#fff
 ```
 
 ### 30.8.4. Ventajas y desventajas de kafka
@@ -1234,8 +1234,8 @@ flowchart LR
         F -->|accede| G[Repository]
     end
 
-    style TRADICIONAL fill:#f4433,color:#fff6,color:#fff
-    style CON_MEDIATR fill:#4CAF5,color:#fff0,color:#fff
+    style TRADICIONAL fill:#f44336,color:#fff
+    style CON_MEDIATR fill:#4CAF50,color:#fff
 ```
 
 **Instalación:**
@@ -1561,14 +1561,14 @@ public class TiendaQuery
 
 | GraphQL llamando a los servicios directamente | GraphQL pasando por MediatR |
 |---|---|
-| Dos implementaciones de «traer todos los productos» | Un solo Query Handler para REST y GraphQL |
+| Dos implementaciones de "traer todos los productos" | Un solo Query Handler para REST y GraphQL |
 | Los Behaviors (Logging, Validación, Caché) solo corren en REST | Los Behaviors corren **también** en GraphQL |
 | Cambias la regla de negocio en un sitio y GraphQL no se entera | Un único sitio que cambiar |
 | Los tests de GraphQL prueban otra cosa | Los tests de GraphQL prueban el mismo handler |
 
 > 📝 **Nota:** Fíjate en el `[Service] IMediator mediator` de la firma: HotChocolate inyecta el mediator **por resolver**, sin necesidad de constructor. Y el patrón de errores (`if (result.IsFailure) throw ...`) es el puente entre el `Result` funcional que devuelven los Handlers y el modelo de excepciones que GraphQL entiende.
 
-📌 **Ejemplo real:** en TiendaAPI (repo CQRS/MediatR) el commit *feat: GraphQL queries pasan por MediatR (CQRS consistente con REST)* creó `GetAllProductosListQuery` y `GetAllCategoriasListQuery` y reescribió `TiendaQuery` para que todo pasara por `IMediator.Send`; los tests se adaptaron en el commit siguiente (*fix: tests GraphQL actualizados para usar IMediator*). CQRS es una **disciplina, no un detalle de transporte**: REST y GraphQL son dos ventanas a la misma caja.
+📌 **Ejemplo real:** hacer que las queries de GraphQL pasen por MediatR obliga a crear `GetAllProductosListQuery` y `GetAllCategoriasListQuery` y a reescribir el `Query` raíz para que todo vaya por `IMediator.Send`, adaptando también los tests. CQRS es una **disciplina, no un detalle de transporte**: REST y GraphQL son dos ventanas a la misma caja.
 
 > 💡 **Consejo:** Si tu GraphQL llama directamente a los servicios (`[Service] IProductoService service`), tienes **dos arquitecturas viviendo en el mismo proyecto**. Pasa las queries por MediatR **antes** de que el esquema crezca: una vez que los resolvers cuelgan de los Handlers, no hay vuelta atrás sin reescribir.
 

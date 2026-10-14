@@ -56,12 +56,12 @@ flowchart TD
     A --> D["📄 Razor Pages"]
     A --> E["🎮 Blazor"]
     A --> F["📡 Web API"]
-    style A fill:#9C27B,color:#fff0,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#2196F,color:#fff3,color:#fff
-    style E fill:#2196F,color:#fff3,color:#fff
-    style F fill:#FF980,color:#fff0,color:#fff
+    style A fill:#9C27B0,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style D fill:#2196F3,color:#fff
+    style E fill:#2196F3,color:#fff
+    style F fill:#FF9800,color:#fff
 ```
 
 📌 **Ejemplo real:** Netflix, Spotify y GitHub usan APIs construidas con tecnologías similares a ASP.NET Core. Cada petición que haces a estos servicios pasa por un pipeline similar al que verás aquí.
@@ -90,13 +90,13 @@ flowchart TD
     D -->|Accede a| E["📦 Database"]
     C -->|Usa| F["📋 Model"]
     B -->|Devuelve| G["📤 DTO"]
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#FF980,color:#fff0,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#9C27B,color:#fff0,color:#fff
-    style E fill:#607D8,color:#fffB,color:#fff
-    style F fill:#4CAF5,color:#fff0,color:#fff
-    style G fill:#FF980,color:#fff0,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#FF9800,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style D fill:#9C27B0,color:#fff
+    style E fill:#607D8B,color:#fff
+    style F fill:#4CAF50,color:#fff
+    style G fill:#FF9800,color:#fff
 ```
 
 📌 **Ejemplo real:** En Amazon, cuando buscas un producto: el **Controller** recibe tu petición, el **Service** busca en el catálogo, el **Repository** accede a la base de datos, y el **DTO** te devuelve solo los datos que necesitas (sin passwords ni datos internos).
@@ -145,11 +145,11 @@ flowchart LR
     B -->|"SELECT *"| C["📦 SQL Server"]
     B -->|"find()"| D["🍃 MongoDB"]
     B -->|"Get()"| E["📄 JSON File"]
-    style A fill:#4CAF5,color:#fff0,color:#fff
-    style B fill:#9C27B,color:#fff0,color:#fff
-    style C fill:#2196F,color:#fff3,color:#fff
-    style D fill:#4CAF5,color:#fff0,color:#fff
-    style E fill:#FF980,color:#fff0,color:#fff
+    style A fill:#4CAF50,color:#fff
+    style B fill:#9C27B0,color:#fff
+    style C fill:#2196F3,color:#fff
+    style D fill:#4CAF50,color:#fff
+    style E fill:#FF9800,color:#fff
 ```
 
 > 💡 **Consejo:** El patrón Repository permite cambiar la fuente de datos sin tocar el service. Hoy es SQL Server, mañana puede ser MongoDB. El service no se entera.
@@ -178,14 +178,14 @@ flowchart LR
     E --> F["🗺️ Routing"]
     F --> G["🎯 Endpoint"]
     G --> H["📤 Respuesta"]
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#f4433,color:#fff6,color:#fff
-    style C fill:#607D8,color:#fffB,color:#fff
-    style D fill:#FF980,color:#fff0,color:#fff
-    style E fill:#9C27B,color:#fff0,color:#fff
-    style F fill:#4CAF5,color:#fff0,color:#fff
-    style G fill:#4CAF5,color:#fff0,color:#fff
-    style H fill:#2196F,color:#fff3,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#f44336,color:#fff
+    style C fill:#607D8B,color:#fff
+    style D fill:#FF9800,color:#fff
+    style E fill:#9C27B0,color:#fff
+    style F fill:#4CAF50,color:#fff
+    style G fill:#4CAF50,color:#fff
+    style H fill:#2196F3,color:#fff
 ```
 
 📌 **Ejemplo real:** Es como una cadena de montaje. Cada estación (middleware) hace su trabajo y pasa el producto a la siguiente. Si alguna estación falla, el producto no llega al final.
@@ -242,10 +242,10 @@ flowchart LR
     A["🌐 Internet"] --> B["🛡️ Reverse Proxy<br/>(Nginx/IIS)"]
     B -->|HTTP| C["⚡ Kestrel"]
     C -->|Pipeline| D["🎯 Endpoint"]
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#f4433,color:#fff6,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#FF980,color:#fff0,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#f44336,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style D fill:#FF9800,color:#fff
 ```
 
 📌 **Ejemplo real:** Kestrel es como el portero de un edificio. Recibe a todos los visitantes (peticiones), les pasa al sistema de seguridad (middleware), y los dirige al destino correcto (endpoint).
@@ -285,11 +285,11 @@ flowchart TD
     B --> C["builder.Build()<br/>Crear la app"]
     C --> D["app.*<br/>Configurar pipeline"]
     D --> E["app.Run()<br/>Arrancar servidor"]
-    style A fill:#9C27B,color:#fff0,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#FF980,color:#fff0,color:#fff
-    style E fill:#2196F,color:#fff3,color:#fff
+    style A fill:#9C27B0,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style D fill:#FF9800,color:#fff
+    style E fill:#2196F3,color:#fff
 ```
 
 ### 5.5.2. Registro de servicios

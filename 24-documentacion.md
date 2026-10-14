@@ -46,14 +46,14 @@ En este punto aprenderás a configurar CORS, integrar Swagger/OpenAPI en ASP.NET
 flowchart LR
     subgraph "Sin CORS"
         A[Frontend: https://mi-app.com] -->|Bloqueado| B[API: https://mi-api.com]
-        style A fill:#f4433,color:#fff6,color:#fff
-        style B fill:#f4433,color:#fff6,color:#fff
+        style A fill:#f44336,color:#fff
+        style B fill:#f44336,color:#fff
     end
 
     subgraph "Con CORS"
         C[Frontend: https://mi-app.com] -->|Permitido| D[API: https://mi-api.com]
-        style C fill:#4CAF5,color:#fff0,color:#fff
-        style D fill:#4CAF5,color:#fff0,color:#fff
+        style C fill:#4CAF50,color:#fff
+        style D fill:#4CAF50,color:#fff
     end
 ```
 
@@ -502,7 +502,7 @@ builder.Services.AddSwaggerGen(options =>
 
 > ⚠️ **Advertencia — Sin `GroupNameFormat`, Swagger sale casi vacío:** El `GroupNameFormat` **no es decorativo**. Sin él, el nombre de grupo de cada endpoint es `ApiVersion.ToString()` → `"1.0"`, y Swashbuckle solo mete en `SwaggerDoc("v1")` los grupos llamados `"v1"`. El resultado es un Swagger con **solo los endpoints sin versionar** (p. ej. `/version`) y **todos los controllers versionados desaparecidos**. Con `'v'VVV`, la versión `1.0` se formatea como `v1` (el minor se omite cuando es `0`) y vuelve a coincidir con el `SwaggerDoc("v1")`.
 
-📌 **Ejemplo real:** TiendaAPI tenía exactamente este bug: `.AddApiExplorer()` sin `GroupNameFormat` y el Swagger mostraba **1 ruta** (`/version`) en lugar de las **22 rutas / 39 operaciones** reales. Una sola línea (`options.GroupNameFormat = "'v'VVV";`) lo arregló.
+📌 **Ejemplo real:** este es un bug más común de lo que parece. `.AddApiExplorer()` sin `GroupNameFormat` hace que el Swagger muestre **1 ruta** (`/version`) en lugar de las **22 rutas / 39 operaciones** reales. Una sola línea (`options.GroupNameFormat = "'v'VVV";`) lo arregla.
 
 ```csharp
 [ApiController]

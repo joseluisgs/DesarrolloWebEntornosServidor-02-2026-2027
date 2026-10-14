@@ -56,8 +56,8 @@ En este punto aprenderás a diseñar APIs REST: qué son los recursos, cómo se 
 flowchart LR
     A["🌐 Cliente"] -->|HTTP Request| B["📡 API REST"]
     B -->|HTTP Response| A
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#4CAF50,color:#fff
 ```
 
 📌 **Ejemplo real:** La API de Twitter/X sigue REST. Cuando abres la app, envía `GET /api/tweets` para obtener los tweets. Cuando publicas, envía `POST /api/tweets` con el texto. Todo sigue el mismo patrón.
@@ -70,11 +70,11 @@ flowchart TD
     A --> C["📭 Sin Estado"]
     A --> D["💾 Cacheable"]
     A --> E["🧩 Uniforme"]
-    style A fill:#9C27B,color:#fff0,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#2196F,color:#fff3,color:#fff
-    style D fill:#FF980,color:#fff0,color:#fff
-    style E fill:#607D8,color:#fffB,color:#fff
+    style A fill:#9C27B0,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#2196F3,color:#fff
+    style D fill:#FF9800,color:#fff
+    style E fill:#607D8B,color:#fff
 ```
 
 | Principio | Significado |
@@ -114,12 +114,12 @@ flowchart LR
     A -->|POST| D["Crear nuevo"]
     A -->|PUT /1| E["Actualizar"]
     A -->|DELETE /1| F["Eliminar"]
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#FF980,color:#fff0,color:#fff
-    style E fill:#FF980,color:#fff0,color:#fff
-    style F fill:#f4433,color:#fff6,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style D fill:#FF9800,color:#fff
+    style E fill:#FF9800,color:#fff
+    style F fill:#f44336,color:#fff
 ```
 
 ### 2.2.2. Parámetros en la URL
@@ -374,16 +374,16 @@ flowchart TD
     N -->|Sí| P{"¿Es DELETE?"}
     P -->|Sí| Q["204 No Content"]
     P -->|No| R["200 OK"]
-    style C fill:#FF980,color:#fff0,color:#fff
-    style E fill:#f4433,color:#fff6,color:#fff
-    style G fill:#f4433,color:#fff6,color:#fff
-    style I fill:#FF980,color:#fff0,color:#fff
-    style I2 fill:#FF980,color:#fff0,color:#fff
-    style L fill:#f4433,color:#fff6,color:#fff
-    style M fill:#4CAF5,color:#fff0,color:#fff
-    style O fill:#f4433,color:#fff6,color:#fff
-    style Q fill:#4CAF5,color:#fff0,color:#fff
-    style R fill:#4CAF5,color:#fff0,color:#fff
+    style C fill:#FF9800,color:#fff
+    style E fill:#f44336,color:#fff
+    style G fill:#f44336,color:#fff
+    style I fill:#FF9800,color:#fff
+    style I2 fill:#FF9800,color:#fff
+    style L fill:#f44336,color:#fff
+    style M fill:#4CAF50,color:#fff
+    style O fill:#f44336,color:#fff
+    style Q fill:#4CAF50,color:#fff
+    style R fill:#4CAF50,color:#fff
 ```
 
 ## 2.5. Request y response

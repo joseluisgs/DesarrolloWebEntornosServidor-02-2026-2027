@@ -69,12 +69,12 @@ flowchart LR
 
     A1 --> A2 --> A3 --> B1 --> B2 --> B3
 
-    style A1 fill:#9C27B,color:#fff0,color:#fff
-    style A2 fill:#9C27B,color:#fff0,color:#fff
-    style A3 fill:#9C27B,color:#fff0,color:#fff
-    style B1 fill:#2196F,color:#fff3,color:#fff
-    style B2 fill:#2196F,color:#fff3,color:#fff
-    style B3 fill:#2196F,color:#fff3,color:#fff
+    style A1 fill:#9C27B0,color:#fff
+    style A2 fill:#9C27B0,color:#fff
+    style A3 fill:#9C27B0,color:#fff
+    style B1 fill:#2196F3,color:#fff
+    style B2 fill:#2196F3,color:#fff
+    style B3 fill:#2196F3,color:#fff
 ```
 
 | Aspecto | Autenticación | Autorización |
@@ -104,11 +104,11 @@ flowchart TD
     E -->|Permiso concedido| G["Ejecutar endpoint"]
     G --> H["200 OK + datos"]
 
-    style A fill:#607D8,color:#fffB,color:#fff
-    style C fill:#f4433,color:#fff6,color:#fff
-    style D fill:#4CAF5,color:#fff0,color:#fff
-    style F fill:#f4433,color:#fff6,color:#fff
-    style H fill:#4CAF5,color:#fff0,color:#fff
+    style A fill:#607D8B,color:#fff
+    style C fill:#f44336,color:#fff
+    style D fill:#4CAF50,color:#fff
+    style F fill:#f44336,color:#fff
+    style H fill:#4CAF50,color:#fff
 ```
 
 En el `Program.cs`, la configuración de estos middlewares debe seguir un orden estricto. La autenticación siempre va primero porque la autorización necesita saber quién es el usuario antes de evaluar sus permisos:
@@ -229,9 +229,9 @@ flowchart TD
     MOD --> P3
     MOD --> P4
 
-    style ADMIN fill:#f4433,color:#fff6,color:#fff
-    style USER fill:#4CAF5,color:#fff0,color:#fff
-    style MOD fill:#FF980,color:#fff0,color:#fff
+    style ADMIN fill:#f44336,color:#fff
+    style USER fill:#4CAF50,color:#fff
+    style MOD fill:#FF9800,color:#fff
 ```
 
 | Rol | Descripción | Ejemplo de uso |
@@ -308,11 +308,11 @@ flowchart LR
     C4 --> A2
     C5 --> A3
 
-    style C1 fill:#2196F,color:#fff3,color:#fff
-    style C2 fill:#2196F,color:#fff3,color:#fff
-    style C3 fill:#2196F,color:#fff3,color:#fff
-    style C4 fill:#2196F,color:#fff3,color:#fff
-    style C5 fill:#2196F,color:#fff3,color:#fff
+    style C1 fill:#2196F3,color:#fff
+    style C2 fill:#2196F3,color:#fff
+    style C3 fill:#2196F3,color:#fff
+    style C4 fill:#2196F3,color:#fff
+    style C5 fill:#2196F3,color:#fff
 ```
 
 | Tipo de claim | Ejemplo | Uso |
@@ -368,10 +368,10 @@ flowchart TD
     R1 --> C1
     R4 --> C2
 
-    style R1 fill:#4CAF5,color:#fff0,color:#fff
-    style R2 fill:#4CAF5,color:#fff0,color:#fff
-    style R3 fill:#FF980,color:#fff0,color:#fff
-    style R4 fill:#FF980,color:#fff0,color:#fff
+    style R1 fill:#4CAF50,color:#fff
+    style R2 fill:#4CAF50,color:#fff
+    style R3 fill:#FF9800,color:#fff
+    style R4 fill:#FF9800,color:#fff
 ```
 
 Una política puede ser tan simple como requerir un rol, o tan compleja como combinar múltiples requisitos con lógica personalizada. La clave es que defines la política una vez en `Program.cs` y la reutilizas con el atributo `[Authorize(Policy = "...")]` en cualquier endpoint.
@@ -391,10 +391,10 @@ flowchart LR
     EVALUAR -->|Cumple| SUCEED["context.Succeed"]
     EVALUAR -->|No cumple| FAIL["Denegar acceso"]
 
-    style REQ fill:#9C27B,color:#fff0,color:#fff
-    style HANDLER fill:#2196F,color:#fff3,color:#fff
-    style SUCEED fill:#4CAF5,color:#fff0,color:#fff
-    style FAIL fill:#f4433,color:#fff6,color:#fff
+    style REQ fill:#9C27B0,color:#fff
+    style HANDLER fill:#2196F3,color:#fff
+    style SUCEED fill:#4CAF50,color:#fff
+    style FAIL fill:#f44336,color:#fff
 ```
 
 > 💡 **Consejo:** Usa Requirements y Handlers cuando la lógica de autorización es demasiado compleja para una política simple o cuando necesitas acceder a recursos de la base de datos para tomar la decisión.
@@ -537,11 +537,11 @@ flowchart TD
     AUTHZ -->|Tiene rol o policy| OK[Endpoint ejecutado]
     AUTHZ -->|No tiene permiso| R403[403 Forbidden]
 
-    style AUTH fill:#4CAF5,color:#fff0,color:#fff
-    style AUTHZ fill:#2196F,color:#fff3,color:#fff
-    style R401 fill:#f4433,color:#fff6,color:#fff
-    style R403 fill:#f4433,color:#fff6,color:#fff
-    style OK fill:#4CAF5,color:#fff0,color:#fff
+    style AUTH fill:#4CAF50,color:#fff
+    style AUTHZ fill:#2196F3,color:#fff
+    style R401 fill:#f44336,color:#fff
+    style R403 fill:#f44336,color:#fff
+    style OK fill:#4CAF50,color:#fff
 ```
 
 **Verificación programática de roles en código:**
@@ -1106,9 +1106,9 @@ flowchart TD
     H -->|Si| G
     H -->|No| I["403 Forbidden"]
 
-    style E fill:#f4433,color:#fff6,color:#fff
-    style G fill:#4CAF5,color:#fff0,color:#fff
-    style I fill:#f4433,color:#fff6,color:#fff
+    style E fill:#f44336,color:#fff
+    style G fill:#4CAF50,color:#fff
+    style I fill:#f44336,color:#fff
 ```
 
 Para implementar esta verificación, puedes usar `IAuthorizationService` que ASP.NET Core te inyecta automáticamente. Este servicio te permite evaluar políticas sobre recursos concretos en tiempo de ejecución:
@@ -1225,12 +1225,12 @@ flowchart TD
     D --> G["7+ tablas, scaffolding"]
     E --> H["Ambos funcionan igual para autorizacion"]
 
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#FF980,color:#fff0,color:#fff
-    style E fill:#2196F,color:#fff3,color:#fff
-    style F fill:#4CAF5,color:#fff0,color:#fff
-    style G fill:#FF980,color:#fff0,color:#fff
-    style H fill:#2196F,color:#fff3,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style D fill:#FF9800,color:#fff
+    style E fill:#2196F3,color:#fff
+    style F fill:#4CAF50,color:#fff
+    style G fill:#FF9800,color:#fff
+    style H fill:#2196F3,color:#fff
 ```
 
 > 💡 **Consejo:** La autorización (roles, claims, policies, handlers) funciona **exactamente igual** en ambos enfoques. La única diferencia es cómo gestionas la identidad del usuario. Elige el enfoque de autenticación que mejor se adapte a tu proyecto y la autorización será la misma.
@@ -1263,15 +1263,15 @@ flowchart TB
     S1 --> S2 --> S3
     M1 --> M2 --> M3
 
-    style P1 fill:#4CAF5,color:#fff0,color:#fff
-    style P2 fill:#4CAF5,color:#fff0,color:#fff
-    style P3 fill:#4CAF5,color:#fff0,color:#fff
-    style S1 fill:#f4433,color:#fff6,color:#fff
-    style S2 fill:#f4433,color:#fff6,color:#fff
-    style S3 fill:#f4433,color:#fff6,color:#fff
-    style M1 fill:#2196F,color:#fff3,color:#fff
-    style M2 fill:#2196F,color:#fff3,color:#fff
-    style M3 fill:#2196F,color:#fff3,color:#fff
+    style P1 fill:#4CAF50,color:#fff
+    style P2 fill:#4CAF50,color:#fff
+    style P3 fill:#4CAF50,color:#fff
+    style S1 fill:#f44336,color:#fff
+    style S2 fill:#f44336,color:#fff
+    style S3 fill:#f44336,color:#fff
+    style M1 fill:#2196F3,color:#fff
+    style M2 fill:#2196F3,color:#fff
+    style M3 fill:#2196F3,color:#fff
 ```
 
 | Práctica | Descripción |

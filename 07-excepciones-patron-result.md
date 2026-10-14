@@ -96,10 +96,10 @@ flowchart LR
         E -->|Sí| H["❌ Nombre duplicado"]
     end
 
-    style G fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#f4433,color:#fff6,color:#fff
-    style F fill:#f4433,color:#fff6,color:#fff
-    style H fill:#f4433,color:#fff6,color:#fff
+    style G fill:#4CAF50,color:#fff
+    style D fill:#f44336,color:#fff
+    style F fill:#f44336,color:#fff
+    style H fill:#f44336,color:#fff
 ```
 
 ### 7.1.4. Ejemplo real
@@ -173,8 +173,8 @@ flowchart TD
     E -->|Sí| F["Stack trace actualizado"]
     E -->|No| G["Continuar ejecución"]
 
-    style B fill:#f4433,color:#fff6,color:#fff
-    style C fill:#FF980,color:#fff0,color:#fff
+    style B fill:#f44336,color:#fff
+    style C fill:#FF9800,color:#fff
 ```
 
 ### 7.2.3. Ejemplo: servicio con excepciones (mal)
@@ -309,10 +309,10 @@ flowchart LR
     S2 -.->|No encontrado| E2
     S2 -.->|Duplicado| E3
 
-    style S4 fill:#4CAF5,color:#fff0,color:#fff
-    style E4 fill:#f4433,color:#fff6,color:#fff
-    style E5 fill:#f4433,color:#fff6,color:#fff
-    style E6 fill:#f4433,color:#fff6,color:#fff
+    style S4 fill:#4CAF50,color:#fff
+    style E4 fill:#f44336,color:#fff
+    style E5 fill:#f44336,color:#fff
+    style E6 fill:#f44336,color:#fff
 ```
 
 ### 7.4.2. Result vs excepciones

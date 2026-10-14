@@ -1,4 +1,4 @@
-﻿- [11. Arquitecturas en capas y Clean Architecture](#11-arquitecturas-en-capas-y-clean-architecture)
+- [11. Arquitecturas en capas y Clean Architecture](#11-arquitecturas-en-capas-y-clean-architecture)
   - [11.1. ¿Por qué necesitamos una arquitectura?](#111-por-qué-necesitamos-una-arquitectura)
     - [11.1.1. El problema del "spaghetti code"](#1111-el-problema-del-spaghetti-code)
     - [11.1.2. Separación de responsabilidades](#1112-separación-de-responsabilidades)
@@ -65,7 +65,7 @@ flowchart TD
         A1 -->|"logica negocio"| E1["Validaciones en 5 sitios"]
     end
 
-    style MAL fill:#f4433,color:#fff6,color:#fff
+    style MAL fill:#f44336,color:#fff
 ```
 
 | Síntoma | Consecuencia |
@@ -133,10 +133,10 @@ flowchart TB
     A1 --> D1
     I1 -.implements.-> D1
 
-    style PRESENTACIÓN fill:#9C27B,color:#fff0,color:#fff
-    style APLICACIÓN fill:#2196F,color:#fff3,color:#fff
-    style DOMINIO fill:#4CAF5,color:#fff0,color:#fff
-    style INFRAESTRUCTURA fill:#FF980,color:#fff0,color:#fff
+    style PRESENTACIÓN fill:#9C27B0,color:#fff
+    style APLICACIÓN fill:#2196F3,color:#fff
+    style DOMINIO fill:#4CAF50,color:#fff
+    style INFRAESTRUCTURA fill:#FF9800,color:#fff
 ```
 
 ### 11.2.4. Flujo de dependencias
@@ -269,10 +269,10 @@ flowchart TB
     GW --> ENT1
     DB --> GW
 
-    style ENTITIES fill:#4CAF5,color:#fff0,color:#fff
-    style USECASES fill:#2196F,color:#fff3,color:#fff
-    style ADAPTERS fill:#FF980,color:#fff0,color:#fff
-    style EXTERIOR fill:#9C27B,color:#fff0,color:#fff
+    style ENTITIES fill:#4CAF50,color:#fff
+    style USECASES fill:#2196F3,color:#fff
+    style ADAPTERS fill:#FF9800,color:#fff
+    style EXTERIOR fill:#9C27B0,color:#fff
 ```
 
 ### 11.4.4. Ejemplo práctico en .NET
@@ -354,7 +354,7 @@ flowchart LR
         S1 --> U1["Update (escritura)"]
     end
 
-    style MIXTO fill:#f4433,color:#fff6,color:#fff
+    style MIXTO fill:#f44336,color:#fff
 ```
 
 **Problemas:**
@@ -382,8 +382,8 @@ flowchart LR
         Q3["Search"]
     end
 
-    style COMMANDS fill:#f4433,color:#fff6,color:#fff
-    style QUERIES fill:#4CAF5,color:#fff0,color:#fff
+    style COMMANDS fill:#f44336,color:#fff
+    style QUERIES fill:#4CAF50,color:#fff
 ```
 
 ```csharp
@@ -466,7 +466,7 @@ public class ProductosController(IMediator mediator) : ControllerBase
 
 ### 11.5.5. Nuestra arquitectura: config classes
 
-En el curso y en **TiendaAPI** usamos una variante práctica de Clean Architecture adaptada a educación. No separamos en proyectos distintos (Domain, Application, Infrastructure), sino que **organizamos por carpetas dentro de un solo proyecto** con **Config classes** en `Infrastructure/` para el registro de DI.
+En el curso usamos una variante práctica de Clean Architecture adaptada a educación. No separamos en proyectos distintos (Domain, Application, Infrastructure), sino que **organizamos por carpetas dentro de un solo proyecto** con **Config classes** en `Infrastructure/` para el registro de DI.
 
 ```mermaid
 flowchart TB
@@ -487,13 +487,13 @@ flowchart TB
     SVC --> REPO
     REPO --> MDL
 
-    style PROYECTO fill:#2196F,color:#fff3,color:#fff
+    style PROYECTO fill:#2196F3,color:#fff
 ```
 
-**Estructura de TiendaAPI:**
+**Estructura del proyecto de esta unidad:**
 
 ```
-TiendaApi.Api/
+ProductosApi/
 ├── Program.cs                    # Punto de entrada
 ├── Controllers/                  # Endpoints HTTP
 ├── Services/                     # Lógica de negocio
@@ -572,7 +572,7 @@ services.AddEmail(environment);
 services.AddStorage();
 ```
 
-📌 Ejemplo real: **TiendaAPI** usa este patrón. Cada concern (repositorios, servicios, cache, email, auth) tiene su propia Config class. Cuando añades un nuevo servicio, solo creas una nueva Config class y la llamas en Program.cs. No necesitas tocar el resto.
+📌 Ejemplo real: en la API de este curso, cada concern (repositorios, servicios, cache, email, auth) tiene su propia Config class. Cuando añades un nuevo servicio, solo creas una nueva Config class y la llamas en Program.cs. No necesitas tocar el resto.
 
 > 💡 **Consejo:** Para educación, esta arquitectura es ideal porque:
 > - **Un solo proyecto** = más fácil de entender para alumnos nuevos

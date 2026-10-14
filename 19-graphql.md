@@ -77,14 +77,14 @@ graph LR
         G2 --> G3["{id, nombre, precio}"]
     end
 
-    style REST fill:#f4433,color:#fff6,color:#fff
-    style GQL fill:#4CAF5,color:#fff0,color:#fff
-    style R1 fill:#f4433,color:#fff6,color:#fff
-    style R2 fill:#f4433,color:#fff6,color:#fff
-    style R3 fill:#f4433,color:#fff6,color:#fff
-    style G1 fill:#4CAF5,color:#fff0,color:#fff
-    style G2 fill:#4CAF5,color:#fff0,color:#fff
-    style G3 fill:#4CAF5,color:#fff0,color:#fff
+    style REST fill:#f44336,color:#fff
+    style GQL fill:#4CAF50,color:#fff
+    style R1 fill:#f44336,color:#fff
+    style R2 fill:#f44336,color:#fff
+    style R3 fill:#f44336,color:#fff
+    style G1 fill:#4CAF50,color:#fff
+    style G2 fill:#4CAF50,color:#fff
+    style G3 fill:#4CAF50,color:#fff
 ```
 
 > 💡 **Analogía:** REST es como un menu fijo donde recibes el plato completo aunque solo quieras la ensalada. GraphQL es como un buffet donde sirves exactamente lo que quieres: "un poco de pollo, mucha ensalada, nada de arroz".
@@ -114,12 +114,12 @@ flowchart TD
         D["POST /graphql { producto(1) { nombre, categoria { nombre }, reviews { texto } } }"]
     end
 
-    style REST_FLOW fill:#f4433,color:#fff6,color:#fff
-    style GQL_FLOW fill:#4CAF5,color:#fff0,color:#fff
-    style A fill:#f4433,color:#fff6,color:#fff
-    style B fill:#f4433,color:#fff6,color:#fff
-    style C fill:#f4433,color:#fff6,color:#fff
-    style D fill:#4CAF5,color:#fff0,color:#fff
+    style REST_FLOW fill:#f44336,color:#fff
+    style GQL_FLOW fill:#4CAF50,color:#fff
+    style A fill:#f44336,color:#fff
+    style B fill:#f44336,color:#fff
+    style C fill:#f44336,color:#fff
+    style D fill:#4CAF50,color:#fff
 ```
 
 📌 Ejemplo real: **GitHub** usa GraphQL para su API. La app móvil de GitHub usa la misma API que la web, pero cada cliente pide los campos que necesita. La versión móvil pide menos datos (más rápida), la web pide todos los campos (más completa). Si GitHub usara REST, tendría que crear endpoints separados para móvil y web, o devolver siempre todos los campos (over-fetching).
@@ -206,15 +206,15 @@ flowchart TD
 
     DI --> F
 
-    style DI fill:#2196F,color:#fff3,color:#fff
-    style ENDPOINT fill:#4CAF5,color:#fff0,color:#fff
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#2196F,color:#fff3,color:#fff
-    style C fill:#2196F,color:#fff3,color:#fff
-    style D fill:#2196F,color:#fff3,color:#fff
-    style E fill:#2196F,color:#fff3,color:#fff
-    style F fill:#4CAF5,color:#fff0,color:#fff
-    style G fill:#4CAF5,color:#fff0,color:#fff
+    style DI fill:#2196F3,color:#fff
+    style ENDPOINT fill:#4CAF50,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#2196F3,color:#fff
+    style C fill:#2196F3,color:#fff
+    style D fill:#2196F3,color:#fff
+    style E fill:#2196F3,color:#fff
+    style F fill:#4CAF50,color:#fff
+    style G fill:#4CAF50,color:#fff
 ```
 
 ### 19.2.3. Flujo de petición GraphQL
@@ -344,9 +344,9 @@ graph LR
     R -->|"estaDisponible (calculado)"| G
     R -->|"precioConDescuento (calculado)"| G
 
-    style M fill:#2196F,color:#fff3,color:#fff
-    style R fill:#FF980,color:#fff0,color:#fff
-    style G fill:#4CAF5,color:#fff0,color:#fff
+    style M fill:#2196F3,color:#fff
+    style R fill:#FF9800,color:#fff
+    style G fill:#4CAF50,color:#fff
 ```
 
 ### 19.3.4. Campos calculados
@@ -760,16 +760,16 @@ graph TB
         F --> I[Cliente 3]
     end
 
-    style PUBLICADOR fill:#2196F,color:#fff3,color:#fff
-    style SERVIDOR fill:#FF980,color:#fff0,color:#fff
-    style SUSCRIPCIONES fill:#9C27B,color:#fff0,color:#fff
-    style CLIENTES fill:#4CAF5,color:#fff0,color:#fff
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#FF980,color:#fff0,color:#fff
-    style C fill:#9C27B,color:#fff0,color:#fff
-    style G fill:#4CAF5,color:#fff0,color:#fff
-    style H fill:#4CAF5,color:#fff0,color:#fff
-    style I fill:#4CAF5,color:#fff0,color:#fff
+    style PUBLICADOR fill:#2196F3,color:#fff
+    style SERVIDOR fill:#FF9800,color:#fff
+    style SUSCRIPCIONES fill:#9C27B0,color:#fff
+    style CLIENTES fill:#4CAF50,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#FF9800,color:#fff
+    style C fill:#9C27B0,color:#fff
+    style G fill:#4CAF50,color:#fff
+    style H fill:#4CAF50,color:#fff
+    style I fill:#4CAF50,color:#fff
 ```
 
 📌 Ejemplo real: **Shopify** usa subscriptions para notificar a los comerciantes cuando se realiza un pedido nuevo. El panel de administracion se actualiza instantaneamente sin recargar la pagina.
@@ -893,11 +893,11 @@ graph TD
     D2 --> R
     D3 --> R
 
-    style S1 fill:#f4433,color:#fff6,color:#fff
-    style D1 fill:#f4433,color:#fff6,color:#fff
-    style D2 fill:#f4433,color:#fff6,color:#fff
-    style D3 fill:#f4433,color:#fff6,color:#fff
-    style R fill:#f4433,color:#fff6,color:#fff
+    style S1 fill:#f44336,color:#fff
+    style D1 fill:#f44336,color:#fff
+    style D2 fill:#f44336,color:#fff
+    style D3 fill:#f44336,color:#fff
+    style R fill:#f44336,color:#fff
 ```
 
 ### 19.8.2. Solución con DataLoader
@@ -915,11 +915,11 @@ graph TD
     P --> DL2["DataLoader asigna a cada categoria"]
     DL2 --> R["2 consultas en total!"]
 
-    style S1 fill:#4CAF5,color:#fff0,color:#fff
-    style DL fill:#FF980,color:#fff0,color:#fff
-    style S2 fill:#4CAF5,color:#fff0,color:#fff
-    style DL2 fill:#FF980,color:#fff0,color:#fff
-    style R fill:#4CAF5,color:#fff0,color:#fff
+    style S1 fill:#4CAF50,color:#fff
+    style DL fill:#FF9800,color:#fff
+    style S2 fill:#4CAF50,color:#fff
+    style DL2 fill:#FF9800,color:#fff
+    style R fill:#4CAF50,color:#fff
 ```
 
 ### 19.8.3. Implementación de DataLoaders
@@ -1135,7 +1135,7 @@ builder.Services.AddAuthorization(options =>
 
 **Desactiva la introspección fuera de desarrollo**
 
-Hay una pieza de seguridad que **no** depende de `[Authorize]`: la **introspección**. Mientras esté activa, cualquiera puede preguntarle al servidor *«enséñame tu esquema completo»* y recibir la lista de queries, mutations, tipos, argumentos y campos — **sin estar autenticado**. Ese esquema es el mapa que necesita un atacante para preparar el siguiente paso.
+Hay una pieza de seguridad que **no** depende de `[Authorize]`: la **introspección**. Mientras esté activa, cualquiera puede preguntarle al servidor *"enséñame tu esquema completo"* y recibir la lista de queries, mutations, tipos, argumentos y campos - **sin estar autenticado**. Ese esquema es el mapa que necesita un atacante para preparar el siguiente paso.
 
 ```csharp
 var builder = services
@@ -1160,7 +1160,7 @@ if (!environment.IsDevelopment())
 return builder;
 ```
 
-📌 **Ejemplo real:** en TiendaAPI el commit *fix: deshabilitar introspección GraphQL en producción (DisableIntrospection, solo Development)* añadió exactamente este bloque en `GraphQLConfig`. Con ello, en producción `__schema` y `__type` devuelven error, y el IDE **Banana Cake Pop** deja de poder explorar el esquema — que es precisamente el objetivo: en local lo tienes todo, en producción nada que no esté declarado en los resolvers.
+📌 **Ejemplo real:** añadir exactamente este bloque en `GraphQLConfig` desactiva la introspección en producción: `__schema` y `__type` devuelven error, y el IDE **Banana Cake Pop** deja de poder explorar el esquema — que es precisamente el objetivo: en local lo tienes todo, en producción nada que no esté declarado en los resolvers.
 
 > ⚠️ **Advertencia:** `DisableIntrospection()` **no sustituye** a la autorización. Desactivarla tapa el descubrimiento del esquema, pero **no autoriza** nada por sí solo: cada resolver sigue necesitando su `[Authorize]` y su validación de entrada. Son dos capas distintas — lo que quita la introspección no es lo que protege tus datos.
 
@@ -1470,21 +1470,21 @@ graph TD
 
     TEST --> NUNIT[NUnit + InMemory]
 
-    style GQL fill:#f4433,color:#fff6,color:#fff
-    style CONCEPTOS fill:#2196F,color:#fff3,color:#fff
-    style TOOLS fill:#FF980,color:#fff0,color:#fff
-    style SECURITY fill:#9C27B,color:#fff0,color:#fff
-    style TEST fill:#4CAF5,color:#fff0,color:#fff
-    style QRY fill:#2196F,color:#fff3,color:#fff
-    style MUT fill:#2196F,color:#fff3,color:#fff
-    style SUB fill:#2196F,color:#fff3,color:#fff
-    style DL fill:#2196F,color:#fff3,color:#fff
-    style HC fill:#FF980,color:#fff0,color:#fff
-    style TYPES fill:#FF980,color:#fff0,color:#fff
-    style FILTERS fill:#FF980,color:#fff0,color:#fff
-    style JWT fill:#9C27B,color:#fff0,color:#fff
-    style AUTH fill:#9C27B,color:#fff0,color:#fff
-    style NUNIT fill:#4CAF5,color:#fff0,color:#fff
+    style GQL fill:#f44336,color:#fff
+    style CONCEPTOS fill:#2196F3,color:#fff
+    style TOOLS fill:#FF9800,color:#fff
+    style SECURITY fill:#9C27B0,color:#fff
+    style TEST fill:#4CAF50,color:#fff
+    style QRY fill:#2196F3,color:#fff
+    style MUT fill:#2196F3,color:#fff
+    style SUB fill:#2196F3,color:#fff
+    style DL fill:#2196F3,color:#fff
+    style HC fill:#FF9800,color:#fff
+    style TYPES fill:#FF9800,color:#fff
+    style FILTERS fill:#FF9800,color:#fff
+    style JWT fill:#9C27B0,color:#fff
+    style AUTH fill:#9C27B0,color:#fff
+    style NUNIT fill:#4CAF50,color:#fff
 ```
 
 ---

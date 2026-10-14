@@ -85,9 +85,9 @@ graph TD
     D -->|4. FileStream| B
     B -->|5. 200 OK| A
     
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#2196F,color:#fff3,color:#fff
-    style D fill:#FF980,color:#fff0,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#2196F3,color:#fff
+    style D fill:#FF9800,color:#fff
 ```
 
 > 💡 **Analogía:** El almacenamiento de archivos es como el almacén de un restaurante. Cuando un cliente pide un plato especial, el mesero va al almacén, busca el ingrediente y lo trae a la cocina. El almacén puede ser físico (disco local) o externo (nube).
@@ -169,7 +169,7 @@ El directorio `wwwroot` es el único directorio accesible públicamente vía HTT
 ```mermaid
 graph TD
     subgraph "Estructura del Proyecto"
-        A[TiendaApi/]
+        A[FunkoApp/]
         B[wwwroot/]
         C[Controllers/]
         D[Models/]
@@ -184,10 +184,10 @@ graph TD
         I[GET /api/productos/1] --> C
     end
     
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style G fill:#2196F,color:#fff3,color:#fff
-    style H fill:#2196F,color:#fff3,color:#fff
-    style I fill:#FF980,color:#fff0,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style G fill:#2196F3,color:#fff
+    style H fill:#2196F3,color:#fff
+    style I fill:#FF9800,color:#fff
 ```
 
 📌 **Ejemplo real:** Cuando un navegador carga una página web, pide el HTML, luego el CSS, luego las imágenes. Todos esos archivos estáticos están en wwwroot. Si intentas acceder a `Controllers/`, recibirás un 404: esos archivos no están en wwwroot.
@@ -219,7 +219,7 @@ builder.WebHost.ConfigureKestrel(options =>
 La clase de configuración encapsula las rutas y opciones del almacenamiento para poder leerlas desde `appsettings.json` sin esparcir `IConfiguration` por todo el código.
 
 ```csharp
-namespace TiendaApi.Apis.Configuration;
+namespace FunkoApi.Configuration;
 
 public class StorageSettings
 {
@@ -392,7 +392,7 @@ La interfaz `IStorageService` define el contrato de operaciones con ficheros (su
 ```csharp
 using Microsoft.AspNetCore.Http;
 
-namespace TiendaApi.Apis.Services.Storage;
+namespace FunkoApi.Services.Storage;
 
 public interface IStorageService
 {
@@ -485,11 +485,11 @@ La implementación concreta `FileSystemStorageService` guarda los ficheros en el
 
 ```csharp
 using Microsoft.AspNetCore.Hosting;
-using TiendaApi.Apis.Configuration;
-using TiendaApi.Apis.Services.Storage;
+using FunkoApi.Configuration;
+using FunkoApi.Services.Storage;
 using Microsoft.Extensions.Options;
 
-namespace TiendaApi.Apis.Services.Storage.Implementation;
+namespace FunkoApi.Services.Storage.Implementation;
 
 public class FileSystemStorageService(
     IWebHostEnvironment env,
@@ -693,7 +693,7 @@ var fileName = GenerateFileName(file.FileName);
 Las excepciones personalizadas permiten distinguir un fichero no encontrado de un error de disco, y devolver el código HTTP que corresponda en cada caso.
 
 ```csharp
-namespace TiendaApi.Apis.Models.Exceptions;
+namespace FunkoApi.Models.Exceptions;
 
 public class FileSizeExceededException : Exception
 {
@@ -756,9 +756,9 @@ El controlador expone los endpoints HTTP para subir, listar y borrar ficheros, y
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
-using TiendaApi.Apis.Services.Storage;
+using FunkoApi.Services.Storage;
 
-namespace TiendaApi.Apis.Controllers;
+namespace FunkoApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -1005,7 +1005,7 @@ La primera línea de defensa al subir ficheros es comprobar la extensión permit
 ```csharp
 using System.ComponentModel.DataAnnotations;
 
-namespace TiendaApi.Apis.Models.Validation;
+namespace FunkoApi.Models.Validation;
 
 public class AllowedExtensionsAttribute : ValidationAttribute
 {
@@ -1055,7 +1055,7 @@ Limitar el tamaño del fichero evita que un archivo gigante llene el disco del s
 ```csharp
 using System.ComponentModel.DataAnnotations;
 
-namespace TiendaApi.Apis.Models.Validation;
+namespace FunkoApi.Models.Validation;
 
 public class MaxFileSizeAttribute : ValidationAttribute
 {
@@ -1096,8 +1096,8 @@ graph TD
     B --> C{"¿Contiene '..' o rutas absolutas?"}
     C -->|Sí| D[Bloquear - 400 Bad Request]
     C -->|No| E[Procesar normalmente]
-    style D fill:#f4433,color:#fff6,color:#fff
-    style E fill:#4CAF5,color:#fff0,color:#fff
+    style D fill:#f44336,color:#fff
+    style E fill:#4CAF50,color:#fff
 ```
 
 ```csharp
@@ -1117,7 +1117,7 @@ El nombre del fichero que manda el cliente puede contener rutas o caracteres esp
 ```csharp
 using System.Text.RegularExpressions;
 
-namespace TiendaApi.Apis.Models.Validation;
+namespace FunkoApi.Models.Validation;
 
 public static class FileNameValidator
 {
@@ -1190,7 +1190,7 @@ El almacenamiento de archivos cobra sentido cuando lo conectamos con entidades d
 ```csharp
 using System.ComponentModel.DataAnnotations;
 
-namespace TiendaApi.Apis.Models;
+namespace FunkoApi.Models;
 
 public class Producto
 {
@@ -1296,11 +1296,11 @@ Para producción, Azure Blob Storage ofrece seguridad, redundancia y escalabilid
 
 ```csharp
 using Azure.Storage.Blobs;
-using TiendaApi.Apis.Configuration;
-using TiendaApi.Apis.Services.Storage;
+using FunkoApi.Configuration;
+using FunkoApi.Services.Storage;
 using Microsoft.Extensions.Options;
 
-namespace TiendaApi.Apis.Services.Storage.Implementation;
+namespace FunkoApi.Services.Storage.Implementation;
 
 public class AzureBlobStorageService : IStorageService
 {
@@ -1435,10 +1435,10 @@ using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using FluentAssertions;
-using TiendaApi.Apis.Configuration;
-using TiendaApi.Apis.Services.Storage.Implementation;
+using FunkoApi.Configuration;
+using FunkoApi.Services.Storage.Implementation;
 
-namespace TiendaApi.Apis.Tests.Services;
+namespace FunkoApi.Tests.Services;
 
 [TestFixture]
 public class FileSystemStorageServiceTests
@@ -1563,10 +1563,10 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NUnit.Framework;
 using FluentAssertions;
-using TiendaApi.Apis.Controllers;
-using TiendaApi.Apis.Services.Storage;
+using FunkoApi.Controllers;
+using FunkoApi.Services.Storage;
 
-namespace TiendaApi.Apis.Tests.Controllers;
+namespace FunkoApi.Tests.Controllers;
 
 [TestFixture]
 public class FilesControllerTests

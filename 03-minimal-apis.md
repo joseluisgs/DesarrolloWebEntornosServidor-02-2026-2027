@@ -64,9 +64,9 @@ flowchart LR
     A["🌐 Cliente"] -->|HTTP| B["Minimal API"]
     B -->|"lambda()"| C["Endpoint"]
     C -->|Response| A
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#FF980,color:#fff0,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#FF9800,color:#fff
 ```
 
 📌 **Ejemplo real:** Así lo harías con ASP.NET Core: si Twitter/X quisiera un endpoint simple como "obtener un tweet" o "dar like", con Minimal API sería una sola lambda en `Program.cs`, sin la ceremonia de un controlador.
@@ -90,8 +90,8 @@ flowchart TD
     A -->|No| C{"¿Necesitas filtros, validación compleja?"}
     C -->|No| B
     C -->|Sí| D["Controller-based"]
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#FF980,color:#fff0,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style D fill:#FF9800,color:#fff
 ```
 
 > 💡 **Consejo:** Empieza siempre con Minimal APIs. Si la API crece y necesitas más estructura, migras a controladores. No complices lo que puedes hacer simple.
@@ -130,12 +130,12 @@ flowchart TD
     C --> D["Ejecuta la lambda"]
     D --> E["Devuelve la respuesta"]
     E --> F["Cliente recibe JSON"]
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#FF980,color:#fff0,color:#fff
-    style D fill:#9C27B,color:#fff0,color:#fff
-    style E fill:#4CAF5,color:#fff0,color:#fff
-    style F fill:#2196F,color:#fff3,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#FF9800,color:#fff
+    style D fill:#9C27B0,color:#fff
+    style E fill:#4CAF50,color:#fff
+    style F fill:#2196F3,color:#fff
 ```
 
 ## 3.3. Definir rutas y métodos HTTP
@@ -247,12 +247,12 @@ flowchart TD
     G -->|Sí| G2{"¿Regla de negocio cumplida?"}
     G2 -->|No| H["Results.UnprocessableEntity()"]
     G2 -->|Sí| I["Results.Ok()"]
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#4CAF5,color:#fff0,color:#fff
-    style F fill:#f4433,color:#fff6,color:#fff
-    style H0 fill:#FF980,color:#fff0,color:#fff
-    style H fill:#FF980,color:#fff0,color:#fff
-    style I fill:#4CAF5,color:#fff0,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style D fill:#4CAF50,color:#fff
+    style F fill:#f44336,color:#fff
+    style H0 fill:#FF9800,color:#fff
+    style H fill:#FF9800,color:#fff
+    style I fill:#4CAF50,color:#fff
 ```
 
 ## 3.5. Gestión de la clave primaria

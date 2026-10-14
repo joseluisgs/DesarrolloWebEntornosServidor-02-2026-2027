@@ -80,12 +80,12 @@ graph TD
     F --> F1["Transacciones"]
     F --> F2["Locks"]
     F --> F3["Async"]
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#FF980,color:#fff0,color:#fff
-    style D fill:#9C27B,color:#fff0,color:#fff
-    style E fill:#607D8,color:#fffB,color:#fff
-    style F fill:#f4433,color:#fff6,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#FF9800,color:#fff
+    style D fill:#9C27B0,color:#fff
+    style E fill:#607D8B,color:#fff
+    style F fill:#f44336,color:#fff
 ```
 
 📌 **Ejemplo real:** Netflix optimiza cada capa de su API. Usa Redis para caché de perfiles, compresión Brotli para respuestas JSON, y paginación para listados de series. Cada capa contribuye a que tu feed cargue en menos de 200ms.
@@ -353,12 +353,12 @@ graph TD
     E --> F["Store in Cache"]
     F --> D
     D --> G["Response"]
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#607D8,color:#fffB,color:#fff
-    style C fill:#FF980,color:#fff0,color:#fff
-    style D fill:#4CAF5,color:#fff0,color:#fff
-    style E fill:#f4433,color:#fff6,color:#fff
-    style F fill:#9C27B,color:#fff0,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#607D8B,color:#fff
+    style C fill:#FF9800,color:#fff
+    style D fill:#4CAF50,color:#fff
+    style E fill:#f44336,color:#fff
+    style F fill:#9C27B0,color:#fff
 ```
 
 ### 23.3.4. Response caching
@@ -461,7 +461,7 @@ var etag = $"\"{producto.Version}-{producto.UpdatedAt.Ticks:x}\"";
 
 Si el ETag cambia en cada respuesta, `If-None-Match` nunca lo iguala → el servidor responde siempre **200 con el cuerpo completo** → el cliente no ahorra ancho de banda **y además** invalida su caché local en cada vuelta. Un ETag que siempre cambia es **peor** que no tener ETag.
 
-📌 **Ejemplo real:** en TiendaAPI había un `ETag = Guid.NewGuid()` copiado de un tutorial. No rompía nada visible, pero anulaba por completo la ventaja de las peticiones condicionales. Se eliminó con el commit *fix: eliminar ETag Guid.NewGuid() decorativo (OutputCache ya gestiona la caché HTTP)*. **Regla:** si no puedes explicar **de dónde sale** tu ETag, es decorativo.
+📌 **Ejemplo real:** un `ETag = Guid.NewGuid()` copiado de un tutorial no rompe nada visible, pero anula por completo la ventaja de las peticiones condicionales: cada respuesta lleva un identificador nuevo y el cliente nunca puede devolver un `304`. Si tu caché HTTP ya gestiona los ETags, ese guion decorativo se elimina. **Regla:** si no puedes explicar **de dónde sale** tu ETag, es decorativo.
 
 **Alternativa en .NET 10 con `[OutputCache]`:**
 
@@ -584,7 +584,7 @@ La alternativa es la **source generation**: le dices al compilador qué tipos va
 public partial class AppJsonContext : JsonSerializerContext;
 ```
 
-📌 **Ejemplo real:** TiendaAPI declara unos 30 tipos en su `AppJsonContext`: todos los DTOs de entrada/salida, los modelos de dominio, los `PagedResult<T>` de paginación y las `List<T>` de respuesta. El compilador genera un fichero por tipo (se ve en `obj/.../System.Text.Json.SourceGeneration/`).
+📌 **Ejemplo real:** una API con source generation declara unos 30 tipos en su `AppJsonContext`: todos los DTOs de entrada/salida, los modelos de dominio, los `PagedResult<T>` de paginación y las `List<T>` de respuesta. El compilador genera un fichero por tipo (se ve en `obj/.../System.Text.Json.SourceGeneration/`).
 
 **Paso 2 — Conectarlo.** Declarar la clase **no basta**: hay que indicarle a ASP.NET Core que la use.
 
@@ -614,7 +614,7 @@ options.JsonSerializerOptions.TypeInfoResolver = JsonTypeInfoResolver.Combine(
     new DefaultJsonTypeInfoResolver()); // fallback a reflexión
 ```
 
-📌 **Ejemplo real:** TiendaAPI aplica ese mismo `Combine` en **7 puntos de serialización**: MVC (`AddJsonOptions`), Minimal APIs (`ConfigureHttpJsonOptions`), el `GlobalExceptionHandler`, el cuerpo 429 del rate limiting, sus dos WebSockets (pedidos y productos) y la caché Redis. En todos: source-gen para sus ~30 tipos declarados y reflexión como red de seguridad para el que se escape.
+📌 **Ejemplo real:** una API completa aplica ese mismo `Combine` en **7 puntos de serialización**: MVC (`AddJsonOptions`), Minimal APIs (`ConfigureHttpJsonOptions`), el `GlobalExceptionHandler`, el cuerpo 429 del rate limiting, sus dos WebSockets (pedidos y productos) y la caché Redis. En todos: source-gen para sus ~30 tipos declarados y reflexión como red de seguridad para el que se escape.
 
 | Aspecto | Reflexión (por defecto) | Source generation |
 |---------|------------------------|-------------------|
@@ -692,7 +692,7 @@ async (IProductoService service) => { });
 
 El rate limiting nativo de ASP.NET Core se configura con políticas globales. Pero a veces necesitas **reglas más granulares** (por ejemplo: ventana corta general + ventana de un minuto solo para escrituras o autenticación) y emitir las **cabeceras estándar `RateLimit-*`** del borrador IETF. Para eso puedes escribir un **middleware propio** sobre `System.Threading.RateLimiting`.
 
-📌 **Ejemplo real:** El proyecto **TiendaAPI** usa exactamente este enfoque. Eliminó `AspNetCoreRateLimit` y lo sustituyó por un middleware propio con `FixedWindowRateLimiter`, emitiendo `RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset` y `Retry-After`.
+📌 **Ejemplo real:** este enfoque sustituye a `AspNetCoreRateLimit` con un middleware propio construido sobre `FixedWindowRateLimiter`, emitiendo `RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset` y `Retry-After`.
 
 **Las reglas de ejemplo (una por periodo, se aplica la más restrictiva):**
 
@@ -712,9 +712,9 @@ flowchart TD
     F -->|"No supera"| E
     F -->|"Superada"| D
 
-    style A fill:#2196F,color:#fff3,color:#fff
-    style D fill:#f4433,color:#fff6,color:#fff
-    style E fill:#4CAF5,color:#fff0,color:#fff
+    style A fill:#2196F3,color:#fff
+    style D fill:#f44336,color:#fff
+    style E fill:#4CAF50,color:#fff
 ```
 
 **El estado: particiones por IP + verbo + ruta**
@@ -943,7 +943,7 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 
 **Un health check de caché real mira métricas, no solo el `ping`**
 
-El ejemplo de arriba responde *«¿responde Redis?»*. Pero hay fallos que el `ping` no ve: Redis contesta perfectamente y **las operaciones siguen fallando** (auth rechazada, clave demasiado grande, timeout de serialización…). Para eso se exponen **métricas de errores de la propia caché dentro del health check**:
+El ejemplo de arriba responde *"¿responde Redis?"*. Pero hay fallos que el `ping` no ve: Redis contesta perfectamente y **las operaciones siguen fallando** (auth rechazada, clave demasiado grande, timeout de serialización…). Para eso se exponen **métricas de errores de la propia caché dentro del health check**:
 
 ```csharp
 // Singleton con contadores atómicos — sin dependencias externas
@@ -1047,9 +1047,9 @@ checks = report.Entries.Select(e => new
 })
 ```
 
-📌 **Ejemplo real:** en TiendaAPI, `CacheMetrics` es un singleton registrado en `CacheConfig.AddCache`, se alimenta desde `RedisCacheService` y se lee en `RedisHealthCheck`. Commits: *feat: CacheMetrics — métricas de errores de caché expuestas en /health*, *fix: añadir using CacheMetrics en HealthChecksConfig* y *fix: CacheMetrics ; cast explícito `DateTime?` en ToSummary*. La idea es poder prescindir de Prometheus/OpenTelemetry en un proyecto de aula: **`GET /health` basta** para notar que la caché anda mal.
+📌 **Ejemplo real:** `CacheMetrics` es un singleton registrado en `CacheConfig.AddCache`, que se alimenta desde `RedisCacheService` y se lee en `RedisHealthCheck`. La idea es poder prescindir de Prometheus/OpenTelemetry en un proyecto de aula: **`GET /health` basta** para notar que la caché anda mal.
 
-> 💡 **Consejo:** Un health check que solo hace `ping` te dice *«Redis contesta»*. Las métricas te dicen **«Redis contesta, pero falla el 0,12 % de las operaciones»** — que es lo que de verdad duele en producción. Y `lastErrorMessage` te ahorra veinte minutos de log-diving: el mensaje ya está ahí.
+> 💡 **Consejo:** Un health check que solo hace `ping` te dice *"Redis contesta"*. Las métricas te dicen **"Redis contesta, pero falla el 0,12 % de las operaciones"** - que es lo que de verdad duele en producción. Y `lastErrorMessage` te ahorra veinte minutos de log-diving: el mensaje ya está ahí.
 
 ### 23.6.2. Application metrics
 

@@ -190,42 +190,42 @@ graph TD
     GW --> GW2[Rate Limiting]
     GW --> GW3[Carga y Seguridad]
 
-    style UD02 fill:#2196F,color:#fff3,color:#fff
-    style P1 fill:#7c3ae,color:#fffd,color:#fff
-    style P2 fill:#4CAF5,color:#fff0,color:#fff
-    style P3 fill:#FF980,color:#fff0,color:#fff
-    style P4 fill:#f4433,color:#fff6,color:#fff
-    style CON fill:#FF980,color:#fff0,color:#fff
-    style REST fill:#FF980,color:#fff0,color:#fff
-    style MIN fill:#FF980,color:#fff0,color:#fff
-    style MVC fill:#FF980,color:#fff0,color:#fff
-    style PIPE fill:#FF980,color:#fff0,color:#fff
-    style DI fill:#FF980,color:#fff0,color:#fff
-    style RES fill:#FF980,color:#fff0,color:#fff
-    style DTO fill:#FF980,color:#fff0,color:#fff
-    style CONF fill:#FF980,color:#fff0,color:#fff
-    style TEST1 fill:#FF980,color:#fff0,color:#fff
-    style ARCH fill:#2196F,color:#fff3,color:#fff
-    style EF fill:#2196F,color:#fff3,color:#fff
-    style MONGO fill:#2196F,color:#fff3,color:#fff
-    style REDIS fill:#2196F,color:#fff3,color:#fff
-    style TRANS fill:#2196F,color:#fff3,color:#fff
-    style AUTH fill:#2196F,color:#fff3,color:#fff
-    style AUTHZ fill:#2196F,color:#fff3,color:#fff
-    style WS fill:#4CAF5,color:#fff0,color:#fff
-    style GQL fill:#4CAF5,color:#fff0,color:#fff
-    style FILE fill:#4CAF5,color:#fff0,color:#fff
-    style EMAIL fill:#4CAF5,color:#fff0,color:#fff
-    style CRON fill:#4CAF5,color:#fff0,color:#fff
-    style OPT fill:#f4433,color:#fff6,color:#fff
-    style SWAG fill:#f4433,color:#fff6,color:#fff
-    style PROF fill:#f4433,color:#fff6,color:#fff
-    style PROG fill:#f4433,color:#fff6,color:#fff
-    style SLOG fill:#f4433,color:#fff6,color:#fff
-    style TESTP fill:#f4433,color:#fff6,color:#fff
-    style DOCKER fill:#f4433,color:#fff6,color:#fff
-    style CQRS fill:#f4433,color:#fff6,color:#fff
-    style GW fill:#f4433,color:#fff6,color:#fff
+    style UD02 fill:#2196F3,color:#fff
+    style P1 fill:#9C27B0,color:#fff
+    style P2 fill:#4CAF50,color:#fff
+    style P3 fill:#FF9800,color:#fff
+    style P4 fill:#f44336,color:#fff
+    style CON fill:#FF9800,color:#fff
+    style REST fill:#FF9800,color:#fff
+    style MIN fill:#FF9800,color:#fff
+    style MVC fill:#FF9800,color:#fff
+    style PIPE fill:#FF9800,color:#fff
+    style DI fill:#FF9800,color:#fff
+    style RES fill:#FF9800,color:#fff
+    style DTO fill:#FF9800,color:#fff
+    style CONF fill:#FF9800,color:#fff
+    style TEST1 fill:#FF9800,color:#fff
+    style ARCH fill:#2196F3,color:#fff
+    style EF fill:#2196F3,color:#fff
+    style MONGO fill:#2196F3,color:#fff
+    style REDIS fill:#2196F3,color:#fff
+    style TRANS fill:#2196F3,color:#fff
+    style AUTH fill:#2196F3,color:#fff
+    style AUTHZ fill:#2196F3,color:#fff
+    style WS fill:#4CAF50,color:#fff
+    style GQL fill:#4CAF50,color:#fff
+    style FILE fill:#4CAF50,color:#fff
+    style EMAIL fill:#4CAF50,color:#fff
+    style CRON fill:#4CAF50,color:#fff
+    style OPT fill:#f44336,color:#fff
+    style SWAG fill:#f44336,color:#fff
+    style PROF fill:#f44336,color:#fff
+    style PROG fill:#f44336,color:#fff
+    style SLOG fill:#f44336,color:#fff
+    style TESTP fill:#f44336,color:#fff
+    style DOCKER fill:#f44336,color:#fff
+    style CQRS fill:#f44336,color:#fff
+    style GW fill:#f44336,color:#fff
 ```
 
 ## 32.2. Conceptos clave
@@ -726,9 +726,9 @@ graph LR
     UD03 -.->|Razor, Blazor, MVC en .NET| UD04
     UD04 -.->|Componentes, Híbridos, JavaScript| UD05
 
-    style UD01 fill:#4CAF5,color:#fff0,color:#fff
-    style UD02 fill:#2196F,color:#fff3,color:#fff
-    style UD03 fill:#FF980,color:#fff0,color:#fff
-    style UD04 fill:#9C27B,color:#fff0,color:#fff
-    style UD05 fill:#f4433,color:#fff6,color:#fff
+    style UD01 fill:#4CAF50,color:#fff
+    style UD02 fill:#2196F3,color:#fff
+    style UD03 fill:#FF9800,color:#fff
+    style UD04 fill:#9C27B0,color:#fff
+    style UD05 fill:#f44336,color:#fff
 ```

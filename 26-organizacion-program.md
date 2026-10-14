@@ -367,7 +367,7 @@ context.Database.EnsureCreated();
 app.Run();
 ```
 
-📌 **Ejemplo real:** El proyecto TiendaApi usa este patrón exactamente. Cada configuración está en su propio archivo dentro de `Infrastructures/`, y Program.cs tiene menos de 120 líneas.
+📌 **Ejemplo real:** el proyecto de este curso usa este patrón exactamente. Cada configuración está en su propio archivo dentro de `Infrastructures/`, y Program.cs tiene menos de 120 líneas.
 
 ### 26.5.1. Comparación de métricas
 
@@ -415,7 +415,7 @@ Hasta ahora hemos organizado **el interior del proyecto**: `Program.cs`, `Infras
 
 > 💡 **Analogía:** Es como el reglamento de un edificio: no pegas el cartel "no fumar" en cada sala; lo pones en la entrada y aplica a todas las plantas. Los cuatro ficheros son el "cartel de la entrada" de tu repo.
 
-📌 **Ejemplo real:** TiendaAPI es un repositorio con la API, sus proyectos de tests y un cliente Blazor. Con estos cuatro ficheros en la raíz, **todos los proyectos** compilan con el mismo SDK, con las mismas propiedades y con las mismas versiones de paquetes.
+📌 **Ejemplo real:** un repositorio con la API, sus proyectos de tests y un cliente Blazor es un caso de libro: con estos cuatro ficheros en la raíz, **todos los proyectos** compilan con el mismo SDK, con las mismas propiedades y con las mismas versiones de paquetes.
 
 ### 26.8.1. El fichero .editorconfig
 
@@ -453,7 +453,7 @@ trim_trailing_whitespace = false
 dotnet format --verify-no-changes
 ```
 
-📌 **Ejemplo real:** TiendaAPI envuelve ese comando en `scripts/check-style.ps1` y lo ejecuta en cada verificación: si alguien formateó mal, el script falla **antes** del commit.
+📌 **Ejemplo real:** envolver ese comando en `scripts/check-style.ps1` y ejecutarlo en cada verificación garantiza que, si alguien formateó mal, el script falle **antes** del commit.
 
 > 💡 **Consejo:** Rider y VS Code leen el `.editorconfig` automáticamente; no tienes que configurar el estilo a mano en cada IDE.
 
@@ -502,7 +502,7 @@ Los proyectos **pueden sobreescribir** lo que necesiten (p. ej., un proyecto de 
 
 **Central Package Management (CPM)** mueve las **versiones** de los paquetes NuGet a un único fichero de la raíz. El problema que resuelve es el **drift de versiones**: dos proyectos del mismo repo usando versiones distintas del mismo paquete.
 
-📌 **Ejemplo real:** Antes de centralizar, TiendaAPI tenía estas versiones **dispares dentro del mismo repositorio**:
+📌 **Ejemplo real:** antes de centralizar, un repositorio con varios proyectos puede tener estas versiones **dispares dentro del mismo repositorio**:
 
 | Paquete | Versión A | Versión B |
 |---------|-----------|-----------|
@@ -565,7 +565,7 @@ Fija **qué versión del SDK de .NET** se espera para compilar el repo:
 | `latestMinor` | También 10.1.x, 10.2.x... |
 | `latestMajor` | También .NET 11, 12... (muy permisivo) |
 
-📌 **Ejemplo real:** TiendaAPI fija `10.0.401` con `latestFeature` para que el equipo y la CI compilen con la misma herramienta aunque cada máquina instale parches distintos.
+📌 **Ejemplo real:** fijar `10.0.401` con `latestFeature` hace que el equipo y la CI compilen con la misma herramienta aunque cada máquina instale parches distintos.
 
 ```bash
 # Qué SDK estoy usando ahora

@@ -1,4 +1,4 @@
-﻿- [9. Configuración y logging](#9-configuración-y-logging)
+- [9. Configuración y logging](#9-configuración-y-logging)
   - [9.1. Configuración en ASP.NET Core](#91-configuración-en-aspnet-core)
     - [9.1.1. Appsettings.json](#911-appsettingsjson)
     - [9.1.2. Perfiles de entorno (Development vs Production)](#912-perfiles-de-entorno-development-vs-production)
@@ -158,7 +158,7 @@ if (string.IsNullOrEmpty(connectionString))
 }
 ```
 
-📌 **Ejemplo real:** en TiendaAPI el commit *fix: fail-fast en producción — credenciales BD/Mongo/Redis obligatorias (fallback solo en dev)* reescribió `AddDatabases` y `AddCache` con este mismo patrón: **tres** excepciones `InvalidOperationException` (PostgreSQL, MongoDB y Redis) que saltan al arrancar si falta la configuración.
+📌 **Ejemplo real:** un despliegue real arrancó en producción con credenciales de reserva y la API empezó a fallar en silencio. La corrección reescribió `AddDatabases` y `AddCache` con este mismo patrón: **tres** excepciones `InvalidOperationException` (PostgreSQL, MongoDB y Redis) que saltan al arrancar si falta la configuración.
 
 > 📝 **Nota:** Se llama *fail-fast* ("fallar rápido") porque el error aparece en el **primer segundo** de vida de la aplicación, justo cuando el orquestador puede verlo y reiniciar con la configuración corregida. La alternativa (el `??` silencioso) produce una app que **arranca en verde** y empieza a escupir `Connection refused` con la primera petición real, a las 3 de la mañana, con nadie mirando.
 
@@ -228,7 +228,7 @@ public class ProductoService(IConfiguration configuration) : IProductoService
 }
 ```
 
-📌 Ejemplo real: **TiendaAPI** usa exactamente estos tres patrones. Un `ProductoService` lee el TTL de caché de configuración, un `JwtService` lee la clave JWT, y un `StorageService` lee las extensiones permitidas. Todo desde `IConfiguration`.
+📌 Ejemplo real: una API con caché, JWT y subida de archivos usa exactamente estos tres patrones. Un `ProductoService` lee el TTL de caché de configuración, un `JwtService` lee la clave JWT, y un `StorageService` lee las extensiones permitidas. Todo desde `IConfiguration`.
 
 ### 9.1.5. Patrones de acceso a configuración
 
@@ -251,12 +251,12 @@ flowchart TD
     E --> H["Valor tipado"]
     F --> I["Objeto/Array"]
 
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#FF980,color:#fff0,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#4CAF5,color:#fff0,color:#fff
-    style E fill:#4CAF5,color:#fff0,color:#fff
-    style F fill:#4CAF5,color:#fff0,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#FF9800,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style D fill:#4CAF50,color:#fff
+    style E fill:#4CAF50,color:#fff
+    style F fill:#4CAF50,color:#fff
 ```
 
 ## 9.2. Logging en ASP.NET Core
@@ -308,12 +308,12 @@ flowchart LR
     I --> W["Warning"]
     W --> E["Error"]
     E --> F["Critical"]
-    style T fill:#607D8,color:#fffB,color:#fff
-    style D fill:#2196F,color:#fff3,color:#fff
-    style I fill:#4CAF5,color:#fff0,color:#fff
-    style W fill:#FF980,color:#fff0,color:#fff
-    style E fill:#f4433,color:#fff6,color:#fff
-    style F fill:#9C27B,color:#fff0,color:#fff
+    style T fill:#607D8B,color:#fff
+    style D fill:#2196F3,color:#fff
+    style I fill:#4CAF50,color:#fff
+    style W fill:#FF9800,color:#fff
+    style E fill:#f44336,color:#fff
+    style F fill:#9C27B0,color:#fff
 ```
 
 ### 9.2.3. Configuración de niveles por categoría

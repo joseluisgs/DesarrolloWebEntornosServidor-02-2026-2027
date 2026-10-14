@@ -1,4 +1,4 @@
-﻿- [1. Conceptos de servicios web y configuración de proyectos .NET](#1-conceptos-de-servicios-web-y-configuración-de-proyectos-net)
+- [1. Conceptos de servicios web y configuración de proyectos .NET](#1-conceptos-de-servicios-web-y-configuración-de-proyectos-net)
   - [1.1. ¿Qué es un servicio web?](#11-qué-es-un-servicio-web)
     - [1.1.1. Servicios orientados a la conexión vs sin conexión](#111-servicios-orientados-a-la-conexión-vs-sin-conexión)
     - [1.1.2. Arquitecturas de servicios web](#112-arquitecturas-de-servicios-web)
@@ -48,8 +48,8 @@ Un **servicio web** es una funcionalidad que se ofrece a través de una API y qu
 flowchart LR
     A["🌐 Cliente"] -->|HTTP Request| B["📡 Servicio Web"]
     B -->|HTTP Response| A
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#4CAF50,color:#fff
 ```
 
 📌 **Ejemplo real:** Cuando compras en Amazon, tu navegador envía una petición al servicio web. El servidor busca productos, calcula precios y devuelve una respuesta JSON que se renderiza en tu pantalla.
@@ -83,8 +83,8 @@ flowchart TD
         A2["📱 Cliente"] -->|Mensaje 1| B2["🖥️ Servidor"]
         A2 -->|Mensaje 2| B2
     end
-    style CONEXION fill:#FF980,color:#fff0,color:#fff
-    style SINCONEXION fill:#2196F,color:#fff3,color:#fff
+    style CONEXION fill:#FF9800,color:#fff
+    style SINCONEXION fill:#2196F3,color:#fff
 ```
 
 ### 1.1.2. Arquitecturas de servicios web
@@ -98,12 +98,12 @@ flowchart TD
     A --> D["🔍 GraphQL"]
     A --> E["⚡ gRPC"]
     A --> F["🔌 WebSockets"]
-    style A fill:#9C27B,color:#fff0,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#f4433,color:#fff6,color:#fff
-    style D fill:#FF980,color:#fff0,color:#fff
-    style E fill:#2196F,color:#fff3,color:#fff
-    style F fill:#607D8,color:#fffB,color:#fff
+    style A fill:#9C27B0,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#f44336,color:#fff
+    style D fill:#FF9800,color:#fff
+    style E fill:#2196F3,color:#fff
+    style F fill:#607D8B,color:#fff
 ```
 
 | Arquitectura | Formato | Uso principal |
@@ -265,15 +265,15 @@ MiApi.slnx
 
 > 📝 **Nota:** A medida que avancemos en el curso, iremos añadiendo más carpetas (Repositories, Dtos, Validators...) según las necesitemos.
 
-**El proyecto real que veremos a lo largo del curso:**
+**El proyecto que veremos a lo largo del curso:**
 
 ```
-TiendaApi.slnx
-├── TiendaApi.Api/          ← Proyecto principal (endpoints, models, services, configuración)
-└── TiendaApi.Tests/        ← Tests (unit + integration)
+ProductosApi.slnx
+├── ProductosApi.Api/          ← Proyecto principal (endpoints, models, services, configuración)
+└── ProductosApi.Tests/        ← Tests (unit + integration)
 ```
 
-> 📝 **Nota:** Esta es la estructura real del proyecto Tienda. Ocasionalmente verás mencionar una variante con `TiendaApi.Core` (una librería aparte para models, services y repositories): es una opción válida para aplicar Clean Architecture estricta, pero **no es la estructura del proyecto real** de este curso.
+> 📝 **Nota:** Esta es la estructura que usaremos en el curso. Ocasionalmente verás mencionar una variante con `ProductosApi.Core` (una librería aparte para models, services y repositories): es una opción válida para aplicar Clean Architecture estricta, pero no es la estructura que seguiremos aquí.
 
 **Las librerías que usaremos:**
 
@@ -297,11 +297,11 @@ flowchart LR
     B --> C["⚙️ Service"]
     C --> D["🗄️ Repository"]
     D --> E["💾 Base de datos"]
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#FF980,color:#fff0,color:#fff
-    style D fill:#9C27B,color:#fff0,color:#fff
-    style E fill:#607D8,color:#fffB,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#FF9800,color:#fff
+    style D fill:#9C27B0,color:#fff
+    style E fill:#607D8B,color:#fff
 ```
 
 ## 1.4. NuGet: gestión de paquetes
@@ -343,9 +343,9 @@ Es el archivo principal de configuración. Se carga en orden jerárquico, donde 
 flowchart TB
     A["📄 appsettings.json"] --> B["🔄 appsettings.Development.json"]
     B --> C["🔒 Variables de entorno"]
-    style A fill:#607D8,color:#fffB,color:#fff
-    style B fill:#FF980,color:#fff0,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
+    style A fill:#607D8B,color:#fff
+    style B fill:#FF9800,color:#fff
+    style C fill:#4CAF50,color:#fff
 ```
 
 **Ejemplo básico:**
@@ -421,8 +421,8 @@ flowchart LR
         B1["✏️ Escribir"] --> B2["💾 Guardar"]
         B2 --> B3["👀 Ver resultado"]
     end
-    style SIN fill:#f4433,color:#fff6,color:#fff
-    style CON fill:#4CAF5,color:#fff0,color:#fff
+    style SIN fill:#f44336,color:#fff
+    style CON fill:#4CAF50,color:#fff
 ```
 
 | Archivo | ¿Recarga? |

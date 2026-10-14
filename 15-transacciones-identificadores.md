@@ -16,7 +16,10 @@
     - [15.4.4. Generador de IDs personalizado con atributo](#1544-generador-de-ids-personalizado-con-atributo)
     - [15.4.5. Comparativa de identificadores](#1545-comparativa-de-identificadores)
   - [15.5. Buenas prácticas](#155-buenas-prácticas)
-  - [15.6. Reto](#156-reto)
+  - [15.6. Reto: concurrencia e identificadores para FunkoApp](#156-reto-concurrencia-e-identificadores-para-funkoapp)
+    - [15.6.1. Contexto](#1561-contexto)
+    - [15.6.2. Retos](#1562-retos)
+    - [15.6.3. Ampliaciones (puntos extra)](#1563-ampliaciones-puntos-extra)
 
 
 
@@ -46,8 +49,8 @@ flowchart TD
         API1 --> D1["Stock 1-1=0"]
         API2 --> D2["Stock 0-1=-1"]
     end
-    style D1 fill:#4CAF5,color:#fff0,color:#fff
-    style D2 fill:#F4433,color:#fff6,color:#fff
+    style D1 fill:#4CAF50,color:#fff
+    style D2 fill:#F44336,color:#fff
 ```
 
 **Timeline del problema:**
@@ -80,10 +83,10 @@ flowchart LR
     A["Atomicidad"] --> C["Consistencia"]
     C --> I["Aislamiento"]
     I --> D["Durabilidad"]
-    style A fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
-    style I fill:#2196F,color:#fff3,color:#fff
-    style D fill:#FF980,color:#fff0,color:#fff
+    style A fill:#4CAF50,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style I fill:#2196F3,color:#fff
+    style D fill:#FF9800,color:#fff
 ```
 
 | Propiedad | Descripción | Ejemplo |
@@ -102,8 +105,8 @@ flowchart TD
     C --> D{"¿Todo OK?"}
     D -->|Sí| E["COMMIT"]
     D -->|No| F["ROLLBACK"]
-    style E fill:#4CAF5,color:#fff0,color:#fff
-    style F fill:#F4433,color:#fff6,color:#fff
+    style E fill:#4CAF50,color:#fff
+    style F fill:#F44336,color:#fff
 ```
 
 **Transacción implícita** (cada `SaveChanges` es una transacción):
@@ -149,8 +152,8 @@ flowchart TD
     C --> D{"¿Sin conflictos?"}
     D -->|Sí| E["Escribir cambios"]
     D -->|No| F["Rechazar / Reintentar"]
-    style E fill:#4CAF5,color:#fff0,color:#fff
-    style F fill:#F4433,color:#fff6,color:#fff
+    style E fill:#4CAF50,color:#fff
+    style F fill:#F44336,color:#fff
 ```
 
 **Implementación con `[Timestamp]`:**
@@ -215,9 +218,9 @@ flowchart TD
     H["Otros usuarios"] --> I{"¿Bloqueado?"}
     I -->|Sí| J["Esperar..."]
     I -->|No| K["Acceder"]
-    style B fill:#FF980,color:#fff0,color:#fff
-    style E fill:#4CAF5,color:#fff0,color:#fff
-    style J fill:#F4433,color:#fff6,color:#fff
+    style B fill:#FF9800,color:#fff
+    style E fill:#4CAF50,color:#fff
+    style J fill:#F44336,color:#fff
 ```
 
 **Implementación con `SELECT FOR UPDATE`:**
@@ -279,10 +282,10 @@ flowchart TD
     end
     A2 --> B1 --> B2 -->|Sí| C1
     B2 -->|No| D["Rollback: stock insuficiente"]
-    style A1 fill:#2196F,color:#fff3,color:#fff
-    style B1 fill:#FF980,color:#fff0,color:#fff
-    style C1 fill:#4CAF5,color:#fff0,color:#fff
-    style D fill:#F4433,color:#fff6,color:#fff
+    style A1 fill:#2196F3,color:#fff
+    style B1 fill:#FF9800,color:#fff
+    style C1 fill:#4CAF50,color:#fff
+    style D fill:#F44336,color:#fff
 ```
 
 **Fase 1 — Validación optimista:**
@@ -339,9 +342,9 @@ flowchart TD
     D -->|Sí| E["Pesimista"]
     D -->|No| F["Mixto"]
     C --> G["Optimista con retry"]
-    style E fill:#F4433,color:#fff6,color:#fff
-    style F fill:#FF980,color:#fff0,color:#fff
-    style G fill:#4CAF5,color:#fff0,color:#fff
+    style E fill:#F44336,color:#fff
+    style F fill:#FF9800,color:#fff
+    style G fill:#4CAF50,color:#fff
 ```
 
 > 📝 **Nota:** El enfoque **mixto** es el más recomendado para la mayoría de aplicaciones web. Combina la rapidez de la validación optimista con la seguridad del `UPDATE` atómico.
@@ -559,10 +562,10 @@ flowchart TD
     B -->|No| E["GUID o YouTube-style"]
     C -->|Sí| F["YouTube-style (11 chars)"]
     C -->|No| G["GUID"]
-    style D fill:#2196F,color:#fff3,color:#fff
-    style E fill:#4CAF5,color:#fff0,color:#fff
-    style F fill:#FF980,color:#fff0,color:#fff
-    style G fill:#9C27B,color:#fff0,color:#fff
+    style D fill:#2196F3,color:#fff
+    style E fill:#4CAF50,color:#fff
+    style F fill:#FF9800,color:#fff
+    style G fill:#9C27B0,color:#fff
 ```
 
 > 📝 **Nota:** En la práctica, el 90% de las aplicaciones usan BIGINT autoincremental o GUID. Los IDs estilo YouTube son útiles cuando necesitas IDs cortos y legibles en URLs (como YouTube, Bitly, o IDs de invite).
@@ -637,11 +640,13 @@ var productos = await context.Productos
 
 > ⚠️ **Advertencia:** El enfoque pesimista puede causar **deadlocks** (bloqueos mutuos). Si dos transacciones bloquean filas diferentes y esperan una por la otra, ambas quedan bloqueadas indefinidamente. Usa timeouts para evitarlo.
 
-## 15.6. Reto
+## 15.6. Reto: concurrencia e identificadores para FunkoApp
 
-> Aplica todo lo visto a FunkoApp: distintos tipos de identificador y políticas de concurrencia.
+### 15.6.1. Contexto
 
-**Añade a tu API:**
+FunkoApp ya tiene su CRUD con EF Core y PostgreSQL: claves autoincrementales, borrado lógico y paginación. Pero el día en que dos administradores editan la misma ficha a la vez, o en que dos clientes reservan el último ejemplar al mismo tiempo, el sistema empieza a perder datos sin avisar. Este reto añade las dos defensas que faltan: políticas de concurrencia y tipos de clave primaria.
+
+### 15.6.2. Retos
 
 1. **Funko con clave BIGINT autoincremental** (como ya tienes)
 2. **Categoria con GUID** como clave primaria
@@ -651,7 +656,7 @@ var productos = await context.Productos
 6. **Política mixta** con validación optimista + `UPDATE ... WHERE stock >= cantidad`
 7. Tests de concurrencia: simular dos usuarios modificando el mismo Funko
 
-**Puntos extra:**
+### 15.6.3. Ampliaciones (puntos extra)
 
 - Reintentos automáticos con Polly en el enfoque optimista
 - Endpoint que muestra el SQL generado con `ToQueryString()`
