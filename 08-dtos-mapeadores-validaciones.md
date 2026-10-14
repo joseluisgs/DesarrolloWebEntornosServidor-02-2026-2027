@@ -116,16 +116,16 @@ Los DTOs se usan igual en minimal APIs y en controladores MVC, pero la forma de 
 // Minimal API: el DTO se usa directamente en el delegate
 app.MapPost("/api/productos", (CreateProductoDto dto, IProductoService service) =>
 {
-    var producto = service.Create(dto);
-    return Results.Created($"/api/productos/{producto.Id}", producto);
+    var creado = service.Create(dto);   // el servicio devuelve el DTO ya mapeado
+    return Results.Created($"/api/productos/{creado.Id}", creado);
 });
 
 // Controlador: el DTO se usa como parámetro del método
 [HttpPost]
 public IActionResult Create([FromBody] CreateProductoDto dto)
 {
-    var producto = service.Create(dto);
-    return CreatedAtAction(nameof(GetById), new { id = producto.Id }, producto);
+    var creado = service.Create(dto);   // el servicio devuelve el DTO ya mapeado
+    return CreatedAtAction(nameof(GetById), new { id = creado.Id }, creado);
 }
 ```
 
@@ -145,17 +145,17 @@ public IActionResult Create([FromBody] CreateProductoDto dto)
 ```mermaid
 graph TD
     A[Cliente envía Request] -->|CreateProductoDto| B[Controlador/Minimal API]
-    B -->|ToModel| C[Modelo de Dominio]
-    C -->|Lógica de negocio| D[Servicio]
-    D -->|Resultado| C
-    C -->|ToDto| E[ProductoDto]
+    B -->|DTO sin mapear| D[Servicio]
+    D -->|ToModel dentro| C[Modelo de Dominio]
+    C -->|Lógica de negocio| D
+    D -->|ToDto dentro| E[ProductoDto]
     E -->|Response| F[Cliente recibe Response]
-    style A fill:#2196F,color:#fff3,color:#fff
-    style B fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#FF980,color:#fff0,color:#fff
-    style D fill:#9C27B,color:#fff0,color:#fff
-    style E fill:#4CAF5,color:#fff0,color:#fff
-    style F fill:#2196F,color:#fff3,color:#fff
+    style A fill:#2196F3,color:#fff
+    style B fill:#4CAF50,color:#fff
+    style C fill:#FF9800,color:#fff
+    style D fill:#9C27B0,color:#fff
+    style E fill:#4CAF50,color:#fff
+    style F fill:#2196F3,color:#fff
 ```
 
 ## 8.2. Mapeadores
@@ -654,8 +654,8 @@ app.MapPost("/api/productos", async (
     if (!resultado.IsValid)
         return Results.ValidationProblem(resultado.ToDictionary());
 
-    var producto = await service.Create(dto);
-    return Results.Created($"/api/productos/{producto.Id}", producto);
+    var creado = await service.Create(dto);   // el servicio devuelve el DTO ya mapeado
+    return Results.Created($"/api/productos/{creado.Id}", creado);
 });
 ```
 
@@ -711,9 +711,9 @@ public IActionResult Create([FromBody] CreateProductoDto dto)
 public ActionResult<ProductoDto> Create([FromBody] CreateProductoDto dto)
 {
     // Aquí el DTO ya está validado — si llegamos aquí, todo está bien
-    var result = service.Create(dto);
+    var result = service.Create(dto);   // Result<ProductoDto, DomainError>
     return result.Match(
-        producto => CreatedAtAction(nameof(GetById), new { id = producto.Id }, producto.ToDto()),
+        creado => CreatedAtAction(nameof(GetById), new { id = creado.Id }, creado),
         error => error.ToHttpResult<ProductoDto>());
 }
 ```
@@ -802,7 +802,7 @@ public IActionResult GetAll(
     [FromQuery] decimal? precioMin,
     [FromQuery] decimal? precioMax)
 {
-    IEnumerable<Producto> productos = service.GetAll();
+    IEnumerable<ProductoDto> productos = service.GetAll();
 
     if (!string.IsNullOrEmpty(nombre))
         productos = productos.Where(p => p.Nombre.Contains(nombre));
@@ -829,7 +829,7 @@ public IActionResult GetAll(
     [FromQuery] string sortBy = "Nombre",
     [FromQuery] bool desc = false)
 {
-    IEnumerable<Producto> productos = service.GetAll();
+    IEnumerable<ProductoDto> productos = service.GetAll();
 
     productos = sortBy.ToLower() switch
     {
@@ -1289,10 +1289,10 @@ Solución: Materializar la colección con `.ToList()` antes de devolverla:
 
 ```csharp
 // ❌ MALO: IEnumerable lazy (falla con XML)
-return Ok(result.Value.Select(p => p.ToDto()));
+return Ok(result.Value);                          // el LINQ del servicio, sin materializar
 
 // ✅ BUENO: Colección materializada (funciona con XML)
-return Ok(result.Value.Select(p => p.ToDto()).ToList());
+return Ok(result.Value.ToList());
 ```
 
 **Error 3: `InvalidDataContractException` en el record**
