@@ -24,6 +24,7 @@
     - [12.4.6. IEntityTypeConfiguration](#1246-ientitytypeconfiguration)
     - [12.4.7. Data annotations vs fluent API](#1247-data-annotations-vs-fluent-api)
     - [12.4.8. ¿Dónde especifico las cosas?](#1248-dónde-especifico-las-cosas)
+    - [12.4.9. Valores por defecto](#1249-valores-por-defecto)
   - [12.5. Relaciones entre entidades](#125-relaciones-entre-entidades)
     - [12.5.1. Uno a uno](#1251-uno-a-uno)
     - [12.5.2. Uno a muchos](#1252-uno-a-muchos)
@@ -41,12 +42,14 @@
     - [12.7.3. Joins y subconsultas](#1273-joins-y-subconsultas)
     - [12.7.4. SQL nativo y ToQueryString](#1274-sql-nativo-y-toquerystring)
     - [12.7.5. AsNoTracking](#1275-asnotracking)
+    - [12.7.6. Filtros de consulta (query filters)](#1276-filtros-de-consulta-query-filters)
   - [12.8. Operaciones en lote](#128-operaciones-en-lote)
   - [12.9. Propiedades avanzadas](#129-propiedades-avanzadas)
     - [12.9.1. Owned types](#1291-owned-types)
     - [12.9.2. Value converters](#1292-value-converters)
     - [12.9.3. Shadow properties](#1293-shadow-properties)
     - [12.9.4. NotMapped y propiedades calculadas](#1294-notmapped-y-propiedades-calculadas)
+    - [12.9.5. Columnas de tiempo (CreatedAt y UpdatedAt)](#1295-columnas-de-tiempo-createdat-y-updatedat)
   - [12.10. Repositorio CRUD](#1210-repositorio-crud)
     - [12.10.1. Entidad y configuración](#12101-entidad-y-configuración)
     - [12.10.2. Interfaz del repositorio](#12102-interfaz-del-repositorio)
@@ -555,6 +558,34 @@ La tabla se llama `TablaFluent` y la columna admite 50. La anotación no se apli
 
 > 💡 **Consejo:** Un estilo mixto y ordenado: anotaciones para lo básico en la entidad (`[Key]`, `[Required]`, `[StringLength]`) y fluent API en `IEntityTypeConfiguration` para todo lo demás. Y si quieres mirar qué decide el modelo final de verdad, en cualquier sitio tienes `db.Model.FindEntityType(typeof(Producto)).FindProperty(nameof(Producto.Descripcion)).GetMaxLength()`, que devuelve `50`.
 
+### 12.4.9. Valores por defecto
+
+Una columna con valor por defecto se rellena sola cuando el `INSERT` no trae valor para ella. Evita que una fila nazca incompleta: un contador a cero, un flag en falso o una fecha de alta, aunque el dato venga de un script o de una carga de datos hecha a mano.
+
+En las anotaciones no hay atributo para esto: `[DefaultValue]` de `System.ComponentModel.DataAnnotations.Schema` lo usaba Entity Framework 6 y EF Core no lo interpreta, así que ponerlo no sirve de nada. Lo que sí dan las anotaciones es `[DatabaseGenerated]` (12.3.2), para decidir si el valor lo genera la base de datos al insertar, al modificar o en ningún caso.
+
+La fluent API cubre los valores por defecto con dos métodos.
+
+```csharp
+// En OnModelCreating: valor fijo
+modelBuilder.Entity<Producto>()
+    .Property(p => p.Precio)
+    .HasDefaultValue(0m);
+
+// En OnModelCreating: valor que calcula la base de datos
+modelBuilder.Entity<Producto>()
+    .Property(p => p.IsDeleted)
+    .HasDefaultValueSql("0");
+```
+
+- **`HasDefaultValue(valor)`:** si el `INSERT` no trae valor para la columna, se usa ese valor.
+- **`HasDefaultValueSql(fragmento)`:** el valor lo calcula la base de datos en el momento del alta; el fragmento depende del motor (`CURRENT_TIMESTAMP` o `GETUTCDATE()` para fechas, `0` para un flag).
+- **`HasDefaultValue` más `ValueGeneratedNever`:** la columna conserva su default en la base de datos, pero EF Core no lo usa en sus inserts: solo aplica a las escrituras que se salgan de EF Core.
+
+📌 **Ejemplo real:** En Gmail un mensaje nuevo se guarda como no leído. La columna de estado nace a `0` aunque el `INSERT` no la traiga, así que hasta una carga de datos hecha con un script deja el correo en la bandeja sin leer.
+
+> ⚠️ **Advertencia:** en los tests con el proveedor InMemory no hay base de datos real: los defaults que son fragmento SQL no se ejecutan. Por eso conviene asignar el valor en la aplicación (12.9.5) y dejar el default de la base de datos como red de seguridad para las escrituras que se salgan de EF Core.
+
 ## 12.5. Relaciones entre entidades
 
 Una relación describe cómo se conectan dos tablas. EF Core las detecta por convención (propiedad de navegación + clave foránea), pero puedes configurarlas con Data Annotations o Fluent API.
@@ -976,6 +1007,58 @@ var sinTracking = await db.Productos.AsNoTracking().ToListAsync();
 
 > 💡 **Consejo:** Usa `AsNoTracking` siempre que solo vayas a leer datos y no vayas a modificarlos.
 
+### 12.7.6. Filtros de consulta (query filters)
+
+Un **query filter** es una condición que declaras una sola vez sobre un tipo de entidad y que EF Core añade automáticamente a todas las consultas de ese tipo. No tienes que recordar el filtro en cada LINQ: sale metido en el SQL de serie. El uso clásico es el borrado lógico, pero sirve igual para ocultar lo inactivo, filtrar por usuario o aislar los datos de cada cliente.
+
+La declaración vive en el `DbContext`, dentro de `OnModelCreating`, igual que el resto de la configuración del modelo.
+
+```csharp
+// En el DbContext: una sola vez, al construir el modelo
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    // EF Core lo convierte en un WHERE añadido a cada consulta de Producto
+    modelBuilder.Entity<Producto>().HasQueryFilter(p => !p.IsDeleted);
+}
+```
+
+A partir de ahí no tocas nada en el código de consulta: el filtro ya va solo.
+
+```csharp
+// EF Core lo traduce a: SELECT ... FROM Productos WHERE "IsDeleted" = 0
+var activos = await db.Productos.ToListAsync();
+
+// El filtro también se aplica a los Include: si la entidad incluida
+// tuviera su propio filtro, solo traería lo que lo supera
+var conCategoria = await db.Productos
+    .Include(p => p.Categoria)
+    .ToListAsync();
+```
+
+📌 **Ejemplo real:** Gmail no borra tus mensajes cuando los mandas a la papelera: los marca y los oculta de la lista normal, y siguen ahí por si quieres recuperarlos. El query filter es ese "oculta los marcados" aplicado por el motor de datos, sin repetirlo en cada pantalla de la aplicación.
+
+**Cómo se ignora un filtro**
+
+Hay veces que sí necesitas ver lo filtrado: la papelera de reciclaje, un listado para un administrador, un informe. Para eso está `IgnoreQueryFilters()`: se pone en la consulta concreta y anula los filtros globales solo durante esa consulta, sin tocar la configuración.
+
+```csharp
+// La papelera: la única consulta que sí ve los borrados
+var borrados = await db.Productos
+    .IgnoreQueryFilters()          // salta el HasQueryFilter de IsDeleted
+    .Where(p => p.IsDeleted)       // y el filtro lo pones tú a mano
+    .ToListAsync();
+```
+
+Tres cosas que conviene tener claras sobre `IgnoreQueryFilters()`:
+
+- **Anula todos los filtros de la consulta:** no hay forma de saltarse solo uno. Si el modelo tiene filtros en varias entidades y en esa consulta necesitas que el de otra siga trabajando, déjalo fuera del salto y añádelo con un `Where`.
+- **No es un parámetro:** el filtro se compila una sola vez con el modelo, así que no puedes cambiarlo petición a petición. Si necesitas otra condición, la pones tú con `Where`.
+- **Solo afecta a LINQ:** las consultas con `FromSqlRaw` ejecutan el SQL que les pases tal cual; el filtro no se inyecta solo.
+
+> 💡 **Consejo:** En un repositorio con borrado lógico, lo normal es dos métodos: `GetAll()` con el filtro de serie para la API y `GetDeleted()` con `IgnoreQueryFilters()` y su `Where(p => p.IsDeleted)` para la papelera.
+
+> ⚠️ **Advertencia:** Un `IgnoreQueryFilters()` puesto sin querer en un método de solo lectura hace que los registros borrados vuelvan a aparecer en la API. Revisa los endpoints de listado cada vez que añadas uno.
+
 ## 12.8. Operaciones en lote
 
 `ExecuteUpdate` y `ExecuteDelete` ejecutan SQL directo sin cargar entidades:
@@ -1057,11 +1140,37 @@ public class Producto
 }
 ```
 
+### 12.9.5. Columnas de tiempo (CreatedAt y UpdatedAt)
+
+Casi toda entidad lleva dos fechas de auditoría: `CreatedAt` guarda cuándo se creó el registro y `UpdatedAt` cuándo se tocó por última vez. No son datos del negocio: el cliente no las pide, pero sin ellas no puedes ordenar por lo más reciente, filtrar lo modificado desde ayer ni depurar qué cambió en un día.
+
+El modelo de la unidad las tiene así: `CreatedAt` obligatoria y `UpdatedAt` anulable, de modo que un `null` significa que el registro nunca se ha actualizado.
+
+```csharp
+public DateTime CreatedAt { get; set; }
+public DateTime? UpdatedAt { get; set; }    // null = nunca modificado
+```
+
+**Quién los rellena**
+
+- **La aplicación (lo que usa la solución de esta unidad):** el repositorio pone `CreatedAt = DateTime.UtcNow` al dar de alta y `UpdatedAt = DateTime.UtcNow` en cada modificación (lo ves en 12.10.3). Funciona igual en cualquier proveedor, también en InMemory para los tests, y cada guardado deja la decisión a la vista.
+- **La base de datos:** con el `HasDefaultValueSql` de 12.4.9 sobre `CreatedAt`, para que un `INSERT` que no venga de la API no deje la fecha vacía. Los proyectos grandes suelen centralizar toda la asignación en un **interceptor de `SaveChanges`** que recorre los cambios antes de guardar y aplica `DateTime.UtcNow` a las dos columnas: los repositorios dejan de acordarse de nada.
+
+**UTC siempre.** Se escribe `DateTime.UtcNow`, nunca `DateTime.Now`: la base de datos vive en un servidor que puede estar en otra zona horaria, y el horario de verano hace que las horas locales retrocedan. Con horas locales, la ordenación por fecha y los "hace 2 días" salen mal a mitad de año.
+
+**Qué se hace con ellas.** Ordenar con `OrderByDescending(p => p.CreatedAt)` para mostrar lo más reciente primero, filtrar por `UpdatedAt` para sacar lo último modificado y comprobar `UpdatedAt != null` para saber qué registros se han tocado tras crearse.
+
+📌 **Ejemplo real:** Instagram muestra la etiqueta "Editado" bajo un comentario que alguien cambió tras publicarlo. Eso no es un campo del comentario: es comparar `UpdatedAt` con `CreatedAt`; si no coinciden, alguien lo tocó después.
+
+> ⚠️ **Advertencia:** `[Timestamp]` no es una fecha: es la columna de concurrencia `rowversion` (12.13). Si la pones pensando en fechas te quedas sin `UpdatedAt` y con una columna binaria.
+
+> 💡 **Consejo:** Si los rellenas en la aplicación, los tests con InMemory ven las mismas fechas que la base de datos real; si dependes del SQL, los tests no comprueban nada de esto.
+
 ## 12.10. Repositorio CRUD
 
 ### 12.10.1. Entidad y configuración
 
-La entidad `Producto` solo lleva atributos de mapeo; los de validación se quedan en el DTO (sección 12.3.4). Los metadatos (`CreatedAt`, `UpdatedAt`) se asignan automáticamente en el constructor.
+La entidad `Producto` solo lleva atributos de mapeo; los de validación se quedan en el DTO (sección 12.3.4). Los metadatos (`CreatedAt`, `UpdatedAt`) no se configuran aquí: los rellena el repositorio, `CreatedAt` al dar de alta y `UpdatedAt` al modificar (sección 12.9.5).
 
 ```csharp
 public class Producto
@@ -1153,7 +1262,7 @@ public class ProductoRepository(AppDbContext db) : IProductoRepository
 
 ### 12.10.4. Borrado lógico
 
-El borrado lógico no borra el registro: marca un flag y lo oculta con un Query Filter.
+El borrado lógico no borra el registro: lo marca con un flag y lo oculta. El filtro que esconde los marcados es el `HasQueryFilter` que declaraste en 12.7.6; aquí lo único que cambia es el flag.
 
 ```csharp
 public async Task<bool> SoftDeleteAsync(long id)
@@ -1165,15 +1274,9 @@ public async Task<bool> SoftDeleteAsync(long id)
     await db.SaveChangesAsync();
     return true;
 }
-
-// Query Filter: todas las consultas excluyen los borrados
-protected override void OnModelCreating(ModelBuilder modelBuilder)
-{
-    modelBuilder.Entity<Producto>().HasQueryFilter(p => !p.IsDeleted);
-}
 ```
 
-> 💡 **Consejo:** Para ver los registros borrados lógicamente, usa `IgnoreQueryFilters()`.
+> 💡 **Consejo:** Para listar los borrados desde un endpoint de papelera, repite el patrón de 12.7.6: `IgnoreQueryFilters()` más un `Where(p => p.IsDeleted)`.
 
 ## 12.11. Migraciones
 
