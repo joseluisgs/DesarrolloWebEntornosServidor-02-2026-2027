@@ -52,7 +52,7 @@
 
 # 13. MongoDB
 
-> 💡 **Punto de partida:** ¿Alguna vez has tenido que diseñar una base de datos con 15 tablas y 20 joins solo para guardar una factura? ¿O has sufrido con un ORM relacional que no encaja con tu modelo de datos? MongoDB te propone otra forma: guarda lo que piensas como un documento, sin tablas, sin joins, sin ceremony.
+> 💡 **Punto de partida:** ¿Alguna vez has tenido que diseñar una base de datos con 15 tablas y 20 joins solo para guardar una factura? ¿O has sufrido con un ORM relacional que no encaja con tu modelo de datos? MongoDB te propone otra forma: guarda lo que piensas como un documento, sin tablas, sin joins, sin ceremonia.
 
 **Objetivos de aprendizaje:**
 - Comprender el modelo NoSQL de documentos y cuándo usarlo
@@ -61,7 +61,7 @@
 - Trabajar con MongoDB usando EF Core para MongoDB
 - Entender documentos embebidos vs referencias
 - Comparar ambas aproximaciones (Driver vs EF Core)
-- Testear con TestContainers
+- Escribir tests con TestContainers
 
 ## 13.1. Fundamentos NoSQL
 
@@ -71,7 +71,7 @@ MongoDB es una base de datos **NoSQL orientada a documentos**. A diferencia de M
 
 > 💡 **Analogía:** MongoDB es como un cajón de carpetas donde cada carpeta puede tener un formato diferente. En SQL, todos los documentos deben seguir la misma plantilla (como formularios oficiales). En MongoDB, cada carpeta es libre de incluir las secciones que quieras.
 
-📌 Ejemplo real: **Instagram** usa MongoDB para almacenar perfiles de usuario, donde cada usuario puede tener campos diferentes (unos tienen blog, otros tienda, otros solo fotos). No tendría sentido forzar a todos a tener las mismas columnas.
+📌 **Ejemplo real:** Instagram usa MongoDB para almacenar perfiles de usuario, donde cada usuario puede tener campos diferentes (unos tienen blog, otros tienda, otros solo fotos). No tendría sentido forzar a todos a tener las mismas columnas.
 
 | Concepto SQL | MongoDB |
 |-------------|---------|
@@ -96,15 +96,15 @@ graph TD
         M2 --> M3[Documento: 1 producto = 1 JSON completo]
     end
 
-    style SQL fill:#2196F,color:#fff3,color:#fff
-    style NOSQL fill:#4CAF5,color:#fff0,color:#fff
-    style S1 fill:#2196F,color:#fff3,color:#fff
-    style S2 fill:#2196F,color:#fff3,color:#fff
-    style S3 fill:#2196F,color:#fff3,color:#fff
-    style S4 fill:#42A5F,color:#fff5,color:#fff
-    style M1 fill:#4CAF5,color:#fff0,color:#fff
-    style M2 fill:#4CAF5,color:#fff0,color:#fff
-    style M3 fill:#66BB6,color:#fffA,color:#fff
+    style SQL fill:#2196F3,color:#fff
+    style NOSQL fill:#4CAF50,color:#fff
+    style S1 fill:#2196F3,color:#fff
+    style S2 fill:#2196F3,color:#fff
+    style S3 fill:#2196F3,color:#fff
+    style S4 fill:#42A5F5,color:#fff
+    style M1 fill:#4CAF50,color:#fff
+    style M2 fill:#4CAF50,color:#fff
+    style M3 fill:#66BB6A,color:#fff
 ```
 
 ### 13.1.2. Modelo de documentos
@@ -170,7 +170,33 @@ El equivalente directo:
 
 ### 13.2.2. Claves foráneas: referencias o embebido
 
-En SQL, las relaciones se hacen con claves foráneas y JOINs. En MongoDB, hay **dos formas**:
+En SQL, las relaciones se hacen con claves foráneas y JOINs. En MongoDB, hay **dos formas**. Para ver la diferencia, mira el mismo dominio dibujado de las tres maneras:
+
+```mermaid
+graph TD
+    subgraph REL["SQL: 3 tablas + FK"]
+        T1[productos] -->|categoria_id| T2[categorias]
+        T1 -->|proveedor_id| T3[proveedores]
+    end
+
+    subgraph EMB["MongoDB embebido: 1 documento"]
+        D1["producto: _id, nombre, categoria: { ... }"]
+    end
+
+    subgraph REF["MongoDB referenciado: 2 colecciones"]
+        D2["producto: _id, nombre, proveedor_id"] -->|ObjectId| P1[proveedor]
+    end
+
+    style REL fill:#2196F3,color:#fff
+    style EMB fill:#4CAF50,color:#fff
+    style REF fill:#FF9800,color:#fff
+    style T1 fill:#2196F3,color:#fff
+    style T2 fill:#2196F3,color:#fff
+    style T3 fill:#2196F3,color:#fff
+    style D1 fill:#4CAF50,color:#fff
+    style D2 fill:#FF9800,color:#fff
+    style P1 fill:#FF9800,color:#fff
+```
 
 **Referencia** (estilo SQL):
 ```json
@@ -265,11 +291,18 @@ public class Categoria
 | **Colecciones necesarias** | 1 | 2 |
 | **Consultas para leerlo** | 1 | 2 |
 
-📌 Ejemplo real: **Amazon** guarda la categoría **dentro** del producto (se lee siempre junto), pero el vendedor va en otra colección: millones de productos comparten vendedor y este cambia nombre, email y dirección constantemente.
+📌 **Ejemplo real:** Amazon guarda la categoría dentro del producto (se lee siempre junto), pero el vendedor va en otra colección: millones de productos comparten vendedor y este cambia nombre, email y dirección constantemente.
 
 ### 13.2.3. Cuándo embeber vs cuándo referenciar
 
-Esta es **la decisión más importante** al diseñar en NoSQL:
+Esta es **la decisión más importante** al diseñar en NoSQL, y no se toma mirando el modelo: se toma mirando las consultas. El método tiene cuatro pasos:
+
+1. **Lista las lecturas de la app**: qué pide cada vista o endpoint (ficha de producto, listado, detalle de pedido).
+2. **Anota qué datos viajan juntos** en cada respuesta. Lo que se pide casi siempre en el mismo rato es candidato a ir embebido.
+3. **Cuenta la cardinalidad**: cuántos elementos hay en el lado de "muchos" y cuántos documentos comparten el dato del lado de "uno". Si no sabes ponerle techo a un array, es que no es "pocos".
+4. **Comprueba consistencia y coste**: si los datos deben verse siempre como un bloque, embebe; si un dato compartido cambia a menudo, reférencia.
+
+Con los cuatro pasos en la mano, el diagrama de decisión hace el resto:
 
 ```mermaid
 graph TD
@@ -290,52 +323,70 @@ graph TD
     REF --> OK2[Dos consultas, datos normalizados]
     SUBSET --> OK3[Lo mejor de ambos mundos]
 
-    style START fill:#FF980,color:#fff0,color:#fff
-    style EMB fill:#4CAF5,color:#fff0,color:#fff
-    style REF fill:#2196F,color:#fff3,color:#fff
-    style SUBSET fill:#9C27B,color:#fff0,color:#fff
-    style OK fill:#4CAF5,color:#fff0,color:#fff
-    style OK2 fill:#2196F,color:#fff3,color:#fff
-    style OK3 fill:#7B1FA,color:#fff2,color:#fff
+    style START fill:#FF9800,color:#fff
+    style EMB fill:#4CAF50,color:#fff
+    style REF fill:#2196F3,color:#fff
+    style SUBSET fill:#9C27B0,color:#fff
+    style OK fill:#4CAF50,color:#fff
+    style OK2 fill:#2196F3,color:#fff
+    style OK3 fill:#7B1FA2,color:#fff
 ```
+
+La primera pata del criterio es la **cardinalidad**: el tamaño del lado "muchos" de la relación, que es la que manda sobre el tamaño final:
+
+| Cardinalidad | Ejemplo | Decisión |
+|--------------|---------|----------|
+| **1:pocos** (decenas, con techo claro) | Producto → su categoría | Embeber |
+| **1:limitado** (cientos, crece con freno) | Chat → últimos 100 mensajes | Subset |
+| **1:ilimitado** (miles o más, sin freno) | Producto → millones de logs | Referenciar |
+| **N:1** (muchos comparten uno) | 10.000 productos → 1 proveedor | Referenciar |
+| **N:M** (cruce de los dos lados) | Producto → varias categorías | Referenciar |
+
+Regla práctica: si no eres capaz de decir "como mucho X elementos", no es "pocos": no lo embebas.
+
+La segunda es la **consistencia**. Un documento es la unidad atómica de MongoDB: leerlo entero es una foto coherente de todos sus campos, y un `updateOne` sobre él es un todo o nada. Si el precio y el descuento van dentro del mismo documento, nadie lee un precio actualizado con un descuento viejo. Con dos colecciones son dos consultas en dos instantes: entre medias, el dato referenciado puede cambiar. Esa es la consistencia eventual que te juegas al referenciar.
+
+Y la fila de "cambian a menudo" esconde una cuenta sencilla: si 10.000 productos llevan embebido el email del proveedor y este lo cambia, hay que reescribir 10.000 documentos; referenciado, se toca uno solo. Con muchas lecturas juntas gana lo embebido; con escrituras frecuentes sobre un dato compartido, gana lo referenciado.
 
 | Criterio | Embeber | Referenciar |
 |----------|---------|-------------|
-| **Datos que se leen juntos** | ✅ Sí | ❌ No |
-| **Datos que cambian a menudo** | ❌ No | ✅ Sí |
+| **Se leen siempre juntos** | ✅ Una sola consulta | ❌ Varias consultas |
+| **Lectura coherente** | ✅ Foto de un solo instante | ❌ Dos consultas, dos instantes |
+| **Dato compartido que cambia a menudo** | ❌ Reescribir N documentos | ✅ Una sola escritura |
 | **Colección que crece sin límite** | ❌ No | ✅ Sí |
-| **Datos que se consultan independiente** | ❌ No | ✅ Sí |
+| **Se consulta por su cuenta** | ❌ No | ✅ Sí |
 | **Relación 1:N con pocos elementos** | ✅ Sí | ⚠️ Opcional |
 | **Relación N:M** | ❌ No | ✅ Sí |
 | **Datos duplicados aceptables** | ✅ Sí | ❌ No |
 
 ```csharp
-// ❌ MALO: Pensar en SQL y separar todo en colecciones distintas
-// Esto fuerza múltiples consultas y pierde la ventaja de MongoDB
-var producto = collection<Producto>.Find(p => p.Id == id).First();
-var categoria = collection<Categoria>.Find(c => c.Id == producto.CategoriaId).First(); // 2ª consulta
-var reviews = collection<Review>.Find(r => r.ProductoId == id).ToList(); // 3ª consulta
+// ❌ MALO: modelo pensado en SQL — ids por todas partes y tres consultas por lectura
+var producto = productos.Find(p => p.Id == id).First();
+var categoria = categorias.Find(c => c.Id == producto.CategoriaId).First();     // 2.ª consulta
+var proveedor = proveedores.Find(pr => pr.Id == producto.ProveedorId).First();  // 3.ª consulta
 
-// ✅ BUENO: Embeber datos que siempre se leen juntos en un solo documento
-var producto = collection<Producto>.Find(p => p.Id == id).First();
-// Producto ya contiene: Categoria { ... } y Reviews [ ... ]
-// Una sola consulta, datos consistentes, mejor rendimiento
+// ✅ BUENO: embeber lo que la ficha enseña siempre junto
+var producto = productos.Find(p => p.Id == id).First();
+// El producto ya trae Categoria { ... } dentro: la ficha sale en una sola consulta
+// y todos sus campos son del mismo instante. El proveedor, que decidió la tabla
+// de arriba, se queda referenciado y se resuelve solo si la vista lo muestra.
 ```
 
 ```csharp
-// ❌ MALO: Embeber colecciones que crecen sin límite (llegarás a 16 MB)
-var logs = collection<Log>.Find(_ => true).ToList();
-// Si un producto tiene millones de logs embebidos →.DocumentExceedsSizeLimitException
+// ❌ MALO: embeber una colección que crece sin límite
+producto.Resenas = resenasDeTodaLaVida;  // array sin freno
+productos.InsertOne(producto);           // con 16 MB, el servidor responde con
+                                         // el error 10334 (BSONObjectTooLarge)
 
-// ✅ BUENO: Usar Subset Pattern — embeber solo los más recientes
-var producto = collection<Producto>.Find(p => p.Id == id).First();
-// Producto tiene: ReviewsRecientes [últimos 5] + ReviewCount
-// El resto de reviews se obtiene de una colección separada si hace falta
+// ✅ BUENO: Subset Pattern — embeber solo los más recientes
+var producto = productos.Find(p => p.Id == id).First();
+// El producto ya trae ResenasRecientes [las últimas 5] y ResenaCount;
+// el resto vive en una colección aparte y se consulta si hace falta
 ```
 
 > 💡 **Analogía:** Piensa en MongoDB como una carpeta de expediente. Puedes pegar notas, fotos y documentos dentro de la misma carpeta (embeber). Pero si la carpeta crece demasiado, necesitarás un archivador separado (referenciar) y solo dejar un Post-It con la referencia.
 
-📌 Ejemplo real: **Netflix** embebe la lista de "episodios" dentro de cada "serie" porque siempre se ven juntos. Pero usa referencias para los "actores" porque un actor aparece en múltiples series.
+📌 **Ejemplo real:** Netflix embebe la lista de "episodios" dentro de cada "serie" porque siempre se ven juntos. Pero usa referencias para los "actores" porque un actor aparece en múltiples series.
 
 Aplicado a nuestro modelo de productos, la decisión queda así:
 
@@ -344,9 +395,9 @@ graph LR
     P[Producto] -->|"embebido · 1 consulta"| C[Categoria]
     P -->|"referencia · 2 consultas"| PR[Proveedor]
 
-    style P fill:#2196F,color:#fff3,color:#fff
-    style C fill:#4CAF5,color:#fff0,color:#fff
-    style PR fill:#FF980,color:#fff0,color:#fff
+    style P fill:#2196F3,color:#fff
+    style C fill:#4CAF50,color:#fff
+    style PR fill:#FF9800,color:#fff
 ```
 
 | Relación | Decisión | ¿Por qué? |
@@ -354,13 +405,26 @@ graph LR
 | **Producto → Categoría** | ✅ **Embeber** | Se lee siempre junto, es pequeña y casi nunca cambia |
 | **Producto → Proveedor** | ✅ **Referenciar** | Miles de productos comparten proveedor, y este cambia nombre, contacto y país |
 
-> ⚠️ **Advertencia:** la pregunta no es «¿es una relación?», sino **«¿cuándo y cómo se leen estos datos?»**. Si decides por la forma de los datos en SQL, acabarás recreando tablas y JOINs dentro de un documento, y perderás lo que MongoDB aporta.
+> 📝 **Nota:** ¿Y si ya tienes referencias y de pronto necesitas los datos juntos? MongoDB ofrece `$lookup`, el equivalente a un LEFT JOIN dentro de un pipeline de agregación. Funciona, pero se evalúa con menos potencia que un JOIN relacional, y cada lectura paga así una decisión de diseño pospuesta. Úsalo como salida puntual, no como plan de diseño.
+
+> ⚠️ **Advertencia:** la pregunta no es "¿es una relación?", sino **"¿cuándo y cómo se leen estos datos?"**. Si decides por la forma de los datos en SQL, acabarás recreando tablas y JOINs dentro de un documento, y perderás lo que MongoDB aporta.
 
 ### 13.2.4. El límite de 16 MB
 
-MongoDB tiene un **límite de 16 MB por documento**. Si embebes un array que puede crecer indefinidamente (ej: millones de logs), llegarás al límite.
+MongoDB tiene un **límite de 16 MB por documento**. No es un capricho: el documento es lo que viaja en una sola lectura, y sin techo una consulta podría cargar medio catálogo en memoria. Si embebes un array que crece sin freno (logs, mensajes, lecturas de sensor), el día que pase de 16 MB el servidor rechaza la escritura con el error `10334` (`BSONObjectTooLarge`), que el driver .NET devuelve como `MongoCommandException`.
 
-Solución: **Subset Pattern** — guarda solo los últimos N elementos embebidos, el resto en una colección separada.
+El tamaño no es el único problema: un array con millones de elementos hace lenta cualquier operación que lo toque, porque MongoDB reescribe el documento entero para modificar un solo campo. Antes de embeber un array, pregúntate qué pasará con ese mismo array dentro de dos años.
+
+Para medir dónde estás, el propio servidor te devuelve el tamaño de cada documento:
+
+```javascript
+// Tamaño en bytes de cada documento de la colección
+db.productos.aggregate([
+  { $project: { nombre: 1, tamano: { $bsonSize: "$$ROOT" } } }
+])
+```
+
+Cuando un array se acerque a su techo (o simplemente ya no quepa), la respuesta es el **Subset Pattern**: guarda dentro del documento solo los últimos N elementos, los que se leen siempre, y deja el resto en una colección aparte. Es uno de los patrones del apartado siguiente.
 
 ### 13.2.5. Patrones de diseño habituales
 
@@ -408,15 +472,13 @@ graph LR
     P2 --> DB
     PN --> DB
 
-    style APP fill:#FF980,color:#fff0,color:#fff
-    style MC fill:#4CAF5,color:#fff0,color:#fff
-    style P1 fill:#2196F,color:#fff3,color:#fff
-    style P2 fill:#2196F,color:#fff3,color:#fff
-    style PN fill:#2196F,color:#fff3,color:#fff
-    style DB fill:#f4433,color:#fff6,color:#fff
+    style APP fill:#FF9800,color:#fff
+    style MC fill:#4CAF50,color:#fff
+    style P1 fill:#2196F3,color:#fff
+    style P2 fill:#2196F3,color:#fff
+    style PN fill:#2196F3,color:#fff
+    style DB fill:#f44336,color:#fff
 ```
-
-La conexión con MongoDB se organiza en database y collections. Una database contiene varias collections, y cada collection guarda documentos JSON.
 
 `MongoClient` es **thread-safe** y gestiona un pool de conexiones. Debes crear **una sola instancia** y reutilizarla (como `HttpClient`).
 
@@ -475,7 +537,7 @@ public class Producto
 > 💡 **Consejo:** Usa siempre POCO en proyectos reales. BsonDocument es útil para prototipos o consultas dinámicas, pero no tiene IntelliSense ni compile-time checking.
 
 ```csharp
-// ❌ MALO: Usar BsonDocument en producción — sin tipado, errores en runtime
+// ❌ MALO: Usar BsonDocument en producción — sin tipado, errores en ejecución
 var doc = collection.Find(new BsonDocument { { "nombre", "Teclado" } }).First();
 var precio = doc["precio"].AsDecimal; // Error si el campo no existe o cambia de tipo
 string nombre = doc["nombre"].AsString; // Sin IntelliSense, sin validación
@@ -493,8 +555,6 @@ Atributos Bson más habituales:
 | `[BsonId]` | Marca la propiedad como `_id` |
 | `[BsonElement("nombre")]` | Mapea a un nombre de campo concreto |
 | `[BsonIgnore]` | Ignora la propiedad (no se serializa) |
-
-Insertar documentos en MongoDB es similar a añadir registros en SQL, pero trabajas con objetos JSON directamente.
 | `[BsonDateTimeKind(DateTimeKind.Utc)]` | Fuerza la zona horaria |
 | `[BsonRepresentation(BsonType.ObjectId)]` | Representa como ObjectId en BSON |
 
@@ -517,8 +577,6 @@ var productos = new List<Producto>
 };
 collection.InsertMany(productos);
 ```
-
-Las consultas en MongoDB usan filtros con la sintaxis de la librería driver, que traduce a JSON Query.
 
 > 📝 **Nota:** Después de `InsertOne`, el driver rellena automáticamente el campo `Id` con un `ObjectId` generado.
 
@@ -599,15 +657,16 @@ var filtro1 = Builders<Producto>.Filter.Eq(p => p.Nombre, "Teclado");
 var filtro2 = Builders<Producto>.Filter.Gt(p => p.Precio, 50);
 var filtro3 = Builders<Producto>.Filter.And(filtro1, filtro2);
 var filtro4 = Builders<Producto>.Filter.Or(
-    Builders<Producto>.Filter.Eq(p => p.Categoria, "Electrónica"),
-    Builders<Producto>.Filter.Eq(p => p.Categoria, "Gaming")
+    // Ruta de campo: se puede filtrar dentro del subdocumento embebido
+    Builders<Producto>.Filter.Eq("categoria.nombre", "Electrónica"),
+    Builders<Producto>.Filter.Eq("categoria.nombre", "Gaming")
 );
 
 // Proyecciones (seleccionar campos)
 var proyeccion = Builders<Producto>.Projection
     .Include(p => p.Nombre)
     .Include(p => p.Precio)
-    .Exclude(p => p._id);
+    .Exclude(p => p.Id);
 
 var resultados = collection.Find(filtro1).Project(proyeccion).ToList();
 ```
@@ -647,12 +706,6 @@ collection.Indexes.CreateOne(new CreateIndexModel<Producto>(
 collection.Indexes.CreateOne(new CreateIndexModel<Producto>(
     Builders<Producto>.IndexKeys.Ascending(p => p.Nombre),
     new CreateIndexOptions { Unique = true }));
-
-// Índice compuesto
-collection.Indexes.CreateOne(new CreateIndexModel<Producto>(
-    Builders<Producto>.IndexKeys
-        .Ascending(p => p.Categoria)
-        .Descending(p => p.Precio)));
 ```
 
 ### 13.3.11. Composición y referencias con el driver
@@ -724,9 +777,7 @@ productos.UpdateOne(
 
 > 💡 **Consejo:** si cada página de listado necesita el nombre del proveedor, estás pagando **2 consultas por página**. Ese es exactamente el motivo de decidir bien en el apartado 13.2.3: lo que se lee siempre junto, se embebe.
 
-📌 Ejemplo real: **Glovo** embebe dentro del restaurante sus horarios y su carta (se leen juntos en cada pantalla), pero el repartidor va **referenciado**: se asigna y cambia en cada pedido sin tocar el documento del restaurante.
-
-Para usar EF Core con MongoDB necesitas el proveedor oficial, que permite trabajar con el mismo patrón que con SQL.
+📌 **Ejemplo real:** Glovo embebe dentro del restaurante sus horarios y su carta (se leen juntos en cada pantalla), pero el repartidor va referenciado: se asigna y cambia en cada pedido sin tocar el documento del restaurante.
 
 ## 13.4. MongoDB con EF Core
 
@@ -738,8 +789,6 @@ Para usar EF Core con MongoDB necesitas el proveedor oficial, que permite trabaj
 dotnet add package MongoDB.EntityFrameworkCore
 ```
 
-El DbContext con UseMongoDB configura la conexión a MongoDB siguiendo el mismo patrón que con Entity Framework y SQL.
-
 > 📝 **Nota:** El proveedor EF Core para MongoDB es oficial (desarrollado por MongoDB, Inc). Permite usar la misma sintaxis de EF Core que usas con PostgreSQL o SQLite, pero guardando en MongoDB.
 
 ### 13.4.2. DbContext con UseMongoDB
@@ -750,23 +799,25 @@ El DbContext con UseMongoDB configura la conexión a MongoDB siguiendo el mismo 
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
 
-public class TiendaDbContext(DbContextOptions<TiendaDbContext> options) : DbContext(options)
+public class ProductosMongoDbContext(DbContextOptions<ProductosMongoDbContext> options)
+    : DbContext(options)
 {
     public DbSet<Producto> Productos => Set<Producto>();
-    public DbSet<Categoria> Categorias => Set<Categoria>();
+    public DbSet<Proveedor> Proveedores => Set<Proveedor>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // MongoDB no necesita migraciones
+        // MongoDB no necesita migraciones: una colección por tipo de documento.
+        // La categoría no aparece: va embebida dentro de Producto (apartado 13.4.5)
         modelBuilder.Entity<Producto>().ToCollection("productos");
-        modelBuilder.Entity<Categoria>().ToCollection("categorias");
+        modelBuilder.Entity<Proveedor>().ToCollection("proveedores");
     }
 }
 
 // Registro en Program.cs / DI
 var client = new MongoClient("mongodb://localhost:27017");
 
-services.AddDbContext<TiendaDbContext>(options =>
+services.AddDbContext<ProductosMongoDbContext>(options =>
     options.UseMongoDB(client, "tienda"));
 ```
 
@@ -804,8 +855,6 @@ public class Producto
     public ObjectId ProveedorId { get; set; }
 }
 ```
-
-La fluent API en MongoDB permite configurar colecciones, índices y serialización con el mismo patrón que en SQL.
 
 > 📝 **Nota:** En MongoDB, los Data Annotations de EF Core (`[Required]`, `[StringLength]`) funcionan para validación en C#, pero **no se aplican en la BD**. MongoDB no tiene constraints como SQL. La `[BsonId]` y `[BsonElement]` son las que controlan el mapeo real.
 
@@ -878,13 +927,13 @@ graph TD
 
     CLASES -->|serializa| MONGO
 
-    style CLASES fill:#2196F,color:#fff3,color:#fff
-    style MONGO fill:#4CAF5,color:#fff0,color:#fff
-    style C fill:#2196F,color:#fff3,color:#fff
-    style D fill:#2196F,color:#fff3,color:#fff
-    style M fill:#4CAF5,color:#fff0,color:#fff
-    style N fill:#4CAF5,color:#fff0,color:#fff
-    style DIR fill:#4CAF5,color:#fff0,color:#fff
+    style CLASES fill:#2196F3,color:#fff
+    style MONGO fill:#4CAF50,color:#fff
+    style C fill:#2196F3,color:#fff
+    style D fill:#2196F3,color:#fff
+    style M fill:#4CAF50,color:#fff
+    style N fill:#4CAF50,color:#fff
+    style DIR fill:#4CAF50,color:#fff
 ```
 
 ```csharp
@@ -986,7 +1035,7 @@ var productosOk = new List<Producto>
 
 > 📝 **Nota:** el **Driver Nativo** no tiene este problema: serializa el objeto tal cual esté. La restricción es de EF Core, que lleva la cuenta de las entidades en su *change tracker* y asume que cada instancia Owned pertenece a una sola entidad propietaria.
 
-📌 Ejemplo real: en `12-ProductosMongo`, el seeder construye la categoría con `NuevaCategoria(indice)` en lugar de reutilizar un array de objetos, precisamente por esto.
+📌 **Ejemplo real:** en `12-ProductosMongo`, el seeder construye la categoría con `NuevaCategoria(indice)` en lugar de reutilizar un array de objetos, precisamente por esto.
 
 ### 13.4.6. Referencias manuales
 
@@ -1057,7 +1106,7 @@ if (producto is not null)
 }
 ```
 
-📌 Ejemplo real: en el ejemplo `12-ProductosMongo`, `GET /api/productos` devuelve la categoría embebida en la misma consulta y solo el `proveedorId`: la API no resuelve el proveedor porque no lo necesita.
+📌 **Ejemplo real:** en el ejemplo `12-ProductosMongo`, `GET /api/productos` devuelve la categoría embebida en la misma consulta y solo el `proveedorId`: la API no resuelve el proveedor porque no lo necesita.
 
 ### 13.4.7. Consultas LINQ
 
@@ -1102,7 +1151,7 @@ var existe = await db.Productos.AnyAsync(p => p.Nombre == "Teclado");
 | **Transacciones** | ⚠️ Solo con réplica set | En un servidor **standalone** salta `NotSupportedException` |
 | **Instancias Owned compartidas** | ⚠️ No | Dos entidades no pueden apuntar al mismo objeto (13.4.5) |
 
-> 📝 **Nota:** El proveedor MongoDB EF Core está en desarrollo activo. Algunas features pueden añadirse en el futuro. Consulta siempre la [documentación oficial](https://www.mongodb.com/es/docs/entity-framework/current/limitations/) para ver el estado actual.
+> 📝 **Nota:** El proveedor MongoDB EF Core está en desarrollo activo y algunas funciones llegarán con el tiempo. La página [Limitaciones de MongoDB.EntityFrameworkCore](https://www.mongodb.com/es/docs/entity-framework/current/limitations/) mantiene al día el estado de la versión que estés usando.
 
 > ⚠️ **Advertencia — transacciones en standalone:** el provider EF Core envuelve cada `SaveChanges` con varios documentos en una **transacción**, y un MongoDB standalone (el de nuestro `docker-compose.yml`) no las soporta. Si necesitas sembrar o escribir varios documentos de golpe sin montar un replica set, puedes desactivarlas:
 
@@ -1138,17 +1187,17 @@ graph TD
     DEC -->|"MongoDB puro, agregaciones"| DRIVER
     DEC -->|"CRUD simple, cambiable"| EF
 
-    style DRIVER fill:#FF980,color:#fff0,color:#fff
-    style EF fill:#9C27B,color:#fff0,color:#fff
-    style D1 fill:#FF980,color:#fff0,color:#fff
-    style D2 fill:#EF6C0,color:#fff0,color:#fff
-    style D3 fill:#F57C0,color:#fff0,color:#fff
-    style D4 fill:#f4433,color:#fff6,color:#fff
-    style E1 fill:#9C27B,color:#fff0,color:#fff
-    style E2 fill:#7B1FA,color:#fff2,color:#fff
-    style E3 fill:#8E24A,color:#fffA,color:#fff
-    style E4 fill:#f4433,color:#fff6,color:#fff
-    style DEC fill:#607D8,color:#fffB,color:#fff
+    style DRIVER fill:#FF9800,color:#fff
+    style EF fill:#9C27B0,color:#fff
+    style D1 fill:#FF9800,color:#fff
+    style D2 fill:#EF6C00,color:#fff
+    style D3 fill:#F57C00,color:#fff
+    style D4 fill:#f44336,color:#fff
+    style E1 fill:#9C27B0,color:#fff
+    style E2 fill:#7B1FA2,color:#fff
+    style E3 fill:#8E24A0,color:#fff
+    style E4 fill:#f44336,color:#fff
+    style DEC fill:#607D8B,color:#fff
 ```
 
 | Criterio | Driver Nativo | EF Core |
@@ -1156,7 +1205,7 @@ graph TD
 | **Control total** | ✅ Sí, acceso directo a la API de MongoDB | ⚠️ Limitado por el ORM |
 | **Funciones MongoDB** | ✅ Todas (agregaciones, geo, text search) | ❌ Solo las que el proveedor soporta |
 | **Sintaxis familiar** | ❌ Builders y métodos específicos de MongoDB | ✅ LINQ, como con SQL |
-| **Cambio de BD** | ❌ Acoplado a MongoDB | ✅ Puedes cambiar a SQL fácilmente |
+| **Cambio de BD** | ❌ Acoplado a MongoDB | ⚠️ LINQ y repositorio se reutilizan, el modelo no se traslada solo |
 | **Migraciones** | ❌ No existen | ❌ No soportadas (pero el ORM sí las gestiona en SQL) |
 | **Owned Types** | ❌ A mano | ✅ `[Owned]` y `OwnsOne/OwnsMany` |
 | **Performance** | ✅ Máxima (sin overhead de ORM) | ⚠️ Alguna pérdida por abstracción |
@@ -1167,22 +1216,20 @@ graph TD
 
 > 💡 **Consejo:** Si tu aplicación es **100% MongoDB** y necesitas funcionalidades avanzadas (agregaciones, geo-queries, Atlas Search), usa el **Driver Nativo**. Si vienes de EF Core relacional y quieres una capa de abstracción más uniforme (o piensas cambiar de BD a futuro), usa **EF Core**.
 
-📌 Ejemplo real: **TiendaAPI** usa el Driver Nativo para MongoDB porque necesita agregaciones y consultas complejas que EF Core no soporta. Pero para PostgreSQL usa EF Core porque las migraciones y el LINQ son muy útiles.
-
-El modelo y su configuración definen cómo se mapean los documentos MongoDB a las clases C#.
+📌 **Ejemplo real:** eBay usa MongoDB para su catálogo de millones de artículos, donde cada categoría tiene atributos propios (talla, color, estado). Las búsquedas del catálogo combinan filtros, facetas y agregaciones, justo el tipo de consulta que se escribe directamente con el driver.
 
 ## 13.6. Repositorio CRUD con MongoDB
 
 ### 13.6.1. Modelo y configuración
 
-El modelo y su configuración definen cómo se mapean los documentos MongoDB a las clases C#.
+El repositorio trabaja sobre el mismo `Producto` que diseñó el apartado 13.2.2, con sus dos formas de relación más los campos de control que pide el CRUD:
 
 ```csharp
 // Modelo
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-public class Funko
+public class Producto
 {
     [BsonId]
     public ObjectId Id { get; set; }
@@ -1195,6 +1242,14 @@ public class Funko
 
     [BsonElement("imagen")]
     public string Imagen { get; set; } = string.Empty;
+
+    // COMPOSICIÓN: la categoría vive DENTRO del producto (apartado 13.4.5)
+    [BsonElement("categoria")]
+    public Categoria Categoria { get; set; } = null!;
+
+    // REFERENCIA: solo el _id del proveedor viaja en el producto (apartado 13.4.6)
+    [BsonElement("proveedor_id")]
+    public ObjectId ProveedorId { get; set; }
 
     [BsonElement("is_deleted")]
     public bool IsDeleted { get; set; }
@@ -1212,12 +1267,12 @@ public class Funko
 La interfaz del repositorio define las operaciones CRUD que el almacén de MongoDB ofrece.
 
 ```csharp
-public interface IFunkoRepository
+public interface IProductoRepository
 {
-    IEnumerable<Funko> GetAll();
-    Funko? GetById(ObjectId id);
-    Funko Add(Funko funko);
-    Funko? Update(Funko funko);
+    IEnumerable<Producto> GetAll();
+    Producto? GetById(ObjectId id);
+    Producto Add(Producto producto);
+    Producto? Update(Producto producto);
     bool Delete(ObjectId id);
     bool IsDuplicated(string nombre, ObjectId excludeId = default);
 }
@@ -1230,40 +1285,40 @@ La implementación con el driver nativo de MongoDB usa las clases del driver dir
 ```csharp
 using MongoDB.Driver;
 
-public class FunkoMongoRepository(IMongoDatabase database) : IFunkoRepository
+public class ProductoMongoRepository(IMongoDatabase database) : IProductoRepository
 {
-    private readonly IMongoCollection<Funko> _collection = database.GetCollection<Funko>("funkos");
+    private readonly IMongoCollection<Producto> _collection = database.GetCollection<Producto>("productos");
 
-    public IEnumerable<Funko> GetAll() =>
-        _collection.Find(f => !f.IsDeleted).ToList();
+    public IEnumerable<Producto> GetAll() =>
+        _collection.Find(p => !p.IsDeleted).ToList();
 
-    public Funko? GetById(ObjectId id) =>
-        _collection.Find(f => f.Id == id && !f.IsDeleted).FirstOrDefault();
+    public Producto? GetById(ObjectId id) =>
+        _collection.Find(p => p.Id == id && !p.IsDeleted).FirstOrDefault();
 
-    public Funko Add(Funko funko)
+    public Producto Add(Producto producto)
     {
-        funko.CreatedAt = DateTime.UtcNow;
-        _collection.InsertOne(funko);
-        return funko;
+        producto.CreatedAt = DateTime.UtcNow;
+        _collection.InsertOne(producto);
+        return producto;
     }
 
-    public Funko? Update(Funko funko)
+    public Producto? Update(Producto producto)
     {
-        funko.UpdatedAt = DateTime.UtcNow;
-        var result = _collection.ReplaceOne(f => f.Id == funko.Id, funko);
-        return result.IsAcknowledged ? funko : null;
+        producto.UpdatedAt = DateTime.UtcNow;
+        var result = _collection.ReplaceOne(p => p.Id == producto.Id, producto);
+        return result.IsAcknowledged ? producto : null;
     }
 
     public bool Delete(ObjectId id)
     {
-        var update = Builders<Funko>.Update
-            .Set(f => f.IsDeleted, true);
-        var result = _collection.UpdateOne(f => f.Id == id, update);
+        var update = Builders<Producto>.Update
+            .Set(p => p.IsDeleted, true);
+        var result = _collection.UpdateOne(p => p.Id == id, update);
         return result.IsAcknowledged && result.ModifiedCount > 0;
     }
 
     public bool IsDuplicated(string nombre, ObjectId excludeId = default) =>
-        _collection.Find(f => f.Nombre == nombre && f.Id != excludeId).Any();
+        _collection.Find(p => p.Nombre == nombre && p.Id != excludeId).Any();
 }
 ```
 
@@ -1271,7 +1326,7 @@ public class FunkoMongoRepository(IMongoDatabase database) : IFunkoRepository
 
 Si añades un índice único (sección 13.3.10) y haces un *upsert* con `ReplaceOne(..., IsUpsert = true)` o `UpdateOne(...)` con `IsUpsert`, MongoDB puede devolverte el error **`E11000 duplicate key error`**. Ojo: **no siempre es un bug**.
 
-Cuando existe una *guarda de versión* («solo sobrescribe si el documento guardado no es más reciente que el entrante»), el filtro no coincide con el documento existente, así que el driver intenta **insertar** y se choca contra el `_id` ya presente:
+Cuando existe una *guarda de versión* ("solo sobrescribe si el documento guardado no es más reciente que el entrante"), el filtro no coincide con el documento existente, así que el driver intenta **insertar** y se choca contra el `_id` ya presente:
 
 ```csharp
 // Filtro con guarda de versión: solo entra si el guardado NO es más reciente
@@ -1299,47 +1354,45 @@ catch (MongoWriteException ex) when (ex.WriteError?.Code == 11000)
 }
 ```
 
-📌 **Ejemplo real:** en TiendaAPI (repo CQRS/MediatR) el commit *fix: atrapar E11000 en upsert de MongoDB — version guard omitido a propósito, no es fallo* añadió exactamente ese `catch` con el filtro `when`. Antes, cada sincronización normal entre SQL y Mongo generaba un **log de error y una alerta ruidosa** por algo que estaba funcionando perfectamente.
+Este patrón es típico cuando MongoDB funciona como réplica de lectura de una base SQL: cada sincronización refresca el documento con un upsert, y la guarda de versión convierte el intento en una inserción que choca contra el `_id` existente. No es un fallo: es la guarda cumpliendo su función.
 
-> 📝 **Nota:** La clave está en el **`when`** (`ex.WriteError?.Code == 11000`). Sin ese filtro, el `catch` se tragaría **todos** los errores de escritura — red caída, permisos insuficientes, documento demasiado grande ; y los convertiría en «éxitos». Con el filtro, solo se ignora el `11000` y el resto sigue saltando.
+> 📝 **Nota:** La clave está en el **`when`** (`ex.WriteError?.Code == 11000`). Sin ese filtro, el `catch` se tragaría **todos** los errores de escritura (red caída, permisos insuficientes, documento demasiado grande) y los convertiría en "éxitos". Con el filtro, solo se ignora el `11000` y el resto sigue saltando.
 
-> ⚠️ **Advertencia:** Antes de dar por bueno un `E11000`, comprueba **qué índice** lo ha provocado. Si **no** tienes guardia de versión y no has tocado el esquema, ese duplicado es un problema real de integridad (dos escrituras simultáneas, ID mal generado…). Ignorar un duplicado sin leer `ex.WriteError` es como cerrar el ojo al humo porque «a veces humea».
-
-La implementación con EF Core permite usar el mismo patrón que con SQL, pero sobre MongoDB.
+> ⚠️ **Advertencia:** Antes de dar por bueno un `E11000`, comprueba **qué índice** lo ha provocado. Si **no** tienes guardia de versión y no has tocado el esquema, ese duplicado es un problema real de integridad (dos escrituras simultáneas, ID mal generado…). Ignorar un duplicado sin leer `ex.WriteError` es como cerrar el ojo al humo porque "a veces humea".
 
 > 💡 **Truco:** `ex.WriteError?.Code` devuelve el código numérico (`11000`); si prefieres no dejar números mágicos en el código, usa `ex.WriteError?.Category == WriteErrorCategory.DuplicateKey`. Es la misma condición, pero se lee sola.
 
 ### 13.6.4. Implementación con EF Core
 
-La implementación con EF Core permite usar el mismo patrón que con SQL, pero sobre MongoDB.
+La implementación con EF Core permite usar el mismo patrón que con SQL, pero sobre MongoDB: el contexto `ProductosMongoDbContext` de la sección 13.4.6 y LINQ en lugar de Builders.
 
 ```csharp
 using Microsoft.EntityFrameworkCore;
 
-public class FunkoEfCoreRepository(TiendaDbContext db) : IFunkoRepository
+public class ProductoEfCoreRepository(ProductosMongoDbContext db) : IProductoRepository
 {
-    public IEnumerable<Funko> GetAll() =>
-        db.Funkos.Where(f => !f.IsDeleted).ToList();
+    public IEnumerable<Producto> GetAll() =>
+        db.Productos.Where(p => !p.IsDeleted).ToList();
 
-    public Funko? GetById(ObjectId id) =>
-        db.Funkos.FirstOrDefault(f => f.Id == id && !f.IsDeleted);
+    public Producto? GetById(ObjectId id) =>
+        db.Productos.FirstOrDefault(p => p.Id == id && !p.IsDeleted);
 
-    public Funko Add(Funko funko)
+    public Producto Add(Producto producto)
     {
-        funko.CreatedAt = DateTime.UtcNow;
-        db.Funkos.Add(funko);
+        producto.CreatedAt = DateTime.UtcNow;
+        db.Productos.Add(producto);
         db.SaveChanges();
-        return funko;
+        return producto;
     }
 
-    public Funko? Update(Funko funko)
+    public Producto? Update(Producto producto)
     {
-        var existente = db.Funkos.Find(funko.Id);
+        var existente = db.Productos.Find(producto.Id);
         if (existente is null) return null;
 
-        existente.Nombre = funko.Nombre;
-        existente.Precio = funko.Precio;
-        existente.Imagen = funko.Imagen;
+        existente.Nombre = producto.Nombre;
+        existente.Precio = producto.Precio;
+        existente.Imagen = producto.Imagen;
         existente.UpdatedAt = DateTime.UtcNow;
 
         db.SaveChanges();
@@ -1348,16 +1401,16 @@ public class FunkoEfCoreRepository(TiendaDbContext db) : IFunkoRepository
 
     public bool Delete(ObjectId id)
     {
-        var funko = db.Funkos.Find(id);
-        if (funko is null) return false;
+        var producto = db.Productos.Find(id);
+        if (producto is null) return false;
 
-        funko.IsDeleted = true;
+        producto.IsDeleted = true;
         db.SaveChanges();
         return true;
     }
 
     public bool IsDuplicated(string nombre, ObjectId excludeId = default) =>
-        db.Funkos.Any(f => f.Nombre == nombre && f.Id != excludeId);
+        db.Productos.Any(p => p.Nombre == nombre && p.Id != excludeId);
 }
 ```
 
@@ -1367,9 +1420,9 @@ public class FunkoEfCoreRepository(TiendaDbContext db) : IFunkoRepository
 
 > ⚠️ **Advertencia — ¡Ojo con las versiones!**
 >
-> `MongoDB.EntityFrameworkCore` depende de una versión **exacta** de `Microsoft.EntityFrameworkCore`. Si usas versiones incompatibles, obtendrás errores en runtime como `MissingMethodException` o `FileNotFoundException`.
+> `MongoDB.EntityFrameworkCore` depende de una versión **exacta** de `Microsoft.EntityFrameworkCore`. Si usas versiones incompatibles, obtendrás errores en ejecución como `MissingMethodException` o `FileNotFoundException`.
 >
-> **Tabla de compatibilidad verificada:**
+> **Tabla de compatibilidad entre versiones:**
 >
 > | MongoDB.EntityFrameworkCore | MongoDB.Driver | Microsoft.EntityFrameworkCore | Estado |
 > |------------------------------|----------------|-------------------------------|--------|
@@ -1381,7 +1434,7 @@ public class FunkoEfCoreRepository(TiendaDbContext db) : IFunkoRepository
 > // ❌ MALO: Mezclar versiones incompatibles
 > <PackageReference Include="MongoDB.EntityFrameworkCore" Version="9.0.0" />
 > <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />  // ¡INCOMPATIBLE!
-> // Resultado: MissingMethodException en runtime
+> // Resultado: MissingMethodException en ejecución
 >
 > // ✅ BUENO: Todas las versiones alineadas
 > <PackageReference Include="MongoDB.EntityFrameworkCore" Version="10.0.3" />
@@ -1471,9 +1524,9 @@ public abstract class MongoTestBase : IAsyncLifetime
 >     style CLEAN fill:#FF9800,color:#fff
 > ```
 >
-> **1. Container como campo instance, nunca `static`**
+> **1. El contenedor como campo de instancia, nunca `static`**
 >
-> Si el contenedor es `static readonly`, se comparte entre todos los `[TestFixture]` de la solución. Pero NUnit ejecuta cada `[TestFixture]` en un ensamblado diferente, y el contenedor se destruye al terminar el primero. El siguiente fixture intenta usar un contenedor muerto → errores raros.
+> Si el contenedor es `static readonly`, se comparte entre todos los `[TestFixture]` de la solución. El problema es el ciclo de vida: el primer fixture que termina lo destruye en su `[OneTimeTearDown]`, y el siguiente arranca con un contenedor ya eliminado → errores raros.
 >
 > ```csharp
 > // ❌ MALO: static readonly — compartido entre fixtures, se destruye antes de tiempo
@@ -1513,11 +1566,9 @@ public abstract class MongoTestBase : IAsyncLifetime
 > {
 >     // Cada test empieza con la BD limpia y los mismos datos base
 >     Database.GetCollection<BsonDocument>("productos").DeleteMany(FilterDefinition<BsonDocument>.Empty);
->     Database.GetCollection<BsonDocument>("categorias").DeleteMany(FilterDefinition<BsonDocument>.Empty);
+>     Database.GetCollection<BsonDocument>("proveedores").DeleteMany(FilterDefinition<BsonDocument>.Empty);
 > }
 > ```
-
-Los tests con el driver nativo prueban las operaciones CRUD directamente contra una base de datos real en Docker.
 >
 > 🔧 **Truco:** MongoDB no tiene `TRUNCATE ... RESTART IDENTITY` porque los IDs son `ObjectId` (generados por el driver, no por la BD). La limpieza con `DeleteMany` es suficiente.
 
@@ -1527,107 +1578,121 @@ Los tests con el driver nativo prueban las operaciones CRUD directamente contra 
 
 ```csharp
 [TestFixture]
-public class FunkoRepositoryTests : MongoTestBase
+public class ProductoRepositoryTests : MongoTestBase
 {
-    private FunkoMongoRepository _repository = null!;
+    private ProductoMongoRepository _repository = null!;
 
     [SetUp]
     public void SetUp()
     {
         // Limpieza entre tests: cada test arranca con la colección vacía
         // (si no, los documentos de tests anteriores contaminan los asserts)
-        Database.GetCollection<BsonDocument>("funkos")
+        Database.GetCollection<BsonDocument>("productos")
             .DeleteMany(FilterDefinition<BsonDocument>.Empty);
 
-        _repository = new FunkoMongoRepository(Database);
+        _repository = new ProductoMongoRepository(Database);
     }
 
     [Test]
-    public void Add_FunkoValido_RetornaConId()
+    public void Add_ProductoValido_RetornaConId()
     {
         // Arrange
-        var funko = new Funko { Nombre = "Spider-Man", Precio = 29.99m };
+        var producto = new Producto
+        {
+            Nombre = "Teclado Mecánico",
+            Precio = 89.99m,
+            Categoria = new Categoria { Nombre = "Electrónica", Descripcion = "Componentes" }
+        };
 
         // Act
-        var resultado = _repository.Add(funko);
+        var resultado = _repository.Add(producto);
 
         // Assert
         resultado.Id.Should().NotBe(ObjectId.Empty);
-        resultado.Nombre.Should().Be("Spider-Man");
+        resultado.Nombre.Should().Be("Teclado Mecánico");
     }
 
     [Test]
-    public void GetById_FunkoExiste_RetornaFunko()
+    public void GetById_ProductoExiste_RetornaProducto()
     {
         // Arrange
-        var funko = _repository.Add(new Funko { Nombre = "Batman", Precio = 35.00m });
+        var producto = _repository.Add(new Producto
+        {
+            Nombre = "Monitor",
+            Precio = 299.00m,
+            Categoria = new Categoria { Nombre = "Electrónica", Descripcion = "Componentes" }
+        });
 
         // Act
-        var resultado = _repository.GetById(funko.Id);
+        var resultado = _repository.GetById(producto.Id);
 
         // Assert
         resultado.Should().NotBeNull();
-        resultado!.Nombre.Should().Be("Batman");
+        resultado!.Nombre.Should().Be("Monitor");
     }
 
     [Test]
-    public void Delete_FunkoExiste_MarcaComoBorrado()
+    public void Delete_ProductoExiste_MarcaComoBorrado()
     {
         // Arrange
-        var funko = _repository.Add(new Funko { Nombre = "Para Borrar", Precio = 10m });
+        var producto = _repository.Add(new Producto
+        {
+            Nombre = "Ratón de Prueba",
+            Precio = 10m,
+            Categoria = new Categoria { Nombre = "Electrónica", Descripcion = "Componentes" }
+        });
 
         // Act
-        var resultado = _repository.Delete(funko.Id);
+        var resultado = _repository.Delete(producto.Id);
 
         // Assert
         resultado.Should().BeTrue();
-        _repository.GetById(funko.Id).Should().BeNull(); // GetById filtra IsDeleted
+        _repository.GetById(producto.Id).Should().BeNull(); // GetById filtra IsDeleted
     }
 }
 ```
-
-Los tests con EF Core prueban el repositorio usando el mismo patrón que con SQL, pero sobre MongoDB.
 
 > 💡 **Consejo:** El repositorio debe filtrar `IsDeleted` también en `GetById`, no solo en `GetAll`. Si no, un elemento borrado lógicamente seguiría siendo visible por ID — inconsistente con el test `Delete → GetById == Null`.
 
 ### 13.7.4. Tests con EF Core
 
-Los tests con EF Core prueban el repositorio usando el mismo patrón que con SQL, pero sobre MongoDB.
+Los tests con EF Core prueban el repositorio usando el mismo patrón que con SQL, pero sobre MongoDB. El contexto es el de la sección 13.4.6 con una novedad: un filtro de consulta que oculta los borrados en todas las consultas.
 
 ```csharp
 using Microsoft.EntityFrameworkCore;
 using MongoDB.EntityFrameworkCore.Extensions;
 
-public class TiendaMongoDbContext : DbContext
+public class ProductosMongoDbContext(DbContextOptions<ProductosMongoDbContext> options)
+    : DbContext(options)
 {
-    public DbSet<Funko> Funkos => Set<Funko>();
-
-    public TiendaMongoDbContext(DbContextOptions<TiendaMongoDbContext> options)
-        : base(options) { }
+    public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<Proveedor> Proveedores => Set<Proveedor>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Funko>().ToCollection("funkos");
+        modelBuilder.Entity<Producto>().ToCollection("productos");
+        modelBuilder.Entity<Proveedor>().ToCollection("proveedores");
+
         // Query Filter: oculta los borrados lógicamente en TODAS las consultas
-        modelBuilder.Entity<Funko>().HasQueryFilter(f => !f.IsDeleted);
+        modelBuilder.Entity<Producto>().HasQueryFilter(p => !p.IsDeleted);
     }
 }
 
 [TestFixture]
-public class FunkoEfCoreTests : MongoTestBase
+public class ProductoEfCoreTests : MongoTestBase
 {
-    private TiendaMongoDbContext _context = null!;
-    private FunkoEfCoreRepository _repository = null!;
+    private ProductosMongoDbContext _context = null!;
+    private ProductoEfCoreRepository _repository = null!;
 
     [SetUp]
     public void SetUp()
     {
-        _context = new TiendaMongoDbContext(
-            new DbContextOptionsBuilder<TiendaMongoDbContext>()
+        _context = new ProductosMongoDbContext(
+            new DbContextOptionsBuilder<ProductosMongoDbContext>()
                 .UseMongoDB(Client, "test_db")
                 .Options);
 
-        _repository = new FunkoEfCoreRepository(_context);
+        _repository = new ProductoEfCoreRepository(_context);
     }
 
     [TearDown]
@@ -1637,13 +1702,18 @@ public class FunkoEfCoreTests : MongoTestBase
     }
 
     [Test]
-    public void Add_FunkoValido_RetornaConId()
+    public void Add_ProductoValido_RetornaConId()
     {
         // Arrange
-        var funko = new Funko { Nombre = "Iron Man", Precio = 25.00m };
+        var producto = new Producto
+        {
+            Nombre = "Monitor",
+            Precio = 299.00m,
+            Categoria = new Categoria { Nombre = "Electrónica", Descripcion = "Componentes" }
+        };
 
         // Act
-        var resultado = _repository.Add(funko);
+        var resultado = _repository.Add(producto);
 
         // Assert
         resultado.Id.Should().NotBe(ObjectId.Empty);
@@ -1653,29 +1723,9 @@ public class FunkoEfCoreTests : MongoTestBase
 
 ## 13.8. Semilla de datos (seed)
 
+La semilla puebla la base de datos de partida: proveedores, categorías y productos de ejemplo para poder trabajar desde el primer arranque. Solo se ejecuta en desarrollo; en producción los datos se gestionan a mano.
+
 ### Con driver nativo
-
-```csharp
-public class MongoDbSeeder(IMongoDatabase database)
-{
-    public async Task SeedAsync()
-    {
-        var collection = database.GetCollection<Funko>("funkos");
-
-        if (await collection.CountDocumentsAsync(FilterDefinition<Funko>.Empty) > 0)
-            return;  // Ya hay datos, no sembrar
-
-        var funkos = new List<Funko>
-        {
-            new() { Nombre = "Spider-Man", Precio = 29.99m, CreatedAt = DateTime.UtcNow },
-            new() { Nombre = "Batman", Precio = 35.00m, CreatedAt = DateTime.UtcNow },
-            new() { Nombre = "Iron Man", Precio = 25.00m, CreatedAt = DateTime.UtcNow }
-        };
-
-        await collection.InsertManyAsync(funkos);
-    }
-}
-```
 
 Cuando hay **referencias**, el orden de siembra importa: **primero lo referenciado, después lo compuesto**. Y los IDs de lo referenciado deben ser **fijos**, o los productos quedarían apuntando a proveedores que ya no existen tras cada reinicio:
 
@@ -1724,21 +1774,23 @@ public static class MongoDbSeeder
 }
 ```
 
-> 📝 **Nota:** en el ejemplo real `12-ProductosMongo` son **5 proveedores** y **10 productos**, y cada producto lleva **su propia instancia** de `Categoria` — comparte instancia y EF Core solo la guarda en uno (apartado 13.4.5).
+> 📝 **Nota:** en el ejemplo `12-ProductosMongo` son **5 proveedores** y **10 productos**, y cada producto lleva **su propia instancia** de `Categoria`: si compartieran instancia, EF Core solo la guardaría en uno de ellos (apartado 13.4.5).
 
-### Con EF Core
+En `Program.cs` la invocación es de desarrollo y resuelve la base de datos registrada en DI:
 
 ```csharp
-// En Program.cs (solo desarrollo)
+// Program.cs (solo desarrollo)
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
-    var seeder = scope.ServiceProvider.GetRequiredService<MongoDbSeeder>();
-    await seeder.SeedAsync();
+    var database = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
+    MongoDbSeeder.Seed(database);
 }
 ```
 
-Y el seeder equivalente con EF Core, con el mismo orden:
+### Con EF Core
+
+El mismo seeder con EF Core, con el mismo orden:
 
 ```csharp
 public static void SeedEfCore(ProductosMongoDbContext context)
@@ -1761,9 +1813,21 @@ public static void SeedEfCore(ProductosMongoDbContext context)
 }
 ```
 
-Estas son las reglas que debes seguir al trabajar con MongoDB en .NET.
+Y la invocación en desarrollo repite el patrón con el contexto:
 
-> 💡 **Consejo:** El seeder siempre debe comprobar si ya existes datos (`CountDocumentsAsync` o `AnyAsync`) antes de insertar. Así es seguro ejecutarlo múltiples veces sin duplicar datos.
+```csharp
+// Program.cs (solo desarrollo)
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<ProductosMongoDbContext>();
+    await context.Database.EnsureDeletedAsync();  // limpia los datos del arranque anterior
+    await context.Database.EnsureCreatedAsync();  // recrea las colecciones vacías
+    MongoDbSeeder.SeedEfCore(context);
+}
+```
+
+> 💡 **Consejo:** Elige una estrategia de siembra y sé coherente con ella: o vacías y re siembras (`DeleteMany` antes de insertar, como en los ejemplos de arriba) o compruebas `CountDocumentsAsync` antes de insertar. Las dos evitan duplicados; lo malo es mezclarlas.
 
 ## 13.9. Buenas prácticas
 
@@ -1785,9 +1849,9 @@ builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://localhost
 ```
 
 ```csharp
-// ❌ MALO: Usar ObjectId como string — pierde rendimiento en búsquedas
+// ❌ MALO: Guardar el _id como string — 24 caracteres en vez de 12 bytes
 [BsonElement("_id")]
-public string Id { get; set; } // No se puede buscar eficientemente
+public string Id { get; set; } // Sí se indexa, pero ocupa el doble y pierde el timestamp del ObjectId
 
 // ✅ BUENO: Usar ObjectId tipado — búsqueda directa por el _id nativo
 [BsonId]
@@ -1796,7 +1860,7 @@ public ObjectId Id { get; set; } // Indexado automáticamente, búsqueda óptima
 
 1. **Embebe cuando los datos van juntos** — Categoría en Producto, Dirección en Cliente
 2. **Referencia cuando cambian a menudo** — No embebas un contador de visitas dentro de un Producto
-3. **Usa POCO, no BsonDocument** — Tipado, IntelliSense, maintainability
+3. **Usa POCO, no BsonDocument** — Tipado, IntelliSense, mantenibilidad
 4. **`MongoClient` es singleton** — Crear uno por aplicación, reutilizar
 5. **El `_id` es obligatorio** — Cada documento debe tener un campo `_id`
 6. **No embebas colecciones ilimitadas** — El límite es 16 MB por documento
@@ -1895,22 +1959,22 @@ graph TD
 
     TEST --> TC[TestContainers Docker]
 
-    style MONGO fill:#f4433,color:#fff6,color:#fff
-    style NOSQL fill:#4CAF5,color:#fff0,color:#fff
-    style DESIGN fill:#2196F,color:#fff3,color:#fff
-    style TOOLS fill:#FF980,color:#fff0,color:#fff
-    style TEST fill:#9C27B,color:#fff0,color:#fff
-    style BSON fill:#4CAF5,color:#fff0,color:#fff
-    style COL fill:#4CAF5,color:#fff0,color:#fff
-    style DOC fill:#4CAF5,color:#fff0,color:#fff
-    style EMB fill:#2196F,color:#fff3,color:#fff
-    style REF fill:#2196F,color:#fff3,color:#fff
-    style PAT fill:#2196F,color:#fff3,color:#fff
-    style DRIVER fill:#FF980,color:#fff0,color:#fff
-    style EF fill:#9C27B,color:#fff0,color:#fff
-    style CRUD1 fill:#EF6C0,color:#fff0,color:#fff
-    style CRUD2 fill:#7B1FA,color:#fff2,color:#fff
-    style TC fill:#7B1FA,color:#fff2,color:#fff
+    style MONGO fill:#f44336,color:#fff
+    style NOSQL fill:#4CAF50,color:#fff
+    style DESIGN fill:#2196F3,color:#fff
+    style TOOLS fill:#FF9800,color:#fff
+    style TEST fill:#9C27B0,color:#fff
+    style BSON fill:#4CAF50,color:#fff
+    style COL fill:#4CAF50,color:#fff
+    style DOC fill:#4CAF50,color:#fff
+    style EMB fill:#2196F3,color:#fff
+    style REF fill:#2196F3,color:#fff
+    style PAT fill:#2196F3,color:#fff
+    style DRIVER fill:#FF9800,color:#fff
+    style EF fill:#9C27B0,color:#fff
+    style CRUD1 fill:#EF6C00,color:#fff
+    style CRUD2 fill:#7B1FA2,color:#fff
+    style TC fill:#7B1FA2,color:#fff
 ```
 
 ---
@@ -1933,4 +1997,4 @@ graph TD
 
 **¿Qué viene después?**
 
-En el siguiente punto veremos **Redis**: un almacén de datos en memoria ultra-rápido que se usa como caché, cola de mensajes y sesión. Verás cómo el `IDatabase` de StackExchange.Redis se registra como singleton, cómo guardianes datos con TTL (Time-To-Live) y cómo Redis complementa a MongoDB: MongoDB para persistencia, Redis para velocidad.
+En el siguiente punto veremos **Redis**: un almacén de datos en memoria ultra-rápido que se usa como caché, cola de mensajes y sesión. Verás cómo el `IDatabase` de StackExchange.Redis se registra como singleton, cómo guardar datos con TTL (Time-To-Live) y cómo Redis complementa a MongoDB: MongoDB para persistencia, Redis para velocidad.
