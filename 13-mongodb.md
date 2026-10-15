@@ -100,15 +100,13 @@ graph TD
         M2 --> M3[Documento: 1 producto = 1 JSON completo]
     end
 
-    style SQL fill:#2196F3,color:#fff
-    style NOSQL fill:#4CAF50,color:#fff
     style S1 fill:#2196F3,color:#fff
     style S2 fill:#2196F3,color:#fff
     style S3 fill:#2196F3,color:#fff
-    style S4 fill:#42A5F5,color:#fff
+    style S4 fill:#2196F3,color:#fff
     style M1 fill:#4CAF50,color:#fff
     style M2 fill:#4CAF50,color:#fff
-    style M3 fill:#66BB6A,color:#fff
+    style M3 fill:#4CAF50,color:#fff
 ```
 
 ### 13.1.2. Modelo de documentos
@@ -191,9 +189,6 @@ graph TD
         D2["producto: _id, nombre, proveedor_id"] -->|ObjectId| P1[proveedor]
     end
 
-    style REL fill:#2196F3,color:#fff
-    style EMB fill:#4CAF50,color:#fff
-    style REF fill:#FF9800,color:#fff
     style T1 fill:#2196F3,color:#fff
     style T2 fill:#2196F3,color:#fff
     style T3 fill:#2196F3,color:#fff
@@ -931,8 +926,6 @@ graph TD
 
     CLASES -->|serializa| MONGO
 
-    style CLASES fill:#2196F3,color:#fff
-    style MONGO fill:#4CAF50,color:#fff
     style C fill:#2196F3,color:#fff
     style D fill:#2196F3,color:#fff
     style M fill:#4CAF50,color:#fff
@@ -1191,15 +1184,13 @@ graph TD
     DEC -->|"MongoDB puro, agregaciones"| DRIVER
     DEC -->|"CRUD simple, cambiable"| EF
 
-    style DRIVER fill:#FF9800,color:#fff
-    style EF fill:#9C27B0,color:#fff
     style D1 fill:#FF9800,color:#fff
-    style D2 fill:#EF6C00,color:#fff
-    style D3 fill:#F57C00,color:#fff
+    style D2 fill:#FF9800,color:#fff
+    style D3 fill:#FF9800,color:#fff
     style D4 fill:#f44336,color:#fff
     style E1 fill:#9C27B0,color:#fff
-    style E2 fill:#7B1FA2,color:#fff
-    style E3 fill:#8E24A0,color:#fff
+    style E2 fill:#9C27B0,color:#fff
+    style E3 fill:#9C27B0,color:#fff
     style E4 fill:#f44336,color:#fff
     style DEC fill:#607D8B,color:#fff
 ```
