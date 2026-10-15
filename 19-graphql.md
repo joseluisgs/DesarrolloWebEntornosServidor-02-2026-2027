@@ -77,8 +77,6 @@ graph LR
         G2 --> G3["{id, nombre, precio}"]
     end
 
-    style REST fill:#f44336,color:#fff
-    style GQL fill:#4CAF50,color:#fff
     style R1 fill:#f44336,color:#fff
     style R2 fill:#f44336,color:#fff
     style R3 fill:#f44336,color:#fff
@@ -114,8 +112,6 @@ flowchart TD
         D["POST /graphql { producto(1) { nombre, categoria { nombre }, reviews { texto } } }"]
     end
 
-    style REST_FLOW fill:#f44336,color:#fff
-    style GQL_FLOW fill:#4CAF50,color:#fff
     style A fill:#f44336,color:#fff
     style B fill:#f44336,color:#fff
     style C fill:#f44336,color:#fff
@@ -206,8 +202,6 @@ flowchart TD
 
     DI --> F
 
-    style DI fill:#2196F3,color:#fff
-    style ENDPOINT fill:#4CAF50,color:#fff
     style A fill:#2196F3,color:#fff
     style B fill:#2196F3,color:#fff
     style C fill:#2196F3,color:#fff
@@ -760,10 +754,6 @@ graph TB
         F --> I[Cliente 3]
     end
 
-    style PUBLICADOR fill:#2196F3,color:#fff
-    style SERVIDOR fill:#FF9800,color:#fff
-    style SUSCRIPCIONES fill:#9C27B0,color:#fff
-    style CLIENTES fill:#4CAF50,color:#fff
     style A fill:#2196F3,color:#fff
     style B fill:#FF9800,color:#fff
     style C fill:#9C27B0,color:#fff

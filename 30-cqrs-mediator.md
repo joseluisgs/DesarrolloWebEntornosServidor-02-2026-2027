@@ -244,8 +244,6 @@ flowchart TD
 
     TRADICIONAL --> PROBLEMAS
 
-    style TRADICIONAL fill:#f44336,color:#fff
-    style PROBLEMAS fill:#f44336,color:#fff
 ```
 
 📌 Ejemplo real: **Netflix** tenía este problema. Sus consultas de catálogo (millones de series) eran lentas porque la misma BD manejaba escrituras de configuración. Al separar CQRS, las lecturas se volvieron 10x más rápidas.
@@ -276,8 +274,6 @@ flowchart TD
 
     CQRS --> VENTAJAS
 
-    style CQRS fill:#4CAF50,color:#fff
-    style VENTAJAS fill:#2196F3,color:#fff
 ```
 
 📌 Ejemplo real: **LinkedIn** usa CQRS. Cuando actualizas tu perfil (escritura), va a PostgreSQL. Cuando alguien busca tu perfil (lectura), va a un sistema optimizado para búsquedas rápidas.
@@ -355,8 +351,6 @@ flowchart TD
 
     SOLO_SQL -->|"Problema: lento con muchos datos"| CQRS
 
-    style SOLO_SQL fill:#f44336,color:#fff
-    style CQRS fill:#4CAF50,color:#fff
 ```
 
 > 📝 **Nota:** CQRS no es la solución para todo. Si tu API tiene 100 usuarios y 50 productos, la complejidad adicional no compensa. CQRS brilla cuando tienes **miles de lecturas por escritura** y necesitas **escalar las lecturas** independientemente.
@@ -917,8 +911,6 @@ flowchart TD
 
     PROBLEMA --> CONSECUENCIAS
 
-    style PROBLEMA fill:#f44336,color:#fff
-    style CONSECUENCIAS fill:#f44336,color:#fff
 ```
 
 📌 Ejemplo real: Si **Amazon** sincronizara todos sus millones de productos cada minuto, sus servidores de BD colapsarían en segundos.
@@ -1147,9 +1139,6 @@ flowchart LR
         D --> I[Cache Redis]
     end
 
-    style PRODUCIDOR fill:#2196F3,color:#fff
-    style KAFKA fill:#FF9800,color:#fff
-    style CONSUMIDORES fill:#4CAF50,color:#fff
 ```
 
 📌 Ejemplo real: **LinkedIn** usa Kafka para sincronizar datos entre cientos de microservicios. Cuando actualizas tu perfil, el evento viaja por Kafka y actualiza ElasticSearch, caches y sistemas de recomendación.
@@ -1196,9 +1185,6 @@ flowchart LR
         F -->|Transforma| G[(MongoDB)]
     end
 
-    style ORIGEN fill:#2196F3,color:#fff
-    style CAPTURA fill:#FF9800,color:#fff
-    style DESTINO fill:#4CAF50,color:#fff
 ```
 
 ### 30.8.4. Ventajas y desventajas de kafka
@@ -1234,8 +1220,6 @@ flowchart LR
         F -->|accede| G[Repository]
     end
 
-    style TRADICIONAL fill:#f44336,color:#fff
-    style CON_MEDIATR fill:#4CAF50,color:#fff
 ```
 
 **Instalación:**

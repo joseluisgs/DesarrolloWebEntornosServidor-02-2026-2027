@@ -408,8 +408,6 @@ flowchart TD
         P1["Cliente"] --> P3["Contenedores"]
     end
 
-    style DOCKER fill:#2196F3,color:#fff
-    style PODMAN fill:#4CAF50,color:#fff
 ```
 
 

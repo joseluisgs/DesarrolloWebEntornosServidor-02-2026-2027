@@ -83,8 +83,6 @@ flowchart TD
         A2["📱 Cliente"] -->|Mensaje 1| B2["🖥️ Servidor"]
         A2 -->|Mensaje 2| B2
     end
-    style CONEXION fill:#FF9800,color:#fff
-    style SINCONEXION fill:#2196F3,color:#fff
 ```
 
 ### 1.1.2. Arquitecturas de servicios web
@@ -421,8 +419,6 @@ flowchart LR
         B1["✏️ Escribir"] --> B2["💾 Guardar"]
         B2 --> B3["👀 Ver resultado"]
     end
-    style SIN fill:#f44336,color:#fff
-    style CON fill:#4CAF50,color:#fff
 ```
 
 | Archivo | ¿Recarga? |

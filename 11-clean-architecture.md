@@ -65,7 +65,6 @@ flowchart TD
         A1 -->|"logica negocio"| E1["Validaciones en 5 sitios"]
     end
 
-    style MAL fill:#f44336,color:#fff
 ```
 
 | Síntoma | Consecuencia |
@@ -133,10 +132,6 @@ flowchart TB
     A1 --> D1
     I1 -.implements.-> D1
 
-    style PRESENTACIÓN fill:#9C27B0,color:#fff
-    style APLICACIÓN fill:#2196F3,color:#fff
-    style DOMINIO fill:#4CAF50,color:#fff
-    style INFRAESTRUCTURA fill:#FF9800,color:#fff
 ```
 
 ### 11.2.4. Flujo de dependencias
@@ -269,10 +264,6 @@ flowchart TB
     GW --> ENT1
     DB --> GW
 
-    style ENTITIES fill:#4CAF50,color:#fff
-    style USECASES fill:#2196F3,color:#fff
-    style ADAPTERS fill:#FF9800,color:#fff
-    style EXTERIOR fill:#9C27B0,color:#fff
 ```
 
 ### 11.4.4. Ejemplo práctico en .NET
@@ -354,7 +345,6 @@ flowchart LR
         S1 --> U1["Update (escritura)"]
     end
 
-    style MIXTO fill:#f44336,color:#fff
 ```
 
 **Problemas:**
@@ -382,8 +372,6 @@ flowchart LR
         Q3["Search"]
     end
 
-    style COMMANDS fill:#f44336,color:#fff
-    style QUERIES fill:#4CAF50,color:#fff
 ```
 
 ```csharp
@@ -487,7 +475,6 @@ flowchart TB
     SVC --> REPO
     REPO --> MDL
 
-    style PROYECTO fill:#2196F3,color:#fff
 ```
 
 **Estructura del proyecto de esta unidad:**
