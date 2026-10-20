@@ -912,6 +912,10 @@ await _cache.SetAsync(key, value, TimeSpan.FromMinutes(30));
 // El dato se elimina automáticamente después de 30 minutos
 ```
 
+El TTL por sí solo **no invalida nada: espera**. Si el dato lo escribe tu propia API, quien lo crea no lo verá hasta que la entrada expire: creas un producto, abres el listado y no aparece. Es el efecto de crear y no ver, y es la trampa clásica de confundir el TTL con la invalidación.
+
+La regla: el TTL es la red de seguridad (nadie se olvida de limpiar nada y el dato acaba caducando); la invalidación por operación (14.9.2) es lo que hace que la caché no se note. Si el dato lo escribe otro sistema o aceptas un desfase conocido, el TTL solo puede bastar; si lo escribe tu API, invalida.
+
 ### 14.9.2. Invalidación por operación CRUD
 
 La invalidación no ocurre sola: hay que acordarse de limpiar las claves afectadas en cada operación de escritura. Cada operación del CRUD tiene su limpieza asociada, y las listas son las que más se olvidan:

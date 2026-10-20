@@ -420,6 +420,8 @@ app.MapGet("/api/productos", Handler).CacheOutput("productos");
 
 > 💡 **Consejo:** cachea solo GET anónimos de lectura (catálogo, fichas). Cualquier endpoint de escritura o con datos por usuario se queda fuera.
 
+> 📝 **Nota:** si no invalidas la etiqueta (ver 23.3.5), la respuesta cacheada puede estar obsoleta hasta `Duration` segundos: el TTL no invalida, solo espera.
+
 ### 23.3.5. Invalidación de caché
 
 El mayor reto del caching es mantener los datos actualizados. Cuando un dato cambia, debes invalidar la entrada de caché correspondiente.
@@ -469,6 +471,10 @@ public class ProductoService(
 ```
 
 > 💡 **Consejo:** con etiquetas no necesitas saber qué claves guarda la caché: al crear un producto cambian el listado y la ficha, y ambos llevan la etiqueta `productos`; un solo `EvictByTagAsync` las vacía. Es la misma idea que la invalidación en cascada para datos, pero sin enumerar claves.
+
+**¿O basta con esperar a que expiren los 60 segundos?** La misma discusión que con los datos de 14.9.1, pero multiplicada por la respuesta: si no invalidas, la API puede enseñar el listado anterior medio minuto después de crear un producto. En una demo es ese momento en que el alumno crea un producto, ve el listado viejo y piensa que la API está rota.
+
+La decisión es la de siempre: si tu API tiene escrituras propias, invalida la etiqueta tras el CUD (es lo que hace el ejemplo de optimización de esta unidad); si es un catálogo que solo escribe otro sistema y aceptas el desfase, déjate llevar por el `Duration` y ahórrate la dependencia de `IOutputCacheStore`. El TTL red de seguridad, la invalidación que la caché no se note.
 
 ### 23.3.6. ETag y peticiones condicionales
 
