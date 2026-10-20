@@ -17,7 +17,8 @@
     - [26.8.1. El fichero .editorconfig](#2681-el-fichero-editorconfig)
     - [26.8.2. Directory.Build.props](#2682-directorybuildprops)
     - [26.8.3. Directory.Packages.props (CPM)](#2683-directorypackagesprops-cpm)
-    - [26.8.4. Global.json](#2684-globaljson)
+    - [26.8.4. Vulnerabilidades: forzar una versión transitiva](#2684-vulnerabilidades-forzar-una-versión-transitiva)
+    - [26.8.5. Global.json](#2685-globaljson)
   - [26.9. Reto: refactoriza el Program.cs de FunkoApp](#269-reto-refactoriza-el-programcs-de-funkoapp)
 
 
@@ -542,7 +543,32 @@ Y los `.csproj` **ya no llevan `Version=`**:
 
 > 💡 **Truco:** Para desactivarlo puntualmente en un proyecto heredado, añade en su `.csproj`: `<ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>`.
 
-### 26.8.4. Global.json
+### 26.8.4. Vulnerabilidades: forzar una versión transitiva
+
+`dotnet list package --vulnerable` comprueba las dependencias contra la base de datos de avisos de NuGet. Cuando encuentra una, el restore emite `NU1902` (moderada) o `NU1903` (alta); con `TreatWarningsAsErrors` activado, esos avisos tumban la compilación.
+
+El problema típico: el paquete vulnerable **no es tuyo**, llega de forma transitiva. Una cadena de diseño de EF Core puede arrastrar, por ejemplo, `System.Security.Cryptography.Pkcs` en una versión con avisos GHSA, y tú no lo referencias en ningún sitio.
+
+La solución no es callar el aviso con `NoWarn`: es **forzar la versión parchada**. En CPM se hace en dos pasos: la versión en el catálogo raíz y la referencia directa en el proyecto que la necesita, porque una versión transitiva solo sube si algo la pide.
+
+```xml
+<!-- Directory.Packages.props -->
+<ItemGroup>
+  <!-- Seguridad: forzar la versión parchada de una dependencia transitive (GHSA-xxxxxxxx-xxxx) -->
+  <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+</ItemGroup>
+```
+
+```xml
+<!-- El .csproj que la necesita la referencia a lo bruto, sin versión -->
+<PackageReference Include="System.Security.Cryptography.Pkcs" />
+```
+
+Tras el cambio, vuelve a ejecutar `dotnet list package --vulnerable --include-transitive`: si el aviso venía de esa cadena, desaparece.
+
+> ⚠️ **Advertencia:** `NoWarn` sobre `NU1902`/`NU1903` es callar el despertador, no apagar el incendio: el paquete vulnerable sigue ahí y el build pasa en verde. La única respuesta aceptable es subir la versión.
+
+### 26.8.5. Global.json
 
 Fija **qué versión del SDK de .NET** se espera para compilar el repo:
 
