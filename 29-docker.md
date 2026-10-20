@@ -112,6 +112,8 @@ ENV ASPNETCORE_URLS=http://+:8080
 ENTRYPOINT ["dotnet", "ProductosApp.dll"]
 ```
 
+> 📝 **Nota:** este ejemplo compila fuera (con `dotnet publish`) y solo copia el resultado. Si la compilación ocurre dentro de la imagen y el proyecto centraliza versiones con CPM (`Directory.Packages.props`, tema 26), la fase de build debe copiar ese fichero **antes** del `dotnet restore`; si falta, el restore revienta con **NU1015**, porque los `.csproj` no llevan `Version=` y el catálogo de versiones no está dentro de la imagen.
+
 ### 29.2.3. Explicacion de instrucciones
 
 | Instruccion | Proposito |
