@@ -17,6 +17,7 @@
     - [23.3.6. ETag y peticiones condicionales](#2336-etag-y-peticiones-condicionales)
     - [23.3.7. OutputCache con Redis: respuestas compartidas](#2337-outputcache-con-redis-respuestas-compartidas)
     - [23.3.8. Qué caché uso: memoria, datos y respuestas](#2338-qué-caché-uso-memoria-datos-y-respuestas)
+    - [23.3.9. Caché multinivel](#2339-caché-multinivel)
   - [23.4. Optimización de API](#234-optimización-de-api)
     - [23.4.1. Compresión de respuestas](#2341-compresión-de-respuestas)
     - [23.4.2. Mínimo de peticiones HTTP](#2342-mínimo-de-peticiones-http)
@@ -561,6 +562,35 @@ La unidad ya tiene tres capas de caché distintas, y se confunden fácil:
 | OutputCache + Redis | Respuestas HTTP | El middleware | Redis | Sí |
 
 La pregunta no es cuál es mejor, sino **qué quieres evitar repetir**: si lo que se repite es ir a la base de datos a montar un objeto, cacheas datos; si lo que se repite es serializar y devolver la misma respuesta a todo el mundo, cacheas respuestas. Un catálogo público con mucho tráfico se beneficia de las dos.
+
+### 23.3.9. Caché multinivel
+
+Las dos capas anteriores no compiten: se apilan. La **caché multinivel** pone entre el cliente y la base de datos varias capas, cada una más rápida pero más limitada que la siguiente.
+
+```mermaid
+flowchart TB
+    C[Cliente] --> L1[OutputCache: respuesta HTTP<br/>TTL 60 s]
+    L1 -->|miss| L2[Caché de datos Redis<br/>objetos DTO<br/>TTL 10 min]
+    L2 -->|miss| BD[(Base de datos)]
+```
+
+El hit rate se acumula: si la capa 1 acierta el 70% y la capa 2 acierta el 80% de lo que queda, el total es 70% + (30% × 80%) = 94% de peticiones que ni siquiera llegan a la base de datos. Y si Redis cae, la capa 1 sigue sirviendo lo que tenga.
+
+Las reglas para que el apilamiento no se desmonte:
+
+- **TTLs decrecientes:** la capa externa (respuestas) vive menos que la interna (objetos). Nunca pongas la capa 2 con TTL mayor que la 1: estarías construyendo respuestas frescas con datos más viejos que los que tiene la propia capa 2.
+- **Invalidar las dos capas en cada escritura:** la etiqueta de OutputCache y la clave de la caché de datos. Olvidar una capa deja datos viejos a medio camino.
+- **Claves predecibles por capa:** `producto:{id}` y `productos:paged:...` en datos; etiquetas `productos` en respuestas.
+
+| Problema | Síntoma | Solución |
+|----------|---------|----------|
+| **Datos desfasados entre capas** | La capa 1 sirve un objeto viejo de la capa 2 | Invalidar las dos capas en toda escritura |
+| **Claves huérfanas** | Redis se llena de claves que nadie lee | TTL corto + `maxmemory-policy allkeys-lru` |
+| **Doble viaje de caché** | Cada petición consulta dos cachés antes de la BD | TTL más corto en la capa externa: solo llega a la 2 lo que merece la pena |
+
+> 💡 **Consejo:** si tu API es pequeña, una sola capa bien invalidada rinde más que dos capas a medias: el multinivel compensa cuando el tráfico lo justifica y alguien puede mantener las invalidaciones de las dos.
+
+> ⚠️ **Advertencia:** no apiles capas con la misma información y el mismo TTL: es el doble de memoria y el doble de invalidaciones para cero ganancia.
 
 ## 23.4. Optimización de API
 
@@ -1126,6 +1156,8 @@ checks = report.Entries.Select(e => new
 📌 **Ejemplo real:** `CacheMetrics` es un singleton registrado en `CacheConfig.AddCache`, que se alimenta desde `RedisCacheService` y se lee en `RedisHealthCheck`. La idea es poder prescindir de Prometheus/OpenTelemetry en un proyecto de aula: **`GET /health` basta** para notar que la caché anda mal.
 
 > 💡 **Consejo:** Un health check que solo hace `ping` te dice *"Redis contesta"*. Las métricas te dicen **"Redis contesta, pero falla el 0,12 % de las operaciones"** - que es lo que de verdad duele en producción. Y `lastErrorMessage` te ahorra veinte minutos de log-diving: el mensaje ya está ahí.
+
+> ⚠️ **Advertencia:** no mapees el mismo health check dos veces (por ejemplo `app.UseHealthChecks("/health")` y además `app.MapHealthChecks("/health")`): la aplicación revienta al arrancar con `AmbiguousMatchException`, porque dos endpoints reclaman la misma ruta. Elige una sola forma.
 
 ### 23.6.2. Application metrics
 
