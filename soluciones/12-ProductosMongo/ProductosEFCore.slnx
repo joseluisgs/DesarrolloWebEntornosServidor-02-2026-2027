@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ProductosMongo/ProductosMongo.csproj" />
+  <Project Path="ProductosMongo.Test/ProductosMongo.Test.csproj" />
+</Solution>

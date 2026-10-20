@@ -1,0 +1,28 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MongoDbSettings__ConnectionString=mongodb://db:27017
+      - MongoDbSettings__DatabaseName=productos_mongo
+      - Productos__RepositoryType=MongoDbNative
+      - Api__Nombre=Productos MongoDB API (Docker)
+      - Api__Mensaje=Desplegado en contenedor
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: mongo:7.0
+    container_name: productos_mongo_api
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodata_api:/var/lib/mongodb/data
+
+volumes:
+  mongodata_api:
