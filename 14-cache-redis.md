@@ -41,7 +41,8 @@
     - [14.9.1. Invalidación por TTL](#1491-invalidación-por-ttl)
     - [14.9.2. Invalidación por operación CRUD](#1492-invalidación-por-operación-crud)
     - [14.9.3. Invalidación en cascada](#1493-invalidación-en-cascada)
-    - [14.9.4. Regla de oro](#1494-regla-de-oro)
+    - [14.9.4. La paginación: claves versionadas](#1494-la-paginación-claves-versionadas)
+    - [14.9.5. Regla de oro](#1495-regla-de-oro)
   - [14.10. CRUD con caché: diagrama completo](#1410-crud-con-caché-diagrama-completo)
   - [14.11. Decorator pattern para caché](#1411-decorator-pattern-para-caché)
   - [14.12. Testing con caché](#1412-testing-con-caché)
@@ -974,7 +975,31 @@ flowchart TD
     style L2 fill:#FF9800,color:#fff
 ```
 
-### 14.9.4. Regla de oro
+### 14.9.4. La paginación: claves versionadas
+
+Las listas con claves simples se invalidan sin más (`productos:all`), pero una paginación genera una clave por combinación (`productos:paged:2:50:gaming`, `productos:paged:1:10:...`) y nadie sabe cuántas hay: no puedes enumerarlas ni borrar por prefijo (que `IMemoryCache` ni siquiera soporta).
+
+La salida es la clave versionada: la clave lleva un número de versión y, al escribir, solo incrementas la versión. Las claves viejas quedan huérfanas y mueren solas por TTL (y por el LRU de Redis si la memoria se llena).
+
+```csharp
+// El servicio lleva un contador de versión (estático: una versión para todos)
+private static long _pagedCacheVersion;
+
+public static void InvalidatePagedCache() =>
+    Interlocked.Increment(ref _pagedCacheVersion);
+
+// Al leer, la clave incluye la versión vigente
+var cacheKey = $"productos:paged:v{Volatile.Read(ref _pagedCacheVersion)}:{filtro}";
+
+// Tras cada escritura, una sola llamada invalida TODA la paginación
+InvalidatePagedCache();
+```
+
+> 📝 **Nota:** el contador en memoria sirve con una instancia; con varias, cada una tendría su propia versión. En ese caso el contador vive en Redis, con un `INCR` atómico.
+
+> 💡 **Consejo:** el precio de la clave versionada son claves huérfanas esperando a su TTL. Ponle TTL corto a la paginación (minutos) para que la basura no se acumule.
+
+### 14.9.5. Regla de oro
 
 | Operación | Elemento Individual | Listas/Colecciones |
 |-----------|---------------------|-------------------|
