@@ -12,9 +12,11 @@
     - [23.3.1. Memory cache](#2331-memory-cache)
     - [23.3.2. Distributed cache con Redis](#2332-distributed-cache-con-redis)
     - [23.3.3. Cache-Aside pattern](#2333-cache-aside-pattern)
-    - [23.3.4. Response caching](#2334-response-caching)
+    - [23.3.4. Output caching (OutputCache)](#2334-output-caching-outputcache)
     - [23.3.5. Invalidación de caché](#2335-invalidación-de-caché)
     - [23.3.6. ETag y peticiones condicionales](#2336-etag-y-peticiones-condicionales)
+    - [23.3.7. OutputCache con Redis: respuestas compartidas](#2337-outputcache-con-redis-respuestas-compartidas)
+    - [23.3.8. Qué caché uso: memoria, datos y respuestas](#2338-qué-caché-uso-memoria-datos-y-respuestas)
   - [23.4. Optimización de API](#234-optimización-de-api)
     - [23.4.1. Compresión de respuestas](#2341-compresión-de-respuestas)
     - [23.4.2. Mínimo de peticiones HTTP](#2342-mínimo-de-peticiones-http)
@@ -45,7 +47,7 @@ En este punto aprenderás a optimizar APIs en ASP.NET Core: desde la consulta a 
 
 - Comprender los fundamentos de la optimización de rendimiento
 - Optimizar consultas a base de datos con EF Core
-- Implementar caché en memoria y distribuido con Redis
+- Implementar caché de datos (memoria y Redis) y de respuestas con OutputCache
 - Configurar compresión de respuestas y paginación
 - Aplicar rate limiting para proteger la API
 - Monitorizar el rendimiento con health checks y métricas
@@ -361,33 +363,62 @@ graph TD
     style F fill:#9C27B0,color:#fff
 ```
 
-### 23.3.4. Response caching
+### 23.3.4. Output caching (OutputCache)
 
-`ResponseCaching` almacena la respuesta HTTP completa en el servidor. El cliente recibe un header `Cache-Control` que le indica si puede usar una versión cacheada.
+`IMemoryCache` y `IDistributedCache` cachean **datos** dentro de tu código. El **output caching** cachea algo distinto: **la respuesta HTTP completa** (cuerpo y cabeceras), sin que tu endpoint se entere. El middleware intercepta la petición antes de que llegue al controlador.
+
+Cómo funciona:
+
+1. **Miss**: la petición llega, no hay respuesta guardada → se ejecuta el endpoint, la respuesta se guarda en la caché de salidas y se devuelve al cliente.
+2. **Hit**: mientras dure la ventana de vida, la misma petición se sirve directamente de la caché: no se ejecuta el endpoint, no se consulta la base de datos.
+3. Si el cliente ya tiene la respuesta (ETag), el middleware puede responder **304 Not Modified** sin cuerpo. Todo eso lo gestiona él: no escribes ni una línea de ETag.
+
+```mermaid
+flowchart LR
+    P[Petición GET] --> M{Middleware<br/>OutputCache}
+    M -->|hit| R[Respuesta cacheada]
+    M -->|miss| E[Endpoint]
+    E --> B[Base de datos]
+    B --> E
+    E --> G[Guardar respuesta]
+    G --> R
+    R --> C[Cliente]
+```
+
+Un punto clave: `AddOutputCache` y `UseOutputCache` **solo habilitan** la caché; no cachean nada hasta que un endpoint lo declara. Nada se cachea por defecto: cada endpoint decide con el atributo `[OutputCache]` (controllers) o con `.CacheOutput(...)` (Minimal APIs).
 
 ```csharp
-builder.Services.AddResponseCaching();
+// Program.cs
+builder.Services.AddOutputCache(options =>
+{
+    // Política base para todos los endpoints que la pidan
+    options.AddBasePolicy(policy => policy.Expire(TimeSpan.FromMinutes(1)));
+
+    // Política nombrada para el catálogo: 60 s + etiqueta para invalidar en bloque
+    options.AddPolicy("productos", policy =>
+        policy.Expire(TimeSpan.FromSeconds(60))
+              .Tag("productos"));
+});
 
 var app = builder.Build();
-
-app.UseResponseCaching();
-
-app.MapGet("/api/productos", async (context) =>
-{
-    context.Response.GetTypedHeaders().CacheControl =
-        new CacheControlHeaderValue
-        {
-            Public = true,
-            MaxAge = TimeSpan.FromMinutes(5)
-        };
-
-    var productos = await context.Services
-        .GetRequiredService<IProductoService>()
-        .GetAllAsync();
-
-    await context.Response.WriteAsJsonAsync(productos);
-});
+app.UseOutputCache();   // después de UseAuthorization, como se ve más abajo
 ```
+
+```csharp
+// Controllers: la política se declara en el endpoint
+[HttpGet]
+[OutputCache(Duration = 60, Tags = new[] { "productos" })]
+public ActionResult<List<ProductoDto>> GetAll() => ...
+
+// Minimal APIs: el mismo efecto con CacheOutput
+app.MapGet("/api/productos", Handler).CacheOutput("productos");
+```
+
+> ⚠️ **Advertencia (pipeline y seguridad):** `UseOutputCache` va **después de `UseRouting`, de `UseCors` y de `UseAuthentication`/`UseAuthorization`**. Si va antes de la autenticación, el middleware puede servir una respuesta cacheada de un usuario a otro. Y si un endpoint lleva `[Authorize]`, no lo cachees sin variar por usuario: la caché guarda un solo cuerpo para todas las peticiones iguales.
+
+> 📝 **Nota:** `AddResponseCaching`/`UseResponseCaching` es la vía **legacy**: depende de las cabeceras `Cache-Control` que tú escribas a mano en cada respuesta. OutputCache es la alternativa moderna, con políticas del servidor, etiquetas y ETag automático. En proyectos nuevos se usa OutputCache.
+
+> 💡 **Consejo:** cachea solo GET anónimos de lectura (catálogo, fichas). Cualquier endpoint de escritura o con datos por usuario se queda fuera.
 
 ### 23.3.5. Invalidación de caché
 
@@ -414,6 +445,30 @@ public class ProductoService(
 ```
 
 > 💡 **Consejo:** Para invalidación en cascada, cuando actualices un producto, invalida tanto el caché del individual como el de la lista. Así la próxima petición carga datos frescos.
+
+La invalidación de **respuestas** funciona igual, pero por etiquetas: cada endpoint cacheado declara sus tags y, cuando los datos cambian, se vacía la etiqueta entera. El almacén de salidas se expone en DI como `IOutputCacheStore`:
+
+```csharp
+public class ProductoService(
+    IProductoRepository repository,
+    IOutputCacheStore outputCacheStore) : IProductoService
+{
+    public Result<Producto, DomainError> Create(CreateProductoDto dto)
+    {
+        var producto = dto.ToModel();
+        var creado = repository.Add(producto);
+
+        // Vacía TODAS las respuestas con la etiqueta "productos"
+        // (el listado y la ficha de cada producto), sin enumerar claves
+        outputCacheStore.EvictByTagAsync("productos", CancellationToken.None)
+            .GetAwaiter().GetResult();
+
+        return Result.Success<Producto, DomainError>(creado);
+    }
+}
+```
+
+> 💡 **Consejo:** con etiquetas no necesitas saber qué claves guarda la caché: al crear un producto cambian el listado y la ficha, y ambos llevan la etiqueta `productos`; un solo `EvictByTagAsync` las vacía. Es la misma idea que la invalidación en cascada para datos, pero sin enumerar claves.
 
 ### 23.3.6. ETag y peticiones condicionales
 
@@ -463,28 +518,43 @@ Si el ETag cambia en cada respuesta, `If-None-Match` nunca lo iguala → el serv
 
 📌 **Ejemplo real:** un `ETag = Guid.NewGuid()` copiado de un tutorial no rompe nada visible, pero anula por completo la ventaja de las peticiones condicionales: cada respuesta lleva un identificador nuevo y el cliente nunca puede devolver un `304`. Si tu caché HTTP ya gestiona los ETags, ese guion decorativo se elimina. **Regla:** si no puedes explicar **de dónde sale** tu ETag, es decorativo.
 
-**Alternativa en .NET 10 con `[OutputCache]`:**
-
-```csharp
-builder.Services.AddOutputCache(options =>
-{
-    options.AddPolicy("productos", policy =>
-        policy.Expire(TimeSpan.FromMinutes(5))
-              .Tag("productos"));
-});
-
-var app = builder.Build();
-app.UseOutputCache();
-
-// El atributo genera automáticamente ETag y gestiona If-None-Match → 304
-app.MapGet("/api/productos/{id}", async (long id, IProductoService service) =>
-        Results.Ok(await service.GetByIdAsync(id)))
-    .CacheOutput("productos");
-```
+**`[OutputCache]` lo hace por ti:** el middleware de caché de salidas genera el ETag desde la respuesta cacheada y responde el 304 correspondiente sin que escribas código (ver 23.3.4). En los endpoints que lleven `[OutputCache]`, borra cualquier ETag manual: duplicar el trabajo solo añade confusión.
 
 > 💡 **Consejo:** Para recursos públicos que casi no cambian (catálogo, estáticos), combina `Cache-Control` con ETags: el navegador reutiliza sin evenir a la red si el ETag coincide.
 
 > ⚠️ **Advertencia:** No derives el ETag solo de un `Guid.NewGuid()` aleatorio: cambiaría en cada respuesta y el cliente nunca recibiría 304. Debe reflejar la versión real del recurso.
+
+### 23.3.7. OutputCache con Redis: respuestas compartidas
+
+Por defecto, OutputCache guarda las respuestas en **memoria del proceso**, igual que `IMemoryCache`. Con una sola instancia no hay problema; con varias, cada una cachea lo suyo: el usuario puede recibir una respuesta de hace un minuto de una instancia y datos frescos de otra.
+
+Si ya tienes Redis, la caché de salidas puede vivir ahí también. Es el mismo servidor, pero **otra capa**: no se mezcla con tus datos de `IDistributedCache`.
+
+```csharp
+// Paquete: Microsoft.AspNetCore.OutputCaching.StackExchangeRedis
+builder.Services.AddStackExchangeRedisOutputCache(options =>
+{
+    options.Configuration = builder.Configuration["Redis:ConnectionString"]!;
+    options.InstanceName = "salidas:";   // espacio de claves aparte de los datos
+});
+```
+
+> ⚠️ **Advertencia:** el método correcto es `AddStackExchangeRedisOutputCache`. El `AddStackExchangeRedisCache` que viste para datos (23.3.2) es otra cosa: cachea objetos de `IDistributedCache`, no respuestas.
+
+> 📝 **Nota:** OutputCache y la caché de datos conviven sin pisarse: el primero guarda respuestas en el middleware, la segunda guarda objetos dentro de tu código. Una API puede usar las dos a la vez: Redis de datos para el servicio y OutputCache (en memoria o en Redis) para los GET públicos.
+
+### 23.3.8. Qué caché uso: memoria, datos y respuestas
+
+La unidad ya tiene tres capas de caché distintas, y se confunden fácil:
+
+| Caché | Qué guarda | Dónde actúa | Almacén por defecto | Compartida entre instancias |
+|-------|------------|-------------|---------------------|------------------------------|
+| `IMemoryCache` | Objetos de negocio | Tu código (servicios) | Memoria del proceso | No |
+| `IDistributedCache` + Redis | Objetos de negocio | Tu código (servicios) | Redis | Sí |
+| OutputCache | Respuestas HTTP | El middleware | Memoria del proceso | No |
+| OutputCache + Redis | Respuestas HTTP | El middleware | Redis | Sí |
+
+La pregunta no es cuál es mejor, sino **qué quieres evitar repetir**: si lo que se repite es ir a la base de datos a montar un objeto, cacheas datos; si lo que se repite es serializar y devolver la misma respuesta a todo el mundo, cacheas respuestas. Un catálogo público con mucho tráfico se beneficia de las dos.
 
 ## 23.4. Optimización de API
 
@@ -1367,7 +1437,7 @@ Un Funko tiene estas propiedades:
 - Implementa `IMemoryCache` para productos individuales
 - Configura Redis para caché distribuido
 - Implementa invalidación de caché al actualizar/eliminar productos
-- Añade Response Caching al endpoint de listado
+- Añade OutputCache con tag al listado y al detalle, e invalida por tag tras cada escritura
 
 **Fase 3: Compresión y Rate Limiting (impacto medio)**
 - Configura Brotli + Gzip para compresión de respuestas
