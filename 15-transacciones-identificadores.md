@@ -156,9 +156,19 @@ catch
 
 ## 15.3. Control de concurrencia
 
+La concurrencia no se resuelve con un único candado: hay tres formas de enfrentarse al mismo problema, y las tres parten de la historia de 15.1 (stock = 1, dos clientes a la vez). Elegir una u otra es decidir cuánto confías en que no habrá conflicto y cuánto estás dispuesto a esperar.
+
+| Enfoque | Imagen mental | En la tienda |
+|---------|---------------|--------------|
+| **Optimista** | Confío en que los conflictos son raros y compruebo al final, justo antes de escribir | Dos editores tocan la ficha del mismo producto |
+| **Pesimista** | No confío: cierro la fila con un candado antes de leerla y nadie más entra | Las últimas entradas de un concierto |
+| **Mixto** | No cierro nada, pero solo dejo pasar el pedido si aún queda mercancía | El carrito del ejemplo de 15.1 |
+
 ### 15.3.1. Enfoque optimista
 
 El enfoque **optimista** asume que los conflictos son raros. Nadie reserva la fila al leerla: se lee sin bloquear y la comprobación ocurre al escribir, dentro del propio `UPDATE`. Si otro proceso modificó los datos, ese `UPDATE` afecta a **0 filas** y EF Core lanza `DbUpdateConcurrencyException` antes de confirmar nada.
+
+**El caso de la tienda:** un marketplace con dos editores de catálogo. Uno pone un producto en oferta por la mañana y otro corrige su descripción por la tarde. El conflicto es raro (solo si coinciden en el mismo producto y el mismo momento), y cuando ocurre la solución natural es enseñar al segundo lo que hay ahora y pedirle que lo relee. El ejemplo de abajo usa `Stock` porque es el campo que más se parece al de 15.1, pero el mecanismo es el mismo para un precio o una descripción.
 
 ```mermaid
 flowchart TD
@@ -169,6 +179,28 @@ flowchart TD
     D -->|No| F["Rechazar / Reintentar"]
     style E fill:#4CAF50,color:#fff
     style F fill:#F44336,color:#fff
+```
+
+La misma carrera vista en el tiempo, con el token de versión en juego:
+
+```mermaid
+sequenceDiagram
+    participant A as Usuario A
+    participant B as Usuario B
+    participant API as API
+    participant BD as Base de datos
+    A->>API: Lee el producto (versión 1)
+    B->>API: Lee el producto (también versión 1)
+    A->>API: Guarda sus cambios
+    API->>BD: UPDATE ... WHERE Version = 1
+    BD-->>API: 1 fila: la versión aún valía
+    Note over API,BD: La fila pasa a versión 2
+    API-->>A: 200 OK
+    B->>API: Guarda sus cambios
+    API->>BD: UPDATE ... WHERE Version = 1
+    BD-->>API: 0 filas: la versión ya no vale
+    Note over API: DbUpdateConcurrencyException
+    API-->>B: 409 Conflict: recarga y reintenta
 ```
 
 **Implementación en EF Core (token de fila):**
@@ -234,6 +266,13 @@ catch (DbUpdateConcurrencyException ex)
 }
 ```
 
+El bloque `catch` merece un recorrido despacio, porque las cuatro líneas hacen cosas distintas:
+
+- **`ex.Entries`**: son las entidades cuyo `UPDATE` ha salido mal. En el caso típico hay una sola.
+- **`GetDatabaseValuesAsync()`**: consulta la base de datos y te devuelve una **copia frescha** de la fila, sin tocar la entidad que llevas en memoria. Es lo que te permite comparar "lo que yo quería escribir" con "lo que hay ahora".
+- **`databaseValues is null`**: la fila ya no existe: entre tu lectura y tu escritura alguien la borró. Ese caso no es un conflicto de valores, es una desaparición, y se responde distinto (404).
+- **`entry.OriginalValues.SetValues(valoresBd)`**: la línea mágica de la estrategia "gana el cliente". Copia a los valores originales de la entidad (los que irán al `WHERE`) la versión que hay ahora en la base de datos, con lo que el siguiente `UPDATE` vuelve a coincidir con una fila.
+
 **Tres estrategias cuando hay conflicto:**
 
 Detectar el conflicto es la mitad del trabajo. La otra mitad es decidir qué hacer con los valores del usuario que acaba de perder la carrera, y no hay una respuesta única: depende de si los dos cambios se pisan.
@@ -264,9 +303,13 @@ Para "gana la base de datos" no hace falta volver a guardar: `await entry.Reload
 
 > 💡 **Consejo:** Para reintentos automáticos con el enfoque optimista, usa **Polly**: `Policy.Handle<DbUpdateConcurrencyException>().WaitAndRetryAsync(3, ...)`. Ojo con el detalle que rompe el reintento: el delegado debe **recargar la entidad** (`entry.ReloadAsync()`) antes de volver a intentarlo. Si no, reenvía el mismo token obsoleto y falla las 3 veces.
 
+**Cuándo usarlo:** cuando los conflictos son raros y no cuestan dinero: fichas de edición, campos independientes, pocos editores a la vez. Si perder la carrera significa vender dos veces la última unidad, el optimista solo da la alerta; la garantía tendría que ponerla un reintento o un `UPDATE` condicional, y ahí el mixto (15.3.3) suele ser mejor encaje.
+
 ### 15.3.2. Enfoque pesimista
 
 El enfoque **pesimista** bloquea los datos antes de modificarlos: quien quiera **escribir** esas filas espera a que termine la transacción. Matiz importante: en PostgreSQL un `SELECT` normal sigue leyendo la versión anterior, así que el bloqueo no congela las lecturas.
+
+**El caso de la tienda:** un teatro vende las últimas 2 entradas de un concierto. Entre que lees el stock y decrementas, el sistema cobra la tarjeta y calcula el asiento: son operaciones lentas. Aquí no puedes permitirte que dos cajeros lean "quedan 2" a la vez; el primero cierra la fila con el candado, el segundo espera en la puerta hasta que el primero termine y, cuando entra, ve el stock real y responde sin liar nada.
 
 ```mermaid
 flowchart TD
@@ -282,7 +325,53 @@ flowchart TD
     style J fill:#F44336,color:#fff
 ```
 
-**Implementación con `SELECT FOR UPDATE`:**
+La espera en el tiempo se ve así: el segundo cliente no recibe error, recibe **silencio** hasta que el candado se suelta.
+
+```mermaid
+sequenceDiagram
+    participant T1 as Cliente 1 (compra 2)
+    participant T2 as Cliente 2 (compra 2)
+    participant BD as Base de datos
+    T1->>BD: BEGIN + SELECT ... FOR UPDATE (lee stock = 2)
+    T2->>BD: BEGIN + SELECT ... FOR UPDATE
+    Note over T2: La fila está bloqueada: espera
+    T1->>BD: UPDATE stock = 0
+    T1->>BD: COMMIT (suelta el candado)
+    BD-->>T2: Por fin lee: stock = 0
+    Note over T2: Stock insuficiente → rollback y mensaje claro
+```
+
+**Primero, el caso de un solo producto:** el mismo candado en su forma más simple, para ver las piezas sin ruido.
+
+```csharp
+await using var transaction = await context.Database.BeginTransactionAsync();
+try
+{
+    // 1. Leer la fila YA bloqueada: hasta el COMMIT, nadie puede escribir en ella
+    var producto = await context.Productos
+        .FromSqlInterpolated($@"SELECT * FROM ""Productos"" WHERE ""Id"" = {id} FOR UPDATE")
+        .SingleAsync();
+
+    // 2. El candado no valida nada por sí solo: la regla de negocio la escribes tú
+    if (producto.Stock < cantidad)
+        throw new InvalidOperationException($"Stock insuficiente para {producto.Nombre}");
+
+    // 3. Modificar la fila que ya tienes bloqueada
+    producto.Stock -= cantidad;
+
+    await context.SaveChangesAsync();
+    await transaction.CommitAsync();   // 4. Al confirmar se suelta el candado
+}
+catch
+{
+    await transaction.RollbackAsync(); // Si algo falla, se suelta igualmente
+    throw;
+}
+```
+
+Recorrido del bloque: la transacción abre la frontera (línea 1); el `FOR UPDATE` mete el candado en el momento exacto de la lectura (líneas 5 y 6), y ese candado vive hasta el `Commit` o el `Rollback`. La comprobación de stock ocurre **después** de leer, ya con la fila protegida: dos clientes juntos no pueden pasar de la línea 8 con el mismo stock. Y si el `SaveChanges` falla, el `catch` suelta el candado: un candado abandonado deja la fila inutilizable para el resto del teatro.
+
+**La versión real: varios productos con `IN`:**
 
 ```csharp
 await using var transaction = await context.Database.BeginTransactionAsync();
@@ -360,9 +449,13 @@ Ninguna puede continuar: cada una espera a la fila que la otra tiene bloqueada. 
 
 **Cómo evitarlo:** bloquea siempre en el mismo orden. Si ordenas los ids antes de bloquear (`ids.OrderBy(i => i)`), las dos transacciones intentan tomar primero el producto 1, una espera a la otra y el ciclo nunca se forma. Como red de seguridad, pon un tiempo límite a la espera de comandos en la cadena de conexión (`Command Timeout=10`): si algo se atasca, la transacción falla antes de dejar filas bloqueadas.
 
+**Cuándo usarlo:** cuando perder la carrera es inaceptable y el bloqueo es corto: últimas unidades, reserva de asientos, transferencias entre cuentas. El candado tiene un precio que se paga en cuanto la transacción se estira (llamadas a una API externa, cálculos pesados dentro): las filas quedan bloqueadas, las colas crecen y aparecen los deadlocks. La regla práctica: abre la transacción, bloquea lo mínimo, trabaja y sal cuanto antes.
+
 ### 15.3.3. Enfoque mixto
 
 El **enfoque mixto** no es un tercer mecanismo de bloqueo, es una composición. Se lee sin bloquear para fallar rápido y dar un mensaje claro al usuario, y la garantía real la da un `UPDATE` condicional (`WHERE stock >= cantidad`): un compare-and-set que o actualiza, o afecta a 0 filas.
+
+**El caso de la tienda:** es el carrito de 15.1 resuelto. Llega el pedido; la tienda lee el stock sin bloquear para poder decir "no hay stock suficiente" en vez de un error genérico, y después descuenta con el `UPDATE` condicional. Si entre la lectura y el descuento otro cliente se llevó las últimas unidades, el `WHERE` no coincide con ninguna fila y el pedido se rechaza: nadie vende dos veces el stock que solo había una vez.
 
 ```mermaid
 flowchart TD
@@ -384,6 +477,21 @@ flowchart TD
     style D fill:#F44336,color:#fff
 ```
 
+Y la misma compra de dos clientes en paralelo, para ver dónde se decide la carrera:
+
+```mermaid
+sequenceDiagram
+    participant A as Cliente 1 (compra 1)
+    participant B as Cliente 2 (compra 1)
+    participant BD as Base de datos
+    A->>BD: UPDATE stock = stock - 1 WHERE stock >= 1
+    BD-->>A: 1 fila: queda stock = 0
+    Note over A: El pedido se confirma
+    B->>BD: UPDATE stock = stock - 1 WHERE stock >= 1
+    BD-->>B: 0 filas: ya no queda nada
+    Note over B: Sin bloqueos ni esperas: solo 409 o "sin stock"
+```
+
 **Fase 1 — Validación optimista:**
 
 La primera fase solo **lee** para poder dar un mensaje útil ("no hay stock"), pero la garantía no está aquí: la da el `UPDATE` condicional de la fase 2. Por eso las entidades se piden con `AsNoTracking()`: no hay intención de modificarlas con EF Core, la escritura la hace SQL crudo, y trackearlas solo ocuparía memoria y dejaría el estado del `DbContext` desincronizado con la base de datos.
@@ -401,32 +509,44 @@ foreach (var item in items)
         return Result.Failure(...);  // Stock insuficiente
 ```
 
-**Fase 2 — Decremento atómico:** las fases 2 y 3 van dentro de la misma transacción; si el `INSERT` del pedido falla, el descuento se deshace.
+**Fase 2 y 3 — descuento atómico y pedido:** las dos fases van dentro de la misma transacción; si el `INSERT` del pedido falla, el descuento se deshace. Este es el bloque completo, tal y como quedaría en el servicio:
 
 ```csharp
 await using var transaction = await context.Database.BeginTransactionAsync();
-
-// ✅ BUENO: ExecuteSqlInterpolatedAsync crea parámetros FormattableString
-// (uno por cada valor interpolado), válidos con cualquier proveedor (Npgsql, SqlServer...)
-var filas = await context.Database.ExecuteSqlInterpolatedAsync($@"
-    UPDATE ""Productos""
-    SET ""Stock"" = ""Stock"" - {cantidad}
-    WHERE ""Id"" = {productoId} AND ""Stock"" >= {cantidad}");
-
-if (filas == 0)
+try
 {
-    await transaction.RollbackAsync();  // Otro usuario ya compró
-    return Result.Failure(...);         // la transacción no llega a confirmarse
+    // ✅ ExecuteSqlInterpolatedAsync crea un parámetro por cada valor
+    // interpolado, válido con cualquier proveedor (Npgsql, SqlServer...)
+    var filas = await context.Database.ExecuteSqlInterpolatedAsync($@"
+        UPDATE ""Productos""
+        SET ""Stock"" = ""Stock"" - {cantidad}
+        WHERE ""Id"" = {productoId} AND ""Stock"" >= {cantidad}");
+
+    if (filas == 0)
+    {
+        // Entre la lectura y el UPDATE, otro cliente se llevó el stock:
+        // el WHERE no ha coincidido con ninguna fila. Desechamos y avisamos.
+        await transaction.RollbackAsync();
+        return Result.Failure<ProductoDto, DomainError>(
+            ProductoError.StockInsuficiente(productoId));
+    }
+
+    // Solo si el descuento salió, creamos el pedido
+    context.Pedidos.Add(pedido);
+    await context.SaveChangesAsync();
+    await transaction.CommitAsync();   // Se confirma junto: descuento + pedido
+    return Result.Success<ProductoDto, DomainError>(pedido.ToDto());
+}
+catch
+{
+    await transaction.RollbackAsync(); // Si el INSERT falla, el descuento se deshace
+    throw;
 }
 ```
 
-**Fase 3 — Crear pedido:**
+Recorrido de las líneas críticas: el `SET "Stock" = "Stock" - {cantidad}` es una **actualización relativa**: la base de datos descuenta sobre el valor que tiene ahora, no sobre el que leíste en la fase 1, así que nunca pisa cambios ajenos. El `WHERE "Stock" >= {cantidad}` es el candado invisible: solo puede pasar el pedido si aún queda mercancía, y la comprobación y el descuento ocurren en la misma sentencia, sin hueco para nadie. `filas == 0` significa exactamente "otro cliente ganó la carrera entre tu lectura y tu escritura": no es un error técnico, es una respuesta de negocio (sin stock) que se devuelve con su código correspondiente. Y el `Rollback` del `catch` existe porque si el `INSERT` del pedido revienta a mitad, el descuento no puede quedarse huérfano: o van los dos o no va ninguno.
 
-```csharp
-context.Pedidos.Add(pedido);
-await context.SaveChangesAsync();
-await transaction.CommitAsync();
-```
+**Cuándo usarlo:** el candidato por defecto para compras e inventario en la web: sin candados de larga duración, con garantía atómica y con mensajes de negocio claros. Solo exige dos cosas de tu stack: soportar el `UPDATE` condicional en tu proveedor (cualquier base de datos relacional lo hace) y aceptar que la validación de la fase 1 es cortesía, no garantía.
 
 ### 15.3.4. Comprobar el conflicto con dos contextos
 
