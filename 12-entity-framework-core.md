@@ -1368,6 +1368,8 @@ modelBuilder.Entity<Producto>()
     .Property(p => p.RowVersion).IsRowVersion();
 ```
 
+> 📝 **Nota:** el token lo tiene que actualizar el proveedor. `[Timestamp]` sobre un `byte[]` solo funciona en SQL Server; en PostgreSQL se usa `xmin` y en SQLite un `int Version` con `IsConcurrencyToken()`. El detalle y el tratamiento del conflicto están en 15.3.1.
+
 ## 12.14. Testing con EF Core
 
 ### 12.14.1. InMemory database

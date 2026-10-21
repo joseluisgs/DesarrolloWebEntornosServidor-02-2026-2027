@@ -1333,7 +1333,7 @@ await repo.UpdateAsync(producto);
 
 // ✅ BUENO: SELECT FOR UPDATE para bloquear filas — un usuario espera a que el otro termine
 var producto = await dbContext.Productos
-    .FromSqlRaw("SELECT * FROM productos WHERE id = {0} FOR UPDATE", id)
+    .FromSqlInterpolated($"SELECT * FROM productos WHERE id = {id} FOR UPDATE")
     .FirstAsync();  // Bloquea la fila hasta que termine la transacción
 producto.Stock -= cantidad;
 await dbContext.SaveChangesAsync();
