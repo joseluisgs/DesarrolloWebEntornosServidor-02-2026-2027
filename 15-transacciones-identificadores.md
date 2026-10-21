@@ -95,6 +95,8 @@ Una **transacción** es un conjunto de operaciones que se ejecutan como una unid
 
 En el pedido de María y Carlos, las dos mitades del negocio (crear el pedido y descontar el stock) tienen que viajar juntas. Si solo se crea el pedido, la tienda regala mercancía; si solo se descuenta el stock, el cliente paga y no recibe nada. La transacción existe precisamente para que esas dos mitades no puedan separarse.
 
+📌 **Ejemplo real:** una pasarela de pagos ejecuta en una sola transacción el cobro de la tarjeta y el registro del pedido. Si el banco rechaza el cobro a mitad de proceso, el rollback deshace el registro: no queda ni un pedido cobrado sin pagar ni un pago sin pedido detrás.
+
 ### 15.2.2. Propiedades ACID
 
 Cuando la base de datos te confirma una transacción, te hace cuatro promesas sobre lo que acaba de pasar con el pedido de María y Carlos. Las cuatro juntas se conocen por su sigla, **ACID**:
@@ -325,6 +327,8 @@ catch (DbUpdateConcurrencyException ex)
 
 Para "gana la base de datos" no hace falta volver a guardar: `await entry.ReloadAsync()` descarta el cambio y deja en la entidad el valor actual. La fusión es la única que necesita interfaz: comparar `entry.CurrentValues` con `databaseValues` y preguntar al usuario campo a campo.
 
+📌 **Ejemplo real:** GitHub aplica este mismo patrón al editar un archivo en el navegador: envía tu versión y, si el archivo cambió desde que lo abriste, te avisa del conflicto en lugar de pisar el trabajo de otro. En HTTP esto se firma con el ETag y el `If-Match` de 15.3.5: el servidor compara el token que traías con el que hay ahora, y si no coinciden responde 412.
+
 > 💡 **Consejo:** Para reintentos automáticos con el enfoque optimista, usa **Polly**: `Policy.Handle<DbUpdateConcurrencyException>().WaitAndRetryAsync(3, ...)`. Ojo con el detalle que rompe el reintento: el delegado debe **recargar la entidad** (`entry.ReloadAsync()`) antes de volver a intentarlo. Si no, reenvía el mismo token obsoleto y falla las 3 veces.
 
 **Cuándo usarlo:** cuando los conflictos son raros y no cuestan dinero: fichas de edición, campos independientes, pocos editores a la vez. Si perder la carrera significa vender dos veces la última unidad, el optimista solo da la alerta; la garantía tendría que ponerla un reintento o un `UPDATE` condicional, y ahí el mixto (15.3.3) suele ser mejor encaje.
@@ -394,6 +398,8 @@ catch
 ```
 
 Recorrido del bloque: la transacción abre la frontera (línea 1); el `FOR UPDATE` mete el candado en el momento exacto de la lectura (líneas 5 y 6), y ese candado vive hasta el `Commit` o el `Rollback`. La comprobación de stock ocurre **después** de leer, ya con la fila protegida: dos clientes juntos no pueden pasar de la línea 8 con el mismo stock. Y si el `SaveChanges` falla, el `catch` suelta el candado: un candado abandonado deja la fila inutilizable para el resto del teatro.
+
+📌 **Ejemplo real:** la banca es el usuario histórico del `FOR UPDATE`: una transferencia bloquea la fila de la cuenta origen, comprueba el saldo, descuenta y confirma; mientras la transacción vive, nadie puede retirar de esa cuenta. El candado dura milisegundos porque el banco hace muy pocas operaciones dentro: ese es el truco, no la sintaxis.
 
 **La versión real: varios productos con `IN`:**
 
@@ -468,6 +474,20 @@ El bloqueo tiene un precio: si dos transacciones toman las filas en distinto ord
 |---------|---------------------------|---------------------------|
 | 1 | Bloquea el producto 1 con `FOR UPDATE` | Bloquea el producto 2 con `FOR UPDATE` |
 | 2 | Pide el producto 2 y se queda esperando | Pide el producto 1 y se queda esperando |
+
+El duelo, en imagen: cada transacción tiene una mano llena y otra vacía, y las dos quieren la de la otra.
+
+```mermaid
+flowchart LR
+    T1[Transacción 1] -->|tiene| P1[Producto 1]
+    T1 -->|quiere| P2[Producto 2]
+    T2[Transacción 2] -->|tiene| P2
+    T2 -->|quiere| P1
+    style T1 fill:#2196F3,color:#fff
+    style T2 fill:#FF9800,color:#fff
+    style P1 fill:#607D8B,color:#fff
+    style P2 fill:#607D8B,color:#fff
+```
 
 Ninguna puede continuar: cada una espera a la fila que la otra tiene bloqueada. PostgreSQL detecta el ciclo, aborta una de las dos con el error `deadlock detected` y el cliente recibe un error sin explicación útil.
 
@@ -570,6 +590,8 @@ catch
 
 Recorrido de las líneas críticas: el `SET "Stock" = "Stock" - {cantidad}` es una **actualización relativa**: la base de datos descuenta sobre el valor que tiene ahora, no sobre el que leíste en la fase 1, así que nunca pisa cambios ajenos. El `WHERE "Stock" >= {cantidad}` es el candado invisible: solo puede pasar el pedido si aún queda mercancía, y la comprobación y el descuento ocurren en la misma sentencia, sin hueco para nadie. `filas == 0` significa exactamente "otro cliente ganó la carrera entre tu lectura y tu escritura": no es un error técnico, es una respuesta de negocio (sin stock) que se devuelve con su código correspondiente. Y el `Rollback` del `catch` existe porque si el `INSERT` del pedido revienta a mitad, el descuento no puede quedarse huérfano: o van los dos o no va ninguno.
 
+📌 **Ejemplo real:** las plataformas de venta de entradas usan este mismo esquema en los lanzamientos calientes: decenas de miles de clientes golpean a la vez y el descuento condicional (`WHERE entradas_disponibles >= 1`) decide solo quién entra. Nadie bloquea filas y no hay colas de candados: solo respuestas de "agotado" para quien llega tarde.
+
 **Cuándo usarlo:** el candidato por defecto para compras e inventario en la web: sin candados de larga duración, con garantía atómica y con mensajes de negocio claros. Solo exige dos cosas de tu stack: soportar el `UPDATE` condicional en tu proveedor (cualquier base de datos relacional lo hace) y aceptar que la validación de la fase 1 es cortesía, no garantía.
 
 ### 15.3.4. Comprobar el conflicto con dos contextos
@@ -611,6 +633,8 @@ private static AppDbContext CreateContext() =>
 Con `Version` de tipo `int` configurado como token en el `DbContext` (`modelBuilder.Entity<Producto>().Property(p => p.Version).IsConcurrencyToken();`), el test funciona igual en SQLite, PostgreSQL y SQL Server. `productoB` conserva el `Version` original, así que su `UPDATE` busca una versión que ya no existe y afecta a 0 filas. En producción ese `Version++` va en el servicio que actualiza; en el test se hace a mano para controlar el orden. El producto con `Id = 1` tiene que existir antes de ejecutar: créalo en el `SetUp` o confía en el seed data.
 
 > ⚠️ **Advertencia:** el proveedor `InMemory` no comprueba tokens de concurrencia. Un test así contra `UseInMemoryDatabase` pasa siempre y no demuestra nada: usa SQLite en fichero o Testcontainers. Y usa un fichero distinto por test para no arrastrar datos entre ejecuciones.
+
+📌 **Ejemplo real:** los tests de dos contextos nacen de incidentes reales: dos operarios del mismo almacén imprimen la misma etiqueta de envío porque el sistema les enseñó el mismo stock. Ese bug nunca sale en pruebas manuales, porque con un solo usuario no hay carrera; por eso existe el patrón de abrir dos contextos en el test: es la única forma de provocar la carrera dentro de CI.
 
 ### 15.3.5. Comparativa de enfoques
 
