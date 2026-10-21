@@ -37,13 +37,26 @@
 
 ## 15.1. El problema de la concurrencia
 
-Cuando múltiples usuarios intentan modificar el mismo dato simultáneamente, surgen problemas de concurrencia que pueden llevar a inconsistencias en los datos.
+Es la noche del lanzamiento y en tu tienda **solo queda una unidad** del Teclado Mecánico. A las 20:00:01, María lo ve desde su ordenador con el cartel de "última unidad" y pulsa comprar. Un segundo después, Carlos hace exactamente lo mismo desde su móvil. Tu API recibe las dos peticiones casi a la vez, y hay dos maneras en que esto puede acabar:
+
+1. El segundo pedido mira el stock **después** de que el primero lo haya descontado: ve "quedan 0" y responde "sin stock". Todo bien.
+2. El segundo pedido mira el stock **antes** de que el primero guarde: también ve "quedan 1", también resta 1, y deja el stock en **−1**. Tu tienda ha vendido dos teclados con una sola unidad.
+
+Lo importante del segundo caso es que nadie ha hecho nada mal. María y Carlos han usado la web con normalidad, y tu código no tiene ni un solo `if` mal escrito. El problema es de pura sincronización: dos operaciones que se solapan en el tiempo y se pisan sin darse cuenta.
+
+> 💡 **Analogía:** Es la caja de galletas de casa. Tú y tu hermano estáis en habitaciones distintas: los dos miráis la caja (queda una galleta), los dos cogéis "la última" y los dos salís convencidos de haberosla llevado. El problema no es que seáis tramposos: es que habéis mirado a la vez y habéis decidido a la vez, sin un método común para repartir.
+
+Ese error tiene nombre: **race condition** (condición de carrera): el resultado de una operación depende del orden en que lleguen dos peticiones que compiten, y tu código no contempla ese orden.
+
+Y una palabra más, porque la vas a oír todo el tema: **concurrencia**. No significa que tus usuarios estén "a la vez" en la pantalla; significa que sus peticiones se solapan en el tiempo mientras tu servidor las atiende. Ese solapamiento es normal y es bueno: es lo que hace que tu API aguante cien peticiones a la vez sin cien hilos ocupados (lo verás en el tema de concurrencia y asincronía). Lo que no es bueno es escribir código que asuma un orden que nadie te ha garantizado.
+
+El esquema resume el escenario y la tabla lo cuenta segundo a segundo:
 
 ```mermaid
 flowchart TD
     subgraph "Escenario problemático"
-        U1["Usuario 1"] -->|GET stock=1| API1["API"]
-        U2["Usuario 2"] -->|GET stock=1| API2["API"]
+        U1["María"] -->|GET stock=1| API1["API"]
+        U2["Carlos"] -->|GET stock=1| API2["API"]
         API1 --> S1["Stock en BD: 1"]
         API2 --> S2["Stock en BD: 1"]
         U1 -->|POST pedido| API1
@@ -57,8 +70,8 @@ flowchart TD
 
 **Timeline del problema:**
 
-| Tiempo | Usuario 1 | Usuario 2 | Stock en BD |
-|--------|-----------|-----------|-------------|
+| Tiempo | María | Carlos | Stock en BD |
+|--------|-------|--------|-------------|
 | T1 | Lee stock = 1 | - | 1 |
 | T2 | - | Lee stock = 1 | 1 |
 | T3 | Crea pedido | - | 1 |
@@ -66,19 +79,30 @@ flowchart TD
 | T5 | - | Crea pedido | 0 |
 | T6 | - | Decrementa stock | **-1** |
 
-Vendemos 2 productos cuando solo teníamos 1 en stock. Esto se llama **race condition** (condición de carrera).
+Lee la tabla en dos pasos. Primero, solo la columna de María: lee el stock en T1 (ve "queda 1"), crea su pedido en T3 y lo descuenta en T4 (deja el stock en 0). Ahora, la de Carlos: lee en T2, y en ese instante el stock seguía en 1, porque María todavía no había guardado nada. Cuando Carlos actúa en T5 y T6, lo hace con la información de dos pasos atrás: resta 1 a 0 y obtiene −1. El hueco entre T2 y T5 es todo el problema: ahí Carlos decide con datos viejos y nada se lo advierte.
 
-📌 Ejemplo real: **Amazon** gestiona millones de compras simultáneas. Cuando ves "último unidad en stock" y la compras, otro usuario en otro país puede estar haciendo lo mismo. Sin control de concurrencia, venderían el mismo producto dos veces.
+📌 Ejemplo real: **Amazon** gestiona millones de compras simultáneas. Cuando ves "última unidad en stock" y la compras, otro usuario en otro país puede estar haciendo lo mismo. Sin control de concurrencia, venderían el mismo producto dos veces.
+
+¿Cómo se evita? Con tres candados distintos sobre esa misma puerta, y los tres veremos en la 15.3: el optimista deja entrar a los dos y comprueba al final si algo se ha roto; el pesimista cierra la puerta con un candado en cuanto entra el primero; el mixto no cierra nada, pero solo deja pasar el pedido si aún queda mercancía. La herramienta que usan los tres por dentro es la transacción, y es lo que viene en 15.2.
 
 ## 15.2. Transacciones
 
 ### 15.2.1. Qué es una transacción
 
-Una **transacción** es un conjunto de operaciones que se ejecutan como una unidad indivisible. Todas se completan exitosamente o ninguna se aplica.
+Una **transacción** es un conjunto de operaciones que se ejecutan como una unidad indivisible: o se aplican todas, o no se aplica ninguna. En código se traduce en tres tiempos: abres la caja, metes dentro todo lo que debe ocurrir a la vez, y la cierras con un `Commit` que deja registrado lo de dentro. Si algo falla a mitad, haces un `Rollback`: se abre la caja al revés y todo sale como estaba.
 
 > 💡 **Analogía:** Piensa en una transferencia bancaria. No puedes sacar dinero de la cuenta A sin asegurarte de que se deposite en la cuenta B. Si algo falla a mitad, todo debe revertirse.
 
+En el pedido de María y Carlos, las dos mitades del negocio (crear el pedido y descontar el stock) tienen que viajar juntas. Si solo se crea el pedido, la tienda regala mercancía; si solo se descuenta el stock, el cliente paga y no recibe nada. La transacción existe precisamente para que esas dos mitades no puedan separarse.
+
 ### 15.2.2. Propiedades ACID
+
+Cuando la base de datos te confirma una transacción, te hace cuatro promesas sobre lo que acaba de pasar con el pedido de María y Carlos. Las cuatro juntas se conocen por su sigla, **ACID**:
+
+- **Atomicidad (todo o nada):** si el pedido falla a mitad, el stock no se descuenta. No existen medias tintas: o entran las dos operaciones, o no entra ninguna.
+- **Consistencia:** cada commit te deja la base de datos en un estado que cumple las reglas declaradas. Matiz importante: la base de datos solo cumple las reglas que le hayas dicho; si no le has puesto ningún `CHECK (Stock >= 0)`, aceptará el −1 de 15.1 y seguirá cumpliendo ACID al pie de la letra.
+- **Aislamiento:** dos pedidos simultáneos no ven los cambios a medio hacer del otro. María nunca lee el stock a medio descontar por Carlos.
+- **Durabilidad:** una vez confirmado el commit, los datos ya no desaparecen aunque el servidor se caiga justo después.
 
 ```mermaid
 flowchart LR
