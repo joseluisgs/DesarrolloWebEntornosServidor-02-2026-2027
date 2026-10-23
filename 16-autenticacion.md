@@ -1092,6 +1092,25 @@ flowchart TD
     style I fill:#4CAF50,color:#fff
 ```
 
+El mismo flujo, pero viendo quién se comunica con quién: la clave está en distinguir el ida y vuelta del navegador (que no lleva secretos) del intercambio de código por token, que ocurre entre servidores.
+
+```mermaid
+sequenceDiagram
+    participant N as Navegador
+    participant S as Tu servidor
+    participant P as Proveedor (Google)
+    N->>S: GET /ExternalLogin?provider=Google
+    S-->>N: 302 Location: https://proveedor/authorize?client_id=...
+    Note over N: El navegador se va al proveedor
+    N->>P: Pantalla de consentimiento
+    P-->>N: 302 Location: https://tuapp/signin-google?code=ABC
+    N->>S: GET /signin-google?code=ABC
+    Note over S,P: Back-channel: servidor a servidor, con el ClientSecret
+    S->>P: Intercambia el code por token
+    P-->>S: ID token y access token
+    S-->>N: Tu propia sesión (o tu JWT)
+```
+
 📌 Ejemplo real: **Spotify** usa este flujo exacto. Cuando haces "Conectar con Spotify" en una app de terceros, Spotify te redirige a su página de autorización, tú eliges qué datos compartir (nombre, playlists, etc.), y la app recibe un token con esos permisos.
 
 ### 16.5.5. Seguridad del flujo: state, nonce y PKCE
