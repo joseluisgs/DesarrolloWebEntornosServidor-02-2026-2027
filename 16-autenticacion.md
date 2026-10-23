@@ -28,6 +28,7 @@
     - [16.5.5. Seguridad del flujo: state, nonce y PKCE](#1655-seguridad-del-flujo-state-nonce-y-pkce)
     - [16.5.6. Tres puertas en el arranque: elegir por configuración](#1656-tres-puertas-en-el-arranque-elegir-por-configuración)
     - [16.5.7. Proveedores y credenciales en el aula](#1657-proveedores-y-credenciales-en-el-aula)
+    - [16.5.8. Errores típicos del login externo](#1658-errores-típicos-del-login-externo)
   - [16.6. Enfoque Identity](#166-enfoque-identity)
     - [16.6.1. ¿Qué es ASP.NET Core Identity?](#1661-qué-es-aspnet-core-identity)
     - [16.6.2. Instalación y configuración](#1662-instalación-y-configuración)
@@ -1207,6 +1208,33 @@ El material de clase no debe depender de una cuenta personal: ni tu Client Secre
 La regla del aula: el ejemplo arranca con `Enabled: false` y sin secretos; quien quiera probar el login externo crea su propia OAuth App (GitHub es la vía más rápida: Settings > Developer settings > OAuth Apps) o levanta un proveedor local. Los secretos, donde ya sabes: user-secrets o variables de entorno, jamás en el repo.
 
 📌 **Ejemplo real:** los cursos que enseñan OIDC suelen montar un Keycloak en un contenedor: cada alumno lo levanta, crea su realm y sus usuarios de prueba, y su API habla con su propio proveedor. Cero cuentas personales, cero verificaciones, y el alumno termina entendiendo qué hace Google por dentro.
+
+**Paso a paso: abrir una puerta con tu propia app.** Los cuatro proveedores piden lo mismo: una app de desarrollador y la misma URL de retorno. En el ejemplo de la unidad, esa URL es `http://localhost:5000/api/Auth/external-callback` y los cuatro se activan igual.
+
+- **GitHub (el más rápido):** en tu cuenta, Settings > Developer settings > OAuth Apps > New OAuth App; pones la URL de retorno; Register; copia el Client ID y genera el Client Secret (solo se muestra una vez). No pide verificación ni teléfono.
+- **Google:** en `console.cloud.google.com`, crea un proyecto nuevo; en OAuth consent screen elige External y modo Testing, y añade tus usuarios de prueba; en Credentials > OAuth client ID (Web application) registra la URL de retorno. En Testing aparecerá el aviso de app no verificada, que es normal.
+- **Microsoft:** en `entra.microsoft.com`, App registrations > New registration; en Redirect URI (tipo Web) la misma URL; en Overview está el Application (client) ID y en Certificates & secrets se crea el client secret (copia el valor, no el identificador).
+- **X (Twitter):** en `developer.x.com`, Projects & Apps crea proyecto y app; en App settings > User authentication settings activa OAuth 2.0 (Web App) con la Callback URI. Es el más tedioso: pide teléfono y su consola cambia a menudo.
+
+Con las credenciales en la mano, los cuatro casos siguen el mismo patrón de activación:
+
+```bash
+cd ProductosTest
+dotnet user-secrets set "GitHub:ClientId" "..."
+dotnet user-secrets set "GitHub:ClientSecret" "..."
+# appsettings.json -> "Auth": { "GitHub": { "Enabled": true, ... } }
+dotnet run --project ProductosTest
+```
+
+Se prueba abriendo en el navegador `http://localhost:5000/api/Auth/external/GitHub`: el navegador sale hacia el proveedor, el usuario autoriza, y la respuesta al volver es el JWT de tu API. Los secretos quedan en tu máquina: ni el repo ni el material de clase se enteran.
+
+### 16.5.8. Errores típicos del login externo
+
+- **`404` con "La puerta 'X' no está activa":** la puerta está cerrada en la configuración (`Auth:X:Enabled`) o el nombre del esquema no es el del proveedor (el de X se llama `Twitter`, no `X`).
+- **El proveedor devuelve `redirect_uri mismatch`:** la URL registrada en la consola del proveedor no coincide carácter a carácter con la que manda tu app: puerto, `http` frente a `https` o una barra final de más. Compara las dos URLs letra a letra.
+- **`401` al volver del callback:** casi siempre significa que has llegado al callback tecleando la URL en el navegador, sin pasar por el proveedor: no hay datos externos que leer.
+- **Pantalla de "app no verificada":** es el modo Testing de Google (y el aviso de X); en clase no hace falta verificar nada.
+- **`AddGoogle` no compila:** en .NET 10 el proveedor vive en su paquete NuGet (16.5.2); sin `dotnet add package`, el método simplemente no existe.
 
 ## 16.6. Enfoque Identity
 
