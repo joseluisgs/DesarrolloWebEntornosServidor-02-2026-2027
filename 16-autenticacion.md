@@ -25,6 +25,9 @@
     - [16.5.2. Configuración con google](#1652-configuración-con-google)
     - [16.5.3. Configuración con GitHub](#1653-configuración-con-github)
     - [16.5.4. Flow completo OAuth2](#1654-flow-completo-oauth2)
+    - [16.5.5. Seguridad del flujo: state, nonce y PKCE](#1655-seguridad-del-flujo-state-nonce-y-pkce)
+    - [16.5.6. Tres puertas en el arranque: elegir por configuración](#1656-tres-puertas-en-el-arranque-elegir-por-configuración)
+    - [16.5.7. Proveedores y credenciales en el aula](#1657-proveedores-y-credenciales-en-el-aula)
   - [16.6. Enfoque Identity](#166-enfoque-identity)
     - [16.6.1. ¿Qué es ASP.NET Core Identity?](#1661-qué-es-aspnet-core-identity)
     - [16.6.2. Instalación y configuración](#1662-instalación-y-configuración)
@@ -1009,9 +1012,20 @@ Los tres actores principales son:
 - **Client**: Tu aplicación (la que quiere acceder)
 - **Authorization Server**: El proveedor (Google, GitHub, Microsoft)
 
+Un matiz que despeja medio curso: OAuth2 **autoriza**, no identifica. Cuando una web te ofrece "Entrar con Google", lo que usa por debajo es **OpenID Connect (OIDC)**: un estándar construido encima de OAuth2 que añade identidad (ID token con tu email y tu nombre) sobre la autorización (los permisos o scopes). En la práctica el flujo es el mismo que acabas de ver, con una pieza más: además del access token, que sirve para llamar a APIs, el proveedor entrega un **ID token** que demuestra quién eres. Tu API, al final, no consume ninguno de los dos: usa esos datos para crear o localizar a su usuario y emitir su propio JWT, que es la credencial con la que trabaja el resto del tiempo.
+
 ### 16.5.2. Configuración con google
 
-Para configurar login con Google, necesitas crear un proyecto en Google Cloud Console, obtener el Client ID y Client Secret, y registrarlos en tu aplicación.
+Para configurar login con Google, necesitas crear un proyecto en Google Cloud Console, crear un cliente OAuth 2.0 y obtener el Client ID y el Client Secret.
+
+Los secretos **no van en el `appsettings.json`** (ese fichero se sube a git): van en el user-secrets del proyecto, que solo existe en tu máquina.
+
+```bash
+dotnet user-secrets set "Google:ClientId" "123456.apps.googleusercontent.com"
+dotnet user-secrets set "Google:ClientSecret" "GOCSPX-xxxxxxxx"
+```
+
+Con eso, el registro en el arranque queda igual que siempre:
 
 ```csharp
 // En Program.cs
@@ -1026,18 +1040,9 @@ builder.Services.AddAuthentication()
     });
 ```
 
-En `appsettings.json` debes configurar las credenciales:
-
-```json
-{
-  "Google": {
-    "ClientId": "tu-client-id.apps.googleusercontent.com",
-    "ClientSecret": "GOCSPX-tu-client-secret"
-  }
-}
-```
-
 > 📝 **Nota:** El `CallbackPath` es la ruta donde Google redirigirá después de que el usuario autorice. ASP.NET Core maneja automáticamente el intercambio de código por token y la creación del ClaimsPrincipal.
+
+> 💡 **Consejo:** mientras la app está en modo **Testing** en la consola de Google, solo pueden entrar los usuarios de prueba que tú añadas, y el navegador avisa de que la app no está verificada. Es suficiente para clase; la verificación solo hace falta si vas a publicarla de verdad.
 
 ### 16.5.3. Configuración con GitHub
 
@@ -1057,6 +1062,8 @@ builder.Services.AddAuthentication()
 ```
 
 > 💡 **Consejo:** Para configurar GitHub, ve a Settings > Developer settings > OAuth Apps > New OAuth App. El campo "Authorization callback URL" debe coincidir con la ruta de callback de tu aplicación (normalmente `https://tu-dominio/signin-github`).
+
+> 📝 **Nota:** igual que con Google, el Client ID y el Client Secret van en user-secrets (`dotnet user-secrets set "GitHub:ClientId" ...`), nunca en el `appsettings.json`.
 
 ### 16.5.4. Flow completo OAuth2
 
@@ -1086,6 +1093,93 @@ flowchart TD
 ```
 
 📌 Ejemplo real: **Spotify** usa este flujo exacto. Cuando haces "Conectar con Spotify" en una app de terceros, Spotify te redirige a su página de autorización, tú eliges qué datos compartir (nombre, playlists, etc.), y la app recibe un token con esos permisos.
+
+### 16.5.5. Seguridad del flujo: state, nonce y PKCE
+
+El flujo de 16.5.4 viaja por el navegador y usa URLs que cualquiera podría manipular; por eso el estándar añade tres piezas de seguridad, y ASP.NET Core las aplica por ti si sabes que existen.
+
+- **state**: un valor aleatorio que tu app guarda antes de redirigir y exige en el retorno. Protege contra CSRF: sin él, un atacante podría engañar a tu servidor para que aceptara como propio un código que él mismo provocó.
+- **nonce**: lo mismo, pero para el ID token de OIDC: impide que alguien reintroduzca un token viejo (ataque de repetición).
+- **PKCE (Proof Key for Code Exchange)**: pensado para clientes sin secreto (SPA, apps móviles y de escritorio). Antes de redirigir, tu app genera un código aleatorio (el verifier) y le manda al proveedor solo su huella digital (el challenge). En el retorno, el intercambio código por token exige el verifier original: aunque un atacante robara el código de la URL, no podría canjearlo.
+
+En ASP.NET Core el state se gestiona solo; el PKCE se enciende con una opción:
+
+```csharp
+builder.Services.AddGoogle(options =>
+{
+    // ...ClientId y ClientSecret...
+    options.UsePkce = true;   // recomendable hoy también en apps web con cookies
+});
+```
+
+> ⚠️ **Advertencia:** el state y el nonce no son adornos del flujo: si tu proveedor los exige y tu app no los manda, el login directamente no arranca. Ante dudas, deja que el middleware haga lo suyo: no reimplementes el flujo a mano.
+
+📌 **Ejemplo real:** los ataques clásicos al login externo (secuestro de sesión vía CSRF y repetición de códigos) existen precisamente porque el flujo completo viaja por URLs del navegador. Con estas tres piezas, el atacante se queda sin capacidad de reutilizar nada que no haya provocado él mismo.
+
+### 16.5.6. Tres puertas en el arranque: elegir por configuración
+
+Un servidor real suele ofrecer varias formas de entrar a la vez: la propia (usuario y contraseña con JWT) y las de los proveedores. La decisión de qué puertas están abiertas no se toma en el código, sino en la configuración, igual que haces con MemoryCache o Redis: el arranque registra lo que pide `appsettings.json` y el resto queda fuera.
+
+El reparto de papeles, que es lo que hay que entender bien:
+
+- **Identity + JWT (la puerta propia)**: siempre presente. Es la que emiten tus servicios al validar usuario y contraseña.
+- **Google, GitHub o Microsoft (las puertas externas)**: opcionales y condicionales. Cuando alguien entra por una de ellas, tu app recibe sus datos, los convierte en un usuario local (el mismo mecanismo de asociación que en 16.6.5) y **emite tu propio JWT**. Tu API no valida tokens de Google: valida los suyos.
+
+```json
+// appsettings.json
+"Auth": {
+  "Google": { "Enabled": false, "ClientId": "", "ClientSecret": "" },
+  "GitHub": { "Enabled": false, "ClientId": "", "ClientSecret": "" }
+}
+```
+
+```csharp
+// Program.cs - solo registra las puertas que la configuración activa
+if (config.GetValue<bool>("Auth:Google:Enabled"))
+{
+    builder.Services.AddGoogle(options =>
+    {
+        options.ClientId = config["Google:ClientId"]
+            ?? throw new InvalidOperationException("Google ClientId no configurado");
+        options.ClientSecret = config["Google:ClientSecret"]
+            ?? throw new InvalidOperationException("Google ClientSecret no configurado");
+        options.UsePkce = true;
+    });
+}
+
+if (config.GetValue<bool>("Auth:GitHub:Enabled"))
+{
+    builder.Services.AddGitHub(options =>
+    {
+        options.ClientId = config["GitHub:ClientId"]
+            ?? throw new InvalidOperationException("GitHub ClientId no configurado");
+        options.ClientSecret = config["GitHub:ClientSecret"]
+            ?? throw new InvalidOperationException("GitHub ClientSecret no configurado");
+    });
+}
+```
+
+Con `Enabled: false` la puerta no se registra: ni aparece en el arranque, ni consume credenciales, ni puede nadie redirigir a un proveedor que la app no conoce.
+
+El mismo patrón sirve para un tercer proveedor: **Microsoft va en caja** (`AddMicrosoftAccount`, sin paquete NuGet extra) y aprovecha las cuentas escolares que ya tienen tus alumnos. X/Twitter existe como paquete de la comunidad (aspnet-contrib), pero su portal de desarrollador y sus niveles de acceso lo hacen poco práctico para clase; guárdalo para un ejercicio voluntario.
+
+> 📝 **Nota:** si tu app es de páginas con Identity, el patrón completo de login externo con cookies (Challenge y callback) ya está en 16.6.5. Las tres puertas de esta sección complementan ese patrón: la decisión de configuración es la misma.
+
+### 16.5.7. Proveedores y credenciales en el aula
+
+El material de clase no debe depender de una cuenta personal: ni tu Client Secret, ni tu API key, ni tu cuenta de Google en ningún fichero que repartas. Un secreto filtrado de tu proyecto recae en tu cuota y en tus recursos, y con veinticinco alumnos repartidos por correos y chats, acaba fuera. Las opciones ordenadas para dar clase:
+
+| Opción | Datos personales | Riesgo | Lo que enseña |
+|--------|------------------|--------|---------------|
+| **Proveedor local (Keycloak en Docker)** | Ninguno: usuarios y realms de prueba | Nulo, sin internet | El alumno ve el proveedor por dentro |
+| **Cada alumno con su cuenta** (GitHub OAuth App propia, proyecto de Google propio) | Solo los del alumno | Bajo | La configuración real de un proveedor cloud |
+| **Auth0, Okta o tenant de desarrollo de Microsoft** | Ninguno (usuarios de prueba) | Bajo | Un proveedor cloud completo sin verificar nada |
+| **Google en modo Testing con usuarios de prueba** | Tu proyecto queda como titular | Medio: tu secreto en manos del alumnado | El flujo real de Google |
+| **API key o secreto tuyo repartido** | Expuesta | Inaceptable | Enseña lo contrario a lo que enseña la unidad |
+
+La regla del aula: el ejemplo arranca con `Enabled: false` y sin secretos; quien quiera probar el login externo crea su propia OAuth App (GitHub es la vía más rápida: Settings > Developer settings > OAuth Apps) o levanta un proveedor local. Los secretos, donde ya sabes: user-secrets o variables de entorno, jamás en el repo.
+
+📌 **Ejemplo real:** los cursos que enseñan OIDC suelen montar un Keycloak en un contenedor: cada alumno lo levanta, crea su realm y sus usuarios de prueba, y su API habla con su propio proveedor. Cero cuentas personales, cero verificaciones, y el alumno termina entendiendo qué hace Google por dentro.
 
 ## 16.6. Enfoque Identity
 
@@ -1640,6 +1734,7 @@ public static class SeedService
 - Refresh tokens: endpoint `POST /auth/refresh` que renueva el access token
 - Rate limiting en login (máximo 5 intentos por minuto por IP)
 - Validación de fortaleza de contraseña (mínimo 8 caracteres, mayúscula, minúscula, número)
+- Login externo con un proveedor propio: activa Google o GitHub por configuración (`Auth:Enabled`), crea el usuario en Identity en el primer login y devuelve tu JWT
 
 ---
 
