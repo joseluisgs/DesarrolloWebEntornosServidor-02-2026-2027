@@ -1016,7 +1016,11 @@ Un matiz que despeja medio curso: OAuth2 **autoriza**, no identifica. Cuando una
 
 ### 16.5.2. Configuración con google
 
-Para configurar login con Google, necesitas crear un proyecto en Google Cloud Console, crear un cliente OAuth 2.0 y obtener el Client ID y el Client Secret.
+Para configurar login con Google, necesitas crear un proyecto en Google Cloud Console, crear un cliente OAuth 2.0 y obtener el Client ID y el Client Secret. El proveedor se instala como paquete NuGet (en .NET 10 ya no viene en el shared framework):
+
+```bash
+dotnet add package Microsoft.AspNetCore.Authentication.Google
+```
 
 Los secretos **no van en el `appsettings.json`** (ese fichero se sube a git): van en el user-secrets del proyecto, que solo existe en tu máquina.
 
@@ -1046,7 +1050,11 @@ builder.Services.AddAuthentication()
 
 ### 16.5.3. Configuración con GitHub
 
-GitHub usa el mismo mecanismo de OAuth2. Primero creas una OAuth App en GitHub Settings, obtienes el Client ID y Client Secret, y lo registras en tu aplicación.
+GitHub usa el mismo mecanismo de OAuth2. Primero creas una OAuth App en GitHub Settings, obtienes el Client ID y Client Secret, y lo registras en tu aplicación. El proveedor viene como paquete de la comunidad:
+
+```bash
+dotnet add package AspNet.Security.OAuth.GitHub
+```
 
 ```csharp
 // En Program.cs
@@ -1180,7 +1188,7 @@ if (config.GetValue<bool>("Auth:GitHub:Enabled"))
 
 Con `Enabled: false` la puerta no se registra: ni aparece en el arranque, ni consume credenciales, ni puede nadie redirigir a un proveedor que la app no conoce.
 
-El mismo patrón sirve para un tercer proveedor: **Microsoft va en caja** (`AddMicrosoftAccount`, sin paquete NuGet extra) y aprovecha las cuentas escolares que ya tienen tus alumnos. X/Twitter existe como paquete de la comunidad (aspnet-contrib), pero su portal de desarrollador y sus niveles de acceso lo hacen poco práctico para clase; guárdalo para un ejercicio voluntario.
+El mismo patrón sirve para un tercer proveedor: **Microsoft** (`AddMicrosoftAccount`) aprovecha las cuentas escolares que ya tienen tus alumnos. Y un detalle de .NET 10 que se lleva más de un susto: los proveedores ya no vienen en el shared framework; Google, Microsoft y GitHub se instalan cada uno con su paquete NuGet (`Microsoft.AspNetCore.Authentication.Google`, `Microsoft.AspNetCore.Authentication.MicrosoftAccount` y `AspNet.Security.OAuth.GitHub`). X/Twitter existe como paquete de la comunidad, pero su portal de desarrollador y sus niveles de acceso lo hacen poco práctico para clase; guárdalo para un ejercicio voluntario.
 
 > 📝 **Nota:** si tu app es de páginas con Identity, el patrón completo de login externo con cookies (Challenge y callback) ya está en 16.6.5. Las tres puertas de esta sección complementan ese patrón: la decisión de configuración es la misma.
 
