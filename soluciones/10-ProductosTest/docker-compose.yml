@@ -1,3 +1,5 @@
+name: ud02-10-test
+
 services:
   api:
     build:

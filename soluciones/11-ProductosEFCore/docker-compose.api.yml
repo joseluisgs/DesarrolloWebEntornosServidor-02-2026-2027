@@ -1,3 +1,5 @@
+name: ud02-11-efcore-api
+
 services:
   api:
     build:
@@ -17,7 +19,7 @@ services:
 
   db:
     image: postgres:17-alpine
-    container_name: productos_efcore_db_api
+    container_name: productos_efcore_db_api_11
     ports:
       - "5433:5432"
     environment:
@@ -27,7 +29,7 @@ services:
     volumes:
       - pgdata_api:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin"]
+      test: ["CMD-SHELL", "pg_isready -U admin -d productos"]
       interval: 5s
       timeout: 5s
       retries: 5

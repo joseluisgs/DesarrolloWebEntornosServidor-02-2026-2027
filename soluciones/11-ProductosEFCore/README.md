@@ -98,6 +98,13 @@ docker compose -f docker-compose.api.yml up -d --build
 docker compose down -v
 ```
 
+> 📝 **Nota:** Los dos compose son **proyectos distintos** (cada fichero lleva su `name:`), así que no se pisan: levantar el stack completo no destruye el contenedor local, y al revés.
+>
+> - **Desarrollo** (`docker compose up -d db`): PostgreSQL en `localhost:5432`. Es lo que necesitas con el play de Rider.
+> - **Stack completo** (`-f docker-compose.api.yml`): api en el `5000` y PostgreSQL en el `5433`, porque dentro de la red de Docker la app se conecta al servicio `db`, no a `localhost`.
+>
+> ⚠️ El nombre del contenedor es propio de esta solución, pero el **puerto 5432 es común a todas**: no levantes dos soluciones a la vez o la segunda fallará con `port is already allocated`.
+
 ## Estructura
 
 ```

@@ -93,6 +93,13 @@ docker compose -f docker-compose.api.yml up -d --build   # api + db
 docker compose down -v
 ```
 
+> 📝 **Nota:** Los dos compose son **proyectos distintos** (cada fichero lleva su `name:`), así que no se pisan: levantar el stack completo no destruye el contenedor local, y al revés.
+>
+> - **Desarrollo** (`docker compose up -d db`): MongoDB en `localhost:27017`. Es lo que necesitas con el play de Rider.
+> - **Stack completo** (`-f docker-compose.api.yml`): api en el `5000` y MongoDB en el `27018`, porque dentro de la red de Docker la app se conecta al servicio `db`, no a `localhost`.
+>
+> ⚠️ El nombre del contenedor es propio de esta solución, pero el **puerto 27017 es común**: no levantes dos soluciones a la vez o la segunda fallará con `port is already allocated`.
+
 ## Estructura
 
 ```
