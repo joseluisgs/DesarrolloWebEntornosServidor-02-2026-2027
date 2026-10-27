@@ -1,0 +1,27 @@
+name: ud02-15-identity-dev
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: productos_efcore_db_15
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: productos
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: productos_redis_15
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass redis123
+    volumes:
+      - redis-data:/data
+
+volumes:
+  pgdata:
+  redis-data:

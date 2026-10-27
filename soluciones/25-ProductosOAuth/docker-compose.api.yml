@@ -1,0 +1,51 @@
+name: ud02-25-oauth-api
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=productos;Username=admin;Password=admin123
+      - Api__Nombre=Productos EF Core API (Docker)
+      - Api__Mensaje=Desplegado en contenedor
+      - Redis__ConnectionString=redis:6379,password=redis123
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  db:
+    image: postgres:17-alpine
+    container_name: productos_efcore_db_api_25
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: productos
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    volumes:
+      - pgdata_api:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d productos"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: productos_redis_api_25
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass redis123
+    volumes:
+      - redis_data_api:/data
+
+volumes:
+  pgdata_api:
+  redis_data_api:
