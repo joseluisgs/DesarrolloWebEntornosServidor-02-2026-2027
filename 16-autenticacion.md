@@ -1571,6 +1571,61 @@ sequenceDiagram
     S-->>C: 403 Forbidden (usuario bloqueado)
 ```
 
+#### La trampa de la cookie al combinar Identity y JWT
+
+El flujo de arriba funciona, pero asume algo que conviene mirar con lupa: **qué esquema atiende cada camino**. `AddIdentity` registra su cookie `Identity.Application` y la deja como esquema por defecto; si después registras JWT y solo fijas `DefaultAuthenticateScheme` y `DefaultChallengeScheme`, el camino del `Forbid` sigue apuntando a la cookie.
+
+```mermaid
+flowchart TB
+    R["Petición con Bearer válido"] --> A{"¿Tiene el rol?"}
+    A -->|Sí| OK["200 con JSON"]
+    A -->|No| F["ForbidAsync"]
+    F --> D{"DefaultForbidScheme"}
+    D -->|"solo fijaste Authenticate y Challenge"| C["Cookie → 302 a /Account/Login"]
+    D -->|"Bearer en los cuatro esquemas"| J["401 o 403 con JSON"]
+```
+
+El síntoma es engañoso: el login funciona, los GET con rol funcionan, y el fallo aparece solo cuando un usuario **autenticado pero sin rol** pega un endpoint de administración: en vez del error JSON que espera un cliente de API, recibe un redirect a la página de login.
+
+La solución oficial es `AddIdentityCore`: Identity construido a mano, sin la cookie, que es el primitivo pensado para APIs.
+
+```csharp
+// AddIdentityCore: Identity sin UI; roles y signInManager se añaden a mano
+services.AddIdentityCore<AppUser>(options => { /* reglas de contraseña y lockout */ })
+    .AddRoles<IdentityRole<long>>()
+    .AddSignInManager()
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
+
+// Defensa en profundidad: los CUATRO esquemas a Bearer
+services.AddAuthentication(options =>
+{
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options => { /* TokenValidationParameters */ });
+
+// Y esquema explícito en las políticas: no dependen del DefaultScheme
+services.AddAuthorizationBuilder()
+    .AddPolicy("RequireAdmin", policy =>
+        new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
+            .RequireRole("ADMIN")
+            .Build());
+```
+
+| | `AddIdentity` | `AddIdentityCore` |
+|---|---|---|
+| Orientado a | Aplicaciones con UI de login (cookies) | APIs sin UI |
+| Registra la cookie `Identity.Application` | Sí | No |
+| `SignInManager` | Incluido | Con `.AddSignInManager()` |
+| Roles | Incluidos | Con `.AddRoles<TRole>()` |
+
+> 💡 **Consejo:** si la API necesita login externo (16.6.5), las cookies `Identity.External` son imprescindibles y se queda `AddIdentity`; en ese caso, la defensa es fijar los cuatro esquemas a Bearer tal y como arriba.
+
+> ⚠️ **Advertencia:** el `[Authorize]` plano sin roles usa la política por defecto y no padece el problema: por eso la trampa solo se ve probando los endpoints con rol. Si tu suite solo prueba credenciales correctas, tampoco la verá.
+
 ### 16.6.5. Identity con OAuth2 (login externo)
 
 Identity integra de forma nativa el login con proveedores externos como Google, GitHub o Microsoft. Esto significa que puedes ofrecer a tus usuarios la opción de iniciar sesión con su cuenta de Google sin tener que gestionar contraseñas. Identity se encarga automáticamente de crear el usuario la primera vez y de asociar el proveedor externo.

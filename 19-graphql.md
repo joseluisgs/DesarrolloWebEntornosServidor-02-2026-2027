@@ -454,6 +454,7 @@ Una query es el equivalente a un `GET` en REST: solo lee datos y no modifica nad
 
 ```csharp
 using HotChocolate.Data;
+using ProductosGraphQL.Repositories;
 
 public class Query
 {
@@ -463,9 +464,10 @@ public class Query
     [UsePaging(MaxPageSize = 50, DefaultPageSize = 10)]
     [UseFiltering]
     [UseSorting]
-    public IQueryable<Producto> GetProductos([Service] ApplicationDbContext context)
+    public IQueryable<Producto> GetProductos([Service] IProductoRepository productoRepository)
     {
-        return context.Productos.Include(p => p.Categoria);
+        // El repositorio ya trae la categoría incluida: el resolver no toca el DbContext
+        return productoRepository.GetAll().AsQueryable();
     }
 
     /// <summary>
@@ -482,9 +484,9 @@ public class Query
     /// Obtiene categorias
     /// </summary>
     [UsePaging]
-    public IQueryable<Categoria> GetCategorias([Service] ApplicationDbContext context)
+    public IQueryable<Categoria> GetCategorias([Service] ICategoriaRepository categoriaRepository)
     {
-        return context.Categorias;
+        return categoriaRepository.GetAll().AsQueryable();
     }
 }
 ```
@@ -727,6 +729,33 @@ mutation EliminarProducto {
 ```
 
 ## 19.7. Subscriptions y tiempo real
+
+**Por qué los mutations no inyectan por constructor:** HotChocolate registra el tipo de mutation (la clase `ProductoMutation`…) con lifetime **singleton**: se crea una vez y vive todo el proceso. Una dependencia scoped (cualquier servicio o repositorio con `DbContext`) inyectada por constructor queda capturada en esa instancia y conserva el mismo objeto durante todo el proceso; su scope se cierra al terminar la primera petición y el contexto queda dispuesto.
+
+| Dónde se inyecta | Lifetime | Resultado |
+|------------------|----------|-----------|
+| **Constructor** | Se captura en el singleton | La dependencia scoped atada al proceso: `Cannot access a disposed context instance` a partir de la segunda petición |
+| **Parámetro `[Service]`** | Scope de cada petición | El `DbContext` se crea y se dispone correctamente en cada llamada |
+
+```csharp
+// ❌ Mal: el servicio quedaría capturado en el singleton
+public class ProductoMutation(IProductoService service) { /* ... */ }
+
+// ✅ Bien: mutation delgado, sin constructor
+public class ProductoMutation
+{
+    public Producto? CrearProducto(
+        CreateProductoInput input,
+        [Service] IProductoService service)   // scope de esta petición
+    {
+        /* mapear el input y delegar en el servicio */
+    }
+}
+```
+
+El error tarda en aparecer: la primera mutation funciona y la segunda o la tercera revienta con `Cannot access a disposed context instance`, que es difícil de interpretar si no se conoce el patrón.
+
+Una segunda regla va con la primera: **el mutation es una capa de traducción delgada**. Mapea el input y delega en el servicio; la lectura previa, la fusión de campos y cualquier regla de negocio viven en el servicio, igual que en el endpoint REST. Un mutation que inyecta repositorios se salta la capa de servicio y duplica lógica de negocio entre REST y GraphQL.
 
 Las Subscriptions permiten recibir actualizaciones en tiempo real mediante WebSockets.
 
@@ -1052,9 +1081,9 @@ public class Query
     /// Query publica - cualquiera puede ver productos
     /// </summary>
     [UsePaging]
-    public IQueryable<Producto> GetProductos([Service] ApplicationDbContext context)
+    public IQueryable<Producto> GetProductos([Service] IProductoRepository productoRepository)
     {
-        return context.Productos;
+        return productoRepository.GetAll().AsQueryable();
     }
 
     /// <summary>
@@ -1318,9 +1347,9 @@ Estas son las reglas que debes seguir al diseñar un esquema GraphQL. El primer 
 // ❌ MALO: Exponer entidades directamente sin filtrar campos
 public class Query
 {
-    public IQueryable<Usuario> GetUsuarios([Service] ApplicationDbContext db)
+    public IQueryable<Usuario> GetUsuarios([Service] IUsuarioRepository repository)
     {
-        return db.Usuarios; // Expone password hash, tokens, etc.
+        return repository.GetAll().AsQueryable(); // Expone password hash, tokens, etc.
     }
 }
 
@@ -1328,9 +1357,9 @@ public class Query
 public class Query
 {
     [UseProjection]
-    public IQueryable<UsuarioDto> GetUsuarios([Service] ApplicationDbContext db)
+    public IQueryable<UsuarioDto> GetUsuarios([Service] IUsuarioRepository repository)
     {
-        return db.Usuarios.Select(u => new UsuarioDto
+        return repository.GetAll().AsQueryable().Select(u => new UsuarioDto
         {
             Id = u.Id,
             Nombre = u.Nombre,
@@ -1343,9 +1372,9 @@ public class Query
 
 ```csharp
 // ❌ MALO: Resolver sin DataLoader — problema N+1
-public async Task<Categoria> GetCategoria([Parent] Producto producto, [Service] ApplicationDbContext db)
+public async Task<Categoria> GetCategoria([Parent] Producto producto, [Service] ICategoriaRepository categoriaRepository)
 {
-    return await db.Categorias.FindAsync(producto.CategoriaId); // 1 consulta por producto
+    return categoriaRepository.GetById(producto.CategoriaId); // 1 consulta por producto
 }
 
 // ✅ BUENO: DataLoader — agrupa consultas

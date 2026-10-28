@@ -822,7 +822,9 @@ services.AddAuthorizationBuilder()
         policy.RequireRole("ADMIN"));
 ```
 
-**Política con claims — verificar edad mínima:**
+> ⚠️ **Advertencia:** esa política no declara esquema: depende enteramente del `DefaultScheme` del contenedor. Si el registro de autenticación cambia (por ejemplo, porque convives con Identity y sus cookies), la política deja de autenticar con Bearer en silencio y el endpoint responde con un redirect en vez de un error JSON. La regla: toda política lleva su esquema explícito, `new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)`, y así queda autosuficiente ante cualquier configuración (ver 16.6.4 de autenticación).
+
+**Política con claims - verificar edad mínima:**
 
 También puedes crear políticas que verifiquen claims específicos. Por ejemplo, una política que solo permita el acceso si el usuario tiene un claim de edad mayor o igual a 18:
 
