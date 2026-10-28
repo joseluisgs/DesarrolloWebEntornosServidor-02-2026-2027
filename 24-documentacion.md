@@ -665,4 +665,4 @@ Vas a documentar una API REST para gestionar una **coleccion de Funkos** con Swa
 
 **¿Qué viene después?**
 
-En el siguiente punto veremos **Configuracion de Entornos**: cómo manejar diferentes configuraciones para desarrollo y producción, variables de entorno, User Secrets y Azure App Configuration.
+En el siguiente punto veremos **Configuración por entornos y perfiles**: cómo manejar diferentes configuraciones para desarrollo y producción, variables de entorno, User Secrets y Azure App Configuration.

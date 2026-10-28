@@ -1,4 +1,4 @@
-- [17. Autorización](#17-autorización)
+- [17. Autorización: roles, claims y políticas](#17-autorización-roles-claims-y-políticas)
   - [17.1. Introducción](#171-introducción)
     - [17.1.1. ¿Qué es la autorización?](#1711-qué-es-la-autorización)
     - [17.1.2. Autenticación vs autorización](#1712-autenticación-vs-autorización)
@@ -27,7 +27,7 @@
 
 
 
-# 17. Autorización
+# 17. Autorización: roles, claims y políticas
 
 > 💡 **Punto de partida:** Has conseguido que Instagram sepa quién eres (autenticación). Pero... ¿puedes borrar la cuenta de otro usuario? ¿Puedes ver estadísticas de negocio? Eso lo decide la **autorización**: qué puedes hacer una vez autenticado.
 

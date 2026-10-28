@@ -24,12 +24,12 @@
       - [Tema 18: WebSockets y SignalR](#tema-18-websockets-y-signalr)
       - [Tema 19: GraphQL](#tema-19-graphql)
       - [Tema 20: file storage](#tema-20-file-storage)
-      - [Tema 21: email services](#tema-21-email-services)
+      - [Tema 21: servicios de email](#tema-21-servicios-de-email)
       - [Tema 22: tareas programadas](#tema-22-tareas-programadas)
     - [Parte 4: arquitectura y operaciones](#parte-4-arquitectura-y-operaciones)
       - [Tema 23: optimización](#tema-23-optimización)
       - [Tema 24: documentación con Swagger/OpenAPI](#tema-24-documentación-con-swaggeropenapi)
-      - [Tema 25: perfiles y configuración](#tema-25-perfiles-y-configuración)
+      - [Tema 25: configuración por entornos y perfiles](#tema-25-configuración-por-entornos-y-perfiles)
       - [Tema 26: organización de Program.cs](#tema-26-organización-de-programcs)
       - [Tema 27: logging avanzado con Serilog](#tema-27-logging-avanzado-con-serilog)
       - [Tema 28: testing profesional](#tema-28-testing-profesional)
@@ -141,7 +141,7 @@ graph TD
     P3 --> WS[WebSockets y SignalR]
     P3 --> GQL[GraphQL]
     P3 --> FILE[File Storage]
-    P3 --> EMAIL[Email Services]
+    P3 --> EMAIL[Servicios de email]
     P3 --> CRON[Tareas Programadas]
 
     WS --> WS1[Hub: Bidireccional]
@@ -409,7 +409,7 @@ graph TD
 - **Nombre único:** `Guid.NewGuid()` para evitar colisiones de nombre
 - 📌 Un e-commerce almacena fotos de productos: local en desarrollo, Azure Blob en producción
 
-#### Tema 21: email services
+#### Tema 21: servicios de email
 - **IEmailService:** Interfaz para enviar emails
 - **MailKit:** Librería para enviar emails via SMTP
 - **MimeMessage:** Construir el email: From, To, Subject, Body (HTML)
@@ -443,7 +443,7 @@ graph TD
 - **Swagger UI:** Interfaz web para probar la API interactivamente
 - 📌 Cada API profesional tiene Swagger para que otros desarrolladores la consuman
 
-#### Tema 25: perfiles y configuración
+#### Tema 25: configuración por entornos y perfiles
 - **Perfiles de entorno:** Development, Staging, Production. Cada uno con su configuración
 - **appsettings.{Environment}.json:** Configuración específica por entorno
 - **User Secrets:** Secretos fuera del código. `dotnet user-secrets set`

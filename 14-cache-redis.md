@@ -1,4 +1,4 @@
-- [14. Caché y Redis](#14-caché-y-redis)
+- [14. Sistemas de caché: Redis y memcached](#14-sistemas-de-caché-redis-y-memcached)
   - [14.1. Fundamentos de caché](#141-fundamentos-de-caché)
     - [14.1.1. Qué es un caché](#1411-qué-es-un-caché)
     - [14.1.2. Por qué usar caché](#1412-por-qué-usar-caché)
@@ -56,7 +56,7 @@
 
 
 
-# 14. Caché y Redis
+# 14. Sistemas de caché: Redis y memcached
 
 > 💡 **Punto de partida:** Si tuvieses que buscar un libro en una biblioteca de 100.000 volúmenes cada vez que alguien te preguntase algo, ¿no guardarías los libros más consultados en una estantería junto a tu escritorio? Eso es exactamente lo que hace un caché.
 

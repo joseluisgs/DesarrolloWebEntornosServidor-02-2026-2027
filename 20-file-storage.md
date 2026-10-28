@@ -1768,4 +1768,4 @@ public class Funko
 
 **¿Qué viene después?**
 
-En el siguiente punto veremos **Email Services**: como enviar emails automáticos con MailKit, plantillas HTML y colas asíncronas.
+En el siguiente punto veremos **Servicios de email**: como enviar emails automáticos con MailKit, plantillas HTML y colas asíncronas.

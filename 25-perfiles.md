@@ -1,4 +1,4 @@
-- [25. Configuracion de entornos](#25-configuracion-de-entornos)
+- [25. Configuración por entornos y perfiles](#25-configuración-por-entornos-y-perfiles)
   - [25.1. Que son los entornos](#251-que-son-los-entornos)
     - [25.1.1. Entornos predefinidos](#2511-entornos-predefinidos)
     - [25.1.2. Prioridad de configuracion](#2512-prioridad-de-configuracion)
@@ -21,7 +21,7 @@
 
 
 
-# 25. Configuracion de entornos
+# 25. Configuración por entornos y perfiles
 
 > 💡 **Punto de partida:** Cuando abres Instagram en tu móvil, la app se conecta a un servidor de desarrollo para probar funcionalidades nuevas. Cuando la versión final sale a producción, usa configuración diferente: base de datos real, logs mínimos y seguridad estricta. Eso es lo que hacen los entornos: permitir que la misma aplicación se comporte de forma diferente según dónde se ejecute.
 
