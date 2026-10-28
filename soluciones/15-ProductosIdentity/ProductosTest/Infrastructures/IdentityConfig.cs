@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -40,7 +41,9 @@ public static class IdentityConfig
             .Get<JwtSettings>() ?? new JwtSettings();
 
         // ── Identity ─────────────────────────────────────────────────────────
-        services.AddIdentity<AppUser, IdentityRole<long>>(options =>
+        // AddIdentityCore: Identity sin UI (no registra la cookie Identity.Application),
+        // el mecanismo oficial para APIs; roles y signInManager se añaden a mano.
+        services.AddIdentityCore<AppUser>(options =>
         {
             // Password
             options.Password.RequiredLength = 8;
@@ -56,14 +59,21 @@ public static class IdentityConfig
             // User
             options.User.RequireUniqueEmail = true;
         })
+        .AddRoles<IdentityRole<long>>()
+        .AddSignInManager()
         .AddEntityFrameworkStores<AppDbContext>()
         .AddDefaultTokenProviders();
 
         // ── JWT Authentication ───────────────────────────────────────────────
+        // Fijamos TODOS los esquemas a Bearer: sin DefaultForbidScheme, un 403
+        // (usuario autenticado sin rol) caería en la cookie de Identity y
+        // redirigiría en vez de devolver el JSON que espera una API.
         services.AddAuthentication(options =>
         {
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;
         })
         .AddJwtBearer(options =>
         {
@@ -82,11 +92,16 @@ public static class IdentityConfig
         });
 
         // ── Authorization Policies ───────────────────────────────────────────
+        // Esquema explícito en las políticas: no dependen del DefaultScheme
         services.AddAuthorizationBuilder()
             .AddPolicy("RequireAdmin", policy =>
-                policy.RequireRole("ADMIN"))
+                new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
+                    .RequireRole("ADMIN")
+                    .Build())
             .AddPolicy("RequireUser", policy =>
-                policy.RequireRole("USER", "ADMIN"));
+                new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
+                    .RequireRole("USER", "ADMIN")
+                    .Build());
 
         Log.Information("Identity y JWT configurados correctamente.");
         return services;

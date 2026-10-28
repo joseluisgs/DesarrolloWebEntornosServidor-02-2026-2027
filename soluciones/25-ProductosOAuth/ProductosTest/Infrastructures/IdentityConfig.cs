@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -59,11 +60,19 @@ public static class IdentityConfig
         .AddEntityFrameworkStores<AppDbContext>()
         .AddDefaultTokenProviders();
 
+        // En este ejemplo se mantiene AddIdentity: el login externo necesita las
+        // cookies Identity.External e Identity.Application. Se fijan los cuatro
+        // esquemas a Bearer para que ningún camino de la API caiga en la cookie.
         // ── JWT Authentication ───────────────────────────────────────────────
+        // Fijamos TODOS los esquemas a Bearer: sin DefaultForbidScheme, un 403
+        // (usuario autenticado sin rol) caería en la cookie de Identity y
+        // redirigiría en vez de devolver el JSON que espera una API.
         services.AddAuthentication(options =>
         {
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;
         })
         .AddJwtBearer(options =>
         {
@@ -82,11 +91,16 @@ public static class IdentityConfig
         });
 
         // ── Authorization Policies ───────────────────────────────────────────
+        // Esquema explícito en las políticas: no dependen del DefaultScheme
         services.AddAuthorizationBuilder()
             .AddPolicy("RequireAdmin", policy =>
-                policy.RequireRole("ADMIN"))
+                new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
+                    .RequireRole("ADMIN")
+                    .Build())
             .AddPolicy("RequireUser", policy =>
-                policy.RequireRole("USER", "ADMIN"));
+                new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
+                    .RequireRole("USER", "ADMIN")
+                    .Build());
 
         Log.Information("Identity y JWT configurados correctamente.");
         return services;
