@@ -344,6 +344,8 @@ graph TD
 - **Ventaja:** Flexibilidad de esquema. **Desventaja:** No hay joins como en SQL
 - **Cassandra:** Modelado por consultas (query-first): primero las consultas, después las tablas. Sin joins, denormalización forzada
 - **Partition y clustering key:** La partición decide qué lectura es barata; la clustering, el orden dentro de ella
+- **Patrones de acceso:** Una tabla por patrón (tabla por su consulta); quien mantiene las copias desnormalizadas es la aplicación, al escribir
+- **Bucketing y anti-patrones:** Particiones con techo ((cliente, anio)); la tabla general única y ALLOW FILTERING señalan un diseño fallido
 - **Cuándo cada uno:** SQL para relaciones y transacciones, MongoDB para esquema flexible, Cassandra para consultas conocidas y escrituras masivas, Redis para velocidad y caducidad
 - 📌 Un catálogo de productos usa MongoDB para almacenar fichas con campos variables (tallas, colores, especificaciones)
 
@@ -637,6 +639,7 @@ Antes de dar por cerrado el tema, asegúrate de poder responder **SÍ** a estas 
 | **Cassandra** | BD distribuida. Modelado por consultas, sin joins, denormalización forzada |
 | **Partition key** | Clave que decide dónde vive el dato y qué lectura es barata en Cassandra |
 | **Clustering key** | Clave que ordena las filas dentro de una partición en Cassandra |
+| **Bucketing** | Dividir una partición que crece demasiado (por ejemplo, por año); se paga leyendo varias particiones |
 | **Redis** | BD en memoria. Caché clave-valor con expiración TTL |
 | **Cache-Aside** | Patrón de caché: cache → si no está → BD → guardar en cache |
 | **Transacción** | Operación atómica: todo o nada (Commit o Rollback) |

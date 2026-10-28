@@ -49,12 +49,17 @@
   - [13.10. Cassandra: el modelado por consultas](#1310-cassandra-el-modelado-por-consultas)
     - [13.10.1. Consultas primero, tablas después](#13101-consultas-primero-tablas-después)
     - [13.10.2. Partition key y clustering key](#13102-partition-key-y-clustering-key)
+    - [13.10.3. Patrones de acceso: una tabla por consulta](#13103-patrones-de-acceso-una-tabla-por-consulta)
+    - [13.10.4. Desnormalización: quién mantiene las copias](#13104-desnormalización-quién-mantiene-las-copias)
+    - [13.10.5. De un modelo relacional a Cassandra: la tienda paso a paso](#13105-de-un-modelo-relacional-a-cassandra-la-tienda-paso-a-paso)
+    - [13.10.6. Errores comunes de diseño](#13106-errores-comunes-de-diseño)
   - [13.11. Cuándo usar cada almacén](#1311-cuándo-usar-cada-almacén)
   - [13.12. Reto: FunkoApp con MongoDB (categoría embebida y proveedor referenciado)](#1312-reto-funkoapp-con-mongodb-categoría-embebida-y-proveedor-referenciado)
     - [13.12.1. Contexto](#13121-contexto)
     - [13.12.2. Retos](#13122-retos)
     - [13.12.3. Ejemplo de documento Funko](#13123-ejemplo-de-documento-funko)
     - [13.12.4. Arquitectura](#13124-arquitectura)
+    - [13.12.5. Ampliación: modelado por consultas en el FunkoApp](#13125-ampliación-modelado-por-consultas-en-el-funkoapp)
 
 
 
@@ -1926,7 +1931,7 @@ flowchart TB
 
 La tabla `PRIMARY KEY (categoria_id, producto_id)` esconde dos decisiones distintas:
 
-- **Partition key** (`categoria_id`): decide dónde vive el dato y qué lectura es barata. Todo lo de una categoría está juntop en la misma partición; leerla es una sola llamada y toca un solo nodo.
+- **Partition key** (`categoria_id`): decide dónde vive el dato y qué lectura es barata. Todo lo de una categoría está junto en la misma partición; leerla es una sola llamada y toca un solo nodo.
 - **Clustering key** (`producto_id`): el orden dentro de la partición. Los productos de la categoría salen ordenados por esa clave sin ningún `ORDER BY`.
 
 ```sql
@@ -1943,6 +1948,201 @@ SELECT * FROM productos_por_categoria WHERE categoria_id = 3;
 
 📌 **Ejemplo real:** Discord movió el historial de mensajes de MongoDB a Cassandra con exactamente este patrón: leer "los mensajes del canal 42" es leer una partición, y las escrituras son un torrente imposible de planificar.
 
+### 13.10.3. Patrones de acceso: una tabla por consulta
+
+Un patrón de acceso es más que un filtro: describe cómo pregunta la aplicación, qué valores conoce al preguntar, qué rango necesita, en qué orden quiere los resultados y cuántas filas espera traer. De esa descripción sale la tabla, y también su nombre: en Cassandra la tabla se llama por su consulta (`productos_por_categoria`, `historial_precios_por_producto`). Si por el nombre no adivinas qué pregunta responde, la tabla está mal presentada y probablemente mal pensada.
+
+Para la tienda, con sus preguntas de siempre:
+
+| Consulta | Patrón de acceso | Tabla que la atiende |
+|----------|------------------|----------------------|
+| Productos de una categoría | Categoría + orden por producto | `productos_por_categoria` |
+| Detalle de un producto | Id suelto | `productos_por_id` |
+| Histórico de precios de un producto | Producto + orden temporal | `historial_precios_por_producto` |
+| Qué precios cambiaron hoy, para el informe | El día como clave, con techo | `cambios_precio_por_fecha` |
+| Los últimos productos que vio un usuario | Usuario + orden temporal con tope | `vistas_por_usuario` |
+
+```mermaid
+flowchart LR
+    Q["Las consultas de la tienda"] --> T1["Una tabla general productos"]
+    Q --> T2["Una tabla por patrón"]
+    T1 --> R1["Se filtra de más:<br/>acceso impredecible"]
+    T2 --> R2["Acceso directo:<br/>partición + orden"]
+    style Q fill:#FF9800,color:#fff
+    style T1 fill:#f44336,color:#fff
+    style T2 fill:#4CAF50,color:#fff
+    style R1 fill:#f44336,color:#fff
+    style R2 fill:#4CAF50,color:#fff
+```
+
+"Una tabla por patrón de acceso" no significa una tabla por cada `SELECT`: si dos consultas comparten la misma localización y el mismo orden, comparten tabla. El error opuesto es el de siempre: una sola tabla general y mil filtros encima, confiando en que el motor arreglará el desorden.
+
+Y antes del primer `CREATE TABLE`, cinco preguntas que se contestan en este orden:
+
+- ¿Qué valores conoce la aplicación cuando lanza la consulta?
+- ¿Qué valor debería llevarnos directamente a una partición?
+- ¿Necesitamos ordenar o recorrer un rango dentro de esa partición?
+- ¿Puede repetirse una fila? Si puede, ¿qué atributo completa la unicidad?
+- ¿Puede crecer esa partición sin techo?
+
+> 💡 **Consejo:** si una consulta necesita `ALLOW FILTERING` para funcionar, el problema casi nunca está en la consulta: está en el diseño de la tabla que la atiende.
+
+### 13.10.4. Desnormalización: quién mantiene las copias
+
+Cassandra no usa joins como mecanismo habitual de consulta, así que la misma información se guarda en varias tablas, una por cada patrón de acceso. Es la continuación directa de lo que viste con el embebido de Mongo (13.2.2): desnormalizar en Cassandra es embeber, con dos diferencias. No hay techo de 16 MB por documento, y la organización no la decide el tamaño del documento, sino la partition key que tú diseñas.
+
+Se escribe de más para leer de menos: si una consulta no puede esperar a una unión, los datos van duplicados por diseño. Registrar una visita de producto muestra el patrón en su forma más simple, la misma escritura en dos tablas:
+
+```sql
+-- Un solo momento de negocio: el usuario 42 visita el producto 101
+CREATE TABLE vistas_por_usuario (
+    usuario_id  bigint,
+    fecha       timestamp,
+    producto_id bigint,
+    nombre      text,   -- denormalizado: el feed se pinta sin joins
+    PRIMARY KEY (usuario_id, fecha)
+) WITH CLUSTERING ORDER BY (fecha DESC);
+
+CREATE TABLE vistas_por_dia (
+    fecha_dia   date,   -- el día manda: la partición tiene techo
+    fecha       timestamp,
+    usuario_id  bigint,
+    producto_id bigint,
+    PRIMARY KEY (fecha_dia, fecha, usuario_id)
+);
+
+INSERT INTO vistas_por_usuario (usuario_id, fecha, producto_id, nombre)
+VALUES (42, '2026-10-28T10:07:00Z', 101, 'Teclado Mecánico');
+
+INSERT INTO vistas_por_dia (fecha_dia, fecha, usuario_id, producto_id)
+VALUES ('2026-10-28', '2026-10-28T10:07:00Z', 42, 101);
+```
+
+Y ahí aparece la pregunta que nadie se hace en un relacional: si la segunda escritura falla, el feed del usuario 42 ya responde bien y "lo que se vio hoy" queda desfasado. Duplicar datos es una decisión de diseño válida; lo anormal es duplicar sin saber quién mantiene las copias al día. El mismo patrón a otra escala es el de `productos_por_categoria` (13.10.1): el nombre de la categoría viaja copiado en cada fila porque leerlo de otra tabla exigiría un cruce que aquí no existe.
+
+| Camino | Cómo funciona | Cuándo usarlo |
+|--------|---------------|---------------|
+| La aplicación escribe en todas las tablas | Cada alta genera tantas escrituras como tablas desnormalizadas | El recomendado: la coherencia depende de código que puedes leer y probar |
+| Vistas materializadas | Cassandra deriva y mantiene una vista a partir de la tabla base | Casos concretos; tienen limitaciones y la escritura explícita es más predecible |
+| Triggers | Una escritura dispara código que escribe en otra tabla | Evitar: ocultan lógica en el servidor y son difíciles de operar |
+
+> ⚠️ **Advertencia:** CQL permite agrupar escrituras con `BATCH`, pero un batch no convierte varias escrituras en una transacción SQL, y los batches que abarcan muchas particiones son costosos. No es un recurso automático para mantener las copias al día.
+
+### 13.10.5. De un modelo relacional a Cassandra: la tienda paso a paso
+
+La mejor manera de comprobar que el método funciona es coger algo que ya sabes hacer, un modelo entidad-relación de toda la vida, y traducirlo entero. Tomemos la parte de la tienda que ya conoces, con su precio incluido:
+
+```mermaid
+erDiagram
+    CATEGORIA ||--o{ PRODUCTO : "contiene"
+    CATEGORIA {
+        int id PK
+        string nombre
+    }
+    PRODUCTO {
+        int id PK
+        int categoria_id FK
+        string nombre
+        double precio
+    }
+```
+
+**Paso 1:** el modelo relacional y sus consultas de siempre. Un relacional guarda el precio actual del producto; el histórico vive en una tabla log con su índice, y la pregunta clásica de negocio ("¿a cuánto estuvo este producto hace tres semanas?") es la que en SQL duele: tabla log, índice compuesto y un trabajo programado para purgar lo viejo.
+
+```sql
+-- a) ¿a cuánto estuvo el producto 3 hace tres semanas? WHERE + ORDER BY + índice
+SELECT precio FROM historial_precio WHERE producto_id = 3
+ORDER BY fecha DESC LIMIT 5;
+
+-- b) GROUP BY + HAVING: categorías con precio medio alto
+SELECT categoria_id, AVG(precio) FROM producto
+GROUP BY categoria_id HAVING AVG(precio) > 100;
+```
+
+Las dos funcionan en SQL porque el motor se busca la vida en cada consulta: elige índice, recorre, agrupa y ordena. La pregunta de Cassandra para este modelo no es de sintaxis: ¿cuántas de estas dos consultas podemos llevarnos?
+
+**Paso 2:** lo que sí se traduce. La consulta (a) conoce al producto y pide orden temporal: esa consulta es oro puro en Cassandra, y la tabla de series temporales es su casa.
+
+```sql
+CREATE TABLE historial_precios_por_producto (
+    producto_id     bigint,
+    fecha           timestamp,
+    precio          double,
+    precio_anterior double,
+    PRIMARY KEY (producto_id, fecha)  -- partition key = producto; clustering = fecha
+) WITH CLUSTERING ORDER BY (fecha DESC);
+-- el ORDER BY que pedías en SQL aquí está GUARDADO en la tabla
+
+-- La consulta (a), traducida: una sola lectura de la partición, sin índice
+SELECT fecha, precio, precio_anterior
+FROM historial_precios_por_producto
+WHERE producto_id = 3
+LIMIT 5;
+```
+
+Dos detalles que pagan el diseño. El primero: la fila ya sabe cuánto cambió (`precio_anterior`), así que la comparación que en SQL harías con una función de ventana se resuelve leyendo. El segundo: si el histórico no es para siempre, `INSERT ... USING TTL` caduca las filas viejas dentro del propio motor y te ahorras el trabajo de purga programada de toda la vida.
+
+**Paso 3:** lo que no se traduce: `GROUP BY` y `HAVING`. CQL no los tiene: no puede recorrer la tabla de todas las categorías para promediar y después filtrar por el promedio. La traducción no es de sintaxis, sino de momento: el cálculo se hace al escribir, no al consultar, y queda guardado en una fila por categoría.
+
+```sql
+CREATE TABLE categoria_resumen (
+    categoria_id bigint PRIMARY KEY,  -- la consulta es POR categoría: una fila por categoría
+    n_productos int,
+    precio_medio double               -- la aplicación lo recalcula al insertar o actualizar
+);
+
+-- La consulta (b), traducida: la tabla es diminuta, una lectura directa
+SELECT n_productos, precio_medio FROM categoria_resumen WHERE categoria_id = 3;
+```
+
+Detalle honesto: filtrar por `precio_medio > 100` exigiría `ALLOW FILTERING`, y aquí, por una vez, no sería un parche porque la tabla entera cabe en una pantalla; la forma limpia, aun así, es traerla y filtrar en la aplicación. Quién la paga: la misma aplicación que inserta el producto actualiza `categoria_resumen`, y ese es el coste de no poder usar `AVG`. Y si vienes de MongoDB (13.3.7), con `$match` y `$group` también agregas en cada consulta, pagando el recorrido o el índice de agregado; en Cassandra la agregación ya está guardada.
+
+**Paso 4:** el informe y el crecimiento: bucketing. Falta la pregunta que casi nadie hace a tiempo: ¿cuánto crecerá cada partición? El histórico de un producto vendido durante años no tiene techo natural. Y queda la segunda consulta del principio, la del informe de cambios: en Cassandra se resuelve con otra tabla cuya partition key es el periodo, que ya de paso pone techo al crecimiento.
+
+```sql
+CREATE TABLE cambios_precio_por_fecha (
+    fecha       date,   -- el día manda: la partición tiene techo
+    producto_id bigint,
+    precio      double,
+    PRIMARY KEY (fecha, producto_id)
+);
+
+-- La consulta del informe, traducida: qué precios cambiaron hoy
+SELECT producto_id, precio FROM cambios_precio_por_fecha WHERE fecha = '2026-10-28';
+```
+
+Consultar el mes completo implica tocar unas treinta particiones de un día cada una, y ese es el canje del bucketing: reduce el tamaño y reparte la carga, pero varias particiones en el mismo informe son varias lecturas. Si el histórico por producto creciera demasiado, se aplica el mismo truco encima: `PRIMARY KEY ((producto_id, anio), fecha)`. El orden de magnitud sí se razona: con filas de ~1 KB, cien mil cambios son unos 100 MB manejables, y diez millones son ~10 GB dentro de una sola partición.
+
+📌 **Ejemplo real:** Netflix publicó que particiones sobredimensionadas en series temporales hacían pasar sus lecturas de milisegundos a segundos, y construyó un mecanismo de división dinámica de particiones para corregirlo. El crecimiento descontrolado no es un problema teórico.
+
+El balance del viaje entero:
+
+| Frente a SQL | Qué ganas | Qué pagas |
+|--------------|-----------|-----------|
+| Consultas frecuentes | Lectura directa en la partición: sin índice que elegir ni plan que calcular | Solo responden las consultas que diseñaste |
+| Series temporales | Orden temporal guardado en la tabla y TTL nativo para purgar | El informe por periodo necesita su propia tabla |
+| Agregaciones | Ya vienen calculadas en la tabla-resumen: lectura instantánea | Alguien debe mantenerlas al escribir |
+| Escala | El mismo esquema crece añadiendo nodos al clúster | Una consulta nueva obliga a replantear el modelo |
+
+La traducción de SQL a Cassandra no es de sintaxis, sino de responsabilidad: en SQL el motor decide en cada consulta; en Cassandra lo decides tú una vez, en el modelo.
+
+### 13.10.6. Errores comunes de diseño
+
+Los mismos errores aparecen una y otra vez, y detectarlos a tiempo ahorra migraciones completas de datos:
+
+| Diseño | Síntoma | Corrección |
+|--------|---------|------------|
+| Tabla general única | Se crea una tabla "para todo" y después se filtra por columnas que no son clave | Una tabla por patrón de acceso; duplicar datos es aceptable |
+| Partition key con pocos valores | Claves como `estado` o `pais`: unas pocas particiones gigantes se llevan toda la carga | Incluir alta cardinalidad en la clave (cliente, producto, fecha) |
+| Orden no soportado | La consulta pide ordenar por un campo que no es clustering column, o en el orden contrario al definido | Alinear el `CLUSTERING ORDER BY` con el patrón de acceso, o crear otra tabla |
+| Unicidad olvidada | Dos escrituras con la misma clave primaria se solapan: la segunda sobrescribirá a la primera | Completar la clave con algo que distinga filas (id, fecha, timeuuid) |
+| Partición sin techo | El histórico crece durante años dentro de la misma clave | Bucket temporal y asumir el coste de leer varios buckets (13.10.5) |
+| `ALLOW FILTERING` como parche | La consulta "funciona" pero escanea muchos más datos de los que devuelve | Señal de diseño fallido: rediseñar la tabla |
+
+En la tienda del ejemplo hay un caso de la tabla que conviene mirar con lupa: las categorías se cuentan con una mano, así que `productos_por_categoria` tiene poquísimas particiones y todas crecen juntas. Para el catálogo de un ciclo eso es perfectamente aceptable; a escala, con millones de filas por categoría, se elegiría una clave de mayor cardinalidad o se partiría por fecha.
+
+> 📝 **Nota:** en Cassandra casi todos los problemas de rendimiento son problemas de diseño de tablas, no de hardware. Antes de añadir nodos o índices, revisa la PRIMARY KEY.
+
 ## 13.11. Cuándo usar cada almacén
 
 Con los cuatro almacenes del módulo sobre la mesa (el relacional, el documento de 13.3 y 13.4, el de este bloque y la caché del tema 14), la pregunta que decide no es cuál es mejor, sino **qué preguntas le vas a hacer y cuántas veces por segundo**:
@@ -1951,7 +2151,7 @@ Con los cuatro almacenes del módulo sobre la mesa (el relacional, el documento 
 |---------|--------|------------------|---------------------------|--------------|
 | **SQL (PostgreSQL)** | Tablas con relaciones y transacciones | Hay relaciones, transacciones y consultas ad-hoc | Escrituras masivas y escalado horizontal | Pedidos, facturación, stock |
 | **MongoDB** | Documentos flexibles | El esquema cambia o se anida; las consultas varían | Joins entre colecciones y escrituras a volumen | Catálogo con fichas variables |
-| **Cassandra** | Tablas por consulta, denormalizadas | Consultas conocidas de antemano y escrituras masivas | Consultas ad-hoc y actualizaciones arbitrarias | Histórico de actividad, feed por usuario |
+| **Cassandra** | Tablas por consulta, denormalizadas | Consultas conocidas de antemano y escrituras masivas | Consultas ad-hoc y actualizaciones arbitrarias | Histórico de precios, feed de actividad por usuario |
 | **Redis** | Clave-valor en memoria | Latencia y caducidad: caché, colas, contadores | Durabilidad de verdad | Caché de catálogo y sesiones (tema 14) |
 
 > 💡 **Consejo:** si la lista de consultas de tu aplicación no cabe en una pizarra, ninguna base de datos te va a salvar: modelar primero es lo que separa un diseño que escala de un diseño que se paga con noches.
@@ -1976,6 +2176,7 @@ FunkoApp ya tiene su CRUD con EF Core y PostgreSQL, con relaciones entre entidad
 6. **Tests con TestContainers:** Al menos 6 tests: Create, GetById, GetAll, Delete lógico, IsDuplicated y **que la referencia al proveedor se persista sin embeberse**
 7. **Seed data:** 3 proveedores con **ID fijo** + 5 Funkos que apuntan a ellos; se insertan al arrancar en desarrollo, **primero los referenciados**
 8. **Validación:** un Funko sin `ProveedorId` debe devolver `400`
+9. **Ampliación opcional (13.12.5):** modela con consultas primero, en Cassandra, el histórico de precios de los funkos y el feed de vistas por usuario
 
 ### 13.12.3. Ejemplo de documento Funko
 
@@ -2071,6 +2272,49 @@ graph TD
     style CRUD2 fill:#7B1FA2,color:#fff
     style TC fill:#7B1FA2,color:#fff
 ```
+
+### 13.12.5. Ampliación: modelado por consultas en el FunkoApp
+
+El reto de arriba modela el catálogo para consultas que aún pueden variar, y para eso MongoDB es el motor indicado. Los funkos, además, viven de subidas y bajadas de precio: "¿a cuánto estuvo mi Spider-Man hace tres meses?" es la pregunta de verdad de un coleccionista, y en un relacional sería una tabla log con su índice y un trabajo de purga programada. Si la tienda creciera, ese histórico y el feed de novedades se plantearían al revés: primero las consultas, después las tablas.
+
+| Consulta | Cómo se atiende |
+|----------|-----------------|
+| Histórico de precios de un funko | Partición `funko_id`, con el orden temporal DESC guardado |
+| Qué funkos cambiaron de precio hoy | El día como partition key: la partición tiene techo |
+| Los últimos funkos que vio un usuario | Partición `usuario_id`, con tope de filas |
+
+```sql
+CREATE TABLE historial_precios_por_funko (
+    funko_id        bigint,
+    fecha           timestamp,
+    precio          double,
+    precio_anterior double,
+    PRIMARY KEY (funko_id, fecha)
+) WITH CLUSTERING ORDER BY (fecha DESC);
+
+CREATE TABLE cambios_precio_por_fecha (
+    fecha       date,   -- el día manda: la partición tiene techo
+    funko_id    bigint,
+    precio      double,
+    PRIMARY KEY (fecha, funko_id)
+);
+
+CREATE TABLE vistas_por_usuario (
+    usuario_id  bigint,
+    fecha       timestamp,
+    funko_id    bigint,
+    nombre      text,   -- denormalizado: el feed se pinta sin joins
+    PRIMARY KEY (usuario_id, fecha)
+) WITH CLUSTERING ORDER BY (fecha DESC);
+```
+
+Los gestos de Mongo tienen aquí nombres distintos. El histórico podría ir embebido en el propio documento, como un array de precios, hasta el techo de 16 MB (13.2.4); en Cassandra no hay techo, pero la organización la decide la partition key que tú diseñas. El precio actual sigue viviendo en el documento del funko: una lectura por id debe seguir costando una sola partición.
+
+Para completar la ampliación:
+
+- Escribe un cambio de precio en las dos tablas, histórico y cambios del día, y responde: ¿quién garantiza que las dos escrituras se hacen juntas y qué ocurre si una falla y la otra no?
+- Calcula cuántas vistas caben en la partición de un usuario activo antes de que esa partición sea un problema, y decide si necesita bucket y de qué periodo.
+- Responde: si el precio actual solo estuviera guardado en el histórico, ¿qué consulta se volvería imposible de atender bien?
 
 ---
 
