@@ -1,4 +1,4 @@
-﻿- [13. MongoDB](#13-mongodb)
+﻿- [13. MongoDB y Cassandra: dos formas de modelar NoSQL](#13-mongodb-y-cassandra-dos-formas-de-modelar-nosql)
   - [13.1. Fundamentos NoSQL](#131-fundamentos-nosql)
     - [13.1.1. ¿Qué es MongoDB?](#1311-qué-es-mongodb)
     - [13.1.2. Modelo de documentos](#1312-modelo-de-documentos)
@@ -46,15 +46,19 @@
     - [Con driver nativo](#con-driver-nativo)
     - [Con EF Core](#con-ef-core)
   - [13.9. Buenas prácticas](#139-buenas-prácticas)
-  - [13.10. Reto: FunkoApp con MongoDB (categoría embebida y proveedor referenciado)](#1310-reto-funkoapp-con-mongodb-categoría-embebida-y-proveedor-referenciado)
-    - [13.10.1. Contexto](#13101-contexto)
-    - [13.10.2. Retos](#13102-retos)
-    - [13.10.3. Ejemplo de documento Funko](#13103-ejemplo-de-documento-funko)
-    - [13.10.4. Arquitectura](#13104-arquitectura)
+  - [13.10. Cassandra: el modelado por consultas](#1310-cassandra-el-modelado-por-consultas)
+    - [13.10.1. Consultas primero, tablas después](#13101-consultas-primero-tablas-después)
+    - [13.10.2. Partition key y clustering key](#13102-partition-key-y-clustering-key)
+  - [13.11. Cuándo usar cada almacén](#1311-cuándo-usar-cada-almacén)
+  - [13.12. Reto: FunkoApp con MongoDB (categoría embebida y proveedor referenciado)](#1312-reto-funkoapp-con-mongodb-categoría-embebida-y-proveedor-referenciado)
+    - [13.12.1. Contexto](#13121-contexto)
+    - [13.12.2. Retos](#13122-retos)
+    - [13.12.3. Ejemplo de documento Funko](#13123-ejemplo-de-documento-funko)
+    - [13.12.4. Arquitectura](#13124-arquitectura)
 
 
 
-# 13. MongoDB
+# 13. MongoDB y Cassandra: dos formas de modelar NoSQL
 
 > 💡 **Punto de partida:** ¿Alguna vez has tenido que diseñar una base de datos con 15 tablas y 20 joins solo para guardar una factura? ¿O has sufrido con un ORM relacional que no encaja con tu modelo de datos? MongoDB te propone otra forma: guarda lo que piensas como un documento, sin tablas, sin joins, sin ceremonia.
 
@@ -1864,13 +1868,103 @@ public ObjectId Id { get; set; } // Indexado automáticamente, búsqueda óptima
 9. **EF Core para CRUD simple** — Si vienes de EF Core relacional, es más fácil
 10. **TestContainers para tests** — Un MongoDB real en Docker, sin depender de instalación local
 
-## 13.10. Reto: FunkoApp con MongoDB (categoría embebida y proveedor referenciado)
+## 13.10. Cassandra: el modelado por consultas
 
-### 13.10.1. Contexto
+MongoDB te deja modelar con flexibilidad y consultar después; **Cassandra invierte el orden: primero la lista de consultas, después las tablas**. Es una base de datos distribuida pensada para escrituras masivas y alta disponibilidad (Discord guardó ahí el historial de mensajes, Instagram su bandeja de entrada), y su regla de oro es que no existen los joins: los datos se copian de forma redundante en cada tabla porque lo que importa es que la lectura salga rapidísima.
+
+### 13.10.1. Consultas primero, tablas después
+
+El diseño empieza en una pizarra, no en un modelador de entidades. Para la tienda, las consultas serían:
+
+| Consulta | Cómo se atiende |
+|----------|-----------------|
+| `Q1`: productos de la categoría 3 | Leer la partición `categoria_id = 3` entera |
+| `Q2`: detalle de un producto | Tabla auxiliar indexada por el id |
+| `Q3`: listado de categorías | Tabla simple de categorías |
+
+Y las tablas que responden a esas consultas, escritas en CQL:
+
+```sql
+-- Q1: la partición es la categoría; dentro, orden por producto
+CREATE TABLE productos_por_categoria (
+    categoria_id      bigint,
+    producto_id       bigint,
+    nombre            text,
+    precio            decimal,
+    categoria_nombre  text,   -- denormalización: el nombre se copia en cada fila
+    PRIMARY KEY (categoria_id, producto_id)
+);
+
+-- Q2: el producto suelto
+CREATE TABLE productos_por_id (
+    id                bigint PRIMARY KEY,
+    nombre            text,
+    precio            decimal,
+    categoria_id      bigint,
+    categoria_nombre  text
+);
+```
+
+Fíjate en lo que no aparece: ninguna clave foránea, ningún `JOIN`, ninguna vista materializada. El nombre de la categoría está escrito en cada fila (`categoria_nombre`) porque leer la tabla de categorías y cruzarla no es su forma de trabajar: en Cassandra se paga de memoria lo que en un relacional se paga en tiempo de consulta.
+
+La lectura de la Q1, con una partición por categoría, se ve así en el mapa:
+
+```mermaid
+flowchart TB
+    Q[Consulta: productos de la categoría 3] --> P[Partición 3<br/>categoria_id = 3]
+    P --> R1[Fila 101: Teclado]
+    P --> R2[Fila 102: Ratón]
+    P --> R3[Fila 103: Monitor]
+    style Q fill:#607D8B,color:#fff
+    style P fill:#2196F3,color:#fff
+    style R1 fill:#4CAF50,color:#fff
+    style R2 fill:#4CAF50,color:#fff
+    style R3 fill:#4CAF50,color:#fff
+```
+
+### 13.10.2. Partition key y clustering key
+
+La tabla `PRIMARY KEY (categoria_id, producto_id)` esconde dos decisiones distintas:
+
+- **Partition key** (`categoria_id`): decide dónde vive el dato y qué lectura es barata. Todo lo de una categoría está juntop en la misma partición; leerla es una sola llamada y toca un solo nodo.
+- **Clustering key** (`producto_id`): el orden dentro de la partición. Los productos de la categoría salen ordenados por esa clave sin ningún `ORDER BY`.
+
+```sql
+INSERT INTO productos_por_categoria (categoria_id, producto_id, nombre, precio, categoria_nombre)
+VALUES (3, 101, 'Teclado Mecánico', 89.99, 'Periféricos');
+
+-- Q1: lee una partición entera, ordenada de serie
+SELECT * FROM productos_por_categoria WHERE categoria_id = 3;
+```
+
+> ⚠️ **Advertencia:** "todos los productos con precio mayor que 50" no es una consulta de Cassandra: tocaría todas las particiones y exigiría `ALLOW FILTERING`, que es la señal de que la consulta y el diseño no encajan. Para preguntas ad-hoc, MongoDB (13.3 y 13.4) o un relacional son mejores opciones.
+
+> 📝 **Nota:** Cassandra tiene TTL nativo por fila: `INSERT ... USING TTL 86400` caduca el dato solo, sin trabajos de limpieza programados. Ideal para sesiones o tokens.
+
+📌 **Ejemplo real:** Discord movió el historial de mensajes de MongoDB a Cassandra con exactamente este patrón: leer "los mensajes del canal 42" es leer una partición, y las escrituras son un torrente imposible de planificar.
+
+## 13.11. Cuándo usar cada almacén
+
+Con los cuatro almacenes del módulo sobre la mesa (el relacional, el documento de 13.3 y 13.4, el de este bloque y la caché del tema 14), la pregunta que decide no es cuál es mejor, sino **qué preguntas le vas a hacer y cuántas veces por segundo**:
+
+| Almacén | Modelo | Brilla cuando... | Se queda corto cuando... | En la tienda |
+|---------|--------|------------------|---------------------------|--------------|
+| **SQL (PostgreSQL)** | Tablas con relaciones y transacciones | Hay relaciones, transacciones y consultas ad-hoc | Escrituras masivas y escalado horizontal | Pedidos, facturación, stock |
+| **MongoDB** | Documentos flexibles | El esquema cambia o se anida; las consultas varían | Joins entre colecciones y escrituras a volumen | Catálogo con fichas variables |
+| **Cassandra** | Tablas por consulta, denormalizadas | Consultas conocidas de antemano y escrituras masivas | Consultas ad-hoc y actualizaciones arbitrarias | Histórico de actividad, feed por usuario |
+| **Redis** | Clave-valor en memoria | Latencia y caducidad: caché, colas, contadores | Durabilidad de verdad | Caché de catálogo y sesiones (tema 14) |
+
+> 💡 **Consejo:** si la lista de consultas de tu aplicación no cabe en una pizarra, ninguna base de datos te va a salvar: modelar primero es lo que separa un diseño que escala de un diseño que se paga con noches.
+
+> 📝 **Nota:** Redis entra en esta tabla por completitud; el tema 14 lo trata en profundidad como caché distribuida. Aquí solo importa recordar que su problema no es modelar, sino responder muy rápido y durar poco.
+
+## 13.12. Reto: FunkoApp con MongoDB (categoría embebida y proveedor referenciado)
+
+### 13.12.1. Contexto
 
 FunkoApp ya tiene su CRUD con EF Core y PostgreSQL, con relaciones entre entidades y borrado lógico. En este reto el mismo catálogo se lleva a MongoDB, un motor de documentos donde cambian las decisiones de modelado: lo que en SQL era una tabla aparte, aquí puede ir embebido dentro del propio documento.
 
-### 13.10.2. Retos
+### 13.12.2. Retos
 
 1. **Modelo Funko:** `Nombre`, `Precio`, `Imagen`, `IsDeleted`, `CreatedAt`, `UpdatedAt`
 2. **Categoría embebida (composición):** `Categoria` como propiedad dentro de Funko (no como colección separada)
@@ -1883,7 +1977,7 @@ FunkoApp ya tiene su CRUD con EF Core y PostgreSQL, con relaciones entre entidad
 7. **Seed data:** 3 proveedores con **ID fijo** + 5 Funkos que apuntan a ellos; se insertan al arrancar en desarrollo, **primero los referenciados**
 8. **Validación:** un Funko sin `ProveedorId` debe devolver `400`
 
-### 13.10.3. Ejemplo de documento Funko
+### 13.12.3. Ejemplo de documento Funko
 
 Así quedaría un documento Funko con la categoría embebida dentro y solo el identificador del proveedor:
 
@@ -1904,7 +1998,7 @@ Así quedaría un documento Funko con la categoría embebida dentro y solo el id
 }
 ```
 
-### 13.10.4. Arquitectura
+### 13.12.4. Arquitectura
 
 La estructura de carpetas de la solución, con las dos implementaciones del repositorio y sus tests:
 

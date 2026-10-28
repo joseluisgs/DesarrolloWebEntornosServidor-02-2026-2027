@@ -4,7 +4,7 @@ UD02. Desarrollo de servicios web en .NET. 2DAW. Curso 2026-2027
 
 ![imagen](https://github.com/joseluisgs/DesarrolloWebEntornosServidor-00-2023-2024/raw/master/images/servicios.png)
 
-- [Desarrollo Web en Entorno Servidor - 02 - Desarrollo de servicios web en .NET](#desarrollo-web-en-entorno-servidor-02---desarrollo-de-servicios-web-en-net)
+- [Desarrollo Web en Entorno Servidor - 02 - Desarrollo de servicios web en .NET](#desarrollo-web-en-entorno-servidor---02---desarrollo-de-servicios-web-en-net)
   - [Contenidos](#contenidos)
   - [Proyecto integrador](#proyecto-integrador)
   - [Contenido en YouTube](#contenido-en-youtube)
@@ -29,7 +29,7 @@ UD02. Desarrollo de servicios web en .NET. 2DAW. Curso 2026-2027
 10. [Pruebas y despliegue básicos](10-pruebas-despliegue.md)
 11. [Arquitecturas para servicios](11-clean-architecture.md)
 12. [Entity Framework Core SQL](12-entity-framework-core.md)
-13. [Entity Framework Core NoSQL con MongoDB](13-mongodb.md)
+13. [MongoDB y Cassandra: dos formas de modelar NoSQL](13-mongodb-cassandra.md)
 14. [Sistemas de caché: Redis y memcached](14-cache-redis.md)
 15. [Transacciones, concurrencia e identificadores](15-transacciones-identificadores.md)
 16. [Autenticación JWT y BCrypt](16-autenticacion.md)
@@ -59,7 +59,7 @@ Los proyectos realizados en clase:
 - [Resumen](https://youtu.be/FhjthcSROeo)
 - [REST API](https://youtu.be/sMFroJJCKSI)
 - [Entity Core framework y SQL](https://youtu.be/_xknwIXg6lI)
-- [NoSQL y mongo con .NET/ASP Core](https://youtu.be/Ox7rGnrfx6Q)
+- [NoSQL: MongoDB con .NET/ASP Core](https://youtu.be/Ox7rGnrfx6Q)
 - [WebSockets con .NET/ASP Core](https://youtu.be/zDSOj6atVsA)
 - [GraphQL con .NET/ASP Core](https://youtu.be/9_slzfm5ods)
 - [Caché avanzada con Redis en .NET/ASP Core](https://youtu.be/w95LVes-Bn4)

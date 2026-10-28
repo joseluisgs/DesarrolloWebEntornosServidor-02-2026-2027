@@ -15,7 +15,7 @@
     - [Parte 2: persistencia y seguridad](#parte-2-persistencia-y-seguridad)
       - [Tema 11: Clean Architecture](#tema-11-clean-architecture)
       - [Tema 12: Entity Framework Core](#tema-12-entity-framework-core)
-      - [Tema 13: MongoDB](#tema-13-mongodb)
+      - [Tema 13: MongoDB y Cassandra](#tema-13-mongodb-y-cassandra)
       - [Tema 14: cache Redis](#tema-14-cache-redis)
       - [Tema 15: transacciones e identificadores](#tema-15-transacciones-e-identificadores)
       - [Tema 16: autenticación](#tema-16-autenticación)
@@ -336,12 +336,15 @@ graph TD
 - **SQL Raw:** FromSqlRaw para consultas nativas, ExecuteSqlRaw para comandos
 - 📌 Un e-commerce usa EF Core con PostgreSQL para gestionar productos, pedidos y clientes
 
-#### Tema 13: MongoDB
+#### Tema 13: MongoDB y Cassandra
 - **MongoDB:** BD documental. JSON flexible. Sin esquema fijo
 - **Documentos BSON:** JSON binario, tipado, con soporte para fechas y ObjectId
 - **Aggregation Pipeline:** Pipeline de transformación: $match → $group → $sort → $project
 - **Drivers:** `MongoDB.Driver` para .NET. Colecciones, filtros, ordenación
 - **Ventaja:** Flexibilidad de esquema. **Desventaja:** No hay joins como en SQL
+- **Cassandra:** Modelado por consultas (query-first): primero las consultas, después las tablas. Sin joins, denormalización forzada
+- **Partition y clustering key:** La partición decide qué lectura es barata; la clustering, el orden dentro de ella
+- **Cuándo cada uno:** SQL para relaciones y transacciones, MongoDB para esquema flexible, Cassandra para consultas conocidas y escrituras masivas, Redis para velocidad y caducidad
 - 📌 Un catálogo de productos usa MongoDB para almacenar fichas con campos variables (tallas, colores, especificaciones)
 
 #### Tema 14: cache Redis
@@ -631,6 +634,9 @@ Antes de dar por cerrado el tema, asegúrate de poder responder **SÍ** a estas 
 | **AsNoTracking** | Consultas de solo lectura sin rastreo de entidades |
 | **MongoDB** | BD documental. JSON flexible. Sin esquema fijo |
 | **Aggregation Pipeline** | Pipeline de transformación en MongoDB: $match, $group, $sort |
+| **Cassandra** | BD distribuida. Modelado por consultas, sin joins, denormalización forzada |
+| **Partition key** | Clave que decide dónde vive el dato y qué lectura es barata en Cassandra |
+| **Clustering key** | Clave que ordena las filas dentro de una partición en Cassandra |
 | **Redis** | BD en memoria. Caché clave-valor con expiración TTL |
 | **Cache-Aside** | Patrón de caché: cache → si no está → BD → guardar en cache |
 | **Transacción** | Operación atómica: todo o nada (Commit o Rollback) |
