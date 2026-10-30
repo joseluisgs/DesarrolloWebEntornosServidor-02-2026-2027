@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ProductosCassandra/ProductosCassandra.csproj" />
+  <Project Path="ProductosCassandra.Test/ProductosCassandra.Test.csproj" />
+</Solution>
