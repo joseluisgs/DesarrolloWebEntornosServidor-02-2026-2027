@@ -302,6 +302,7 @@ graph TD
 - **appsettings.json:** Fichero de configuración. Valores por defecto + valores por entorno
 - **IOptions<T>:** Configuración tipada. Accedes a valores como propiedades
 - **Secciones:** ConnectionStrings, Jwt, Logging, Cors, AppState
+- **.env:** Variables de entorno en un fichero `CLAVE=VALOR`. .NET no lo lee solo: hay que cargarlo con la shell; Docker y Compose sí lo leen
 - **Serilog:** Logging estructurado. Sinks: Console, File, Seq
 - **Niveles:** Verbose, Debug, Information, Warning, Error, Fatal
 - **Logger<T>:** Logger inyectado por DI. Escríbelo en logs con `LogInformation`, `LogError`
@@ -448,6 +449,7 @@ graph TD
 - **appsettings.{Environment}.json:** Configuración específica por entorno
 - **User Secrets:** Secretos fuera del código. `dotnet user-secrets set`
 - **Variables de entorno:** En producción, los secretos van en variables de entorno, no en ficheros
+- **.env:** Reunir esas variables en un fichero propio fuera de git. Se carga con `$env:` en PowerShell o `export` en bash, y se añade al `.gitignore`
 - **IConfiguration:** Acceder a cualquier valor de configuración de forma tipada
 - 📌 Un equipo usa Development en local, Staging para QA, Production para clientes
 
@@ -479,6 +481,7 @@ graph TD
 #### Tema 29: Docker y contenedores
 - **Dockerfile:** Receta multi-etapa: build → test → runtime. Mismo formato para Docker y Podman
 - **docker-compose.yml:** Define servicios: app, BD, caché, etc. Compatible con Podman Compose
+- **env_file vs environment:** `env_file` mete el `.env` dentro del contenedor; `${VAR}` del compose se resuelve en el host antes de arrancar
 - **.dockerignore:** Excluir bin/, obj/, .git/ del contexto de build
 - **Multi-etapa:** Build stage compila y testea, runtime stage solo tiene la app
 - **Non-root user:** Ejecutar como usuario no root por seguridad
@@ -549,6 +552,8 @@ graph TD
 | `AllowAnyOrigin()` en CORS | Cualquier web puede acceder a tu API | Configurar orígenes específicos |
 | No usar `Include` en EF Core | Problema N+1 (muchas queries) | Usar Eager Loading con Include |
 | Guardar secretos en appsettings.json | Se sube a git por accidente | Usar User Secrets o variables de entorno |
+| Esperar que .NET lea el `.env` solo | No se carga ningún valor y la app arranca con los defectos | Cargarlo en la shell antes de `dotnet run` |
+| Subir el `.env` a git | Los secretos quedan en el historial del repositorio | Añadirlo al `.gitignore` desde el primer día |
 | `Parse` sin validar | Excepción si el dato no es válido | Usar `TryParse` |
 | No usar `CancellationToken` | Operaciones no se pueden cancelar | Pasar token en métodos asíncronos |
 | No rotar logs | El disco se llena | Configurar retención y rotación |
@@ -660,6 +665,7 @@ Antes de dar por cerrado el tema, asegúrate de poder responder **SÍ** a estas 
 | **Rate Limiting** | Limitar peticiones por IP para evitar abusos |
 | **Swagger/OpenAPI** | Estándar para documentar APIs REST automáticamente |
 | **User Secrets** | Secretos fuera del código. `dotnet user-secrets set` |
+| **.env** | Fichero de variables de entorno (`CLAVE=VALOR`). Fuera de git; .NET no lo lee solo, Docker y Compose sí |
 | **Serilog** | Librería de logging estructurado con sinks (Console, File, Seq) |
 | **NUnit** | Framework de tests para .NET |
 | **Moq** | Librería para crear mocks de interfaces |

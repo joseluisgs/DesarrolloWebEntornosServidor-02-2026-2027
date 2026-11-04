@@ -1,23 +1,26 @@
 - [29. Docker y despliegue](#29-docker-y-despliegue)
   - [29.1. Conceptos fundamentales](#291-conceptos-fundamentales)
-    - [29.1.1. Que es un contenedor](#2911-que-es-un-contenedor)
+    - [29.1.1. Qué es un contenedor](#2911-qué-es-un-contenedor)
     - [29.1.2. Ventajas de los contenedores](#2912-ventajas-de-los-contenedores)
   - [29.2. Dockerfile](#292-dockerfile)
     - [29.2.1. Estructura del proyecto](#2921-estructura-del-proyecto)
-    - [29.2.2. Dockerfile basico](#2922-dockerfile-basico)
-    - [29.2.3. Explicacion de instrucciones](#2923-explicacion-de-instrucciones)
+    - [29.2.2. Dockerfile básico](#2922-dockerfile-básico)
+    - [29.2.3. Explicación de instrucciones](#2923-explicación-de-instrucciones)
   - [29.3. Multi-Stage build](#293-multi-stage-build)
   - [29.4. Docker compose](#294-docker-compose)
     - [29.4.1. Docker-compose.yml completo](#2941-docker-composeyml-completo)
-    - [29.4.2. Patron de dos archivos](#2942-patron-de-dos-archivos)
+    - [29.4.2. Patrón de dos archivos](#2942-patrón-de-dos-archivos)
   - [29.5. Variables de entorno](#295-variables-de-entorno)
+    - [29.5.1. El fichero .env](#2951-el-fichero-env)
+    - [29.5.2. Las dos vías del docker-compose](#2952-las-dos-vías-del-docker-compose)
+    - [29.5.3. El viaje hasta la aplicación](#2953-el-viaje-hasta-la-aplicación)
   - [29.6. Health Checks](#296-health-checks)
-  - [29.7. Optimizacion de imagenes](#297-optimizacion-de-imagenes)
+  - [29.7. Optimización de imágenes](#297-optimización-de-imágenes)
     - [29.7.1. Usar alpine Linux](#2971-usar-alpine-linux)
     - [29.7.2. .dockerignore](#2972-dockerignore)
-  - [29.7.3. Excluir proyectos de test del build](#2973-excluir-proyectos-de-test-del-build)
+    - [29.7.3. Excluir proyectos de test del build](#2973-excluir-proyectos-de-test-del-build)
   - [29.8. CI/CD con GitHub Actions](#298-cicd-con-github-actions)
-  - [29.9. Buenas practicas](#299-buenas-practicas)
+  - [29.9. Buenas prácticas](#299-buenas-prácticas)
   - [29.10. Reto: despliega FunkoApp con Docker](#2910-reto-despliega-funkoapp-con-docker)
 
 
@@ -26,21 +29,21 @@
 
 > 💡 **Punto de partida:** ¿Recuerdas cuando instalabas un programa y decía "funciona en mi ordenador"? Docker resuelve ese problema: empaqueta tu aplicación con todo lo que necesita (runtime, librerías, configuración) y funciona igual en cualquier lugar. Es como un contenedor de carga pero para código.
 
-En este punto aprenderás a crear Dockerfiles optimizados, usar Docker Compose para orquestar multiples contenedores, implementar multi-stage builds y configurar CI/CD con GitHub Actions.
+En este punto aprenderás a crear Dockerfiles optimizados, usar Docker Compose para orquestar múltiples contenedores, implementar multi-stage builds y configurar CI/CD con GitHub Actions.
 
 **Objetivos de aprendizaje:**
-- Comprender que son los contenedores y por que se usan
+- Comprender que son los contenedores y por qué se usan
 - Crear Dockerfiles para aplicaciones ASP.NET Core
-- Implementar multi-stage builds para reducir tamanio de imagenes
-- Usar Docker Compose para orquestar multiples servicios
+- Implementar multi-stage builds para reducir tamaño de imágenes
+- Usar Docker Compose para orquestar múltiples servicios
 - Configurar variables de entorno y health checks
 - Implementar CI/CD con GitHub Actions
 
 ## 29.1. Conceptos fundamentales
 
-### 29.1.1. Que es un contenedor
+### 29.1.1. Qué es un contenedor
 
-Un **contenedor** es una unidad de software que incluye todo lo necesario para ejecutar una aplicacion: codigo, runtime, herramientas del sistema, librerias y configuraciones. A diferencia de las maquinas virtuales, los contenedores comparten el kernel del sistema operativo y son mas ligeros.
+Un **contenedor** es una unidad de software que incluye todo lo necesario para ejecutar una aplicación: código, runtime, herramientas del sistema, librerías y configuraciones. A diferencia de las máquinas virtuales, los contenedores comparten el kernel del sistema operativo y son más ligeros.
 
 ```mermaid
 flowchart TB
@@ -67,18 +70,18 @@ flowchart TB
     end
 ```
 
-📌 **Ejemplo real:** Spotify usa contenedores Docker para desplegar miles de microservicios. Cada servicio esta empaquetado en su propio contenedor, lo que permite escalar solo los que necesitan mas recursos.
+📌 **Ejemplo real:** Spotify usa contenedores Docker para desplegar miles de microservicios. Cada servicio está empaquetado en su propio contenedor, lo que permite escalar solo los que necesitan más recursos.
 
 ### 29.1.2. Ventajas de los contenedores
 
 | Aspecto | Beneficio |
 |---------|-----------|
-| **Consistencia** | Mismo entorno en desarrollo, testing y produccion |
+| **Consistencia** | Mismo entorno en desarrollo, testing y producción |
 | **Portabilidad** | Funciona en cualquier sistema con Docker |
-| **Aislamiento** | Cada aplicacion tiene su propio contenedor |
-| **Escalabilidad** | Facil de escalar horizontalmente |
+| **Aislamiento** | Cada aplicación tiene su propio contenedor |
+| **Escalabilidad** | Fácil de escalar horizontalmente |
 | **Velocidad** | Arrancan en segundos, no en minutos |
-| **Eficiencia** | Usan menos recursos que maquinas virtuales |
+| **Eficiencia** | Usan menos recursos que máquinas virtuales |
 
 ## 29.2. Dockerfile
 
@@ -99,7 +102,7 @@ ProductosApp/
 └── docker-compose.yml
 ```
 
-### 29.2.2. Dockerfile basico
+### 29.2.2. Dockerfile básico
 
 > 📝 **Nota:** Antes de construir la imagen, genera la carpeta `publish` con la aplicación compilada: `dotnet publish src/ProductosApp/ProductosApp.csproj -c Release -o publish`.
 
@@ -114,23 +117,23 @@ ENTRYPOINT ["dotnet", "ProductosApp.dll"]
 
 > 📝 **Nota:** este ejemplo compila fuera (con `dotnet publish`) y solo copia el resultado. Si la compilación ocurre dentro de la imagen y el proyecto centraliza versiones con CPM (`Directory.Packages.props`, tema 26), la fase de build debe copiar ese fichero **antes** del `dotnet restore`; si falta, el restore revienta con **NU1015**, porque los `.csproj` no llevan `Version=` y el catálogo de versiones no está dentro de la imagen.
 
-### 29.2.3. Explicacion de instrucciones
+### 29.2.3. Explicación de instrucciones
 
-| Instruccion | Proposito |
+| Instrucción | Propósito |
 |-------------|-----------|
 | `FROM` | Imagen base sobre la que construimos |
 | `WORKDIR` | Directorio de trabajo dentro del contenedor |
 | `COPY` | Copiar archivos del host al contenedor |
-| `RUN` | Ejecutar comandos durante la construccion |
+| `RUN` | Ejecutar comandos durante la construcción |
 | `ENV` | Variables de entorno |
 | `EXPOSE` | Puertos que expone el contenedor |
-| `USER` | Usuario que ejecuta la aplicacion |
+| `USER` | Usuario que ejecuta la aplicación |
 | `ENTRYPOINT` | Comando que se ejecuta al iniciar |
-| `HEALTHCHECK` | Verificacion de salud del contenedor |
+| `HEALTHCHECK` | Verificación de salud del contenedor |
 
 ## 29.3. Multi-Stage build
 
-El **multi-stage build** permite construir la aplicacion en una etapa y copiar solo los archivos necesarios a una imagen final mas pequena.
+El **multi-stage build** permite construir la aplicación en una etapa y copiar solo los archivos necesarios a una imagen final más pequeña.
 
 ```dockerfile
 # ==================================================
@@ -188,15 +191,15 @@ ENTRYPOINT ["dotnet", "ProductosApp.dll"]
 
 📌 **Ejemplo real:** La imagen de Netflix Backend usa multi-stage builds. La etapa de build tiene el SDK completo (~800MB), pero la imagen final solo tiene el runtime (~200MB). Esto reduce el tiempo de despliegue y el ataque superficial de seguridad.
 
-### Comparacion de tamanos
+### Comparación de tamaños
 
-| Tipo de Build | Tamanio Aproximado |
+| Tipo de Build | Tamaño Aproximado |
 |---------------|-------------------|
 | Single-stage con SDK | ~800 MB |
 | Multi-stage con aspnet | ~200 MB |
 | Multi-stage con alpine | ~150 MB |
 
-> ⚠️ **Advertencia:** Usa siempre multi-stage builds en produccion. Una imagen con el SDK incluido expone herramientas de desarrollo que no deberian estar en produccion.
+> ⚠️ **Advertencia:** Usa siempre multi-stage builds en producción. Una imagen con el SDK incluido expone herramientas de desarrollo que no deberían estar en producción.
 
 ## 29.4. Docker compose
 
@@ -261,7 +264,7 @@ networks:
 
 ### Comandos de Docker compose
 
-| Comando | Descripcion |
+| Comando | Descripción |
 |---------|-------------|
 | `docker compose up -d` | Iniciar todos los servicios en background |
 | `docker compose down` | Detener todos los servicios |
@@ -269,9 +272,9 @@ networks:
 | `docker compose build api` | Reconstruir imagen de la API |
 | `docker compose ps` | Ver estado de los servicios |
 
-### 29.4.2. Patron de dos archivos
+### 29.4.2. Patrón de dos archivos
 
-En desarrollo es comun separar la infraestructura de la API en dos archivos:
+En desarrollo es común separar la infraestructura de la API en dos archivos:
 
 ```yaml
 # docker-compose.yml — Solo base de datos (para desarrollo local)
@@ -317,13 +320,15 @@ docker compose up -d
 docker compose -f docker-compose.api.yml up -d
 ```
 
-> 💡 **Consejo:** Manten las versiones de imagenes consistentes en todos los compose. Ejemplo: `postgres:17-alpine`, `redis:7-alpine`.
+> 💡 **Consejo:** Mantén las versiones de imágenes consistentes en todos los compose. Ejemplo: `postgres:17-alpine`, `redis:7-alpine`.
 
 ## 29.5. Variables de entorno
 
-Las variables de entorno permiten configurar la aplicacion sin modificar el codigo.
+Las variables de entorno permiten configurar la aplicación sin modificar el código: la misma imagen sirve para desarrollo, pruebas y producción, y lo único que cambia es lo que haya fuera. En Docker ese "fuera" se organiza en un fichero `.env`.
 
-### Archivo .env
+### 29.5.1. El fichero .env
+
+El `.env` es un fichero de texto plano con una variable por línea, en formato `CLAVE=valor`, sin `export` y sin comillas. Vive en la raíz del proyecto, junto al `docker-compose.yml`.
 
 ```bash
 # .env
@@ -331,21 +336,7 @@ DB_PASSWORD=Postgres123!
 JWT_SECRET=mi-clave-secreta-produccion-muy-larga-y-segura-de-al-menos-32-caracteres
 ```
 
-### Uso en docker-compose.yml
-
-```yaml
-services:
-  api:
-    build: .
-    env_file:
-      - .env
-    environment:
-      - ConnectionStrings__DefaultConnection=Host=db;Database=productosdb;Password=${DB_PASSWORD}
-```
-
-> ⚠️ **Advertencia:** Nunca subas el archivo .env al repositorio. Agregalo al `.gitignore` siempre.
-
-### Agregar al .gitignore
+Nunca se sube al repositorio: el `.env` con las contraseñas va en el `.gitignore` desde el primer commit.
 
 ```gitignore
 .env
@@ -354,9 +345,69 @@ services:
 secrets.json
 ```
 
+> ⚠️ **Advertencia:** Si el `.env` llega a GitHub, borrarlo después no borra el historial: hay que sacarlo de todos los commits. Comparte los secretos por canales seguros, no por el repositorio.
+
+> 📝 **Nota:** Este mismo `.env` se usa sin Docker: se carga a mano antes de `dotnet run` y la aplicación ni se entera. Ese circuito, con el comando para PowerShell y para bash, está en 9.1.4.
+
+### 29.5.2. Las dos vías del docker-compose
+
+Hay dos formas de que el `.env` entre en el compose, y las dos hacen cosas distintas. Es la confusión más habitual de esta parte:
+
+| Vía | Dónde actúa | Para qué sirve |
+|-----|-------------|----------------|
+| `env_file` | Dentro del contenedor | Pasa las variables a la aplicación para que las lea en ejecución |
+| `environment` con `${...}` | En el propio YAML del compose | Sustituir valores antes de arrancar nada: contraseñas dentro de cadenas, rutas, puertos |
+
+```yaml
+services:
+  api:
+    build: .
+    env_file:
+      - .env   # inyecta DB_PASSWORD y JWT_SECRET dentro del contenedor
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=db;Database=productosdb;Password=${DB_PASSWORD}
+```
+
+Dos detalles que conviene tener claros antes de copiar el bloque:
+
+- Si una clave aparece en las dos vías, gana `environment`.
+- `${DB_PASSWORD}` lo resuelve **Compose**, no la aplicación: si la variable no está en el `.env`, la cadena queda con el hueco vacío y el error aparece mucho después, cuando la app intenta conectar.
+
+La comprobación es de dos segundos:
+
+```bash
+# Lo que Compose ya ha resuelto: aquí se ve la cadena con la contraseña dentro
+docker compose config
+
+# Lo que el contenedor tiene realmente al otro lado
+docker compose exec api printenv ConnectionStrings__DefaultConnection
+```
+
+### 29.5.3. El viaje hasta la aplicación
+
+Dentro del contenedor no hay nada especial: una variable de entorno más, igual que la que definiste en la terminal de tu máquina. Desde ahí el viaje hasta el código es el mismo que en 9.1.4, con una sola diferencia: quien define la variable es Compose.
+
+```mermaid
+flowchart LR
+    A[".env"] -->|Compose lee| B["env_file / environment"]
+    B --> C["Contenedor: variable<br/>ConnectionStrings__DefaultConnection"]
+    C --> D["Proveedor de variables<br/>de entorno de .NET"]
+    D --> E["IConfiguration:<br/>pisa appsettings.json"]
+    style A fill:#607D8B,color:#fff
+    style B fill:#607D8B,color:#fff
+    style C fill:#2196F3,color:#fff
+    style D fill:#FF9800,color:#fff
+    style E fill:#4CAF50,color:#fff
+```
+
+Y con eso el `.env` deja de ser un truco de Compose: es la última capa de configuración de la aplicación, la que manda sobre `appsettings.json` y sobre `appsettings.{Environment}.json`.
+
+> 💡 **Consejo:** La jerarquía de la 9.1.2 no cambia: `appsettings.json` abajo, `appsettings.{Entorno}.json` encima y la variable de entorno arriba del todo. El `.env` no mueve nada de esa pila, solo es el sitio donde guardas lo que va en el piso superior.
+
 ## 29.6. Health Checks
 
-Los health checks monitorizan la salud de la aplicacion y permiten al orquestador tomar decisiones.
+Los health checks monitorizan la salud de la aplicación y permiten al orquestador tomar decisiones.
 
 ### Endpoint de salud en ASP.NET Core
 
@@ -404,7 +455,7 @@ services:
       start_period: 10s
 ```
 
-## 29.7. Optimizacion de imagenes
+## 29.7. Optimización de imágenes
 
 ### 29.7.1. Usar alpine Linux
 
@@ -444,7 +495,7 @@ out/
 .secrets
 ```
 
-> 💡 **Consejo:** El `.dockerignore` es como el `.gitignore` pero para Docker. Excluye archivos innecesarios para reducir el tamanio de la imagen y mejorar la seguridad.
+> 💡 **Consejo:** El `.dockerignore` es como el `.gitignore` pero para Docker. Excluye archivos innecesarios para reducir el tamaño de la imagen y mejorar la seguridad.
 
 ### 29.7.3. Excluir proyectos de test del build
 
@@ -486,7 +537,7 @@ COPY ["MiApi*/MiApi*.csproj", "MiApi/"]
 > 📝 **Nota:** Si usas CPM, recuerda copiar `Directory.Packages.props` antes de los `.csproj` (ver punto 20.5 de UD03).
 ## 29.8. CI/CD con GitHub Actions
 
-CI/CD (Continuous Integration / Continuous Deployment) automatiza el build, test y deploy de tu aplicacion.
+CI/CD (Continuous Integration / Continuous Deployment) automatiza el build, test y deploy de tu aplicación.
 
 ### Workflow completo
 
@@ -584,24 +635,24 @@ jobs:
             type=ref,event=branch
 ```
 
-📌 **Ejemplo real:** Spotify ejecuta mas de 50,000 tests en cada pull request usando pipelines CI/CD similares. Si algun test falla, el PR no se puede merge.
+📌 **Ejemplo real:** Spotify ejecuta más de 50,000 tests en cada pull request usando pipelines CI/CD similares. Si algún test falla, el PR no se puede merge.
 
-## 29.9. Buenas practicas
+## 29.9. Buenas prácticas
 
-| Practica | Descripcion |
+| Práctica | Descripción |
 |----------|-------------|
-| **Multi-stage builds** | Reducir tamanio de imagen final |
+| **Multi-stage builds** | Reducir tamaño de imagen final |
 | **Usuario no-root** | Seguridad en el contenedor |
 | **Variables de entorno** | Para secretos, nunca hardcodear |
-| **Health checks** | Para monitorizacion y orquestacion |
+| **Health checks** | Para monitorización y orquestación |
 | **.dockerignore** | Excluir archivos innecesarios |
 | **Cache de layers** | En CI/CD para acelerar builds |
-| **Imagenes Alpine** | Para reducir tamanio |
+| **Imágenes Alpine** | Para reducir tamaño |
 | **Persistencia de datos** | Usar volumes para bases de datos |
 | **Redes aisladas** | Para seguridad entre contenedores |
 | **CI/CD automatizado** | Para builds y deploys consistentes |
 
-> ⚠️ **Advertencia:** Nunca guardes secretos en el Dockerfile o en el codigo fuente. Usa variables de entorno o archivos .env que nunca se suban al repositorio.
+> ⚠️ **Advertencia:** Nunca guardes secretos en el Dockerfile o en el código fuente. Usa variables de entorno o archivos .env que nunca se suban al repositorio.
 
 ## 29.10. Reto: despliega FunkoApp con Docker
 
@@ -618,7 +669,7 @@ Tu API de Funkos necesita ser desplegable en cualquier entorno usando contenedor
 3. Configura variables de entorno para secretos
 4. Implementa health checks en el contenedor
 5. Configura persistencia de datos con volumes
-6. Crea un workflow basico de CI/CD con GitHub Actions
+6. Crea un workflow básico de CI/CD con GitHub Actions
 
 ### Archivos esperados
 
@@ -638,19 +689,19 @@ FunkoApp/
 
 **Resumen del punto:**
 
-| Concepto | Descripcion |
+| Concepto | Descripción |
 |----------|-------------|
 | **Contenedor** | Unidad de software portable con todas las dependencias |
 | **Imagen Docker** | Plantilla de solo lectura para crear contenedores |
 | **Dockerfile** | Instrucciones para construir una imagen |
-| **Multi-stage** | Construir en etapas para reducir tamanio final |
-| **Docker Compose** | Orquestar multiples contenedores |
-| **Variables de entorno** | Configurar la aplicacion sin modificar el codigo |
-| **Health Check** | Verificacion de salud del contenedor |
-| **CI/CD** | Automatizacion de build, test y deploy |
+| **Multi-stage** | Construir en etapas para reducir tamaño final |
+| **Docker Compose** | Orquestar múltiples contenedores |
+| **Variables de entorno** | Configurar la aplicación sin modificar el código |
+| **Health Check** | Verificación de salud del contenedor |
+| **CI/CD** | Automatización de build, test y deploy |
 | **GitHub Actions** | Plataforma de CI/CD integrada en GitHub |
-| **Alpine Linux** | Imagenes mas ligeras para produccion |
+| **Alpine Linux** | Imágenes más ligeras para producción |
 
 **¿Qué viene después?**
 
-En la siguiente unidad veremos **Clean Architecture**: como organizar una aplicacion ASP.NET Core en capas (Domain, Application, Infrastructure, Presentation) siguiendo principios SOLID y patrones de diseño.
+En la siguiente unidad veremos **Clean Architecture**: cómo organizar una aplicación ASP.NET Core en capas (Domain, Application, Infrastructure, Presentation) siguiendo principios SOLID y patrones de diseño.

@@ -3,8 +3,9 @@
     - [9.1.1. Appsettings.json](#911-appsettingsjson)
     - [9.1.2. Perfiles de entorno (Development vs Production)](#912-perfiles-de-entorno-development-vs-production)
     - [9.1.3. Variables de entorno](#913-variables-de-entorno)
-    - [9.1.4. Leyendo configuración en código](#914-leyendo-configuración-en-código)
-    - [9.1.5. Patrones de acceso a configuración](#915-patrones-de-acceso-a-configuración)
+    - [9.1.4. Ficheros .env](#914-ficheros-env)
+    - [9.1.5. Leyendo configuración en código](#915-leyendo-configuración-en-código)
+    - [9.1.6. Patrones de acceso a configuración](#916-patrones-de-acceso-a-configuración)
   - [9.2. Logging en ASP.NET Core](#92-logging-en-aspnet-core)
     - [9.2.1. ILogger: el sistema de logging del framework](#921-ilogger-el-sistema-de-logging-del-framework)
     - [9.2.2. Niveles de log](#922-niveles-de-log)
@@ -26,6 +27,7 @@ En este punto aprenderás a configurar tu aplicación para distintos entornos (d
 
 **Objetivos de aprendizaje:**
 - Organizar la configuración en `appsettings.json` por entornos
+- Cargar secretos desde variables de entorno y ficheros `.env`
 - Leer valores de configuración en código con `IConfiguration`
 - Configurar Serilog para consola y fichero con rotación
 - Entender los niveles de log y cuándo usar cada uno
@@ -205,7 +207,91 @@ La convención de nombres usa `__` (doble guion bajo) para separar niveles:
 
 📌 Ejemplo real: **Stripe** nunca incluye las claves API en el código fuente. Las lee de variables de entorno o de un gestor de secrets como Azure Key Vault o AWS Secrets Manager.
 
-### 9.1.4. Leyendo configuración en código
+Definirlas una a una en la consola se hace cuesta arriba: cada terminal nueva empieza de cero. El sitio habitual donde se guardan es un fichero `.env`: es el siguiente apartado.
+
+### 9.1.4. Ficheros .env
+
+Un `.env` es un fichero de texto con una variable por línea, que se carga de golpe antes de arrancar. Es el formato que usan la mayoría de herramientas de despliegue, y Docker Compose lo lee sin que le pidas nada.
+
+**Formato:**
+
+```bash
+# .env: una CLAVE=valor por línea, sin export y sin comillas
+ConnectionStrings__DefaultConnection=Host=localhost;Database=tienda
+Cache__TTLMinutes=10
+Jwt__Secret=clave-de-desarrollo-12345
+```
+
+Las reglas son pocas y estrictas:
+
+- Una variable por línea, en formato `CLAVE=valor`.
+- Sin `export`, sin `declare` y sin comillas: si pones comillas, las comillas llegan hasta el valor.
+- Los comentarios empiezan por `#`; las líneas vacías se ignoran.
+- Los niveles se separan con `__`, igual que en cualquier variable de entorno: `Cache__TTLMinutes` es la clave `Cache:TTLMinutes`.
+- Vive en la raíz del proyecto y no se sube a git: va en el `.gitignore` desde el primer commit.
+
+> ⚠️ **Advertencia:** .NET no lee el `.env` por sí solo. Si ejecutas `dotnet run` con el fichero al lado, la aplicación no se entera de que existe: el proveedor de configuración solo mira appsettings, las variables de entorno del sistema y los argumentos. Quien viene de Node o Python, donde el `.env` se carga automáticamente, se lleva aquí la primera sorpresa.
+
+**Cargarlo en local:** dos comandos, uno por sistema, y van en la misma terminal, justo antes de `dotnet run`.
+
+```powershell
+# Windows PowerShell: recorre el .env y crea cada variable en la sesión
+Get-Content .env | ForEach-Object {
+    if ($_ -match '^\s*([^#=]+)=(.*)$') {
+        Set-Item -Path "env:$($Matches[1].Trim())" -Value $Matches[2].Trim()
+    }
+}
+dotnet run
+```
+
+```bash
+# Linux y macOS: set -a exporta lo que venga después, set +a deja de hacerlo
+set -a; source .env; set +a
+dotnet run
+```
+
+**Cómo llega hasta `appsettings.json`:** una vez cargada, la variable entra en la configuración como cualquier otra y pisa el valor del JSON. Con esta base en `appsettings.json`:
+
+```json
+{
+  "Cache": { "TTLMinutes": 5 },
+  "ConnectionStrings": { "DefaultConnection": "Host=localhost;Database=tienda" }
+}
+```
+
+y con este `.env`:
+
+```bash
+ConnectionStrings__DefaultConnection=Host=db;Database=tienda;Password=Postgres123!
+```
+
+al arrancar pasa esto:
+
+| Clave | `appsettings.json` | Variable de entorno | Valor final en `IConfiguration` |
+|-------|:------------------:|:-------------------:|:-------------------------------:|
+| `Cache:TTLMinutes` | `5` | no existe | `5` |
+| `ConnectionStrings:DefaultConnection` | `Host=localhost;Database=tienda` | la del `.env` | `Host=db;Database=tienda;Password=Postgres123!` |
+
+Quien no esté en el `.env` se queda con lo del JSON; quien esté, gana. Es la tabla de prioridad de la 9.1.2, vista con valores delante:
+
+```mermaid
+flowchart LR
+    A[".env"] -->|se carga en la sesión| B["Variable de entorno<br/>ConnectionStrings__DefaultConnection"]
+    C["appsettings.json"] --> D["IConfiguration"]
+    B -->|prioridad 3: pisa al JSON| D
+    D --> E["Tu código lee<br/>GetConnectionString()"]
+    style A fill:#607D8B,color:#fff
+    style B fill:#2196F3,color:#fff
+    style C fill:#607D8B,color:#fff
+    style D fill:#FF9800,color:#fff
+    style E fill:#4CAF50,color:#fff
+```
+
+> 💡 **Consejo:** En el lado de Docker no hay que cargar nada a mano: el `docker-compose.yml` lee el `.env` solo (29.5), y dentro del contenedor la variable sigue el mismo viaje hasta `IConfiguration`.
+
+> 📝 **Nota:** Otras dos formas de definir variables sin tocar la consola: `launchSettings.json`, para el perfil con el que arrancas desde el IDE (25.4), y `dotnet user-secrets`, para los secretos que solo existen en tu máquina (25.8).
+
+### 9.1.5. Leyendo configuración en código
 
 ASP.NET Core inyecta `IConfiguration` en cualquier servicio que lo necesite. Se usa el patrón de **primary constructor** (C# 14):
 
@@ -230,7 +316,7 @@ public class ProductoService(IConfiguration configuration) : IProductoService
 
 📌 Ejemplo real: una API con caché, JWT y subida de archivos usa exactamente estos tres patrones. Un `ProductoService` lee el TTL de caché de configuración, un `JwtService` lee la clave JWT, y un `StorageService` lee las extensiones permitidas. Todo desde `IConfiguration`.
 
-### 9.1.5. Patrones de acceso a configuración
+### 9.1.6. Patrones de acceso a configuración
 
 | Patrón | Cuándo usarlo | Ejemplo |
 |--------|---------------|---------|
@@ -511,6 +597,8 @@ La categoría del logger es automáticamente el nombre del tipo (`ProductoServic
 
 9.7. **`Log.CloseAndFlush()` en el finally:** Asegúrate de que todos los logs se escriben antes de que la aplicación termine
 
+9.8. **El `.env` no se sube a git:** Va en el `.gitignore` desde el primer commit; los secretos se comparten por canales seguros, nunca por el repositorio
+
 ## 9.4. Reto: configuración y logging en FunkoApp
 
 > Configura FunkoApp con perfiles de entorno y Serilog.
@@ -527,6 +615,7 @@ La categoría del logger es automáticamente el nombre del tipo (`ProductoServic
 
 - Añade una sección `Serilog` en `appsettings.json` y configura desde ahí
 - Usa variables de entorno para la contraseña de la base de datos
+- Guárdalas en un fichero `.env` y cárgalas antes de `dotnet run`
 - Configura niveles de log distintos por categoría
 
 ---
@@ -539,6 +628,7 @@ La categoría del logger es automáticamente el nombre del tipo (`ProductoServic
 | **appsettings.{Environment}.json** | Configuración por entorno (sobreescribe la base) |
 | **IConfiguration** | Interfaz para leer configuración en código |
 | **Variables de entorno** | Para secrets (nunca en JSON) |
+| **Ficheros .env** | Variables de entorno en un fichero que se carga antes de arrancar |
 | **ILogger\<T\>** | Sistema de logging del framework |
 | **Niveles de log** | Trace, Debug, Information, Warning, Error, Critical (ILogger) / Fatal (Serilog) |
 | **Serilog** | Librería de logging estructurado |

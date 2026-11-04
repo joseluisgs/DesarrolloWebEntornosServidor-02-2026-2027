@@ -1,22 +1,22 @@
 - [25. Configuración por entornos y perfiles](#25-configuración-por-entornos-y-perfiles)
-  - [25.1. Que son los entornos](#251-que-son-los-entornos)
+  - [25.1. Qué son los entornos](#251-qué-son-los-entornos)
     - [25.1.1. Entornos predefinidos](#2511-entornos-predefinidos)
-    - [25.1.2. Prioridad de configuracion](#2512-prioridad-de-configuracion)
-  - [25.2. Configuracion por entorno](#252-configuracion-por-entorno)
+    - [25.1.2. Prioridad de configuración](#2512-prioridad-de-configuración)
+  - [25.2. Configuración por entorno](#252-configuración-por-entorno)
     - [25.2.1. Estructura de archivos](#2521-estructura-de-archivos)
-    - [25.2.2. Configuracion base](#2522-configuracion-base)
-    - [25.2.3. Configuracion de desarrollo](#2523-configuracion-de-desarrollo)
-    - [25.2.4. Configuracion de produccion](#2524-configuracion-de-produccion)
-  - [25.3. Configuracion de base de datos por entorno](#253-configuracion-de-base-de-datos-por-entorno)
+    - [25.2.2. Configuración base](#2522-configuración-base)
+    - [25.2.3. Configuración de desarrollo](#2523-configuración-de-desarrollo)
+    - [25.2.4. Configuración de producción](#2524-configuración-de-producción)
+  - [25.3. Configuración de base de datos por entorno](#253-configuración-de-base-de-datos-por-entorno)
   - [25.4. Variables de entorno](#254-variables-de-entorno)
   - [25.5. Uso de IWebHostEnvironment](#255-uso-de-iwebhostenvironment)
-  - [25.6. Configuracion de Swagger por entorno](#256-configuracion-de-swagger-por-entorno)
-  - [25.7. Configuracion de logging por entorno](#257-configuracion-de-logging-por-entorno)
+  - [25.6. Configuración de Swagger por entorno](#256-configuración-de-swagger-por-entorno)
+  - [25.7. Configuración de logging por entorno](#257-configuración-de-logging-por-entorno)
   - [25.8. Secretos de usuario (User Secrets)](#258-secretos-de-usuario-user-secrets)
-  - [25.9. Configuracion avanzada](#259-configuracion-avanzada)
-    - [25.9.1. Clases de configuracion tipadas](#2591-clases-de-configuracion-tipadas)
+  - [25.9. Configuración avanzada](#259-configuración-avanzada)
+    - [25.9.1. Clases de configuración tipadas](#2591-clases-de-configuración-tipadas)
   - [25.10. Azure app configuration](#2510-azure-app-configuration)
-  - [25.11. Buenas practicas](#2511-buenas-practicas)
+  - [25.11. Buenas prácticas](#2511-buenas-prácticas)
   - [25.12. Reto: configura entornos para FunkoApp](#2512-reto-configura-entornos-para-funkoapp)
 
 
@@ -34,7 +34,7 @@ En este punto aprenderás a configurar diferentes entornos en ASP.NET Core, usar
 - Configurar IWebHostEnvironment para comportamiento condicional
 - Gestionar secretos de forma segura
 
-## 25.1. Que son los entornos
+## 25.1. Qué son los entornos
 
 Los **entornos** (environments) en ASP.NET Core permiten configurar la aplicación de manera diferente según dónde se ejecute. Esto es esencial para mantener la seguridad en producción mientras se facilita el desarrollo.
 
@@ -68,11 +68,11 @@ flowchart LR
 
 ASP.NET Core tiene tres entornos predefinidos:
 
-| Entorno | Descripcion | Uso Tipico |
+| Entorno | Descripción | Uso Típico |
 |---------|-------------|------------|
 | **Development** | Desarrollo local | Debug, Swagger, logs detallados |
-| **Staging** | Pre-produccion | Pruebas finales antes de produccion |
-| **Production** | Produccion real | Configuracion optimizada y segura |
+| **Staging** | Pre-producción | Pruebas finales antes de producción |
+| **Production** | Producción real | Configuración optimizada y segura |
 
 **Establecer el entorno:**
 
@@ -84,7 +84,7 @@ set ASPNETCORE_ENVIRONMENT=Development
 export ASPNETCORE_ENVIRONMENT=Development
 ```
 
-### 25.1.2. Prioridad de configuracion
+### 25.1.2. Prioridad de configuración
 
 ```mermaid
 flowchart TD
@@ -110,7 +110,7 @@ flowchart TD
 
 > 📝 **Nota:** Los valores cargados **más arriba** en la lista (mayor prioridad) **sobrescriben** a los que aparecen más abajo. Por ejemplo, una variable de entorno sobrescribe el mismo valor en appsettings.json, y un argumento de línea de comandos gana sobre todo lo demás.
 
-## 25.2. Configuracion por entorno
+## 25.2. Configuración por entorno
 
 ### 25.2.1. Estructura de archivos
 
@@ -126,7 +126,7 @@ ProductosApp/
 └── ProductosApp.csproj
 ```
 
-### 25.2.2. Configuracion base
+### 25.2.2. Configuración base
 
 **appsettings.json:**
 
@@ -148,7 +148,7 @@ ProductosApp/
 }
 ```
 
-### 25.2.3. Configuracion de desarrollo
+### 25.2.3. Configuración de desarrollo
 
 **appsettings.Development.json:**
 
@@ -172,7 +172,7 @@ ProductosApp/
 }
 ```
 
-### 25.2.4. Configuracion de produccion
+### 25.2.4. Configuración de producción
 
 `appsettings.Production.json` lleva los ajustes del entorno real: logs mínimos, connection string seguro y URLs del dominio definitivo.
 
@@ -196,7 +196,7 @@ ProductosApp/
 }
 ```
 
-> ⚠️ **Advertencia:** Nunca uses claves reales o contrasenas de produccion en appsettings.Development.json. Usa User Secrets para datos sensibles.
+> ⚠️ **Advertencia:** Nunca uses claves reales o contraseñas de producción en appsettings.Development.json. Usa User Secrets para datos sensibles.
 
 > ⚠️ **Advertencia:** .NET **no expande** `${DB_PASSWORD}` en appsettings.json: llegaría literal a la connection string. **Nunca pongas la contraseña en el JSON**. Déjala vacía (o solo servidor/base) y sobreescribe la connection string completa en producción con una variable de entorno:
 
@@ -213,7 +213,7 @@ ENV ConnectionStrings__DefaultConnection=""
 
 En desarrollo, la contraseña (si hace falta) se guarda con User Secrets, nunca en el JSON.
 
-## 25.3. Configuracion de base de datos por entorno
+## 25.3. Configuración de base de datos por entorno
 
 Cada entorno apunta a una base de datos distinta: SQLite local en desarrollo, PostgreSQL del servidor en producción. La clave está en el connection string.
 
@@ -245,11 +245,11 @@ else
 }
 ```
 
-📌 **Ejemplo real:** En desarrollo usas SQLite (rapido, sin instalacion). En produccion usas SQL Server o PostgreSQL (escalable, con replicas). Es como usar un coche de practicas en el parking y el coche de carrera en la pista.
+📌 **Ejemplo real:** En desarrollo usas SQLite (rápido, sin instalación). En producción usas SQL Server o PostgreSQL (escalable, con réplicas). Es como usar un coche de prácticas en el parking y el coche de carrera en la pista.
 
 ## 25.4. Variables de entorno
 
-Las variables de entorno son la forma mas segura de configurar secretos en produccion.
+Las variables de entorno son la forma más segura de configurar secretos en producción.
 
 **Configurar en launchSettings.json:**
 
@@ -297,11 +297,13 @@ ENV ASPNETCORE_ENVIRONMENT=Production
 docker build --build-arg JWT_SECRET="mi-clave-secreta" -t productosapp .
 ```
 
-📌 **Ejemplo real:** Las aplicaciones en Azure usan variables de entorno para las connection strings de bases de datos. Nunca se guardan en el codigo fuente.
+> 💡 **Consejo:** También puedes guardar todas estas variables en un fichero `.env` de la raíz, una por línea, y cargarlas de golpe antes de arrancar. .NET no lo lee solo; el recorrido desde el `.env` hasta `IConfiguration` está en 9.1.4, y cómo se lo pasa Docker Compose en 29.5.
+
+📌 **Ejemplo real:** Las aplicaciones en Azure usan variables de entorno para las connection strings de bases de datos. Nunca se guardan en el código fuente.
 
 ## 25.5. Uso de IWebHostEnvironment
 
-`IWebHostEnvironment` permite ejecutar codigo condicional segun el entorno.
+`IWebHostEnvironment` permite ejecutar código condicional según el entorno.
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -355,7 +357,7 @@ public class EmailService(IWebHostEnvironment environment, ILogger<EmailService>
 }
 ```
 
-## 25.6. Configuracion de Swagger por entorno
+## 25.6. Configuración de Swagger por entorno
 
 Swagger se habilita solo en desarrollo: en producción no tiene sentido exponer la documentación completa de la API.
 
@@ -383,9 +385,9 @@ if (app.Environment.IsDevelopment())
 }
 ```
 
-> ⚠️ **Advertencia:** Nunca expongas Swagger en produccion. Swagger revela la estructura completa de tu API, lo cual es un riesgo de seguridad.
+> ⚠️ **Advertencia:** Nunca expongas Swagger en producción. Swagger revela la estructura completa de tu API, lo cual es un riesgo de seguridad.
 
-## 25.7. Configuracion de logging por entorno
+## 25.7. Configuración de logging por entorno
 
 **appsettings.Development.json:**
 
@@ -445,9 +447,9 @@ var jwtSecret = builder.Configuration["Jwt:Secret"];
 
 > 📝 **Nota:** User Secrets solo funciona en desarrollo y los secretos se almacenan en un archivo JSON separado en el perfil del usuario. Nunca se commitea al repositorio.
 
-## 25.9. Configuracion avanzada
+## 25.9. Configuración avanzada
 
-### 25.9.1. Clases de configuracion tipadas
+### 25.9.1. Clases de configuración tipadas
 
 Las clases tipadas encapsulan la configuración en propiedades con nombre, en vez de andar buscando claves con strings mágicos por el `IConfiguration`.
 
@@ -483,7 +485,7 @@ jwtSettings?.Validate();
 
 ## 25.10. Azure app configuration
 
-Azure App Configuration ofrece configuracion centralizada para multiples aplicaciones en la nube.
+Azure App Configuration ofrece configuración centralizada para múltiples aplicaciones en la nube.
 
 ```bash
 dotnet add package Microsoft.Extensions.Configuration.AzureAppConfiguration
@@ -498,58 +500,58 @@ builder.Configuration.AddAzureAppConfiguration(options =>
 });
 ```
 
-📌 **Ejemplo real:** Las empresas como IKEA usan Azure App Configuration para gestionar la configuracion de miles de tiendas online desde un solo lugar. Si cambian un precio promocional, todas las aplicaciones se actualizan automaticamente.
+📌 **Ejemplo real:** Las empresas como IKEA usan Azure App Configuration para gestionar la configuración de miles de tiendas online desde un solo lugar. Si cambian un precio promocional, todas las aplicaciones se actualizan automáticamente.
 
-## 25.11. Buenas practicas
+## 25.11. Buenas prácticas
 
-| Practica | Descripcion |
+| Práctica | Descripción |
 |----------|-------------|
-| **Nunca commits secretos** | Usa User Secrets o variables de entorno, nunca guardes contrasenas en el codigo |
-| **Separar configuracion por entorno** | Un archivo appsettings por entorno |
-| **Validar configuracion** | Valida la configuracion al inicio de la aplicacion |
-| **Usar variables de entorno en produccion** | No hardcodear secretos en archivos de configuracion |
-| **Swagger solo en desarrollo** | Deshabilitar Swagger en produccion por seguridad |
-| **Logs apropiados** | Detallados en desarrollo, minimos en produccion |
-| **Base de datos diferente** | Nunca usar la misma base de datos en desarrollo y produccion |
-| **Documentar configuracion** | Documentar todas las variables requeridas en README |
-| **Usar IWebHostEnvironment** | Para comportamiento condicional segun el entorno |
-| **No exponer detalles de error** | En produccion, oculta los detalles de excepciones al cliente |
+| **Nunca commits secretos** | Usa User Secrets o variables de entorno, nunca guardes contraseñas en el código |
+| **Separar configuración por entorno** | Un archivo appsettings por entorno |
+| **Validar configuración** | Valida la configuración al inicio de la aplicación |
+| **Usar variables de entorno en producción** | No hardcodear secretos en archivos de configuración |
+| **Swagger solo en desarrollo** | Deshabilitar Swagger en producción por seguridad |
+| **Logs apropiados** | Detallados en desarrollo, mínimos en producción |
+| **Base de datos diferente** | Nunca usar la misma base de datos en desarrollo y producción |
+| **Documentar configuración** | Documentar todas las variables requeridas en README |
+| **Usar IWebHostEnvironment** | Para comportamiento condicional según el entorno |
+| **No exponer detalles de error** | En producción, oculta los detalles de excepciones al cliente |
 
 ## 25.12. Reto: configura entornos para FunkoApp
 
-> Antes de irte, configura los entornos de desarrollo y produccion para tu API de Funkos.
+> Antes de irte, configura los entornos de desarrollo y producción para tu API de Funkos.
 
 ### Contexto
 
-Tu API de Funkos necesita funcionar correctamente tanto en desarrollo como en produccion, con configuracion diferente para cada entorno.
+Tu API de Funkos necesita funcionar correctamente tanto en desarrollo como en producción, con configuración diferente para cada entorno.
 
 ### Ejercicio
 
-1. Crea `appsettings.json` con configuracion base
+1. Crea `appsettings.json` con configuración base
 2. Crea `appsettings.Development.json` con SQLite, Swagger habilitado y logs detallados
-3. Crea `appsettings.Production.json` con SQL Server, Swagger deshabilitado y logs minimos
+3. Crea `appsettings.Production.json` con SQL Server, Swagger deshabilitado y logs mínimos
 4. Configura User Secrets para el JWT secret en desarrollo
-5. Configura variables de entorno para produccion
-6. Implementa un servicio que se comporte diferente segun el entorno
+5. Configura variables de entorno para producción
+6. Implementa un servicio que se comporte diferente según el entorno
 
-> 💡 **Consejo:** Asegurate de que el .gitignore excluya archivos sensibles como .env y secrets.json. Los secretos nunca deben llegar al repositorio.
+> 💡 **Consejo:** Asegúrate de que el .gitignore excluya archivos sensibles como .env y secrets.json. Los secretos nunca deben llegar al repositorio.
 
 ---
 
 **Resumen del punto:**
 
-| Concepto | Descripcion |
+| Concepto | Descripción |
 |----------|-------------|
 | **Entornos** | Development, Staging, Production permiten configurar la app de forma diferente |
-| **appsettings.json** | Organiza la configuracion por entorno con prioridad |
-| **Variables de entorno** | Son la forma mas segura de configurar secretos en produccion |
-| **IWebHostEnvironment** | Permite acceder al entorno actual desde cualquier parte del codigo |
+| **appsettings.json** | Organiza la configuración por entorno con prioridad |
+| **Variables de entorno** | Son la forma más segura de configurar secretos en producción |
+| **IWebHostEnvironment** | Permite acceder al entorno actual desde cualquier parte del código |
 | **User Secrets** | Almacenan datos sensibles de forma segura en desarrollo |
-| **Swagger** | Debe estar deshabilitado en produccion por seguridad |
-| **Logging** | Debe ser detallado en desarrollo y minimo en produccion |
-| **Validacion de configuracion** | Previene errores de inicio por configuracion incompleta |
-| **Prioridad de configuracion** | appsettings.json → appsettings.{Env}.json → user secrets (solo Development) → variables de entorno → argumentos de CLI (cada uno sobrescribe al anterior) |
+| **Swagger** | Debe estar deshabilitado en producción por seguridad |
+| **Logging** | Debe ser detallado en desarrollo y mínimo en producción |
+| **Validación de configuración** | Previene errores de inicio por configuración incompleta |
+| **Prioridad de configuración** | appsettings.json → appsettings.{Env}.json → user secrets (solo Development) → variables de entorno → argumentos de CLI (cada uno sobrescribe al anterior) |
 
 **¿Qué viene después?**
 
-En el siguiente punto veremos **Organizacion de Program.cs**: como refactorizar un Program.cs monolitico usando extension methods y el patron Infrastructure para mantener el codigo limpio y mantenible.
+En el siguiente punto veremos **Organización de Program.cs**: cómo refactorizar un Program.cs monolítico usando extensión methods y el patrón Infrastructure para mantener el código limpio y mantenible.
