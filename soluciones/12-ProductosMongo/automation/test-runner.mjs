@@ -9,9 +9,9 @@ const ROOT = path.resolve(__dirname, "..");
 const CONFIG = {
   nombre: "12-ProductosMongo",
   csproj: "ProductosMongo/ProductosMongo.csproj",
-  baseUrl: "http://localhost:5000",
+  baseUrl: "http://localhost:5110",
   healthPaths: ["/swagger", "/api/productos", "/"],
-  env: { ASPNETCORE_ENVIRONMENT: "Development", ASPNETCORE_URLS: "http://localhost:5000" },
+  env: { ASPNETCORE_ENVIRONMENT: "Development", ASPNETCORE_URLS: "http://localhost:5110" },
   dbServices: ["db"], // mongo
   fallbackComposeFile: "docker-compose.api.yml", // stack completo (api + db)
   // El seed genera ObjectIds nuevos en cada arranque: los ids se toman de GET

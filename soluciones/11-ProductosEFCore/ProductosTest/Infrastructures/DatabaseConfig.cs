@@ -24,7 +24,7 @@ public static class DatabaseConfig
         Log.Information("Configurando PostgreSQL...");
 
         var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? "Host=localhost;Port=5432;Database=productos_efcore;Username=postgres;Password=postgres";
+            ?? "Host=localhost;Port=5440;Database=productos_efcore;Username=postgres;Password=postgres";
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString)

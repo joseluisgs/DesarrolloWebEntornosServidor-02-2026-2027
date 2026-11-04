@@ -17,7 +17,7 @@ Variante del ejemplo 02 con DI por capas y un conjunto de rutas de consulta **di
 dotnet run --project ProductosControllersApiDI
 ```
 
-Escucha en `http://localhost:5000`.
+Escucha en `http://localhost:5110`.
 
 ## Pruebas automatizadas
 
@@ -34,7 +34,7 @@ Script Node.js nativo: `dotnet restore`/`build`/`run` → polling ≤20 s → **
 
 ## Endpoints
 
-Prefijo: `http://localhost:5000/api/productos`
+Prefijo: `http://localhost:5110/api/productos`
 
 | Método | Ruta | Parámetros | Cuerpo de petición | Respuesta exitosa | Errores |
 |--------|------|------------|--------------------|-------------------|---------|
@@ -71,11 +71,11 @@ Prefijo: `http://localhost:5000/api/productos`
 ### Ejemplos
 
 ```bash
-curl -X POST http://localhost:5000/api/productos \
+curl -X POST http://localhost:5110/api/productos \
   -H "Content-Type: application/json" \
   -d '{"nombre": "Monitor", "precio": 299.99, "categoria": "Electrónica"}'
 
-curl -X PATCH http://localhost:5000/api/productos/1/precio \
+curl -X PATCH http://localhost:5110/api/productos/1/precio \
   -H "Content-Type: application/json" -d 799.99
 ```
 

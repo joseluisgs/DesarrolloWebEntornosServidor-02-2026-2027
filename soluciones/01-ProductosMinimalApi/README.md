@@ -19,7 +19,7 @@ Ejemplo introductorio de Minimal APIs: CRUD completo de productos con almacenami
 dotnet run --project ProductosMinimalApi
 ```
 
-La API escucha en `http://localhost:5000`.
+La API escucha en `http://localhost:5110`.
 
 ## Pruebas automatizadas
 
@@ -42,7 +42,7 @@ Código de salida: `0` si todo pasa, `1` si algún test falla.
 
 ## Endpoints
 
-Prefijo base: `http://localhost:5000/api/productos`
+Prefijo base: `http://localhost:5110/api/productos`
 
 | Método | Ruta | Parámetros | Cuerpo de petición | Respuesta exitosa | Errores |
 |--------|------|------------|--------------------|-------------------|---------|
@@ -86,7 +86,7 @@ Prefijo base: `http://localhost:5000/api/productos`
 }
 ```
 
-> 📝 `id`, `createdAt` los asigna el servidor; `isActivo` es de solo lectura.
+> 📝 **Nota:** `id`, `createdAt` los asigna el servidor; `isActivo` es de solo lectura.
 > Como `Producto` es un `record` inmutable, el repositorio no lo modifica: crea una copia con `with` y la guarda en el `Dictionary`.
 
 ## Estructura

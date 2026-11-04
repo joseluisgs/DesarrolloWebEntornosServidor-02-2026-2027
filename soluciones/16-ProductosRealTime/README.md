@@ -20,7 +20,7 @@ docker compose up -d
 dotnet run --project ProductosTest
 ```
 
-Escucha en `http://localhost:5000` · Hub: `/hubs/...` (ver `Hubs/`).
+Escucha en `http://localhost:5110` · Hub: `/hubs/...` (ver `Hubs/`).
 
 ## Pruebas automatizadas (runner)
 

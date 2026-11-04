@@ -18,7 +18,7 @@ Ejemplo de control de errores sin try/catch en el controller: el servicio lanza 
 dotnet run --project ProductosExcepciones
 ```
 
-Escucha en `http://localhost:5000`.
+Escucha en `http://localhost:5110`.
 
 ## Pruebas automatizadas
 
@@ -35,7 +35,7 @@ Node.js nativo: `dotnet restore`/`build`/`run` → polling ≤20 s → **9 tests
 
 ## Endpoints
 
-Prefijo: `http://localhost:5000/api/productos`
+Prefijo: `http://localhost:5110/api/productos`
 
 | Método | Ruta | Parámetros | Cuerpo de petición | Respuesta exitosa | Errores |
 |--------|------|------------|--------------------|-------------------|---------|

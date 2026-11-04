@@ -10,12 +10,12 @@ const CONFIG = {
   nombre: "03-ProductosMinimalApiDI",
   // Rutas relativas a ROOT
   csproj: "ProductosMinimalApiDI/ProductosMinimalApiDI.csproj",
-  baseUrl: "http://localhost:5000",
+  baseUrl: "http://localhost:5110",
   // Orden de polling: cualquier respuesta HTTP (200,404...) = listo
   healthPaths: ["/swagger", "/", "/api/productos"],
   env: {
     ASPNETCORE_ENVIRONMENT: "Development",
-    ASPNETCORE_URLS: "http://localhost:5000",
+    ASPNETCORE_URLS: "http://localhost:5110",
   },
   // Sin compose en 03 → no se toca docker en fase de infra
   dbServices: [],

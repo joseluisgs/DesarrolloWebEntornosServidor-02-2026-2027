@@ -91,7 +91,7 @@ Testcontainers levanta un Cassandra 5.0 real y efímero por ejecución (arranca 
 
 ## Endpoints
 
-### Categorías — `api/Categorias`
+### Categorías: `api/Categorias`
 
 | Método | Ruta | Consulta | Éxito | Errores |
 |--------|------|----------|-------|---------|
@@ -99,7 +99,7 @@ Testcontainers levanta un Cassandra 5.0 real y efímero por ejecución (arranca 
 | GET | `/api/Categorias/{id}` | — | `200` | `404` |
 | GET | `/api/Categorias/{id}/productos` | **Q1** | `200` (partición entera, ordenada de serie) | — |
 
-### Productos — `api/Productos`
+### Productos: `api/Productos`
 
 | Método | Ruta | Consulta | Cuerpo | Éxito | Errores |
 |--------|------|----------|--------|-------|---------|

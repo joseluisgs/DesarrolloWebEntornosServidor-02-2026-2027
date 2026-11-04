@@ -5,7 +5,7 @@ services:
     image: cassandra:5.0
     container_name: productos_cassandra_db_26
     ports:
-      - "9042:9042"
+      - "9043:9042"
     # Sin techo de heap, la JVM pide varios GB y un portátil de clase se ahoga.
     # Con 1G vive cómoda una instancia de desarrollo de un nodo.
     environment:

@@ -18,7 +18,7 @@ Misma API que el ejemplo 01 (CRUD + consultas LINQ + eliminación lógica), pero
 dotnet run --project ProductosControllersApi
 ```
 
-Escucha en `http://localhost:5000`.
+Escucha en `http://localhost:5110`.
 
 ## Pruebas automatizadas
 
@@ -35,7 +35,7 @@ El script (Node.js nativo) compila y arranca la API con `dotnet run`, espera su 
 
 ## Endpoints
 
-Prefijo: `http://localhost:5000/api/productos`
+Prefijo: `http://localhost:5110/api/productos`
 
 | Método | Ruta | Parámetros | Cuerpo de petición | Respuesta exitosa | Errores |
 |--------|------|------------|--------------------|-------------------|---------|

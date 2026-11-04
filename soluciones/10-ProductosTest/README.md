@@ -14,7 +14,7 @@ Misma base de endpoints y DTOs que los ejemplos 08–09 (CRUD + search/filter/pa
 
 ```bash
 dotnet run --project ProductosTest
-# http://localhost:5000
+# http://localhost:5110
 ```
 
 ## Pruebas automatizadas (runner)
@@ -38,7 +38,7 @@ dotnet test ProductosTest.slnx --collect:"XPlat Code Coverage"
 
 ## Endpoints
 
-Prefijo: `http://localhost:5000/api/productos`
+Prefijo: `http://localhost:5110/api/productos`
 
 | Método | Ruta | Parámetros | Cuerpo de petición | Respuesta exitosa | Errores |
 |--------|------|------------|--------------------|-------------------|---------|
@@ -70,7 +70,7 @@ Prefijo: `http://localhost:5000/api/productos`
 
 ```bash
 docker compose up --build
-# http://localhost:5000 · http://localhost:5000/swagger
+# http://localhost:5110 · http://localhost:5110/swagger
 
 # Solo imagen
 docker build -t productos-test .

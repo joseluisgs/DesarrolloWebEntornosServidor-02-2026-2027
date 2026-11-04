@@ -5,7 +5,7 @@ services:
     image: mongo:7.0
     container_name: productos_mongo_db_12
     ports:
-      - "27017:27017"
+      - "27020:27017"
     volumes:
       - mongodata:/var/lib/mongodb/data
 

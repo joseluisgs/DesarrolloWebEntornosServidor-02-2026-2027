@@ -20,7 +20,7 @@ docker compose up -d
 dotnet run --project ProductosTest
 ```
 
-Escucha en `http://localhost:5000`.
+Escucha en `http://localhost:5110`.
 
 ## Pruebas automatizadas (runner)
 
@@ -40,7 +40,7 @@ dotnet test
 
 ## Endpoints
 
-### Auth — `http://localhost:5000/api/Auth`
+### Auth — `http://localhost:5110/api/Auth`
 
 | Método | Ruta | Auth | Cuerpo de petición | Respuesta exitosa | Errores |
 |--------|------|------|--------------------|-------------------|---------|
@@ -94,10 +94,10 @@ docker compose down -v
 
 > 📝 **Nota:** Los dos compose son **proyectos distintos** (cada fichero lleva su `name:`), así que no se pisan: levantar el stack completo no destruye los contenedores locales, y al revés.
 >
-> - **Desarrollo** (`docker compose up -d`): PostgreSQL en `localhost:5432` y Redis en `localhost:6379`. Es lo que necesitas con el play de Rider.
-> - **Stack completo** (`-f docker-compose.api.yml`): api en el `5000`, PostgreSQL en el `5433` y Redis en el `6380`, porque dentro de la red de Docker la app se conecta a los servicios `db` y `redis`, no a `localhost`. Arranca en `Development` a propósito: así se crean las tablas y se siembra Identity, y ahí vive Swagger.
+> - **Desarrollo** (`docker compose up -d`): PostgreSQL en `localhost:5440` y Redis en `localhost:6390`. Es lo que necesitas con el play de Rider.
+> - **Stack completo** (`-f docker-compose.api.yml`): api en el `5110`, PostgreSQL en el `5441` y Redis en el `6391`, porque dentro de la red de Docker la app se conecta a los servicios `db` y `redis`, no a `localhost`. Arranca en `Development` a propósito: así se crean las tablas y se siembra Identity, y ahí vive Swagger.
 >
-> ⚠️ Los nombres de contenedor son propios de esta solución, pero los **puertos 5432 y 6379 son comunes**: no levantes dos soluciones a la vez o la segunda fallará con `port is already allocated`.
+> ⚠️ **Advertencia:** Los nombres de contenedor son propios de esta solución, pero los **puertos 5440 y 6390 son comunes**: no levantes dos soluciones a la vez o la segunda fallará con `port is already allocated`.
 
 ## Estructura
 

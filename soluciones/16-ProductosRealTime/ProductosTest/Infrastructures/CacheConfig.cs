@@ -46,7 +46,7 @@ public static class CacheConfig
             services.AddStackExchangeRedisCache(options =>
             {
                 options.Configuration = configuration["Redis:ConnectionString"]
-                    ?? "localhost:6379";
+                    ?? "localhost:6390";
             });
             services.AddSingleton<ICacheService, RedisCacheService>();
             Log.Information("Caché: Redis (Producción) — TTL: {Minutes} min",

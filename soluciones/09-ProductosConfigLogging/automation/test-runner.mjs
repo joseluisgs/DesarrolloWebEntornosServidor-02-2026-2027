@@ -9,9 +9,9 @@ const ROOT = path.resolve(__dirname, "..");
 const CONFIG = {
   nombre: "09-ProductosConfigLogging",
   csproj: "ProductosConfigLogging/ProductosConfigLogging.csproj",
-  baseUrl: "http://localhost:5000",
+  baseUrl: "http://localhost:5110",
   healthPaths: ["/swagger", "/api/productos", "/"],
-  env: { ASPNETCORE_ENVIRONMENT: "Development", ASPNETCORE_URLS: "http://localhost:5000" },
+  env: { ASPNETCORE_ENVIRONMENT: "Development", ASPNETCORE_URLS: "http://localhost:5110" },
   dbServices: [],
   fallbackComposeFile: null,
   prepareDb: [],

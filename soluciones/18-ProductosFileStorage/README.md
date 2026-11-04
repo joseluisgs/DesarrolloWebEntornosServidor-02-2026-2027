@@ -11,7 +11,7 @@ API REST de productos con **subida de imágenes** (`multipart/form-data`), `ISto
 - Desarrollo limpia el directorio de uploads al arrancar
 - Infra: PostgreSQL + Redis; BD `productos_filestorage` se crea con `prepareDb` si falta
 
-> ⚠️ El proyecto necesita la carpeta `wwwroot/` (si `WebRootPath` es null, el storage falla). Ya está incluida.
+> ⚠️ **Advertencia:** El proyecto necesita la carpeta `wwwroot/` (si `WebRootPath` es null, el storage falla). Ya está incluida.
 
 ## Ejecución manual
 
@@ -24,7 +24,7 @@ docker compose exec -T db psql -U admin -d postgres -c "CREATE DATABASE producto
 dotnet run --project ProductosTest
 ```
 
-Escucha en `http://localhost:5000`.
+Escucha en `http://localhost:5110`.
 
 ## Pruebas automatizadas (runner)
 
@@ -74,7 +74,7 @@ dotnet test
 **Ejemplo upload (curl):**
 
 ```bash
-curl -X POST http://localhost:5000/api/Productos/imagen \
+curl -X POST http://localhost:5110/api/Productos/imagen \
   -H "Authorization: Bearer $TOKEN" \
   -F "nombre=Producto Con Imagen Test" \
   -F "precio=29.99" \

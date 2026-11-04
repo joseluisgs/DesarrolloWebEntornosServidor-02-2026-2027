@@ -9,9 +9,9 @@ const ROOT = path.resolve(__dirname, "..");
 const CONFIG = {
   nombre: "14-ProductosConcurrency",
   csproj: "ProductosTest/ProductosTest.csproj",
-  baseUrl: "http://localhost:5000",
+  baseUrl: "http://localhost:5110",
   healthPaths: ["/swagger", "/", "/api/Productos"],
-  env: { ASPNETCORE_ENVIRONMENT: "Development", ASPNETCORE_URLS: "http://localhost:5000" },
+  env: { ASPNETCORE_ENVIRONMENT: "Development", ASPNETCORE_URLS: "http://localhost:5110" },
   dbServices: ["db", "redis"],
   fallbackComposeFile: "docker-compose.api.yml",
   prepareDb: [],

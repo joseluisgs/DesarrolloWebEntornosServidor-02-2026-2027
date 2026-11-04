@@ -93,14 +93,12 @@ public static class IdentityConfig
         // ── Authorization Policies ───────────────────────────────────────────
         // Esquema explícito en las políticas: no dependen del DefaultScheme
         services.AddAuthorizationBuilder()
-            .AddPolicy("RequireAdmin", policy =>
-                new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
-                    .RequireRole("ADMIN")
-                    .Build())
-            .AddPolicy("RequireUser", policy =>
-                new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
-                    .RequireRole("USER", "ADMIN")
-                    .Build());
+            .AddPolicy("RequireAdmin", policy => policy
+                    .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+                    .RequireRole("ADMIN"))
+            .AddPolicy("RequireUser", policy => policy
+                    .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+                    .RequireRole("USER", "ADMIN"));
 
         Log.Information("Identity y JWT configurados correctamente.");
         return services;

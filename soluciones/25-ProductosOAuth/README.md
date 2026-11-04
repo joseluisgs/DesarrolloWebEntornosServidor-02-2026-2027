@@ -8,7 +8,7 @@ Es la evolución del ejemplo 15-ProductosIdentity: la puerta propia se queda igu
 
 ## Tutorial paso a paso
 
-### Paso 0. Arrancar y probar la puerta propia
+### Paso 0. arrancar y probar la puerta propia
 
 ```bash
 # 1. Base de datos (PostgreSQL + Redis)
@@ -18,42 +18,42 @@ docker compose up -d
 dotnet run --project ProductosTest
 ```
 
-Escucha en `http://localhost:5000` (Swagger en `/swagger` si el entorno es Development). El arranque crea el esquema y siembra productos y usuarios.
+Escucha en `http://localhost:5110` (Swagger en `/swagger` si el entorno es Development). El arranque crea el esquema y siembra productos y usuarios.
 
 Comprueba que la puerta propia funciona:
 
 ```bash
 # Login local con el usuario de prueba
-curl -X POST http://localhost:5000/api/Auth/login \
+curl -X POST http://localhost:5110/api/Auth/login \
      -H "Content-Type: application/json" \
      -d '{"email":"admin@admin.com","password":"Admin123!"}'
 # → 200 { "token": "eyJ...", "role": "ADMIN", ... }
 
 # Usa el token en un endpoint protegido
-curl http://localhost:5000/api/Auth/me -H "Authorization: Bearer <token>"
+curl http://localhost:5110/api/Auth/me -H "Authorization: Bearer <token>"
 # → 200 perfil de admin@admin.com
 
 # Y comprueba que una puerta externa está cerrada
-curl -i http://localhost:5000/api/Auth/external/Google
+curl -i http://localhost:5110/api/Auth/external/Google
 # → 404 "La puerta 'Google' no está activa: revisa Auth:Google:Enabled"
 ```
 
-### Paso 1. Crear la app en el proveedor
+### Paso 1. crear la app en el proveedor
 
 Los cuatro proveedores piden lo mismo: una app de desarrollador con la **misma URL de retorno**, que en este ejemplo es siempre:
 
 ```
-http://localhost:5000/api/Auth/external-callback
+http://localhost:5110/api/Auth/external-callback
 ```
 
 #### Opción A: GitHub (el más rápido, 5 minutos)
 
 1. Con tu cuenta de GitHub: **Settings → Developer settings → OAuth Apps → New OAuth App**.
-2. Rellena: nombre (por ejemplo `ProductosOAuth`), Homepage `http://localhost:5000` y en **Authorization callback URL** la URL de retorno de arriba.
+2. Rellena: nombre (por ejemplo `ProductosOAuth`), Homepage `http://localhost:5110` y en **Authorization callback URL** la URL de retorno de arriba.
 3. Pulsa **Register**. Copia el **Client ID** y pulsa **Generate a new client secret** para el **Client Secret** (solo se muestra una vez).
 4. No pide verificación ni teléfono.
 
-#### Opción B: Google (modo Testing)
+#### Opción B: Google (modo testing)
 
 1. En `console.cloud.google.com` crea un **proyecto nuevo** (uno de pruebas, no el de producción).
 2. **APIs & Services → OAuth consent screen**: tipo **External**, modo **Testing**, y añade tus **usuarios de prueba** (el correo con el que vas a entrar).
@@ -64,7 +64,7 @@ http://localhost:5000/api/Auth/external-callback
 #### Opción C: X / Twitter
 
 1. En `developer.x.com`, **Projects & Apps**: crea proyecto y app (el nivel Free basta).
-2. **App settings → User authentication settings**: activa **OAuth 2.0**, tipo **Web App**, y registra la Callback URI (la misma URL) y como Website URL `http://localhost:5000`.
+2. **App settings → User authentication settings**: activa **OAuth 2.0**, tipo **Web App**, y registra la Callback URI (la misma URL) y como Website URL `http://localhost:5110`.
 3. **OAuth 2.0 → Client ID and Client Secret**.
 4. Es el más tedioso: pide verificación de teléfono y su consola cambia a menudo. El nombre del esquema de la app es `Twitter`.
 
@@ -75,7 +75,7 @@ http://localhost:5000/api/Auth/external-callback
 3. **Overview → Application (client) ID** y **Certificates & secrets → New client secret** (copia el **valor**, no el identificador; se muestra una vez).
 4. Aprovecha las cuentas escolares o Outlook que ya tienen los alumnos.
 
-### Paso 2. Guardar los secretos y abrir la puerta
+### Paso 2. guardar los secretos y abrir la puerta
 
 Los secretos **no van nunca en el `appsettings.json`** ni en el repo: van en el user-secrets de tu máquina.
 
@@ -101,9 +101,9 @@ Y en `appsettings.json`, abre la puerta elegida:
 
 Si activas una puerta sin guardar sus credenciales, la API no arranca: avisa con `InvalidOperationException` (fail-fast), que es lo que toca.
 
-### Paso 3. Probar el flujo en el navegador
+### Paso 3. probar el flujo en el navegador
 
-1. Abre `http://localhost:5000/api/Auth/external/GitHub` en el navegador (cambia `GitHub` por tu proveedor).
+1. Abre `http://localhost:5110/api/Auth/external/GitHub` en el navegador (cambia `GitHub` por tu proveedor).
 2. Tu servidor responde con una redirección (302) y el navegador se va al proveedor.
 3. Autorizas en el proveedor (con tu cuenta).
 4. El proveedor redirige a `external-callback` con un código; tu servidor lo canjea, crea o vincula la cuenta local en Identity y responde **con el JWT de esta API**.
@@ -147,7 +147,7 @@ dotnet test
 
 ## Endpoints
 
-### Auth - `http://localhost:5000/api/Auth`
+### Auth - `http://localhost:5110/api/Auth`
 
 | Método | Ruta | Auth | Cuerpo de petición | Respuesta exitosa | Errores |
 |--------|------|------|--------------------|-------------------|---------|
@@ -188,10 +188,10 @@ docker compose down -v
 
 > 📝 **Nota:** Los dos compose son **proyectos distintos** (cada fichero lleva su `name:`), así que no se pisan: levantar el stack completo no destruye los contenedores locales, y al revés.
 >
-> - **Desarrollo** (`docker compose up -d`): PostgreSQL en `localhost:5432` y Redis en `localhost:6379`. Es lo que necesitas con el play de Rider.
-> - **Stack completo** (`-f docker-compose.api.yml`): api en el `5000`, PostgreSQL en el `5433` y Redis en el `6380`, porque dentro de la red de Docker la app se conecta a los servicios `db` y `redis`, no a `localhost`.
+> - **Desarrollo** (`docker compose up -d`): PostgreSQL en `localhost:5440` y Redis en `localhost:6390`. Es lo que necesitas con el play de Rider.
+> - **Stack completo** (`-f docker-compose.api.yml`): api en el `5110`, PostgreSQL en el `5441` y Redis en el `6391`, porque dentro de la red de Docker la app se conecta a los servicios `db` y `redis`, no a `localhost`.
 >
-> ⚠️ Los nombres de contenedor son propios de esta solución, pero los **puertos 5432 y 6379 son comunes**: no levantes dos soluciones a la vez o la segunda fallará con `port is already allocated`.
+> ⚠️ **Advertencia:** Los nombres de contenedor son propios de esta solución, pero los **puertos 5440 y 6390 son comunes**: no levantes dos soluciones a la vez o la segunda fallará con `port is already allocated`.
 
 ## Estructura
 

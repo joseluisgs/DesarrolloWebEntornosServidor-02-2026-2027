@@ -10,9 +10,9 @@ const CONFIG = {
   nombre: "10-ProductosTest",
   // OJO: el .csproj es ProductosTest (el .slnx huérfano de ProductosConfigLogging no se usa)
   csproj: "ProductosTest/ProductosTest.csproj",
-  baseUrl: "http://localhost:5000",
+  baseUrl: "http://localhost:5110",
   healthPaths: ["/swagger", "/api/productos", "/"],
-  env: { ASPNETCORE_ENVIRONMENT: "Development", ASPNETCORE_URLS: "http://localhost:5000" },
+  env: { ASPNETCORE_ENVIRONMENT: "Development", ASPNETCORE_URLS: "http://localhost:5110" },
   // docker-compose.yml solo define el servicio api (sin BD)
   dbServices: [],
   fallbackComposeFile: null,

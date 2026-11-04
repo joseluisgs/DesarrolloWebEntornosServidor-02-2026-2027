@@ -16,7 +16,7 @@ Ejemplo intermedio-alto que separa dominio y presentación con DTOs, valida en d
 dotnet run --project ProductosAvanzados
 ```
 
-Escucha en `http://localhost:5000`.
+Escucha en `http://localhost:5110`.
 
 ## Pruebas automatizadas
 
@@ -32,7 +32,7 @@ Node.js nativo: restore/build/run → polling ≤20 s → **14 tests** → limpi
 
 ## Endpoints
 
-Prefijo: `http://localhost:5000/api/productos`
+Prefijo: `http://localhost:5110/api/productos`
 
 | Método | Ruta | Parámetros | Cuerpo de petición | Respuesta exitosa | Errores |
 |--------|------|------------|--------------------|-------------------|---------|

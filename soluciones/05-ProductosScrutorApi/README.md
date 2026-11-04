@@ -17,7 +17,7 @@ Misma API de productos que los ejemplos 01–03 (CRUD + consultas LINQ), pero la
 dotnet run --project ProductosScrutorApi
 ```
 
-Escucha en `http://localhost:5000`.
+Escucha en `http://localhost:5110`.
 
 ## Pruebas automatizadas
 
@@ -34,7 +34,7 @@ Node.js nativo: compila y arranca con `dotnet run`, espera ≤20 s, ejecuta **17
 
 ## Endpoints
 
-Prefijo: `http://localhost:5000/api/productos`
+Prefijo: `http://localhost:5110/api/productos`
 
 | Método | Ruta | Parámetros | Cuerpo de petición | Respuesta exitosa | Errores |
 |--------|------|------------|--------------------|-------------------|---------|
@@ -58,7 +58,7 @@ Prefijo: `http://localhost:5000/api/productos`
 | `nombre` vacío | `400` | `"El nombre es obligatorio"` (string JSON) |
 | `precio <= 0` | `400` | `"El precio debe ser mayor que cero"` |
 
-> ⚠️ A diferencia del 03, aquí el **precio 0 está prohibido**.
+> ⚠️ **Advertencia:** A diferencia del 03, aquí el **precio 0 está prohibido**.
 
 ### Ejemplo de cuerpo
 

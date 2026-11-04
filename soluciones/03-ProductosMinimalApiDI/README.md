@@ -20,7 +20,7 @@ Sin Swagger ni Docker: solo SDK de .NET.
 dotnet run --project ProductosMinimalApiDI
 ```
 
-Escucha en `http://localhost:5000`.
+Escucha en `http://localhost:5110`.
 
 ## Pruebas automatizadas
 
@@ -37,7 +37,7 @@ Node.js nativo (sin dependencias): arranca la API con `dotnet run`, espera hasta
 
 ## Endpoints
 
-Prefijo: `http://localhost:5000/api/productos`
+Prefijo: `http://localhost:5110/api/productos`
 
 | Método | Ruta | Parámetros | Cuerpo de petición | Respuesta exitosa | Errores |
 |--------|------|------------|--------------------|-------------------|---------|

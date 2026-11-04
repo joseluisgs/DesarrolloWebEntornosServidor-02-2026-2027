@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "5000:8080"
+      - "5110:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - MongoDbSettings__ConnectionString=mongodb://db:27017
@@ -22,7 +22,7 @@ services:
     image: mongo:7.0
     container_name: productos_mongo_api_12
     ports:
-      - "27018:27017"
+      - "27021:27017"
     volumes:
       - mongodata_api:/var/lib/mongodb/data
 

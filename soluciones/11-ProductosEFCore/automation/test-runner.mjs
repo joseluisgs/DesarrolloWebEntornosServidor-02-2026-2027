@@ -10,9 +10,9 @@ const CONFIG = {
   nombre: "11-ProductosEFCore",
   // OJO: el proyecto vive en la carpeta ProductosTest, no ProductosEFCore
   csproj: "ProductosTest/ProductosTest.csproj",
-  baseUrl: "http://localhost:5000",
+  baseUrl: "http://localhost:5110",
   healthPaths: ["/swagger", "/api/productos", "/"],
-  env: { ASPNETCORE_ENVIRONMENT: "Development", ASPNETCORE_URLS: "http://localhost:5000" },
+  env: { ASPNETCORE_ENVIRONMENT: "Development", ASPNETCORE_URLS: "http://localhost:5110" },
   dbServices: ["db"], // postgres
   fallbackComposeFile: "docker-compose.api.yml", // stack completo (api + db)
   // POSTGRES_DB=productos ya crea la BD; appsettings Development usa productos (admin/admin123)

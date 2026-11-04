@@ -18,7 +18,7 @@ Flujo sin excepciones en la capa de presentación: el servicio devuelve `Result<
 dotnet run --project ProductosResult
 ```
 
-Escucha en `http://localhost:5000` (el runner fija `ASPNETCORE_URLS`).
+Escucha en `http://localhost:5110` (el runner fija `ASPNETCORE_URLS`).
 
 ## Pruebas automatizadas
 
@@ -34,7 +34,7 @@ Node.js nativo: restore/build/run → polling ≤20 s → **12 tests** → limpi
 
 ## Endpoints
 
-Prefijo: `http://localhost:5000/api/productos`
+Prefijo: `http://localhost:5110/api/productos`
 
 | Método | Ruta | Parámetros | Cuerpo de petición | Respuesta exitosa | Errores |
 |--------|------|------------|--------------------|-------------------|---------|

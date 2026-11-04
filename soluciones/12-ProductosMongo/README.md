@@ -25,7 +25,7 @@ docker compose up -d db
 dotnet run --project ProductosMongo
 ```
 
-Escucha en `http://localhost:5000`.
+Escucha en `http://localhost:5110`.
 
 ## Pruebas automatizadas (runner)
 
@@ -46,7 +46,7 @@ dotnet test
 
 ## Endpoints
 
-Prefijo: `http://localhost:5000/api/productos`
+Prefijo: `http://localhost:5110/api/productos`
 
 | Método | Ruta | Parámetros | Cuerpo de petición | Respuesta exitosa | Errores |
 |--------|------|------------|--------------------|-------------------|---------|
@@ -95,10 +95,10 @@ docker compose down -v
 
 > 📝 **Nota:** Los dos compose son **proyectos distintos** (cada fichero lleva su `name:`), así que no se pisan: levantar el stack completo no destruye el contenedor local, y al revés.
 >
-> - **Desarrollo** (`docker compose up -d db`): MongoDB en `localhost:27017`. Es lo que necesitas con el play de Rider.
-> - **Stack completo** (`-f docker-compose.api.yml`): api en el `5000` y MongoDB en el `27018`, porque dentro de la red de Docker la app se conecta al servicio `db`, no a `localhost`.
+> - **Desarrollo** (`docker compose up -d db`): MongoDB en `localhost:27020`. Es lo que necesitas con el play de Rider.
+> - **Stack completo** (`-f docker-compose.api.yml`): api en el `5110` y MongoDB en el `27018`, porque dentro de la red de Docker la app se conecta al servicio `db`, no a `localhost`.
 >
-> ⚠️ El nombre del contenedor es propio de esta solución, pero el **puerto 27017 es común**: no levantes dos soluciones a la vez o la segunda fallará con `port is already allocated`.
+> ⚠️ **Advertencia:** El nombre del contenedor es propio de esta solución, pero el **puerto 27020 es común**: no levantes dos soluciones a la vez o la segunda fallará con `port is already allocated`.
 
 ## Estructura
 
