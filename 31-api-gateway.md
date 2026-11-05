@@ -16,7 +16,7 @@
     - [31.4.2. Configuración en appsettings.json](#3142-configuración-en-appsettingsjson)
     - [31.4.3. Configuración en Program.cs](#3143-configuración-en-programcs)
     - [31.4.4. Tokens JWT con YARP](#3144-tokens-jwt-con-yarp)
-  - [31.5. Ejemplo práctico: auth y productos con YARP](#315-ejemplo-práctico-auth-y-productos-con-yarp)
+  - [31.5. Ejemplo práctico: auth + productos con YARP](#315-ejemplo-práctico-auth--productos-con-yarp)
     - [31.5.1. Arquitectura del ejemplo](#3151-arquitectura-del-ejemplo)
     - [31.5.2. Docker compose](#3152-docker-compose)
     - [31.5.3. Configuración de rutas](#3153-configuración-de-rutas)

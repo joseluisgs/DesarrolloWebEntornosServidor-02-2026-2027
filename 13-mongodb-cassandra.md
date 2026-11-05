@@ -22,7 +22,7 @@
     - [13.3.9. Builders de filtros y actualizaciones](#1339-builders-de-filtros-y-actualizaciones)
     - [13.3.10. Índices](#13310-índices)
     - [13.3.11. Composición y referencias con el driver](#13311-composición-y-referencias-con-el-driver)
-  - [13.4. EF Core con MongoDB](#134-ef-core-con-mongodb)
+  - [13.4. MongoDB con EF Core](#134-mongodb-con-ef-core)
     - [13.4.1. Paquete NuGet](#1341-paquete-nuget)
     - [13.4.2. DbContext con UseMongoDB](#1342-dbcontext-con-usemongodb)
     - [13.4.3. Data annotations en MongoDB](#1343-data-annotations-en-mongodb)

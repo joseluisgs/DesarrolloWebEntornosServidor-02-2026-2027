@@ -2,7 +2,7 @@
   - [12.1. Fundamentos](#121-fundamentos)
     - [12.1.1. ¿Qué es un ORM?](#1211-qué-es-un-orm)
     - [12.1.2. DbContext](#1212-dbcontext)
-    - [12.1.3. Change tracker](#1213-change-tracker)
+    - [12.1.3. Change tracker y metadatos](#1213-change-tracker-y-metadatos)
     - [12.1.4. Ventajas de EF Core](#1214-ventajas-de-ef-core)
   - [12.2. Configuración inicial](#122-configuración-inicial)
     - [12.2.1. Paquetes NuGet](#1221-paquetes-nuget)
@@ -62,8 +62,14 @@
   - [12.12. Seed data y logging](#1212-seed-data-y-logging)
   - [12.13. Control de concurrencia](#1213-control-de-concurrencia)
   - [12.14. Testing con EF Core](#1214-testing-con-ef-core)
+    - [12.14.1. InMemory database](#12141-inmemory-database)
+    - [12.14.2. TestContainers](#12142-testcontainers)
   - [12.15. Buenas prácticas](#1215-buenas-prácticas)
   - [12.16. Reto: repositorio CRUD con Entity Framework Core en FunkoApp](#1216-reto-repositorio-crud-con-entity-framework-core-en-funkoapp)
+    - [12.16.1. Contexto](#12161-contexto)
+    - [12.16.2. Modelo de datos](#12162-modelo-de-datos)
+    - [12.16.3. Almacenamiento](#12163-almacenamiento)
+    - [12.16.4. Retos](#12164-retos)
 
 
 

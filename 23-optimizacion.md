@@ -25,7 +25,7 @@
     - [23.4.4. Serialización JSON source-generated](#2344-serialización-json-source-generated)
   - [23.5. Rate Limiting](#235-rate-limiting)
     - [23.5.1. Rate Limiting con ASP.NET Core](#2351-rate-limiting-con-aspnet-core)
-    - [23.5.2. Middleware propio con headers RateLimit-*](#2352-middleware-propio-con-headers-ratelimit)
+    - [23.5.2. Middleware propio con headers RateLimit-*](#2352-middleware-propio-con-headers-ratelimit-)
     - [23.5.3. Token bucket algorithm](#2353-token-bucket-algorithm)
   - [23.6. Monitoring y profiling](#236-monitoring-y-profiling)
     - [23.6.1. Health Checks](#2361-health-checks)

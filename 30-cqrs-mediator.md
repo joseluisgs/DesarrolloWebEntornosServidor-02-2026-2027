@@ -31,7 +31,7 @@
     - [30.6.6. Enfoque 5: RX.NET con observables](#3066-enfoque-5-rxnet-con-observables)
     - [30.6.7. Comparativa](#3067-comparativa)
   - [30.7. Ventajas y desventajas](#307-ventajas-y-desventajas)
-  - [30.8. Kafka: la opcion profesional](#308-kafka-la-opcion-profesional)
+  - [30.8. Kafka: la opción profesional](#308-kafka-la-opción-profesional)
     - [30.8.1. ¿Qué es kafka?](#3081-qué-es-kafka)
     - [30.8.2. ¿Qué es debezium (CDC)?](#3082-qué-es-debezium-cdc)
     - [30.8.3. Flujo completo: PostgreSQL a kafka a MongoDB](#3083-flujo-completo-postgresql-a-kafka-a-mongodb)
@@ -49,7 +49,7 @@
     - [30.10.3. Ventajas de este enfoque](#30103-ventajas-de-este-enfoque)
   - [30.11. Testing de CQRS](#3011-testing-de-cqrs)
   - [30.12. Buenas prácticas](#3012-buenas-prácticas)
-  - [30.13. Reto: CQRS y MediatR en FunkoApp](#3013-reto-cqrs-y-mediator-en-funkoapp)
+  - [30.13. Reto: CQRS y MediatR en FunkoApp](#3013-reto-cqrs-y-mediatr-en-funkoapp)
 
 
 

@@ -4,7 +4,7 @@
     - [19.1.2. REST vs GraphQL](#1912-rest-vs-graphql)
     - [19.1.3. Cuándo usar GraphQL](#1913-cuándo-usar-graphql)
   - [19.2. HotChocolate en ASP.NET Core](#192-hotchocolate-en-aspnet-core)
-    - [19.2.1. Paquetes NuGet](#1921-paquetes-nut)
+    - [19.2.1. Paquetes NuGet](#1921-paquetes-nuget)
     - [19.2.2. Configuración en Program.cs](#1922-configuración-en-programcs)
     - [19.2.3. Flujo de petición GraphQL](#1923-flujo-de-petición-graphql)
   - [19.3. Tipos y esquema](#193-tipos-y-esquema)

@@ -109,6 +109,8 @@ En este proyecto usamos **NUnit** por su sintaxis clara y atributos descriptivos
 
 ## 28.4. Estructura del proyecto de tests
 
+El proyecto de pruebas replica la estructura del proyecto real: una carpeta por tipo de componente, para que localizar el test de una clase sea cuestión de mirar su ruta.
+
 ```
 ProductosApp.Tests/
 ├── Unit/
@@ -216,6 +218,8 @@ public class ProductoServiceTests
 | `[Category]` | Categorizar tests | `[Category("Slow")]` |
 
 ### 28.6.2. Ejemplo completo
+
+Un test de servicio entero, con sus dependencias falsas montadas en el arranque y sus aserciones al final:
 
 ```csharp
 [TestFixture]
@@ -360,6 +364,8 @@ public class FluentAssertionsExamples
 
 ### 28.8.1. Configurar comportamiento con setup
 
+El método **Setup** le dice al mock qué debe devolver cuando el código bajo test lo llame:
+
 ```csharp
 [TestFixture]
 public class ProductoServiceMockTests
@@ -436,6 +442,8 @@ public class ProductoServiceMockTests
 
 ### 28.8.2. Tipos de setup
 
+El mismo admite respuestas fijas, respuestas calculadas con una expresión lambda y respuestas que cambian en cada llamada:
+
 ```csharp
 // Setup con valor fijo
 _repositoryMock.Setup(r => r.GetCountAsync()).ReturnsAsync(42);
@@ -459,6 +467,8 @@ _repositoryMock
 ```
 
 ### 28.8.3. Verify - verificar interacciones
+
+Con **Verify** compruebas que el código bajo test ha hablado con el mock como esperabas: cuántas veces y con qué argumentos.
 
 ```csharp
 // Verificar que se llamo una vez
@@ -951,6 +961,8 @@ public class ProductoIntegrationTests { }
 | **Tests con Testcontainers** | **Limitado** | Cada contenedor es pesado |
 
 ## 28.13. Comandos utiles
+
+Los comandos del día a día para ejecutar las pruebas, filtrarlas y leer su resultado:
 
 ```bash
 # Ejecutar todos los tests
