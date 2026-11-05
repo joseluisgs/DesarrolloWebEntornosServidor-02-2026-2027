@@ -23,16 +23,22 @@
     - [11.5.3. CQRS con MediatR (introducción)](#1153-cqrs-con-mediatr-introducción)
     - [11.5.4. ¿Cuándo usar CQRS?](#1154-cuándo-usar-cqrs)
     - [11.5.5. Nuestra arquitectura: config classes](#1155-nuestra-arquitectura-config-classes)
-  - [11.6. Estructura del proyecto](#116-estructura-del-proyecto)
-    - [11.6.1. Organización de carpetas](#1161-organización-de-carpetas)
-    - [11.6.2. Capas y sus contenidos](#1162-capas-y-sus-contenidos)
-  - [11.7. Buenas prácticas](#117-buenas-prácticas)
-  - [11.8. Decisiones de arquitectura: ADRs](#118-decisiones-de-arquitectura-adrs)
-    - [11.8.1. ¿Qué es un ADR?](#1181-qué-es-un-adr)
-    - [11.8.2. Plantilla de ADR (formato MADR)](#1182-plantilla-de-adr-formato-madr)
-    - [11.8.3. Ejemplo completo: rate limiting nativo](#1183-ejemplo-completo-rate-limiting-nativo)
-    - [11.8.4. Reglas de oro](#1184-reglas-de-oro)
-  - [11.9. Reto: Clean Architecture por carpetas en FunkoApp](#119-reto-clean-architecture-por-carpetas-en-funkoapp)
+  - [11.6. Del monolito a los microservicios](#116-del-monolito-a-los-microservicios)
+    - [11.6.1. El problema del monolito que crece](#1161-el-problema-del-monolito-que-crece)
+    - [11.6.2. Qué son los microservicios](#1162-qué-son-los-microservicios)
+    - [11.6.3. Problemas que resuelve y problemas que crea](#1163-problemas-que-resuelve-y-problemas-que-crea)
+    - [11.6.4. API Gateway: la puerta de entrada](#1164-api-gateway-la-puerta-de-entrada)
+    - [11.6.5. ¿Cuándo pasar de monolito a microservicios?](#1165-cuándo-pasar-de-monolito-a-microservicios)
+  - [11.7. Estructura del proyecto](#117-estructura-del-proyecto)
+    - [11.7.1. Organización de carpetas](#1171-organización-de-carpetas)
+    - [11.7.2. Capas y sus contenidos](#1172-capas-y-sus-contenidos)
+  - [11.8. Buenas prácticas](#118-buenas-prácticas)
+  - [11.9. Decisiones de arquitectura: ADRs](#119-decisiones-de-arquitectura-adrs)
+    - [11.9.1. ¿Qué es un ADR?](#1191-qué-es-un-adr)
+    - [11.9.2. Plantilla de ADR (formato MADR)](#1192-plantilla-de-adr-formato-madr)
+    - [11.9.3. Ejemplo completo: rate limiting nativo](#1193-ejemplo-completo-rate-limiting-nativo)
+    - [11.9.4. Reglas de oro](#1194-reglas-de-oro)
+  - [11.10. Reto: Clean Architecture por carpetas en FunkoApp](#1110-reto-clean-architecture-por-carpetas-en-funkoapp)
 
 
 
@@ -682,9 +688,9 @@ No hay una fecha, hay señales:
 
 > 💡 **Consejo:** Pasa a microservicios **por dolor real**, no por moda. Un monolito modular con Clean Architecture puede seguir creciendo años antes de necesitar la separación.
 
-## 11.6. Estructura del proyecto
+## 11.7. Estructura del proyecto
 
-### 11.6.1. Organización de carpetas
+### 11.7.1. Organización de carpetas
 
 La organización de carpetas refleja los anillos de Clean Architecture: cada capa tiene su propia carpeta y solo depende de las capas interiores.
 
@@ -711,7 +717,7 @@ MiApi/
     └── Program.cs
 ```
 
-### 11.6.2. Capas y sus contenidos
+### 11.7.2. Capas y sus contenidos
 
 | Capa | Contenido | Regla |
 |------|-----------|-------|
@@ -721,7 +727,7 @@ MiApi/
 | **Api** | Controllers, Middleware, Program.cs | Conecta todo |
 
 
-## 11.7. Buenas prácticas
+## 11.8. Buenas prácticas
 
 - **Dominio puro:** La capa de dominio NO debe tener dependencias de NuGet (ni EF Core, ni ASP.NET Core)
 - **Interfaces en dominio:** El dominio define los contratos, la infraestructura los implementa
@@ -731,11 +737,11 @@ MiApi/
 - **Clean Architecture para equipos:** En proyectos con varios desarrolladores, Clean Architecture da claridad
 
 
-## 11.8. Decisiones de arquitectura: ADRs
+## 11.9. Decisiones de arquitectura: ADRs
 
 Hemos comparado capas, Onion y Clean... y llegará el día en que tu equipo tenga que **elegir**. El problema no es decidir: es que seis meses después nadie recuerda **por qué** se decidió.
 
-### 11.8.1. ¿Qué es un ADR?
+### 11.9.1. ¿Qué es un ADR?
 
 Un **ADR** (*Architecture Decision Record*, "registro de decisiones de arquitectura") es un fichero de texto corto que documenta **una decisión importante** de forma que cualquiera (incluido el "yo" del futuro) pueda entenderla.
 
@@ -751,7 +757,7 @@ Un **ADR** (*Architecture Decision Record*, "registro de decisiones de arquitect
 
 > 💡 **Analogía:** Es la bitácora de un barco: no te dice hacia dónde va ahora (eso es el README), te dice **por qué giró** cuando el capitán lo decidió.
 
-### 11.8.2. Plantilla de ADR (formato MADR)
+### 11.9.2. Plantilla de ADR (formato MADR)
 
 La plantilla más extendida es **MADR**. En el proyecto la verás en inglés; aquí la tienes traducida:
 
@@ -789,7 +795,7 @@ Elegimos la **opción A** porque <justificación>.
 
 Los campos clave son **Estado**, **Contexto**, **Opciones** y **Consecuencias**: si no puedes rellenar las opciones, probablemente no haya decisión (solo una imposición).
 
-### 11.8.3. Ejemplo completo: rate limiting nativo
+### 11.9.3. Ejemplo completo: rate limiting nativo
 
 Este es un ADR real de nuestro ámbito: la decisión de sustituir `AspNetCoreRateLimit` por la API nativa de .NET (la que viste en el tema 23, sección 23.5.2).
 
@@ -830,7 +836,7 @@ y los headers exactamente como queremos.
 
 > 📝 **Nota:** Un ADR **aceptada no se edita**. Si dentro de un año cambias de opinión, escribes un ADR nuevo y el antiguo pasa a `Estado: obsoleta (reemplazada por ADR-0012)`. Así queda la **historia** de las decisiones.
 
-### 11.8.4. Reglas de oro
+### 11.9.4. Reglas de oro
 
 - **Uno por decisión:** si un fichero documenta tres decisiones, en realidad no documenta ninguna.
 - **Corto:** una o dos páginas. Si no cabe, es un diseño, no un ADR.
@@ -843,7 +849,7 @@ y los headers exactamente como queremos.
 
 > ⚠️ **Advertencia:** El ADR más peligroso es el que no existe: sin él, el siguiente desarrollador "arreglará" tu decisión porque nadie dejó escrita la razón.
 
-## 11.9. Reto: Clean Architecture por carpetas en FunkoApp
+## 11.10. Reto: Clean Architecture por carpetas en FunkoApp
 
 > Diseña la arquitectura de FunkoApp.
 
