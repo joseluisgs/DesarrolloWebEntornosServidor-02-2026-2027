@@ -496,6 +496,8 @@ Result<Producto, DomainError> resultado = service.GetById(id);
 // Si es ConflictError, devolver 409
 ```
 
+> 📝 **Nota:** Este mapa de códigos no es una convención suelta: es el criterio que se justifica en el apartado **2.4.4** de REST API (ver `02-rest-api.md`). Ahí está el dilema de qué devolver cuando se borra algo con elementos asociados y por qué en este proyecto una regla de negocio de dominio se responde 422, mientras que un duplicado o una carrera de concurrencia se responde 409.
+
 ## 7.7. Errores de dominio tipados
 
 ### 7.7.1. DomainError base

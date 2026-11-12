@@ -16,7 +16,7 @@
     - [2.4.1. 2xx: éxito](#241-2xx-éxito)
     - [2.4.2. 200 vs 201 vs 204](#242-200-vs-201-vs-204)
     - [2.4.3. 4xx: error del cliente](#243-4xx-error-del-cliente)
-    - [2.4.4. 400 vs 422](#244-400-vs-422)
+    - [2.4.4. 400 vs 409 vs 422](#244-400-vs-409-vs-422)
     - [2.4.5. 401 vs 403](#245-401-vs-403)
     - [2.4.6. 5xx: error del servidor](#246-5xx-error-del-servidor)
     - [2.4.7. ¿Cuándo usar cada código?](#247-cuándo-usar-cada-código)
@@ -320,19 +320,58 @@ Los códigos de estado HTTP comunican al cliente qué ha pasado con su petición
 | **401** | Unauthorized | No estás autenticado (no envías token) |
 | **403** | Forbidden | Estás autenticado pero no tienes permisos |
 | **404** | Not Found | El recurso no existe |
-| **409** | Conflict | Conflicto (ej: intentar crear un producto que ya existe) |
-| **422** | Unprocessable Entity | Los datos son válidos sintácticamente pero tienen errores de negocio |
+| **409** | Conflict | El recurso o el estado que pides choca con algo que ya existe (producto duplicado, dos peticiones compitiendo por el mismo) |
+| **422** | Unprocessable Entity | Los datos son válidos sintácticamente pero los rechaza una regla de negocio |
 
-### 2.4.4. 400 vs 422
+### 2.4.4. 400 vs 409 vs 422
+
+Los tres rechazan la petición y los tres se confunden a la primera. La diferencia está en dónde está el problema: en el mensaje que llega, en el estado que ya tiene el servidor o en la regla del negocio.
 
 | Código | Significado | Ejemplo |
 |--------|-------------|---------|
 | **400** | No supera la **validación**: mal formado o campos inválidos/ausentes | JSON con errores de sintaxis, nombre vacío, precio con texto en vez de número |
+| **409** | El recurso o el estado que pides **choca con algo que ya existe** | Nombre de producto duplicado, dos peticiones compitiendo por el último, modificar un pedido ya entregado |
 | **422** | Los campos están bien, pero una **regla de negocio** rechaza la operación | Stock insuficiente, no se puede eliminar una categoría que tiene productos |
 
-> ⚠️ **Advertencia:** No los confundas. Si falta el nombre o el precio es `-5€`, eso es **validación de datos → 400** (ASP.NET Core ya te lo devuelve solo con `[ApiController]`). El **422** es para cuando los datos son correctos pero el negocio dice "no puedo". El **409** es para duplicados (nombre ya existente).
+> ⚠️ **Advertencia:** No los confundas. Si falta el nombre o el precio es `-5€`, eso es **validación de datos → 400** (ASP.NET Core ya te lo devuelve solo con `[ApiController]`). El **422** es para cuando los datos son correctos pero el negocio dice "no puedo". El **409** es para cuando lo que pides choca con lo que ya hay: duplicados y choques de estado.
 
 📌 **Ejemplo real:** En Amazon, si envías un JSON con la sintaxis rota → 400. Si envías un formulario sin rellenar el nombre → 400. Si pones un precio de -5€ → 400. Pero si pides 10 unidades de un artículo con stock 3 → 422: los datos son válidos, pero la operación no se puede procesar.
+
+**El dilema: borrar una categoría con productos**
+
+Pongamos el caso que más se repite en clase: `DELETE /api/v1/categorias/1` y la categoría tiene productos asociados. ¿Qué devolvemos? Antes de discutir descartamos los malos: no es **404**, porque la categoría existe; no es **400**, porque la petición está perfecta; y un **500** nunca es una respuesta de negocio.
+
+Quedan dos candidatos serios y los dos se defienden citando el estándar:
+
+- **409 Conflict**: "conflicts with the current state of the target resource", un choque con el estado actual.
+- **422 Unprocessable Entity**: "the syntax of the request content is correct, but it was unable to process the contained instructions", lo entiendo pero no puedo ejecutar tu instrucción.
+
+La frase que cierra la pregunta: **400 = el problema está en lo que me enviaste; 409 y 422 = el problema está en lo que pides hacer**. Aquí el estándar no impone ninguno de los dos, así que la elección es de diseño y hay que poder justificarla.
+
+**Por qué en este proyecto es 422**
+
+El criterio está escrito en el propio código: el mapper de errores de dominio traduce `ConflictError` a **409** y `BusinessRuleError` a **422**, y lo que clasifica es el motivo del rechazo, no el tipo de choque.
+
+| Caso de nuestras APIs | Código | Motivo del rechazo |
+|-----------------------|:------:|--------------------|
+| `POST /categorias` con nombre ya usado | **409** | Choca con un recurso que ya existe |
+| Dos peticiones a la vez por el último producto | **409** | Concurrencia: solo una puede ganar |
+| `PUT /pedidos/5` de un pedido ya entregado | **409** | El estado actual no admite esa operación |
+| `POST /pedidos` con `cantidad` mayor que el stock | **422** | El dominio prohíbe vender más de lo que hay |
+| `DELETE /categorias/1` con productos asociados | **422** | El dominio prohíbe crear huérfanos |
+| Baja de un usuario con pedidos sin resolver | **422** | Misma regla: no se rompen las referencias |
+| `GET /productos/999999` | **404** | No existe |
+| JSON malformado | **400** | El mensaje está mal |
+
+La justificación en una línea: que la categoría tenga productos no es un recurso que choque con otro, es la regla de negocio diciendo "aquí no se crean huérfanos", la misma clase de regla que el stock.
+
+**La prueba de coherencia**
+
+Si alguien defiende el 409 para las relaciones porque "eso depende del estado del servidor", hay que empujarlo hasta el final: el stock también vive en la base de datos, así que le tocaría mover también el stock a 409. Y si mueve solo las relaciones, se queda con dos reglas idénticas atadas a dos códigos distintos. Eso sí es el error de diseño.
+
+La escala no es 409 contra 422: es si aplicas tu criterio a todos los casos. Lo obligatorio no es el número elegido, sino un criterio único, consistente y documentado, igual en el mapper, en los controladores y en los tests.
+
+> 💡 **Consejo:** Si en tu proyecto prefieres el 409 canónico para las claves externas, adelante, pero llévate el stock y el resto de reglas de negocio en el mismo barco y actualiza tus tests. Lo que no se puede defender es elegir un código por endpoint.
 
 ### 2.4.5. 401 vs 403
 
@@ -513,7 +552,7 @@ Un Funko tiene estas propiedades:
 | **401** | No autenticado |
 | **403** | No autorizado |
 | **404** | Recurso no encontrado |
-| **409** | Recurso duplicado |
+| **409** | Recurso duplicado o choque con el estado actual |
 | **422** | Regla de negocio incumplida |
 
 **¿Qué viene después?**

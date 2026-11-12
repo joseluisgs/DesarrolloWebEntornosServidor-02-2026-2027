@@ -308,7 +308,8 @@ flowchart TB
 
     subgraph "Capa 3: Servicio"
         SVC["Validar nombre único<br/>Verificar stock"]
-        SVC -->|Falla| SVC_ERR["409 Conflict<br/>400 Bad Request"]
+        SVC -->|Nombre ya registrado| SVC_ERR["409 Conflict"]
+        SVC -->|Stock insuficiente| SVC_ERR2["422 Unprocessable"]
     end
 
     subgraph "Éxito"
@@ -327,6 +328,7 @@ flowchart TB
     style DA_ERR fill:#f44336,color:#fff
     style FV_ERR fill:#f44336,color:#fff
     style SVC_ERR fill:#f44336,color:#fff
+    style SVC_ERR2 fill:#f44336,color:#fff
 ```
 
 📌 Ejemplo real: **Netflix** cuando creas una cuenta valida que el email tenga formato correcto (Data Annotations), que la contraseña tenga al menos 8 caracteres con una mayúscula y un número (FluentValidation), y que el email no esté ya registrado en la base de datos (validación en servicio). Los tres niveles trabajando en conjunto.
