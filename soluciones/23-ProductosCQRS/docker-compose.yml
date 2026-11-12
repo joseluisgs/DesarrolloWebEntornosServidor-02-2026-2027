@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: productos-cqrs-postgres
+    ports:
+      - "5440:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: productos_cqrs
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mongo:
+    image: mongo:7.0
+    container_name: productos-cqrs-mongo
+    ports:
+      - "27020:27017"
+    volumes:
+      - mongodata:/data/db
+    networks:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    container_name: productos-cqrs-redis
+    ports:
+      - "6390:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  pgdata:
+  mongodata:
+  redis-data:

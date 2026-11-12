@@ -1,0 +1,12 @@
+# Compilacion local: no debe entrar en la imagen
+**/bin/
+**/obj/
+**/logs/
+
+# IDE y temporales
+.idea/
+.vs/
+*.user
+*.suo
+node_modules/
+.DS_Store

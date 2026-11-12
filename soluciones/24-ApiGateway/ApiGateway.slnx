@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="ApiGateway/ApiGateway.csproj" />
+  <Project Path="AuthMicroService/AuthMicroService.csproj" />
+  <Project Path="ProductosMicroService/ProductosMicroService.csproj" />
+  <Project Path="ProveedoresMicroService/ProveedoresMicroService.csproj" />
+</Solution>
