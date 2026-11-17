@@ -17,7 +17,8 @@ try
     builder.Host.UseSerilog();
 
     // ── JWT Authentication ───────────────────────────────────────────────
-    var jwtKey = builder.Configuration["Jwt:Key"] ?? "SuperSecretKeyForJwtToken2024!";
+    var jwtKey = builder.Configuration["Jwt:Key"]
+        ?? "SuperSecretKeyForJwtToken2024!SuperSecretKeyForJwtToken2024!";
     var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "AuthMicroService";
     var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "ApiGateway";
 

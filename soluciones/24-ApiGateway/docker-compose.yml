@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # ── Base de datos: PostgreSQL (Auth + Productos) ───────────────────────
   postgres:
@@ -12,6 +10,9 @@ services:
       - "5440:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # Crea productos_db la primera vez que se levanta el volumen:
+      # POSTGRES_DB solo crea auth_db y el micro de Productos necesita la suya.
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - backend
     healthcheck:
@@ -68,11 +69,15 @@ services:
       - ConnectionStrings__PostgresConnection=Host=postgres;Database=productos_db;Username=admin;Password=admin123
       - ConnectionStrings__RedisConnection=redis:6379
       - Cache__DefaultExpirationMinutes=5
+      # En Docker la referencia es el DNS de la red interna, no localhost
+      - Proveedores__BaseUrl=http://proveedores-microservice:5103
       - Urls=http://+:5102
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_started
+      proveedores-microservice:
         condition: service_started
     networks:
       - backend

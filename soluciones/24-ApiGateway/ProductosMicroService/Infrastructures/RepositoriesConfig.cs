@@ -25,12 +25,15 @@ public static class RepositoriesConfig
         services.AddScoped<IProductoRepository, ProductoRepository>();
         services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 
-        // Repositorio remoto (Refit)
+        // Repositorio remoto (Refit).
+        // La URL no se escribe a mano: sale de la configuración, para que en local
+        // apunte a localhost:5103 y en Docker al DNS del contenedor (red interna).
+        var proveedoresBaseUrl = configuration["Proveedores:BaseUrl"] ?? "http://localhost:5103";
         services.AddScoped<IProveedorRemoteRepository, ProveedorRemoteRepository>();
         services.AddRefitClient<IProveedorApi>()
             .ConfigureHttpClient(c =>
             {
-                c.BaseAddress = new Uri("http://localhost:5103");
+                c.BaseAddress = new Uri(proveedoresBaseUrl);
                 c.Timeout = TimeSpan.FromSeconds(10);
             });
 

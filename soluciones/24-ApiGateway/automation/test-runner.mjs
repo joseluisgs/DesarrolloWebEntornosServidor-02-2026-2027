@@ -14,16 +14,16 @@ const CONFIG = {
   healthPaths: ["/swagger", "/api/proveedores", "/"],
   env: { ASPNETCORE_ENVIRONMENT: "Development" },
   dbServices: ["postgres", "mongo", "redis"],
-  // No existe docker-compose.api.yml: el compose raíz ya levanta API + gateway + BD
+  // No existe docker-compose.api.yml: el compose raíz ya levanta API + gateway + BD.
+  // productos_db la crea postgres-init.sql en volúmenes nuevos; la comprobación de
+  // abajo cubre volúmenes antiguos, y ambas rutas son idempotentes.
   fallbackComposeFile: null,
-  prepareDb: [
-    // POSTGRES_DB solo crea auth_db; productos_db hay que crearla a mano
-    `docker compose exec -T postgres psql -U admin -d postgres -c "CREATE DATABASE productos_db;"`,
-  ],
+  // Orden importa: Proveedores siempra antes que Productos, porque Productos le
+  // pide un proveedor real para sembrar sus productos de ejemplo.
   servicios: [
+    { name: "ProveedoresMicroService", csproj: "ProveedoresMicroService/ProveedoresMicroService.csproj", env: { ASPNETCORE_URLS: "http://localhost:5103" } },
     { name: "AuthMicroService", csproj: "AuthMicroService/AuthMicroService.csproj", env: { ASPNETCORE_URLS: "http://localhost:5101" } },
     { name: "ProductosMicroService", csproj: "ProductosMicroService/ProductosMicroService.csproj", env: { ASPNETCORE_URLS: "http://localhost:5102" } },
-    { name: "ProveedoresMicroService", csproj: "ProveedoresMicroService/ProveedoresMicroService.csproj", env: { ASPNETCORE_URLS: "http://localhost:5103" } },
     {
       name: "ApiGateway",
       csproj: "ApiGateway/ApiGateway.csproj",
@@ -57,18 +57,48 @@ function tryRun(cmd) {
   try { run(cmd); } catch (e) { log(`  ⚠️ (tolerado) ${e.message.split("\n")[0]}`); }
 }
 function dockerAvailable() {
-  try { return spawnSync("docker", ["compose", "version"], { encoding: "utf8", shell: true }).status === 0; }
+  // String + shell:true (no array): el array con shell:true dispara DEP0190 en Node
+  try { return spawnSync("docker compose version", { encoding: "utf8", shell: true }).status === 0; }
   catch { return false; }
+}
+function dockerOut(cmd) {
+  const res = spawnSync(cmd, { cwd: ROOT, encoding: "utf8", shell: true });
+  return { code: res.status ?? 1, out: `${res.stdout || ""}${res.stderr || ""}` };
+}
+/** Espera a que Postgres del compose acepte conexiones (no con sleeps a ciegas). */
+async function esperarPostgres(timeoutMs = 60000) {
+  const inicio = Date.now();
+  while (Date.now() - inicio < timeoutMs) {
+    const { code } = dockerOut(`docker compose exec -T postgres pg_isready -U admin -d auth_db`);
+    if (code === 0) return true;
+    await sleep(1000);
+  }
+  return false;
+}
+/**
+ * Crea productos_db solo si no existe (idempotente).
+ * postgres-init.sql ya la crea en volúmenes nuevos; esto cubre volúmenes antiguos.
+ */
+function crearBaseProductos() {
+  const existe = dockerOut(
+    `docker compose exec -T postgres psql -U admin -d postgres -tA -c "SELECT 1 FROM pg_database WHERE datname='productos_db';"`
+  );
+  if (existe.out.trim() === "1") return "productos_db ya existía";
+  const crea = dockerOut(`docker compose exec -T postgres psql -U admin -d postgres -c "CREATE DATABASE productos_db;"`);
+  if (crea.code !== 0) throw new Error(`No se pudo crear productos_db:\n${crea.out}`);
+  return "productos_db creada";
 }
 function killTree(pid) {
   if (!pid) return;
-  try { spawnSync("taskkill", ["/pid", String(pid), "/T", "/F"], { shell: true }); }
+  try { spawnSync(`taskkill /pid ${pid} /T /F`, { shell: true }); }
   catch { try { process.kill(pid); } catch { } }
 }
 function spawnApi(csproj, envExtra = {}) {
   // --no-launch-profile: ignorar applicationUrl de launchSettings.json
-  // para que ASPNETCORE_URLS del runner gobierna los puertos (5100-5103)
-  const child = spawn("dotnet", ["run", "--project", csproj, "--no-launch-profile"], {
+  // para que ASPNETCORE_URLS del runner gobierna los puertos (5100-5103).
+  // String (no array) + shell:true: el array con shell:true dispara DEP0190 en Node.
+  const cmd = `dotnet run --project "${csproj}" --no-launch-profile`;
+  const child = spawn(cmd, {
     cwd: ROOT, env: { ...process.env, ...CONFIG.env, ...envExtra },
     stdio: ["ignore", "pipe", "pipe"], shell: true,
   });
@@ -85,22 +115,30 @@ async function fetchAny(url) {
     return res;
   } catch { return null; }
 }
-async function waitForApi(timeoutMs = 30000) {
+async function waitForApi(timeoutMs = 45000) {
   const start = Date.now();
+  const puertos = {
+    "http://localhost:5101": "Auth",
+    "http://localhost:5102": "Productos",
+    "http://localhost:5103": "Proveedores",
+  };
   while (Date.now() - start < timeoutMs) {
-    // Gateway (baseUrl) + microservicios directos para detectar procesos caídos pronto
+    // Exigimos los CUATRO servicios: si un microservicio ha muerto (BD caída,
+    // puerto mal...) la suite no se lanza, porque saldrían tests falsos.
     let gatewayOk = false;
     for (const p of CONFIG.healthPaths) {
       if (await fetchAny(CONFIG.baseUrl + p)) { gatewayOk = true; break; }
     }
     if (gatewayOk) {
-      const puertos = ["http://localhost:5101", "http://localhost:5102", "http://localhost:5103"];
-      const microsOk = (await Promise.all(puertos.map(p => fetchAny(p + "/")))).every(Boolean);
-      if (microsOk) return true;
-      // Si el gateway responde, damos por bueno aunque un micro espere otra vía de health
-      return true;
+      const micros = await Promise.all(Object.keys(puertos).map(async p => {
+        const res = await fetchAny(p + "/swagger/index.html");
+        return !!res && res.ok;
+      }));
+      if (micros.every(Boolean)) return true;
+      const caidos = Object.entries(puertos).filter((_, i) => !micros[i]).map(([, n]) => n);
+      process.stdout.write(`   [espera] gateway OK · aún sin responder: ${caidos.join(", ")}\n`);
     }
-    await sleep(500);
+    await sleep(1000);
   }
   return false;
 }
@@ -122,11 +160,29 @@ async function req(method, urlPath, { body, headers = {}, token, formData } = {}
 }
 const resultados = [];
 async function test(nombre, fn) {
-  try { await fn(); resultados.push({ nombre, ok: true }); logOk(nombre); }
+  try {
+    const detalle = await fn();
+    resultados.push({ nombre, ok: true });
+    logOk(nombre);
+    // Cada test devuelve un resumen de lo que la API ha respondido de verdad
+    if (detalle) log(`         ${detalle}`);
+  }
   catch (e) { resultados.push({ nombre, ok: false, error: e.message }); logErr(`${nombre} → ${e.message}`); exitCode = 1; }
 }
 function assert(c, m) { if (!c) throw new Error(m); }
 function assertEq(a, e, m) { if (a !== e) throw new Error(`${m}: obtenido ${JSON.stringify(a)}, esperado ${JSON.stringify(e)}`); }
+/** Como assertEq, pero imprime el cuerpo de la respuesta: sin él un 400 es un misterio. */
+function assertStatus(r, esperado) {
+  if (r.status !== esperado) {
+    const cuerpo = (r.text || "(sin cuerpo)").replace(/\s+/g, " ").slice(0, 500);
+    throw new Error(`status: obtenido ${r.status}, esperado ${esperado} · cuerpo: ${cuerpo}`);
+  }
+}
+/** Cuerpo de la respuesta en una sola línea, para el resumen de cada test. */
+function cuerpo(r) {
+  const t = (r.text || "").replace(/\s+/g, " ").trim();
+  return t ? (t.length > 200 ? `${t.slice(0, 200)}…` : t) : "(cuerpo vacío)";
+}
 
 async function runSuite() {
   // Todo contra el gateway (baseUrl :5100). No hay /me ni usuarios seed → hay que registrar
@@ -138,47 +194,56 @@ async function runSuite() {
 
   await test("1. GET /api/proveedores → 200 con semilla", async () => {
     const r = await req("GET", "/api/proveedores");
-    assertEq(r.status, 200, "status");
+    assertStatus(r, 200);
     assert(Array.isArray(r.json) && r.json.length >= 1, "la lista de proveedores está vacía");
     proveedorId = r.json[0].id ?? r.json[0]._id ?? r.json[0].Id;
     assert(proveedorId, "el primer proveedor no tiene id");
+    return `HTTP 200 · ${r.json.length} proveedores sembrados · primero: ${r.json[0].nombre} (${proveedorId})`;
   });
 
   await test("2. GET /api/productos sin token → 401", async () => {
     const r = await req("GET", "/api/productos");
-    assertEq(r.status, 401, "status");
+    assertStatus(r, 401);
+    return `HTTP 401 · el gateway exige JWT en /api/productos · ${cuerpo(r)}`;
   });
 
   await test("3a. POST /api/Auth/register usuario único → 200 con token", async () => {
     const r = await req("POST", "/api/Auth/register", {
       body: { email: emailUnico, password, nombre: "Gateway", apellidos: "Tester" },
     });
-    assertEq(r.status, 200, "status");
+    assertStatus(r, 200);
     assert(r.json?.token, "register no devuelve token");
     token = r.json.token;
+    return `HTTP 200 · ${cuerpo(r)}`;
   });
 
   await test("3b. POST /api/Auth/login → 200 con token", async () => {
     const r = await req("POST", "/api/Auth/login", {
       body: { email: emailUnico, password },
     });
-    assertEq(r.status, 200, "status");
+    assertStatus(r, 200);
     assert(r.json?.token, "login no devuelve token");
     token = r.json.token;
+    return `HTTP 200 · ${r.json.email} · token de ${r.json.token.length} caracteres`;
   });
 
   await test("4. POST /api/Auth/login incorrecto → 401", async () => {
     const r = await req("POST", "/api/Auth/login", {
       body: { email: emailUnico, password: "Wrong123!" },
     });
-    assertEq(r.status, 401, "status");
+    assertStatus(r, 401);
     assertEq(r.json?.error, "Credenciales invalidas", "mensaje de error");
+    return `HTTP 401 · ${cuerpo(r)}`;
   });
 
-  await test("5. GET /api/productos con token → 200 array", async () => {
+  await test("5. GET /api/productos con token → 200 array con semilla", async () => {
     const r = await req("GET", "/api/productos", { token });
-    assertEq(r.status, 200, "status");
+    assertStatus(r, 200);
     assert(Array.isArray(r.json), "la respuesta no es un array");
+    // La semilla de productos de ejemplo debe haberse creado al arrancar
+    assert(r.json.length >= 1, "no hay ningún producto de ejemplo: la semilla no se creó");
+    const p = r.json[0];
+    return `HTTP 200 · ${r.json.length} productos · [${p.id}] ${p.nombre} ${p.precio} € · ${p.categoriaNombre} · proveedor ${p.proveedorNombre}`;
   });
 
   // Escrituras requieren rol ADMIN → login con admin seedeado
@@ -186,12 +251,13 @@ async function runSuite() {
     const r = await req("POST", "/api/Auth/login", {
       body: { email: "admin@admin.com", password: "Admin123!" },
     });
-    assertEq(r.status, 200, "status");
+    assertStatus(r, 200);
     assert(r.json?.token, "login admin no devuelve token");
     // AuthResponseDto serializa como { token, email, nombre, rol, expiration }
     const rol = r.json?.rol ?? r.json?.Rol ?? r.json?.role;
     assertEq(rol, "ADMIN", "rol del token");
     token = r.json.token;
+    return `HTTP 200 · ${r.json.email} · rol ${rol}`;
   });
 
   await test("6. POST /api/productos con token ADMIN → 201 y guarda id", async () => {
@@ -204,15 +270,18 @@ async function runSuite() {
         proveedorId,
       },
     });
-    assertEq(r.status, 201, "status");
+    assertStatus(r, 201);
     assert(r.headers.get("location"), "falta la cabecera Location");
     productoId = r.json?.id ?? r.json?._id ?? r.json?.Id;
     assert(productoId !== undefined && productoId !== null, "la respuesta no contiene id");
+    // La validación remota Productos → Proveedores ha tenido que funcionar para llegar aquí
+    return `HTTP 201 · Location: ${r.headers.get("location")} · ${cuerpo(r)}`;
   });
 
   await test("7. GET /api/productos/{id} → 200", async () => {
     const r = await req("GET", `/api/productos/${productoId}`, { token });
-    assertEq(r.status, 200, "status");
+    assertStatus(r, 200);
+    return `HTTP 200 · ${cuerpo(r)}`;
   });
 
   await test("8. PUT /api/productos/{id} → 200", async () => {
@@ -225,27 +294,31 @@ async function runSuite() {
         proveedorId,
       },
     });
-    assertEq(r.status, 200, "status");
+    assertStatus(r, 200);
+    return `HTTP 200 · ${cuerpo(r)}`;
   });
 
   await test("9. DELETE → 204 y GET {id} → 404", async () => {
     const del = await req("DELETE", `/api/productos/${productoId}`, { token });
-    assertEq(del.status, 204, "DELETE status");
+    assertStatus(del, 204);
     const get = await req("GET", `/api/productos/${productoId}`, { token });
-    assertEq(get.status, 404, "GET tras DELETE status");
+    assertStatus(get, 404);
+    return `DELETE HTTP 204 (sin cuerpo) · GET posterior HTTP 404 · ${cuerpo(get)}`;
   });
 
   await test("10. GET /api/proveedores/{id} inexistente → 404", async () => {
     const r = await req("GET", "/api/proveedores/000000000000000000000000");
-    assertEq(r.status, 404, "status");
+    assertStatus(r, 404);
+    return `HTTP 404 · ${cuerpo(r)}`;
   });
 
   await test("11. POST /api/Auth/register duplicado → 400", async () => {
     const r = await req("POST", "/api/Auth/register", {
       body: { email: emailUnico, password, nombre: "Dup", apellidos: "Duplicate" },
     });
-    assertEq(r.status, 400, "status");
+    assertStatus(r, 400);
     assert(r.json?.error, "la respuesta no contiene error");
+    return `HTTP 400 · ${cuerpo(r)}`;
   });
 }
 
@@ -259,9 +332,9 @@ async function main() {
     if (composeFiles.length && CONFIG.dbServices.length && dockerAvailable()) {
       log(`▶ Levantando infraestructura: ${CONFIG.dbServices.join(", ")}`);
       run(`docker compose up -d ${CONFIG.dbServices.join(" ")}`);
-      await sleep(5000); // esperar a que Postgres acepte conexiones
-      for (const c of CONFIG.prepareDb) { log(`▶ Prepare: ${c}`); tryRun(c); }
-      await sleep(2000);
+      log("▶ Esperando a que Postgres acepte conexiones...");
+      if (!(await esperarPostgres())) throw new Error("Postgres no respondió en 60s");
+      log(`▶ Prepare: ${crearBaseProductos()}`);
     }
     log("▶ dotnet restore"); run(`dotnet restore "${CONFIG.csproj}"`);
     log("▶ dotnet build"); run(`dotnet build "${CONFIG.csproj}" -c Debug --no-restore`);
@@ -270,7 +343,7 @@ async function main() {
       log(`   · ${s.name} → ${s.env.ASPNETCORE_URLS}`);
       procs.push(spawnApi(s.csproj, s.env));
     }
-    let listo = await waitForApi(30000);
+    let listo = await waitForApi(45000);
     if (!listo && composeFiles.length && dockerAvailable()) {
       console.warn("  ⚠️ CLI falló → fallback docker compose up -d --build");
       procs.forEach(p => killTree(p.pid)); procs = [];
@@ -278,20 +351,23 @@ async function main() {
         ? CONFIG.fallbackComposeFile : "docker-compose.yml";
       log(`▶ Fallback: docker compose -f ${file} up -d --build`);
       run(`docker compose -f ${file} up -d --build`);
-      listo = await waitForApi(30000);
+      listo = await waitForApi(45000);
     }
-    if (!listo) throw new Error("El gateway no respondió en 30s");
+    if (!listo) {
+      throw new Error("No respondieron los 4 servicios en 45s (gateway + Auth + Productos + Proveedores). Revisa la consola [api]: si un microservicio dice 'FTL', esa es la causa real.");
+    }
     log("\n▶ Ejecutando suite de tests HTTP...\n");
     await runSuite();
   } catch (e) {
     logErr(`Error fatal: ${e.message}`); exitCode = 1;
   } finally {
-    log("\n▶ Limpieza...");
+    log("\n▶ Limpieza: parando los 4 procesos dotnet...");
     procs.forEach(p => killTree(p.pid));
+    // La infraestructura se DEJA LEVANTADA: así, terminada la suite, puedes seguir
+    // trabajando en modo desarrollo desde Rider o la terminal con la BD ya llena.
+    // Para reiniciar de cero: docker compose down -v
     if (composeFiles.length) {
-      for (const f of new Set([...composeFiles].reverse())) {
-        try { run(`docker compose -f ${f} down -v`); } catch (e) { logErr(`down ${f}: ${e.message}`); }
-      }
+      log("▶ Infraestructura (postgres, mongo, redis) se queda corriendo.");
     }
   }
   const pass = resultados.filter(r => r.ok).length, fail = resultados.length - pass;

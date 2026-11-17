@@ -37,24 +37,35 @@ public class ProductosController(IProductoService service) : ControllerBase
 
     /// <summary>
     /// Crea un nuevo producto (requiere JWT + rol Admin).
+    /// Responde con el mismo DTO de lectura que GET, para que la respuesta sea
+    /// idéntica en Swagger, en Bruno y en la suite de automatización.
     /// </summary>
     [HttpPost]
     [Authorize(Roles = "ADMIN")]
-    public IActionResult Create([FromBody] CreateProductoDto dto)
+    public async Task<IActionResult> Create([FromBody] CreateProductoDto dto)
     {
         var result = service.Create(dto);
-        return result.IsSuccess ? CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value) : BadRequest(new { error = result.Error.Message });
+        if (result.IsFailure)
+            return BadRequest(new { error = result.Error.Message });
+
+        var lectura = await service.GetByIdReadAsync(result.Value!.Id);
+        return CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, lectura.Value);
     }
 
     /// <summary>
     /// Actualiza un producto (requiere JWT + rol Admin).
+    /// Igual que Create: responde con el DTO de lectura.
     /// </summary>
     [HttpPut("{id:long}")]
     [Authorize(Roles = "ADMIN")]
-    public IActionResult Update(long id, [FromBody] UpdateProductoDto dto)
+    public async Task<IActionResult> Update(long id, [FromBody] UpdateProductoDto dto)
     {
         var result = service.Update(id, dto);
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(new { error = result.Error.Message });
+        if (result.IsFailure)
+            return BadRequest(new { error = result.Error.Message });
+
+        var lectura = await service.GetByIdReadAsync(id);
+        return Ok(lectura.Value);
     }
 
     /// <summary>

@@ -25,7 +25,7 @@ public static class IdentityConfig
 
         // PostgreSQL
         var connectionString = configuration.GetConnectionString("PostgresConnection")
-            ?? "Host=localhost;Database=auth_db;Username=admin;Password=admin123";
+            ?? "Host=localhost;Port=5440;Database=auth_db;Username=admin;Password=admin123";
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
 
