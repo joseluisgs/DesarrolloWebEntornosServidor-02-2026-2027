@@ -37,15 +37,22 @@ public static class RepositoriesConfig
                 c.Timeout = TimeSpan.FromSeconds(10);
             });
 
+        // Log de demostración: dónde acaba la llamada interna a Proveedores.
+        // En local es localhost:5103; en Docker, http://proveedores-microservice:5103.
+        Log.Information("[Productos] Cliente Refit hacia Proveedores: {Url} · timeout de 10 s", proveedoresBaseUrl);
+
         // Cache distribuida (Redis)
+        var redis = configuration.GetConnectionString("RedisConnection") ?? "localhost:6390";
         services.AddStackExchangeRedisCache(options =>
         {
-            options.Configuration = configuration.GetConnectionString("RedisConnection")
-                ?? "localhost:6390";
+            options.Configuration = redis;
             options.InstanceName = "Productos_";
         });
         services.Configure<CacheOptions>(configuration.GetSection(CacheOptions.SectionName));
         services.AddScoped<ICacheService, DistributedCacheService>();
+
+        // Log de demostración: dónde se guarda la caché de lecturas
+        Log.Information("[Productos] Caché Redis: {Redis} (prefijo 'Productos_')", redis);
 
         Log.Information("Repositorios y cache registrados correctamente.");
         return services;

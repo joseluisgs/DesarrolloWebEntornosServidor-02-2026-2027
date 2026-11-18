@@ -70,7 +70,18 @@ try
     // ── Seed de datos ────────────────────────────────────────────────────────
     await app.InitializeDatabaseAsync();
 
-    app.UseSerilogRequestLogging();
+    // Log de demostración: deja ver que la petición ha llegado a ESTE microservicio
+    // (no solo al gateway). Swagger queda en Debug para que en la consola solo se
+    // vean las peticiones de verdad.
+    app.UseSerilogRequestLogging(options =>
+    {
+        options.MessageTemplate =
+            "[Productos] {RequestMethod} {RequestPath} recibido por el microservicio → {StatusCode} en {Elapsed:0.0000} ms";
+        options.GetLevel = (context, elapsed, exception) =>
+            context.Request.Path.StartsWithSegments("/swagger") && exception is null
+                ? LogEventLevel.Debug
+                : LogEventLevel.Information;
+    });
     app.UseAuthentication();
     app.UseAuthorization();
 

@@ -28,6 +28,12 @@ public static class DatabaseConfig
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
 
+        // Log de demostración: base propia de este micro (distinta de auth_db del
+        // de Auth) en el puerto 5440 que publica docker-compose.
+        Log.Information("[Productos] PostgreSQL: {Conexion}",
+            string.Join(";", connectionString.Split(';')
+                .Select(p => p.StartsWith("Password=", StringComparison.OrdinalIgnoreCase) ? "Password=***" : p)));
+
         Log.Information("PostgreSQL configurado correctamente.");
         return services;
     }
@@ -44,14 +50,14 @@ public static class DatabaseConfig
 
         if (!db.Categorias.Any())
         {
-            Log.Information("Seed: Creando categorias de prueba...");
+            Log.Information("[Productos] base vacía: creando la semilla de categorías...");
             db.Categorias.AddRange(
                 new Categoria { Nombre = "Electronica", Descripcion = "Dispositivos electronicos" },
                 new Categoria { Nombre = "Mobiliario", Descripcion = "Muebles y accesorios" },
                 new Categoria { Nombre = "Perifericos", Descripcion = "Teclados, ratones, etc." }
             );
             await db.SaveChangesAsync();
-            Log.Information("Seed: 3 categorias creadas");
+            Log.Information("[Productos] semilla: 3 categorías creadas (Electrónica, Mobiliario, Periféricos)");
         }
 
         if (!db.Productos.Any())
@@ -65,7 +71,7 @@ public static class DatabaseConfig
             var mobiliario = db.Categorias.First(c => c.Nombre == "Mobiliario").Id;
             var perifericos = db.Categorias.First(c => c.Nombre == "Perifericos").Id;
 
-            Log.Information("Seed: Creando productos de prueba...");
+            Log.Information("[Productos] creando la semilla de 6 productos de ejemplo...");
             db.Productos.AddRange(
                 new Producto { Nombre = "Logitech MX Master 3S", Precio = 89.99m, CategoriaId = perifericos, ProveedorId = proveedorId, CreatedAt = DateTime.UtcNow },
                 new Producto { Nombre = "Teclado mecanico RGB", Precio = 59.99m, CategoriaId = perifericos, ProveedorId = proveedorId, CreatedAt = DateTime.UtcNow },
@@ -75,7 +81,7 @@ public static class DatabaseConfig
                 new Producto { Nombre = "Mesa de trabajo ergonomica", Precio = 179.50m, CategoriaId = mobiliario, ProveedorId = proveedorId, CreatedAt = DateTime.UtcNow }
             );
             await db.SaveChangesAsync();
-            Log.Information("Seed: 6 productos creados");
+            Log.Information("[Productos] semilla: 6 productos creados, todos con el mismo proveedor");
         }
     }
 
@@ -99,7 +105,7 @@ public static class DatabaseConfig
                     var id = proveedores[0].Id;
                     if (!string.IsNullOrWhiteSpace(id))
                     {
-                        Log.Information("Seed: Proveedor de referencia {Id} ({Nombre})", id, proveedores[0].Nombre);
+                        Log.Information("[Productos] proveedor de referencia para la semilla: {Nombre} ({Id}), traído de Proveedores", proveedores[0].Nombre, id);
                         return id;
                     }
                 }

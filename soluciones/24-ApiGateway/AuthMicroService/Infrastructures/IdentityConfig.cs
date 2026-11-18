@@ -29,6 +29,10 @@ public static class IdentityConfig
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
 
+        // Log de demostración: la configuración real con la que arranca este micro.
+        // El puerto es el que publica docker-compose (5440), no el 5432 por defecto.
+        Log.Information("[Auth] PostgreSQL: {Conexion}", EnmascararPassword(connectionString));
+
         // Identity
         // AddIdentityCore: Identity sin UI (no registra la cookie Identity.Application),
         // el mecanismo oficial para APIs; roles y signInManager se añaden a mano.
@@ -47,7 +51,13 @@ public static class IdentityConfig
         .AddDefaultTokenProviders();
 
         // JWT
+        var jwtSettings = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()!;
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+
+        // Log de demostración: la clave JWT es compartida; si no coincide aquí,
+        // en Productos o en el gateway, ningún token de esta API valdrá.
+        Log.Information("[Auth] JWT: Issuer {Issuer} · Audience {Audience} · clave de {Longitud} caracteres (misma que Productos y el gateway)",
+            jwtSettings.Issuer, jwtSettings.Audience, jwtSettings.Key.Length);
 
         // Authentication
         // Fijamos TODOS los esquemas a Bearer: sin DefaultForbidScheme, un 403
@@ -62,7 +72,6 @@ public static class IdentityConfig
         })
         .AddJwtBearer(options =>
         {
-            var jwtSettings = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()!;
             options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -101,7 +110,7 @@ public static class IdentityConfig
             if (!await roleManager.RoleExistsAsync(role))
             {
                 await roleManager.CreateAsync(new IdentityRole(role));
-                Log.Information("Rol '{Role}' creado", role);
+                Log.Information("[Auth] semilla: rol '{Role}' creado", role);
             }
         }
 
@@ -122,7 +131,7 @@ public static class IdentityConfig
             if (createResult.Succeeded)
             {
                 await userManager.AddToRoleAsync(admin, "ADMIN");
-                Log.Information("Usuario admin creado: {Email}", adminEmail);
+                Log.Information("[Auth] semilla: usuario {Email} creado con rol ADMIN", adminEmail);
             }
             else
             {
@@ -130,5 +139,19 @@ public static class IdentityConfig
                     string.Join(", ", createResult.Errors.Select(e => e.Description)));
             }
         }
+        else
+        {
+            // Normal en el segundo arranque: la base ya está sembrada
+            Log.Information("[Auth] Usuario admin ya presente en auth_db: {Email}", adminEmail);
+        }
     }
+
+    /// <summary>
+    /// Quita la contraseña de una cadena de conexión para poder enseñarla en consola.
+    /// </summary>
+    private static string EnmascararPassword(string connectionString) =>
+        string.Join(";", connectionString.Split(';')
+            .Select(p => p.StartsWith("Password=", StringComparison.OrdinalIgnoreCase)
+                ? "Password=***"
+                : p));
 }

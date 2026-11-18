@@ -26,12 +26,12 @@ public class AuthService(
     /// <inheritdoc />
     public async Task<Result<AuthResponseDto, DomainError>> RegisterAsync(RegisterDto dto)
     {
-        Log.Information("Intento de registro para {Email}", dto.Email);
+        Log.Information("[Auth] registro recibido de {Email}", dto.Email);
 
         var existingUser = await userManager.FindByEmailAsync(dto.Email);
         if (existingUser is not null)
         {
-            Log.Warning("Registro fallido: {Email} ya existe", dto.Email);
+            Log.Warning("[Auth] registro RECHAZADO: {Email} ya existe", dto.Email);
             return Result.Failure<AuthResponseDto, DomainError>(
                 new ConflictError($"Ya existe un usuario con el email '{dto.Email}'"));
         }
@@ -49,7 +49,7 @@ public class AuthService(
         if (!result.Succeeded)
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            Log.Warning("Registro fallido para {Email}: {Errors}", dto.Email, errors);
+            Log.Warning("[Auth] registro RECHAZADO de {Email}: {Errors}", dto.Email, errors);
             return Result.Failure<AuthResponseDto, DomainError>(
                 new BusinessRuleError($"Error al crear el usuario: {errors}"));
         }
@@ -58,19 +58,19 @@ public class AuthService(
 
         var token = GenerateJwtToken(user, "USER");
 
-        Log.Information("Registro exitoso para {Email} con rol USER", dto.Email);
+        Log.Information("[Auth] registro OK: {Email} con rol USER · token emitido", dto.Email);
         return Result.Success<AuthResponseDto, DomainError>(token);
     }
 
     /// <inheritdoc />
     public async Task<Result<AuthResponseDto, DomainError>> LoginAsync(LoginDto dto)
     {
-        Log.Information("Intento de login para {Email}", dto.Email);
+        Log.Information("[Auth] login recibido de {Email}", dto.Email);
 
         var user = await userManager.FindByEmailAsync(dto.Email);
         if (user is null)
         {
-            Log.Warning("Login fallido: usuario {Email} no encontrado", dto.Email);
+            Log.Warning("[Auth] login RECHAZADO: {Email} no existe", dto.Email);
             return Result.Failure<AuthResponseDto, DomainError>(
                 UnauthorizedError.InvalidCredentials());
         }
@@ -78,7 +78,7 @@ public class AuthService(
         var result = await signInManager.CheckPasswordSignInAsync(user, dto.Password, lockoutOnFailure: false);
         if (!result.Succeeded)
         {
-            Log.Warning("Login fallido: contrasena incorrecta para {Email}", dto.Email);
+            Log.Warning("[Auth] login RECHAZADO: contraseña incorrecta de {Email}", dto.Email);
             return Result.Failure<AuthResponseDto, DomainError>(
                 UnauthorizedError.InvalidCredentials());
         }
@@ -86,7 +86,7 @@ public class AuthService(
         var role = (await userManager.GetRolesAsync(user)).FirstOrDefault() ?? "USER";
         var token = GenerateJwtToken(user, role);
 
-        Log.Information("Login exitoso para {Email} con rol {Role}", dto.Email, role);
+        Log.Information("[Auth] login OK: {Email} con rol {Role} · token emitido", dto.Email, role);
         return Result.Success<AuthResponseDto, DomainError>(token);
     }
 

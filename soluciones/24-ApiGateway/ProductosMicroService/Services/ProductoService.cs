@@ -35,11 +35,11 @@ public class ProductoService(
         var cached = await cache.GetAsync<List<ProductoReadDto>>(ReadAllKey);
         if (cached is not null)
         {
-            Log.Debug("Cache HIT: GetAll productos");
+            Log.Information("[Productos] caché Redis HIT: la lista sale de Redis sin tocar PostgreSQL");
             return Result.Success<List<ProductoReadDto>, DomainError>(cached);
         }
 
-        Log.Debug("Cache MISS: GetAll productos → PostgreSQL");
+        Log.Information("[Productos] caché Redis MISS: leyendo la lista completa de PostgreSQL");
         var productos = repository.GetAll().ToList();
 
         var dtos = new List<ProductoReadDto>();
@@ -63,11 +63,11 @@ public class ProductoService(
         var cached = await cache.GetAsync<ProductoReadDto>(cacheKey);
         if (cached is not null)
         {
-            Log.Debug("Cache HIT: GetById producto {Id}", id);
+            Log.Information("[Productos] caché Redis HIT: producto {Id} servido desde Redis", id);
             return Result.Success<ProductoReadDto, DomainError>(cached);
         }
 
-        Log.Debug("Cache MISS: GetById producto {Id} → PostgreSQL", id);
+        Log.Information("[Productos] caché Redis MISS: producto {Id} leído de PostgreSQL", id);
         var producto = repository.GetById(id);
         if (producto is null)
             return Result.Failure<ProductoReadDto, DomainError>(
@@ -92,19 +92,31 @@ public class ProductoService(
         // Validar categoria local
         var categoria = categoriaRepository.GetById(dto.CategoriaId);
         if (categoria is null)
+        {
+            Log.Information("[Productos] alta de '{Nombre}' RECHAZADA: la categoría {Categoria} no existe",
+                dto.Nombre, dto.CategoriaId);
             return Result.Failure<Producto, DomainError>(
                 NotFoundError.FromId(dto.CategoriaId.ToString(), "Categoria"));
+        }
 
         // Validar nombre duplicado
         if (repository.IsDuplicated(dto.Nombre))
+        {
+            Log.Information("[Productos] alta de '{Nombre}' RECHAZADA: ya hay un producto con ese nombre",
+                dto.Nombre);
             return Result.Failure<Producto, DomainError>(
                 new BusinessRuleError($"Ya existe un producto con el nombre '{dto.Nombre}'"));
+        }
 
         // Validar proveedor remoto
         var proveedor = proveedorRemote.GetByIdAsync(dto.ProveedorId).GetAwaiter().GetResult();
         if (proveedor is null)
+        {
+            Log.Information("[Productos] alta de '{Nombre}' RECHAZADA: el proveedor {Proveedor} no existe o no responde",
+                dto.Nombre, dto.ProveedorId);
             return Result.Failure<Producto, DomainError>(
                 NotFoundError.FromId(dto.ProveedorId, "Proveedor"));
+        }
 
         var producto = new Producto
         {
@@ -117,10 +129,12 @@ public class ProductoService(
         };
 
         repository.Add(producto);
+        Log.Information("[Productos] alta OK: '{Nombre}' ({Precio} €) en {Categoria} · proveedor {Proveedor}",
+            producto.Nombre, producto.Precio, categoria.Nombre, proveedor.Nombre);
 
         // Invalidar cache
         cache.RemoveAsync(ReadAllKey).GetAwaiter().GetResult();
-        Log.Information("Cache: Invalidada lista productos tras Create");
+        Log.Information("[Productos] caché invalidada: la lista deje de servirse desde Redis tras el alta");
 
         return Result.Success<Producto, DomainError>(producto);
     }
@@ -129,25 +143,40 @@ public class ProductoService(
     {
         var existente = repository.GetById(id);
         if (existente is null)
+        {
+            Log.Information("[Productos] modificación de {Id} RECHAZADA: no existe", id);
             return Result.Failure<Producto, DomainError>(
                 NotFoundError.FromId(id.ToString(), "Producto"));
+        }
 
         // Validar categoria local
         var categoria = categoriaRepository.GetById(dto.CategoriaId);
         if (categoria is null)
+        {
+            Log.Information("[Productos] modificación de {Id} RECHAZADA: la categoría {Categoria} no existe",
+                id, dto.CategoriaId);
             return Result.Failure<Producto, DomainError>(
                 NotFoundError.FromId(dto.CategoriaId.ToString(), "Categoria"));
+        }
 
         // Validar nombre duplicado
         if (repository.IsDuplicated(dto.Nombre, id))
+        {
+            Log.Information("[Productos] modificación de {Id} RECHAZADA: '{Nombre}' ya es de otro producto",
+                id, dto.Nombre);
             return Result.Failure<Producto, DomainError>(
                 new BusinessRuleError($"Ya existe un producto con el nombre '{dto.Nombre}'"));
+        }
 
         // Validar proveedor remoto
         var proveedor = proveedorRemote.GetByIdAsync(dto.ProveedorId).GetAwaiter().GetResult();
         if (proveedor is null)
+        {
+            Log.Information("[Productos] modificación de {Id} RECHAZADA: el proveedor {Proveedor} no existe o no responde",
+                id, dto.ProveedorId);
             return Result.Failure<Producto, DomainError>(
                 NotFoundError.FromId(dto.ProveedorId, "Proveedor"));
+        }
 
         var producto = new Producto
         {
@@ -167,7 +196,9 @@ public class ProductoService(
         // Invalidar cache
         cache.RemoveAsync(ReadByIdKey(id)).GetAwaiter().GetResult();
         cache.RemoveAsync(ReadAllKey).GetAwaiter().GetResult();
-        Log.Information("Cache: Invalidada cache del producto {Id} y lista tras Update", id);
+        Log.Information("[Productos] caché invalidada: producto {Id} y lista", id);
+        Log.Information("[Productos] producto {Id} actualizado → '{Nombre}' ({Precio} €) · proveedor {Proveedor}",
+            id, dto.Nombre, dto.Precio, proveedor.Nombre);
 
         return Result.Success<Producto, DomainError>(actualizado);
     }
@@ -182,7 +213,8 @@ public class ProductoService(
         // Invalidar cache
         cache.RemoveAsync(ReadByIdKey(id)).GetAwaiter().GetResult();
         cache.RemoveAsync(ReadAllKey).GetAwaiter().GetResult();
-        Log.Information("Cache: Invalidada cache del producto {Id} y lista tras Delete", id);
+        Log.Information("[Productos] caché invalidada: producto {Id} y lista", id);
+        Log.Information("[Productos] producto {Id} eliminado de PostgreSQL", id);
 
         return UnitResult.Success<DomainError>();
     }
@@ -202,15 +234,24 @@ public class ProductoService(
         var cacheKey = $"proveedor:{proveedorId}";
         var cached = await cache.GetAsync<ProveedorReadDto>(cacheKey);
         if (cached is not null)
+        {
+            // Redis ya tiene al proveedor: no hace falta volver a llamar a Proveedores.
+            // En Debug para que una lista de 6 productos no repita la misma línea 6 veces.
+            Log.Debug("[Productos] proveedor {Id}: '{Nombre}' servido desde Redis, sin llamar a Proveedores",
+                proveedorId, cached.Nombre);
             return cached.Nombre;
+        }
 
         var proveedor = await proveedorRemote.GetByIdAsync(proveedorId);
         if (proveedor is not null)
         {
             await cache.SetAsync(cacheKey, proveedor, _cacheExpiration);
+            Log.Information("[Productos] proveedor {Id}: '{Nombre}' guardado en Redis durante {Minutos} min",
+                proveedorId, proveedor.Nombre, _cacheExpiration.TotalMinutes);
             return proveedor.Nombre;
         }
 
+        Log.Information("[Productos] proveedor {Id}: sin dato, se mostrará 'Desconocido'", proveedorId);
         return "Desconocido";
     }
 }

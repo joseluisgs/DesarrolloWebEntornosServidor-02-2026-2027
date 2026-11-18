@@ -28,6 +28,9 @@ public static class DatabaseConfig
         services.AddDbContextFactory<MongoDbContext>(options =>
             options.UseMongoDB(connectionString), ServiceLifetime.Scoped);
 
+        // Log de demostración: base de este micro (MongoDB en el 27020 del compose)
+        Log.Information("[Proveedores] MongoDB: {Conexion}", connectionString);
+
         Log.Information("MongoDB configurado correctamente.");
         return services;
     }
@@ -43,7 +46,7 @@ public static class DatabaseConfig
 
         if (!mongoCtx.Proveedores.Any())
         {
-            Log.Information("Seed: Creando proveedores de prueba...");
+            Log.Information("[Proveedores] base vacía: creando la semilla de 4 proveedores...");
             // Id explícito por documento: evita conflicto de tracking con claves vacías
             mongoCtx.Proveedores.AddRange(
                 new Proveedor { Id = ObjectId.GenerateNewId().ToString(), Nombre = "Logitech", Email = "contacto@logitech.com", Telefono = "+34 912 345 678", Direccion = "Calle Mayor 1, Madrid" },
@@ -52,7 +55,7 @@ public static class DatabaseConfig
                 new Proveedor { Id = ObjectId.GenerateNewId().ToString(), Nombre = "Xiaomi", Email = "info@xiaomi.es", Telefono = "+34 915 678 901", Direccion = "Calle Gran Via 28, Madrid" }
             );
             await mongoCtx.SaveChangesAsync();
-            Log.Information("Seed: 4 proveedores creados");
+            Log.Information("[Proveedores] semilla lista: Logitech, Samsung, Apple y Xiaomi (ObjectId de MongoDB)");
         }
     }
 }
